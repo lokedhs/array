@@ -1,8 +1,9 @@
 package array
 
 class IncompatibleTypeException(message: String) : Exception(message)
+class APLIndexOutOfBoundsException(message: String) : Exception(message)
 
-inline fun unless(cond: Boolean, fn: () -> Unit): Unit {
+inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {
         fn()
     }
