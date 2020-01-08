@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="main" type="GradleKonanAppRunConfiguration" factoryName="Application" WORKING_DIR="$PROJECT_DIR$">
+    <method v="2">
+      <option name="com.jetbrains.konan.IdeaKonanBuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
