@@ -39,19 +39,19 @@ class TokenGenerator(val engine: Engine, val content: String) {
             ch.isWhitespace() -> Whitespace
             ch.isLetter() -> collectSymbol(ch)
             singleCharFunctions.contains(ch.toString()) -> Symbol(ch.toString())
-            else -> throw UnexpectedSymbol("Unexpected symbol: ${ch}")
+            else -> throw UnexpectedSymbol(ch)
         }
     }
 
-    private fun collectNumber(firstChar: Char) : ParsedNumber {
+    private fun collectNumber(firstChar: Char): ParsedNumber {
         val buf = StringBuilder()
         buf.append(firstChar)
-        while(pos < content.length) {
-            val ch = content[pos]
-            if(ch.isLetter()) {
+        while (pos < content.length) {
+            val ch = content[pos++]
+            if (ch.isLetter()) {
                 throw IllegalNumberFormat("Illegal number format")
             }
-            if(!ch.isDigit()) {
+            if (!ch.isDigit()) {
                 break;
             }
             buf.append(ch)
@@ -63,12 +63,11 @@ class TokenGenerator(val engine: Engine, val content: String) {
         val buf = StringBuilder()
         buf.append(firstChar)
         while (pos < content.length) {
-            val ch = content[pos]
+            val ch = content[pos++]
             if (!ch.isLetterOrDigit()) {
                 break
             }
             buf.append(ch)
-            pos++
         }
         return Symbol(buf.toString())
     }
@@ -90,29 +89,36 @@ class FunctionCall2Arg(fn: Function, leftArgs: Instruction, rightArgs: Instructi
 
 class VariableRef(val name: Symbol) : Instruction
 
-class Literal1DArray(val values: List<Instruction>) : Instruction
-class LiteralNumber() : Instruction // this is not correct
+class Literal1DArray(val values: List<Instruction>) : Instruction {
+    override fun toString(): String {
+        return "Literal1DArray(values=$values)"
+    }
+}
+class LiteralNumber(val value: Long) : Instruction {
+    override fun toString() = "LiteralNumber(value=$value)"
+}
 
 fun parseValue(engine: Engine, tokeniser: TokenGenerator): Instruction {
     val leftArgs = ArrayList<Instruction>()
 
-    val token = tokeniser.nextToken()
-    if (token == CloseParen || token == EndOfFile) {
-        return Literal1DArray(leftArgs)
-    }
-
-    when (token) {
-        is Symbol -> {
-            val fn = engine.getFunction(token)
-            if (fn != null) {
-                val rightArgs = parseValue(engine, tokeniser)
-                return FunctionCall2Arg(fn, Literal1DArray(leftArgs), rightArgs)
-            } else {
-                leftArgs.add(VariableRef(token))
-            }
+    while (true) {
+        val token = tokeniser.nextToken()
+        if (token == CloseParen || token == EndOfFile) {
+            return Literal1DArray(leftArgs)
         }
-        is LiteralNumber -> {
 
+        when (token) {
+            is Symbol -> {
+                val fn = engine.getFunction(token)
+                if (fn != null) {
+                    val rightArgs = parseValue(engine, tokeniser)
+                    return FunctionCall2Arg(fn, Literal1DArray(leftArgs), rightArgs)
+                } else {
+                    leftArgs.add(VariableRef(token))
+                }
+            }
+            is ParsedNumber -> leftArgs.add(LiteralNumber(token.value))
+            else -> throw UnexpectedToken(token)
         }
     }
 }

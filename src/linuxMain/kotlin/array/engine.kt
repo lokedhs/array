@@ -13,8 +13,9 @@ class Engine {
         return functions[name]
     }
 
-    fun parseString(input: String) {
-        val tokeniser = TokenGenerator(this, "{" + input + "}")
-        return CodeBlock(tokeniser)
+    fun parseString(input: String): Instruction {
+        val tokeniser = TokenGenerator(this, input)
+        val result = parseValue(this, tokeniser)
+        return result
     }
 }

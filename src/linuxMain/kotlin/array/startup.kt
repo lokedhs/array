@@ -13,11 +13,9 @@ fun main() {
 //    val c = int100.add(a)
 //    printArray("c", c as APLArray)
 
-    val gen = TokenGenerator("this is a test string")
-    while(true) {
-        val token = gen.nextToken() ?: break
-        println("token = ${token}")
-    }
+    val engine = Engine()
+    val result = engine.parseString("10 20 foo")
+    println("result = ${result}")
 }
 
 private fun printArray(message: String, a: APLArray) {

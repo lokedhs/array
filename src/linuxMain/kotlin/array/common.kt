@@ -3,7 +3,8 @@ package array
 class IncompatibleTypeException(message: String) : Exception(message)
 class APLIndexOutOfBoundsException(message: String) : Exception(message)
 class IllegalNumberFormat(message: String) : Exception(message)
-class UnexpectedSymbol(message: String) : Exception(message)
+class UnexpectedSymbol(ch: Char) : Exception("Unexpected symbol: ${ch}")
+class UnexpectedToken(token: Token) : Exception("Unexpected token: ${token}")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {
@@ -17,22 +18,18 @@ class Arrays {
             if(a === b) {
                 return true
             }
-            unless(a.size == b.size) {
+            val aLength = a.size
+            val bLength = b.size
+            unless(aLength == bLength) {
                 return false
             }
-            val i1 = a.iterator()
-            val i2 = b.iterator()
-            while(true) {
-                val n1 = i1.hasNext()
-                val n2 = i2.hasNext()
-                if (!n1 && !n2) {
-                    return true
-                } else if ((n1 && !n2) || (!n1 && n2)) {
-                    return false
-                } else if (i1.next() != i2.next()) {
-                    return false
+
+            for(i in 0 until aLength) {
+                if(a[i] != b[i]) {
+                    return false;
                 }
             }
+            return true;
         }
 
         fun toString(values: Array<*>): String {
