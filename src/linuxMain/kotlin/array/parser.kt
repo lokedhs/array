@@ -38,7 +38,7 @@ class TokenGenerator(val engine: Engine, val content: String) {
             ch.isDigit() -> collectNumber(ch)
             ch.isWhitespace() -> Whitespace
             ch.isLetter() -> collectSymbol(ch)
-            singleCharFunctions.contains(ch.toString()) -> Symbol(ch.toString())
+            singleCharFunctions.contains(ch.toString()) -> engine.internSymbol(ch.toString())
             else -> throw UnexpectedSymbol(ch)
         }
     }
@@ -69,7 +69,7 @@ class TokenGenerator(val engine: Engine, val content: String) {
             }
             buf.append(ch)
         }
-        return Symbol(buf.toString())
+        return engine.internSymbol(buf.toString())
     }
 
     fun nextToken(): Token {
@@ -84,27 +84,47 @@ class TokenGenerator(val engine: Engine, val content: String) {
 
 interface Instruction
 
-class FunctionCall1Arg(fn: Function, rightArgs: Instruction) : Instruction
-class FunctionCall2Arg(fn: Function, leftArgs: Instruction, rightArgs: Instruction) : Instruction
+class FunctionCall1Arg(val fn: Function, val rightArgs: Instruction) : Instruction {
+    override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
+}
 
-class VariableRef(val name: Symbol) : Instruction
+class FunctionCall2Arg(val fn: Function, val leftArgs: Instruction, val rightArgs: Instruction) : Instruction {
+    override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
+}
+
+class VariableRef(val name: Symbol) : Instruction {
+    override fun toString() = "Var(${name})"
+}
 
 class Literal1DArray(val values: List<Instruction>) : Instruction {
-    override fun toString(): String {
-        return "Literal1DArray(values=$values)"
-    }
+    override fun toString() = "Literal1DArray(${values})"
 }
+
+class LiteralScalarValue(val value: Instruction) : Instruction {
+    override fun toString() = "LiteralScalarValue(${value})"
+}
+
 class LiteralNumber(val value: Long) : Instruction {
     override fun toString() = "LiteralNumber(value=$value)"
 }
 
 fun parseValue(engine: Engine, tokeniser: TokenGenerator): Instruction {
+    fun valueListToArg(args: List<Instruction>) : Instruction {
+        assert(!args.isEmpty())
+        if(args.size == 1) {
+            return LiteralScalarValue(args[0])
+        }
+        else {
+            return Literal1DArray(args)
+        }
+    }
+
     val leftArgs = ArrayList<Instruction>()
 
     while (true) {
         val token = tokeniser.nextToken()
         if (token == CloseParen || token == EndOfFile) {
-            return Literal1DArray(leftArgs)
+            return valueListToArg(leftArgs)
         }
 
         when (token) {
@@ -112,7 +132,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Instruction {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
                     val rightArgs = parseValue(engine, tokeniser)
-                    return FunctionCall2Arg(fn, Literal1DArray(leftArgs), rightArgs)
+                    return if(leftArgs.isEmpty()) FunctionCall1Arg(fn, rightArgs) else FunctionCall2Arg(fn, valueListToArg(leftArgs), rightArgs)
                 } else {
                     leftArgs.add(VariableRef(token))
                 }
