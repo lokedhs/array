@@ -2,6 +2,8 @@ package array
 
 class IncompatibleTypeException(message: String) : Exception(message)
 class APLIndexOutOfBoundsException(message: String) : Exception(message)
+class IllegalNumberFormat(message: String) : Exception(message)
+class UnexpectedSymbol(message: String) : Exception(message)
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {
