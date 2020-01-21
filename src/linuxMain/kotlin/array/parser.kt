@@ -21,7 +21,7 @@ class TokenGenerator(val engine: Engine, val content: String) {
     private val pushBackQueue = ArrayList<Token>()
 
     init {
-        singleCharFunctions = HashSet(listOf("+", "-", "*", "/"))
+        singleCharFunctions = HashSet(listOf("+", "-", "×", "÷"))
     }
 
     fun nextTokenOrSpace(): Token {
