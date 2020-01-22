@@ -3,8 +3,9 @@ package array
 class IncompatibleTypeException(message: String) : Exception(message)
 class APLIndexOutOfBoundsException(message: String) : Exception(message)
 class IllegalNumberFormat(message: String) : Exception(message)
-class UnexpectedSymbol(ch: Char) : Exception("Unexpected symbol: ${ch}")
-class UnexpectedToken(token: Token) : Exception("Unexpected token: ${token}")
+class UnexpectedSymbol(ch: Int) : Exception("Unexpected symbol: $ch")
+class UnexpectedToken(token: Token) : Exception("Unexpected token: $token")
+class VariableNotAssigned(name: Symbol) : Exception("Variable not assigned: $name")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {

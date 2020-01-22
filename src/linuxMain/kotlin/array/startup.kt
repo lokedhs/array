@@ -4,7 +4,7 @@ fun main() {
     val a = iota(5)
     printArray("a", a)
 
-    val int100 = APLInteger(100)
+    val int100 = APLLong(100)
     val b = a.add(int100)
     printArray("b", b as APLArray)
 
@@ -14,7 +14,6 @@ fun main() {
 //    printArray("c", c as APLArray)
 
     val engine = Engine()
-    engine.registerFunction(engine.internSymbol("a"))
     val result = engine.parseString("10 20 foo")
     println("result = ${result}")
 }
