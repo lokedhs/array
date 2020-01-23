@@ -4,7 +4,9 @@ abstract class Token
 
 object Whitespace : Token()
 object EndOfFile : Token()
+object OpenParen : Token()
 object CloseParen : Token()
+object StatementSeparator : Token()
 
 class Symbol(val value: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${value}]"
@@ -13,7 +15,7 @@ class Symbol(val value: String) : Token(), Comparable<Symbol> {
     override fun equals(other: Any?) = other != null && other is Symbol && value == other.value
 }
 
-class ParsedNumber(val value: Long) : Token()
+class ParsedLong(val value: Long) : Token()
 
 class TokenGenerator(val engine: Engine, val content: String) {
     private val singleCharFunctions: Set<String>
@@ -21,7 +23,7 @@ class TokenGenerator(val engine: Engine, val content: String) {
     private val pushBackQueue = ArrayList<Token>()
 
     init {
-        singleCharFunctions = HashSet(listOf("+", "-", "×", "÷"))
+        singleCharFunctions = HashSet(listOf("+", "-", "×", "÷", "⍬", "⍳", "⍴"))
     }
 
     private fun getNextChar(): Int {
@@ -41,8 +43,10 @@ class TokenGenerator(val engine: Engine, val content: String) {
         // For now, let's ignore surrogate pairs.
         val ch = content[pos++].toInt()
         return when {
-            isOpenParen(ch) -> collectParenExpr()
+            isOpenParen(ch) -> OpenParen
+            isCloseParen(ch) -> CloseParen
             isNegationSign(ch) -> collectNegativeNumber()
+            isStatementSeparator(ch) -> StatementSeparator
             singleCharFunctions.contains(codepointToString(ch)) -> engine.internSymbol(codepointToString(ch))
             isDigit(ch) -> collectNumber(ch)
             isWhitespace(ch) -> Whitespace
@@ -57,14 +61,12 @@ class TokenGenerator(val engine: Engine, val content: String) {
         return buf.toString()
     }
 
-    private fun collectParenExpr(): Token {
-        TODO("collect until closing paren.")
-    }
-
     private fun isOpenParen(ch: Int) = ch == '('.toInt()
+    private fun isCloseParen(ch: Int) = ch == ')'.toInt()
+    private fun isStatementSeparator(ch: Int) = ch == '◊'.toInt()
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
 
-    private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedNumber {
+    private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
         while (pos < content.length) {
@@ -78,10 +80,10 @@ class TokenGenerator(val engine: Engine, val content: String) {
             }
             buf.addCodepoint(ch)
         }
-        return ParsedNumber(buf.toString().toLong() * if(isNegative) -1 else 1)
+        return ParsedLong(buf.toString().toLong() * if (isNegative) -1 else 1)
     }
 
-    private fun collectNegativeNumber() : ParsedNumber {
+    private fun collectNegativeNumber(): ParsedLong {
         val ch = getNextChar()
         unless(isDigit(ch)) {
             throw IllegalNumberFormat("Negation sign not followed by number")
@@ -117,12 +119,25 @@ interface Instruction {
     fun evalWithEngine(engine: Engine): APLValue
 }
 
-class FunctionCall1Arg(val fn: Function, val rightArgs: Instruction) : Instruction {
+class InstructionList(val instructions: List<Instruction>) : Instruction {
+    override fun evalWithEngine(engine: Engine): APLValue {
+        var result: APLValue? = null
+        for (instr in instructions) {
+            result = instr.evalWithEngine(engine)
+        }
+        if (result == null) {
+            throw IllegalStateException("Empty instruction list")
+        }
+        return result
+    }
+}
+
+class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction) : Instruction {
     override fun evalWithEngine(engine: Engine) = fn.eval1Arg(rightArgs.evalWithEngine(engine))
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
 
-class FunctionCall2Arg(val fn: Function, val leftArgs: Instruction, val rightArgs: Instruction) : Instruction {
+class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val rightArgs: Instruction) : Instruction {
     override fun evalWithEngine(engine: Engine): APLValue {
         val leftValue = rightArgs.evalWithEngine(engine)
         val rightValue = leftArgs.evalWithEngine(engine)
@@ -143,7 +158,7 @@ class VariableRef(val name: Symbol) : Instruction {
 class Literal1DArray(val values: List<Instruction>) : Instruction {
     override fun evalWithEngine(engine: Engine): APLValue {
         val size = values.size
-        val result = Array<APLValue?>(size) {null}
+        val result = Array<APLValue?>(size) { null }
         for (i in (size - 1) downTo 0) {
             result[i] = values[i].evalWithEngine(engine)
         }
@@ -163,41 +178,57 @@ class LiteralNumber(val value: Long) : Instruction {
     override fun toString() = "LiteralNumber(value=$value)"
 }
 
-fun parseValue(engine: Engine, tokeniser: TokenGenerator): Instruction {
-    fun valueListToArg(args: List<Instruction>): Instruction {
-        unless(!args.isEmpty()) {
+fun parseValue(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
+    val statementList = ArrayList<Instruction>()
+    val leftArgs = ArrayList<Instruction>()
+
+    fun valueListToArg(): Instruction {
+        if (leftArgs.isEmpty()) {
             throw IllegalStateException("Argument list should not be empty")
         }
-        if (args.size == 1) {
-            return LiteralScalarValue(args[0])
+        if (leftArgs.size == 1) {
+            return LiteralScalarValue(leftArgs[0])
         } else {
-            return Literal1DArray(args)
+            return Literal1DArray(leftArgs)
         }
     }
 
-    val leftArgs = ArrayList<Instruction>()
+    fun makeResultList() = if (statementList.isEmpty()) {
+        valueListToArg()
+    } else {
+        statementList.add(valueListToArg())
+        InstructionList(statementList)
+    }
 
     while (true) {
         val token = tokeniser.nextToken()
         if (token == CloseParen || token == EndOfFile) {
-            return valueListToArg(leftArgs)
+            if (token == endToken) {
+                return makeResultList()
+            } else {
+                throw UnexpectedToken(token)
+            }
         }
 
         when (token) {
             is Symbol -> {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
-                    val rightArgs = parseValue(engine, tokeniser)
-                    return if (leftArgs.isEmpty()) FunctionCall1Arg(fn, rightArgs) else FunctionCall2Arg(
-                        fn,
-                        valueListToArg(leftArgs),
-                        rightArgs
-                    )
+                    val rightValue = parseValue(engine, tokeniser, endToken)
+                    return if (leftArgs.isEmpty()) {
+                        FunctionCall1Arg(fn, rightValue)
+                    } else {
+                        FunctionCall2Arg(fn, makeResultList(), rightValue)
+                    }
                 } else {
                     leftArgs.add(VariableRef(token))
                 }
             }
-            is ParsedNumber -> leftArgs.add(LiteralNumber(token.value))
+            is OpenParen -> leftArgs.add(parseValue(engine, tokeniser, CloseParen))
+            is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
+            is StatementSeparator -> {
+                throw IllegalStateException("Statement separator does not work")
+            }
             else -> throw UnexpectedToken(token)
         }
     }

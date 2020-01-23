@@ -1,6 +1,6 @@
 package array
 
-class PrintFunction : Function {
+class PrintAPLFunction : APLFunction {
     override fun eval1Arg(arg: APLValue): APLValue {
         println(arg.formatted())
         return arg
