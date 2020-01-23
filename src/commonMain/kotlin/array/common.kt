@@ -1,6 +1,7 @@
 package array
 
 class IncompatibleTypeException(message: String) : Exception(message)
+class InvalidDimensionsException(message: String) : Exception(message)
 class APLIndexOutOfBoundsException(message: String) : Exception(message)
 class IllegalNumberFormat(message: String) : Exception(message)
 class UnexpectedSymbol(ch: Int) : Exception("Unexpected symbol: $ch")
@@ -43,5 +44,11 @@ class Arrays {
             buf.append(" ]")
             return buf.toString()
         }
+    }
+}
+
+fun assertx(condition: Boolean, message: String = "Assertion error") {
+    if(!condition) {
+        throw AssertionError(message)
     }
 }

@@ -1,13 +1,10 @@
 package array
 
-import array.builtins.AddAPLFunction
-import array.builtins.IotaAPLFunction
-import array.builtins.RhoAPLFunction
-import array.builtins.SubAPLFunction
+import array.builtins.*
 
 interface APLFunction {
-    fun eval1Arg(arg: APLValue) : APLValue
-    fun eval2Arg(arg1: APLValue, arg2: APLValue) : APLValue
+    fun eval1Arg(context: RuntimeContext, arg: APLValue) : APLValue
+    fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) : APLValue
 }
 
 class Engine {
@@ -27,20 +24,13 @@ class Engine {
         functions[name] = fn
     }
 
-    fun getFunction(name: Symbol): APLFunction? {
-        return functions[name]
-    }
+    fun getFunction(name: Symbol) = functions[name]
+    fun parseString(input: String) = parseValueToplevel(this, TokenGenerator(this, input), EndOfFile)
+    fun internSymbol(name: String): Symbol = symbols.getOrPut(name, {Symbol(name)})
+    fun lookupVar(name: Symbol): APLValue? = variables[name]
+    fun makeRuntimeContext() = RuntimeContext(this)
+}
 
-    fun parseString(input: String): Instruction {
-        val tokeniser = TokenGenerator(this, input)
-        return parseValue(this, tokeniser, EndOfFile)
-    }
-
-    fun internSymbol(name: String): Symbol {
-        return symbols.getOrPut(name, {Symbol(name)})
-    }
-
-    fun lookupVar(name: Symbol): APLValue? {
-        return variables[name]
-    }
+class RuntimeContext(val engine: Engine) {
+    fun lookupVar(name: Symbol) = engine.lookupVar(name)
 }

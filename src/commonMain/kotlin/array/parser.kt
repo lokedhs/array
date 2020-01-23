@@ -116,14 +116,14 @@ class TokenGenerator(val engine: Engine, val content: String) {
 }
 
 interface Instruction {
-    fun evalWithEngine(engine: Engine): APLValue
+    fun evalWithContext(context: RuntimeContext): APLValue
 }
 
 class InstructionList(val instructions: List<Instruction>) : Instruction {
-    override fun evalWithEngine(engine: Engine): APLValue {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
         var result: APLValue? = null
         for (instr in instructions) {
-            result = instr.evalWithEngine(engine)
+            result = instr.evalWithContext(context)
         }
         if (result == null) {
             throw IllegalStateException("Empty instruction list")
@@ -133,34 +133,34 @@ class InstructionList(val instructions: List<Instruction>) : Instruction {
 }
 
 class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction) : Instruction {
-    override fun evalWithEngine(engine: Engine) = fn.eval1Arg(rightArgs.evalWithEngine(engine))
+    override fun evalWithContext(context: RuntimeContext) = fn.eval1Arg(context, rightArgs.evalWithContext(context))
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
 
 class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val rightArgs: Instruction) : Instruction {
-    override fun evalWithEngine(engine: Engine): APLValue {
-        val leftValue = rightArgs.evalWithEngine(engine)
-        val rightValue = leftArgs.evalWithEngine(engine)
-        return fn.eval2Arg(rightValue, leftValue)
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        val leftValue = rightArgs.evalWithContext(context)
+        val rightValue = leftArgs.evalWithContext(context)
+        return fn.eval2Arg(context, rightValue, leftValue)
     }
 
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
 }
 
 class VariableRef(val name: Symbol) : Instruction {
-    override fun evalWithEngine(engine: Engine): APLValue {
-        return engine.lookupVar(name) ?: throw VariableNotAssigned(name)
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        return context.lookupVar(name) ?: throw VariableNotAssigned(name)
     }
 
     override fun toString() = "Var(${name})"
 }
 
 class Literal1DArray(val values: List<Instruction>) : Instruction {
-    override fun evalWithEngine(engine: Engine): APLValue {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
         val size = values.size
         val result = Array<APLValue?>(size) { null }
         for (i in (size - 1) downTo 0) {
-            result[i] = values[i].evalWithEngine(engine)
+            result[i] = values[i].evalWithContext(context)
         }
         return APLArrayImpl(arrayOf(size)) { result[it]!! }
     }
@@ -169,66 +169,66 @@ class Literal1DArray(val values: List<Instruction>) : Instruction {
 }
 
 class LiteralScalarValue(val value: Instruction) : Instruction {
-    override fun evalWithEngine(engine: Engine) = value.evalWithEngine(engine)
+    override fun evalWithContext(context: RuntimeContext) = value.evalWithContext(context)
     override fun toString() = "LiteralScalarValue(${value})"
 }
 
 class LiteralNumber(val value: Long) : Instruction {
-    override fun evalWithEngine(engine: Engine) = APLLong(value)
+    override fun evalWithContext(context: RuntimeContext) = APLLong(value)
     override fun toString() = "LiteralNumber(value=$value)"
 }
 
-fun parseValue(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
+fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
+
+    while (true) {
+        val (instr, lastToken) = parseValue(engine, tokeniser)
+        statementList.add(instr)
+        if (lastToken == endToken) {
+            assertx(!statementList.isEmpty())
+            return if (statementList.size == 1) instr else InstructionList(statementList)
+        } else if (lastToken != StatementSeparator) {
+            throw UnexpectedToken(lastToken)
+        }
+    }
+}
+
+fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
     val leftArgs = ArrayList<Instruction>()
 
-    fun valueListToArg(): Instruction {
+    fun makeResultList(): Instruction {
         if (leftArgs.isEmpty()) {
             throw IllegalStateException("Argument list should not be empty")
         }
-        if (leftArgs.size == 1) {
-            return LiteralScalarValue(leftArgs[0])
+        return if (leftArgs.size == 1) {
+            LiteralScalarValue(leftArgs[0])
         } else {
-            return Literal1DArray(leftArgs)
+            Literal1DArray(leftArgs)
         }
-    }
-
-    fun makeResultList() = if (statementList.isEmpty()) {
-        valueListToArg()
-    } else {
-        statementList.add(valueListToArg())
-        InstructionList(statementList)
     }
 
     while (true) {
         val token = tokeniser.nextToken()
-        if (token == CloseParen || token == EndOfFile) {
-            if (token == endToken) {
-                return makeResultList()
-            } else {
-                throw UnexpectedToken(token)
-            }
+        if (token == CloseParen || token == EndOfFile || token == StatementSeparator) {
+            return Pair(makeResultList(), token)
         }
 
         when (token) {
             is Symbol -> {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
-                    val rightValue = parseValue(engine, tokeniser, endToken)
+                    val (rightValue, lastToken) = parseValue(engine, tokeniser)
                     return if (leftArgs.isEmpty()) {
-                        FunctionCall1Arg(fn, rightValue)
+                        Pair(FunctionCall1Arg(fn, rightValue), lastToken)
                     } else {
-                        FunctionCall2Arg(fn, makeResultList(), rightValue)
+                        Pair(FunctionCall2Arg(fn, makeResultList(), rightValue), lastToken)
                     }
                 } else {
                     leftArgs.add(VariableRef(token))
                 }
             }
-            is OpenParen -> leftArgs.add(parseValue(engine, tokeniser, CloseParen))
+            is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
             is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
-            is StatementSeparator -> {
-                throw IllegalStateException("Statement separator does not work")
-            }
             else -> throw UnexpectedToken(token)
         }
     }

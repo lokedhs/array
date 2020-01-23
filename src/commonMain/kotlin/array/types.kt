@@ -3,14 +3,26 @@ package array
 typealias Dimensions = Array<Int>
 
 interface APLValue {
+    fun dimensions(): Dimensions
+    fun rank(): Int
+    fun valueAt(p: Int): APLValue
+    fun size(): Int
+    fun asNumber(): Number = throw IncompatibleTypeException("Type cannot be converted to a number")
+
     fun add(a: APLValue): APLValue
     fun formatted(): String = this.toString()
 }
 
 val ADD_FN = { a: APLValue, b: APLValue -> a.add(b) }
 
-abstract class APLNumber : APLValue {
-    abstract fun asNumber(): Number
+abstract class APLSingleValue : APLValue {
+    override fun dimensions() = emptyArray<Int>()
+    override fun valueAt(p: Int) = throw IllegalArgumentException("Can't read a value from a scalar")
+    override fun size() = 1
+    override fun rank() = 0
+}
+
+abstract class APLNumber : APLSingleValue() {
     override fun formatted() = asNumber().toString()
     override fun toString() = "APLLong(${formatted()})"
 }
@@ -41,10 +53,8 @@ class APLDouble(val value: Double) : APLNumber() {
 }
 
 abstract class APLArray : APLValue {
-    abstract val dimensions: Dimensions
-    abstract fun valueAt(vararg p: Int): APLValue
-
-    fun rank() = this.dimensions.size
+    override fun rank() = dimensions().size
+    override fun size() = dimensions().reduce { a, b -> a * b }
 
     override fun add(a: APLValue): APLValue {
         return when (a) {
@@ -55,7 +65,7 @@ abstract class APLArray : APLValue {
                 ArraySum(this, a, ADD_FN)
             }
             is APLNumber -> {
-                ArraySum(this, ConstantArray(this.dimensions, a), ADD_FN)
+                ArraySum(this, ConstantArray(this.dimensions(), a), ADD_FN)
             }
             else -> throw IncompatibleTypeException("Can't add an array to an object of different type")
         }
@@ -74,18 +84,19 @@ abstract class APLArray : APLValue {
         }
 
         fun output2D() {
-            val height = dimensions[0]
-            val width = dimensions[1]
+            val d = dimensions()
+            val height = d[0]
+            val width = d[1]
             var first = true
             for (y in 0 until height) {
-                if(first) first = false else buf.append("\n")
+                if (first) first = false else buf.append("\n")
                 outputLine(y * width, (y + 1) * width)
             }
         }
 
         when {
             rank() == 0 -> buf.append(valueAt(0).formatted())
-            rank() == 1 -> outputLine(0, dimensions[0])
+            rank() == 1 -> outputLine(0, dimensions()[0])
             rank() == 2 -> output2D()
         }
 
@@ -94,19 +105,21 @@ abstract class APLArray : APLValue {
 }
 
 class ConstantArray(
-    override val dimensions: Dimensions,
+    private val dimensions: Dimensions,
     private val value: APLValue
 ) : APLArray() {
+
+    override fun dimensions() = dimensions
 
     override fun add(a: APLValue): APLValue {
         TODO("not implemented")
     }
 
-    override fun valueAt(vararg p: Int) = value
+    override fun valueAt(p: Int) = value
 }
 
 class APLArrayImpl(
-    override val dimensions: Dimensions,
+    private val dimensions: Dimensions,
     init: (Int) -> APLValue
 ) : APLArray() {
 
@@ -116,14 +129,8 @@ class APLArrayImpl(
         values = Array(dimensions.reduce { a, b -> a * b }, init)
     }
 
-    override fun valueAt(vararg p: Int): APLValue {
-        unless(p.size == rank()) {
-            throw IncompatibleTypeException("Incorrect rank. Got ${p.size}, expected ${rank()}")
-        }
-        val pos = indexFromDimensions(dimensions, p)
-        return values[pos]
-    }
-
+    override fun dimensions() = dimensions
+    override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
 }
 
@@ -133,11 +140,11 @@ class ArraySum(
     private val fn: (APLValue, APLValue) -> APLValue
 ) : APLArray() {
 
-    override val dimensions = a.dimensions // Both arrays are of the same dimension
+    override fun dimensions() = a.dimensions() // Both arrays are of the same dimension
 
-    override fun valueAt(vararg p: Int): APLValue {
-        val o1 = a.valueAt(*p)
-        val o2 = b.valueAt(*p)
+    override fun valueAt(p: Int): APLValue {
+        val o1 = a.valueAt(p)
+        val o2 = b.valueAt(p)
         return fn(o1, o2)
     }
 }
