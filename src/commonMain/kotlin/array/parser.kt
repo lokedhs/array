@@ -17,7 +17,7 @@ class Symbol(val value: String) : Token(), Comparable<Symbol> {
 
 class ParsedLong(val value: Long) : Token()
 
-class TokenGenerator(val engine: Engine, val content: String) {
+class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private val singleCharFunctions: Set<String>
     private var pos = 0
     private val pushBackQueue = ArrayList<Token>()
@@ -26,22 +26,14 @@ class TokenGenerator(val engine: Engine, val content: String) {
         singleCharFunctions = HashSet(listOf("+", "-", "×", "÷", "⍬", "⍳", "⍴"))
     }
 
-    private fun getNextChar(): Int {
-        // Ignore surrogate pairs for now
-        return content[pos++].toInt()
-    }
-
     fun nextTokenOrSpace(): Token {
         if (!pushBackQueue.isEmpty()) {
             return pushBackQueue.removeAt(pushBackQueue.size - 1)
         }
 
-        if (pos >= content.length) {
-            return EndOfFile;
-        }
+        val ch = content.nextCodepoint() ?: return EndOfFile
 
         // For now, let's ignore surrogate pairs.
-        val ch = content[pos++].toInt()
         return when {
             isOpenParen(ch) -> OpenParen
             isCloseParen(ch) -> CloseParen
@@ -69,13 +61,13 @@ class TokenGenerator(val engine: Engine, val content: String) {
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
-        while (pos < content.length) {
-            val ch = getNextChar()
+        while(true) {
+            val ch = content.nextCodepoint() ?: break
             if (isLetter(ch)) {
                 throw IllegalNumberFormat("Illegal number format")
             }
             if (!isDigit(ch)) {
-                pos--;
+                content.revertLastChars(1)
                 break;
             }
             buf.addCodepoint(ch)
@@ -84,8 +76,8 @@ class TokenGenerator(val engine: Engine, val content: String) {
     }
 
     private fun collectNegativeNumber(): ParsedLong {
-        val ch = getNextChar()
-        unless(isDigit(ch)) {
+        val ch = content.nextCodepoint()
+        if(ch == null || !isDigit(ch)) {
             throw IllegalNumberFormat("Negation sign not followed by number")
         }
         return collectNumber(ch, true)
@@ -94,8 +86,8 @@ class TokenGenerator(val engine: Engine, val content: String) {
     private fun collectSymbol(firstChar: Int): Symbol {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
-        while (pos < content.length) {
-            val ch = getNextChar()
+        while(true) {
+            val ch = content.nextCodepoint() ?: break
             if (!isLetter(ch) || isDigit(ch)) {
                 pos--;
                 break

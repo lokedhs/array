@@ -15,6 +15,8 @@ class Engine {
     init {
         registerFunction(internSymbol("+"), AddAPLFunction())
         registerFunction(internSymbol("-"), SubAPLFunction())
+        registerFunction(internSymbol("×"), MulAPLFunction())
+        registerFunction(internSymbol("÷"), DivAPLFunction())
         registerFunction(internSymbol("⍳"), IotaAPLFunction())
         registerFunction(internSymbol("⍴"), RhoAPLFunction())
         registerFunction(internSymbol("print"), PrintAPLFunction())
@@ -25,7 +27,7 @@ class Engine {
     }
 
     fun getFunction(name: Symbol) = functions[name]
-    fun parseString(input: String) = parseValueToplevel(this, TokenGenerator(this, input), EndOfFile)
+    fun parseString(input: String) = parseValueToplevel(this, TokenGenerator(this, StringCharacterProvider(input)), EndOfFile)
     fun internSymbol(name: String): Symbol = symbols.getOrPut(name, {Symbol(name)})
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this)

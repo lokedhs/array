@@ -25,3 +25,23 @@ class SubAPLFunction : APLFunction {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
+
+class MulAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
+        TODO("not implemented")
+    }
+
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+        TODO("not implemented")
+    }
+}
+
+class DivAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
+        TODO("not implemented")
+    }
+
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+        TODO("not implemented")
+    }
+}
