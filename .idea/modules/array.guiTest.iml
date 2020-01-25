@@ -5,24 +5,25 @@
       <configuration version="3" platform="JVM 1.6" allPlatforms="JVM [1.6]" useProjectSettings="false" isTestModule="true" externalProjectId="array">
         <dependsOnModuleNames>array_commonTest</dependsOnModuleNames>
         <sourceSets>
-          <sourceSet>array.jvmMain</sourceSet>
           <sourceSet>array.commonTest</sourceSet>
+          <sourceSet>array.jvmMain</sourceSet>
           <sourceSet>array.commonMain</sourceSet>
+          <sourceSet>array.guiMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
-        <externalSystemTestTasks>jvmTest|array:jvmTest|jvm</externalSystemTestTasks>
+        <externalSystemTestTasks>guiTest|array:guiTest|gui</externalSystemTestTasks>
         <compilerSettings>
           <option name="additionalArguments" value="-Xallow-no-source-files" />
         </compilerSettings>
         <compilerArguments>
-          <option name="destination" value="$MODULE_DIR$/../../build/classes/kotlin/jvm/test" />
-          <option name="classpath" value="$MODULE_DIR$/../../build/classes/kotlin/jvm/main:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.61/4702105e97f7396ae41b113fdbdc180ec1eb1e36/kotlin-stdlib-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.61/65abb71d5afb850b68be03987b08e2c864ca3110/kotlin-stdlib-common-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-common/1.3.61/c243c22f908c91f2ad9dc767080d97dec6a33cc4/kotlin-test-common-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-annotations-common/1.3.61/d62b1dc6be222c383d1b738e10cd1f83c6f8c0d7/kotlin-test-annotations-common-1.3.61.jar" />
+          <option name="destination" value="$MODULE_DIR$/../../build/classes/kotlin/gui/test" />
+          <option name="classpath" value="$MODULE_DIR$/../../build/classes/kotlin/gui/main:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.61/4702105e97f7396ae41b113fdbdc180ec1eb1e36/kotlin-stdlib-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.61/65abb71d5afb850b68be03987b08e2c864ca3110/kotlin-stdlib-common-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-common/1.3.61/c243c22f908c91f2ad9dc767080d97dec6a33cc4/kotlin-test-common-1.3.61.jar:/home/elias/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-annotations-common/1.3.61/d62b1dc6be222c383d1b738e10cd1f83c6f8c0d7/kotlin-test-annotations-common-1.3.61.jar" />
           <option name="noStdlib" value="true" />
           <option name="noReflect" value="true" />
           <option name="moduleName" value="array" />
           <option name="friendPaths">
             <array>
-              <option value="$MODULE_DIR$/../../build/classes/kotlin/jvm/main" />
+              <option value="$MODULE_DIR$/../../build/classes/kotlin/gui/main" />
             </array>
           </option>
           <option name="languageVersion" value="1.3" />
