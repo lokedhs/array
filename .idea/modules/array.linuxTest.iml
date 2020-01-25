@@ -5,8 +5,8 @@
       <configuration version="3" platform="Native " allPlatforms="Native []" useProjectSettings="false" isTestModule="true" externalProjectId="array">
         <dependsOnModuleNames>array_commonTest</dependsOnModuleNames>
         <sourceSets>
-          <sourceSet>array.commonTest</sourceSet>
           <sourceSet>array.linuxMain</sourceSet>
+          <sourceSet>array.commonTest</sourceSet>
           <sourceSet>array.commonMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>

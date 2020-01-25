@@ -5,10 +5,10 @@
       <configuration version="3" platform="JVM 1.6" allPlatforms="JVM [1.6]" useProjectSettings="false" isTestModule="true" externalProjectId="array">
         <dependsOnModuleNames>array_commonTest</dependsOnModuleNames>
         <sourceSets>
+          <sourceSet>array.guiMain</sourceSet>
           <sourceSet>array.commonTest</sourceSet>
           <sourceSet>array.jvmMain</sourceSet>
           <sourceSet>array.commonMain</sourceSet>
-          <sourceSet>array.guiMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
         <externalSystemTestTasks>guiTest|array:guiTest|gui</externalSystemTestTasks>

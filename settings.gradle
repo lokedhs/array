@@ -1,1 +1,5 @@
 rootProject.name = 'array'
+
+include ":gui"
+//project(":gui").projectDir = new File("gui")
+
