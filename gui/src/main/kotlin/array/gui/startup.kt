@@ -1,6 +1,5 @@
 package array.gui
 
-import array.APLArray
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.control.Label

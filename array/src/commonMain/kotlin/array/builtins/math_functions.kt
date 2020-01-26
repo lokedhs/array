@@ -1,7 +1,7 @@
 package array.builtins
 
-import array.APLValue
 import array.APLFunction
+import array.APLValue
 import array.RuntimeContext
 
 class AddAPLFunction : APLFunction {
