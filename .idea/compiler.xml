@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="array.guiMain" target="1.6" />
+      <module name="array.guiTest" target="1.6" />
+      <module name="array.main" target="11" />
+      <module name="array.test" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

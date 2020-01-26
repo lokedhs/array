@@ -1,11 +1,21 @@
 plugins {
+    id 'application'
     id 'org.jetbrains.kotlin.jvm'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 repositories {
     mavenCentral()
 }
 
+javafx {
+    version = "13"
+    modules = [ 'javafx.controls' ]
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+//    implementation project(':array')
 }
+
+mainClassName = 'array.gui.Client'
