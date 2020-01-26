@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="array-gui">
-    <output-path>$PROJECT_DIR$/build/libs</output-path>
-    <root id="archive" name="array-gui.jar">
-      <element id="module-output" name="array.guiMain" />
-    </root>
-  </artifact>
-</component>

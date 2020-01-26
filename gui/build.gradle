@@ -15,7 +15,7 @@ javafx {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-//    implementation project(':array')
+    implementation project(':array')
 }
 
 mainClassName = 'array.gui.Client'

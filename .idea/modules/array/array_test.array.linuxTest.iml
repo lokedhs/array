@@ -2,15 +2,15 @@
 <module version="4">
   <component name="FacetManager">
     <facet type="kotlin-language" name="Kotlin">
-      <configuration version="3" platform="Native " allPlatforms="Native []" useProjectSettings="false" isTestModule="true" externalProjectId="array">
+      <configuration version="3" platform="Native " allPlatforms="Native []" useProjectSettings="false" isTestModule="true" externalProjectId=":array">
         <dependsOnModuleNames>array_commonTest</dependsOnModuleNames>
         <sourceSets>
-          <sourceSet>array.linuxMain</sourceSet>
-          <sourceSet>array.commonTest</sourceSet>
-          <sourceSet>array.commonMain</sourceSet>
+          <sourceSet>array_test.array.commonTest</sourceSet>
+          <sourceSet>array_test.array.commonMain</sourceSet>
+          <sourceSet>array_test.array.linuxMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
-        <externalSystemTestTasks>linuxTest|array:linuxTest|linux</externalSystemTestTasks>
+        <externalSystemTestTasks>linuxTest|:array:linuxTest|linux</externalSystemTestTasks>
         <compilerSettings />
         <compilerArguments>
           <option name="languageVersion" value="1.3" />

@@ -1,4 +1,4 @@
-rootProject.name = 'array'
+rootProject.name = 'array_test'
 
+include ":array"
 include ":gui"
-//project(":gui").projectDir = new File("gui")
