@@ -25,15 +25,21 @@ class ArraySum2Args(
     private val b: APLValue
 ) : APLArray() {
 
+    private val aRank = a.rank()
+    private val bRank = b.rank()
+
     init {
-        assertx(Arrays.equals(a.dimensions(), b.dimensions()))
+        unless(aRank == 0 || bRank == 0 || Arrays.equals(a.dimensions(), b.dimensions())) {
+            throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar")
+        }
     }
 
-    override fun dimensions() = a.dimensions() // Both arrays are of the same dimension
-    override fun size() = a.size()
+    override fun dimensions() = if(aRank == 0) b.dimensions() else a.dimensions()
 
     override fun valueAt(p: Int): APLValue {
-        return fn.combineValues(a.valueAt(p), b.valueAt(p))
+        return fn.combineValues(
+            if(aRank == 0) a else a.valueAt(p),
+            if(bRank == 0) b else b.valueAt(p))
     }
 }
 
