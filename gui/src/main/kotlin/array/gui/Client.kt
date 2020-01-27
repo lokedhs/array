@@ -57,7 +57,12 @@ class Client : Application() {
     }
 
     private fun sendInput(text: String) {
-        val instr = engine.parseString(text)
-        instr.evalWithContext(engine.makeRuntimeContext())
+        try {
+            val instr = engine.parseString(text)
+            instr.evalWithContext(engine.makeRuntimeContext())
+        }
+        catch(e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

@@ -14,7 +14,7 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
 class IotaAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         if (arg is APLNumber) {
-            return IotaArray(arg.asNumber().toInt())
+            return IotaArray(arg.asDouble().toInt())
         } else {
             throw IllegalStateException("Needs to be rewritten once the new class hierarchy is in place")
         }
@@ -33,7 +33,7 @@ class ResizedArray(private val dimensions: Dimensions, private val value: APLVal
 class RhoAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         val argDimensions = arg.dimensions()
-        return APLArrayImpl(arrayOf(argDimensions.size), { APLLong(argDimensions[it].toLong()) })
+        return APLArrayImpl(arrayOf(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
     }
 
     override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
@@ -41,7 +41,7 @@ class RhoAPLFunction : APLFunction {
             throw InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array")
         }
 
-        val d1 = Array(arg1.size()) { arg1.valueAt(it).asNumber().toInt() }
+        val d1 = Array(arg1.size()) { arg1.valueAt(it).asDouble().toInt() }
         val d2 = arg2.dimensions()
         return if (Arrays.equals(d1, d2)) {
             // The array already has the correct dimensions, simply return the old one

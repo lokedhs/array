@@ -29,6 +29,7 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib-common')
                 implementation kotlin('stdlib')
+                implementation kotlin('reflect')
             }
         }
         commonTest {

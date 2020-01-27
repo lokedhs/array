@@ -23,7 +23,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private val pushBackQueue = ArrayList<Token>()
 
     init {
-        singleCharFunctions = HashSet(listOf("+", "-", "×", "÷", "⍬", "⍳", "⍴"))
+        singleCharFunctions = hashSetOf("+", "-", "×", "÷", "⍬", "⍳", "⍴", "←", "¨")
     }
 
     fun nextTokenOrSpace(): Token {
@@ -33,7 +33,6 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
 
         val ch = content.nextCodepoint() ?: return EndOfFile
 
-        // For now, let's ignore surrogate pairs.
         return when {
             isOpenParen(ch) -> OpenParen
             isCloseParen(ch) -> CloseParen
@@ -45,6 +44,10 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
             isLetter(ch) -> collectSymbol(ch)
             else -> throw UnexpectedSymbol(ch)
         }
+    }
+
+    fun pushBackToken(token: Token) {
+        pushBackQueue.add(token)
     }
 
     private fun codepointToString(ch: Int): String {
@@ -61,7 +64,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
-        while(true) {
+        while (true) {
             val ch = content.nextCodepoint() ?: break
             if (isLetter(ch)) {
                 throw IllegalNumberFormat("Illegal number format")
@@ -77,7 +80,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
 
     private fun collectNegativeNumber(): ParsedLong {
         val ch = content.nextCodepoint()
-        if(ch == null || !isDigit(ch)) {
+        if (ch == null || !isDigit(ch)) {
             throw IllegalNumberFormat("Negation sign not followed by number")
         }
         return collectNumber(ch, true)
@@ -86,7 +89,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private fun collectSymbol(firstChar: Int): Symbol {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
-        while(true) {
+        while (true) {
             val ch = content.nextCodepoint() ?: break
             if (!isLetter(ch) || isDigit(ch)) {
                 pos--;
@@ -209,11 +212,12 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is Symbol -> {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
+                    val parsedFn = parseOperator(fn, engine, tokeniser)
                     val (rightValue, lastToken) = parseValue(engine, tokeniser)
                     return if (leftArgs.isEmpty()) {
-                        Pair(FunctionCall1Arg(fn, rightValue), lastToken)
+                        Pair(FunctionCall1Arg(parsedFn, rightValue), lastToken)
                     } else {
-                        Pair(FunctionCall2Arg(fn, makeResultList(), rightValue), lastToken)
+                        Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue), lastToken)
                     }
                 } else {
                     leftArgs.add(VariableRef(token))
@@ -224,4 +228,23 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             else -> throw UnexpectedToken(token)
         }
     }
+}
+
+fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator) : APLFunction {
+    var currentFn = fn
+    var token: Token
+    while(true) {
+        token = tokeniser.nextToken()
+        if(token is Symbol) {
+            val op = engine.getOperator(token) ?: break
+            currentFn = op.combineFunction(currentFn)
+        }
+        else {
+            break
+        }
+    }
+    if(token != EndOfFile) {
+        tokeniser.pushBackToken(token)
+    }
+    return currentFn
 }

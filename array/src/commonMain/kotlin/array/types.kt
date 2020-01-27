@@ -4,74 +4,75 @@ typealias Dimensions = Array<Int>
 
 interface APLValue {
     fun dimensions(): Dimensions
-    fun rank(): Int
+    fun rank(): Int = dimensions().size
     fun valueAt(p: Int): APLValue
-    fun size(): Int
-    fun asNumber(): Number = throw IncompatibleTypeException("Type cannot be converted to a number")
+    fun size(): Int = dimensions().reduce { a, b -> a * b }
+    fun asDouble(): Double = throw IncompatibleTypeException("Type cannot be converted to a number: ${this::class.qualifiedName}")
 
-    fun add(a: APLValue): APLValue
-    fun formatted(): String = this.toString()
+    fun formatted(): String = arrayAsString(this)
 }
-
-val ADD_FN = { a: APLValue, b: APLValue -> a.add(b) }
 
 abstract class APLSingleValue : APLValue {
     override fun dimensions() = emptyArray<Int>()
-    override fun valueAt(p: Int) = throw IllegalArgumentException("Can't read a value from a scalar")
+    override fun valueAt(p: Int): APLValue {
+        if(p != 0) {
+            throw APLIndexOutOfBoundsException("Reading index $p from scalar")
+        }
+        else {
+            return this
+        }
+    }
     override fun size() = 1
     override fun rank() = 0
 }
 
 abstract class APLArray : APLValue {
-    override fun rank() = dimensions().size
-    override fun size() = dimensions().reduce { a, b -> a * b }
+//    override fun add(a: APLValue): APLValue {
+//        return when (a) {
+//            is APLArray -> {
+//                unless(rank() == a.rank()) {
+//                    throw IncompatibleTypeException("Arrays are of different dimensions")
+//                }
+//                ArraySum(this, a, ADD_FN)
+//            }
+//            is APLNumber -> {
+//                ArraySum(this, ConstantArray(this.dimensions(), a), ADD_FN)
+//            }
+//            else -> throw IncompatibleTypeException("Can't add an array to an object of different type")
+//        }
+//    }
+}
 
-    override fun add(a: APLValue): APLValue {
-        return when (a) {
-            is APLArray -> {
-                unless(rank() == a.rank()) {
-                    throw IncompatibleTypeException("Arrays are of different dimensions")
-                }
-                ArraySum(this, a, ADD_FN)
-            }
-            is APLNumber -> {
-                ArraySum(this, ConstantArray(this.dimensions(), a), ADD_FN)
-            }
-            else -> throw IncompatibleTypeException("Can't add an array to an object of different type")
+fun arrayAsString(array: APLValue): String {
+    val buf = StringBuilder()
+
+    fun outputLine(start: Int, end: Int) {
+        var first = true
+        for (i in start until end) {
+            val value = array.valueAt(i)
+            if (first) first = false else buf.append(" ")
+            buf.append(value.formatted())
         }
     }
 
-    override fun formatted(): String {
-        val buf = StringBuilder()
-
-        fun outputLine(start: Int, end: Int) {
-            var first = true
-            for (i in start until end) {
-                val value = valueAt(i)
-                if (first) first = false else buf.append(" ")
-                buf.append(value.formatted())
-            }
+    fun output2D() {
+        val d = array.dimensions()
+        val height = d[0]
+        val width = d[1]
+        var first = true
+        for (y in 0 until height) {
+            if (first) first = false else buf.append("\n")
+            outputLine(y * width, (y + 1) * width)
         }
-
-        fun output2D() {
-            val d = dimensions()
-            val height = d[0]
-            val width = d[1]
-            var first = true
-            for (y in 0 until height) {
-                if (first) first = false else buf.append("\n")
-                outputLine(y * width, (y + 1) * width)
-            }
-        }
-
-        when {
-            rank() == 0 -> buf.append(valueAt(0).formatted())
-            rank() == 1 -> outputLine(0, dimensions()[0])
-            rank() == 2 -> output2D()
-        }
-
-        return buf.toString()
     }
+
+    when {
+        array.rank() == 0 -> buf.append(array.valueAt(0).formatted())
+        array.rank() == 1 -> outputLine(0, array.dimensions()[0])
+        array.rank() == 2 -> output2D()
+    }
+
+    return buf.toString()
 }
 
 class ConstantArray(
@@ -80,10 +81,6 @@ class ConstantArray(
 ) : APLArray() {
 
     override fun dimensions() = dimensions
-
-    override fun add(a: APLValue): APLValue {
-        TODO("not implemented")
-    }
 
     override fun valueAt(p: Int) = value
 }
@@ -102,21 +99,6 @@ class APLArrayImpl(
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
-}
-
-class ArraySum(
-    private val a: APLArray,
-    private val b: APLArray,
-    private val fn: (APLValue, APLValue) -> APLValue
-) : APLArray() {
-
-    override fun dimensions() = a.dimensions() // Both arrays are of the same dimension
-
-    override fun valueAt(p: Int): APLValue {
-        val o1 = a.valueAt(p)
-        val o2 = b.valueAt(p)
-        return fn(o1, o2)
-    }
 }
 
 fun make_simple_array(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements.get(it) }
