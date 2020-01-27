@@ -8,7 +8,7 @@ interface APLFunction {
 }
 
 interface APLOperator {
-    fun combineFunction(fn: APLFunction): APLFunction
+    fun combineFunction(fn: APLFunction, axis: APLValue?): APLFunction
 }
 
 class Engine {
@@ -18,15 +18,29 @@ class Engine {
     private val variables = HashMap<Symbol,APLValue>()
 
     init {
+        // core functions
         registerFunction(internSymbol("+"), AddAPLFunction())
         registerFunction(internSymbol("-"), SubAPLFunction())
         registerFunction(internSymbol("×"), MulAPLFunction())
         registerFunction(internSymbol("÷"), DivAPLFunction())
+        registerFunction(internSymbol("⋆"), PowerAPLFunction())
+        registerFunction(internSymbol("⍟"), LogAPLFunction())
         registerFunction(internSymbol("⍳"), IotaAPLFunction())
         registerFunction(internSymbol("⍴"), RhoAPLFunction())
+        registerFunction(internSymbol("⊢"), IdentityAPLFunction())
+        registerFunction(internSymbol("⊣"), HideAPLFunction())
+
+        // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
 
+        // maths
+        registerFunction(internSymbol("sin"), SinAPLFunction())
+        registerFunction(internSymbol("cos"), CosAPLFunction())
+        registerFunction(internSymbol("tan"), TanAPLFunction())
+
+        // operators
         registerOperator(internSymbol("¨"), ForEachOp())
+        registerOperator(internSymbol("/"), ReduceOp())
     }
 
     fun registerFunction(name: Symbol, fn: APLFunction) {

@@ -23,7 +23,13 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private val pushBackQueue = ArrayList<Token>()
 
     init {
-        singleCharFunctions = hashSetOf("+", "-", "×", "÷", "⍬", "⍳", "⍴", "←", "¨")
+        singleCharFunctions = hashSetOf(
+            "!", "#", "%", "&", "*", "+", ",", "-", "/", "<", "=", ">", "?", "@", "^", "|",
+            "~", "¨", "×", "÷", "←", "↑", "→", "↓", "∊", "∘", "∧", "∨", "∩", "∪", "∼", "≠",
+            "≡", "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷",
+            "⌹", "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤",
+            "⍥", "⍨", "⍪", "⍫", "⍬", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
+            "○", "$", "¥", "χ", "\\")
     }
 
     fun nextTokenOrSpace(): Token {
@@ -71,7 +77,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
             }
             if (!isDigit(ch)) {
                 content.revertLastChars(1)
-                break;
+                break
             }
             buf.addCodepoint(ch)
         }
@@ -92,7 +98,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         while (true) {
             val ch = content.nextCodepoint() ?: break
             if (!isLetter(ch) || isDigit(ch)) {
-                pos--;
+                pos--
                 break
             }
             buf.addCodepoint(ch)
@@ -237,7 +243,7 @@ fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator) : 
         token = tokeniser.nextToken()
         if(token is Symbol) {
             val op = engine.getOperator(token) ?: break
-            currentFn = op.combineFunction(currentFn)
+            currentFn = op.combineFunction(currentFn, null)
         }
         else {
             break

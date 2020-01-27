@@ -51,3 +51,13 @@ class RhoAPLFunction : APLFunction {
         }
     }
 }
+
+class IdentityAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue) = arg
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) = arg2
+}
+
+class HideAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue) = arg
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) = arg1
+}

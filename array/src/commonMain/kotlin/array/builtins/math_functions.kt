@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlin.math.*
 
 interface CellSumFunction1Arg {
     fun combine(a: APLValue): APLValue
@@ -62,8 +63,8 @@ abstract class MathCombineAPLFunction : APLFunction {
         return ArraySum2Args(fn, arg1, arg2)
     }
 
-    abstract fun combine1Arg(a: APLValue): APLValue
-    abstract fun combine2Arg(a: APLValue, b: APLValue): APLValue
+    open fun combine1Arg(a: APLValue): APLValue = TODO("not implemented")
+    open fun combine2Arg(a: APLValue, b: APLValue): APLValue = TODO("not implemented")
 }
 
 class AddAPLFunction : MathCombineAPLFunction() {
@@ -95,4 +96,26 @@ class MulAPLFunction : MathCombineAPLFunction() {
 class DivAPLFunction : MathCombineAPLFunction() {
     override fun combine1Arg(a: APLValue) = APLDouble(1.0 / a.asDouble())
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble() / b.asDouble())
+}
+
+class PowerAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(exp(a.asDouble()))
+    override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble().pow(b.asDouble()))
+}
+
+class LogAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(ln(a.asDouble()))
+    override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(log(b.asDouble(), a.asDouble()))
+}
+
+class SinAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(sin(a.asDouble()))
+}
+
+class CosAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(cos(a.asDouble()))
+}
+
+class TanAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(tan(a.asDouble()))
 }

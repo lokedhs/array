@@ -43,8 +43,8 @@ class Client : Application() {
 
         val entryTextField = ExtendedCharsInputField()
         val sendEntry = { sendInput(entryTextField.text) }
-        entryTextField.onAction = EventHandler { sendEntry() }
         entryTextField.font = font
+        entryTextField.onAction = EventHandler { sendEntry() }
         grid.add(entryTextField, 0, 1)
 
         val sendButton = Button("Submit").apply {
