@@ -28,10 +28,10 @@ class Arrays {
 
             for(i in 0 until aLength) {
                 if(a[i] != b[i]) {
-                    return false;
+                    return false
                 }
             }
-            return true;
+            return true
         }
 
         fun toString(values: Array<*>): String {

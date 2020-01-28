@@ -17,7 +17,15 @@ class ArraySum1Arg(
 ) : APLArray() {
     override fun dimensions() = a.dimensions()
     override fun size() = a.size()
-    override fun valueAt(p: Int) = fn.combine(a.valueAt(p))
+    override fun valueAt(p: Int): APLValue {
+        val rank = a.rank()
+        return if(rank == 0) {
+            fn.combine(a)
+        }
+        else {
+            ArraySum1Arg(fn, a.valueAt(p))
+        }
+    }
 }
 
 class ArraySum2Args(
@@ -35,13 +43,23 @@ class ArraySum2Args(
         }
     }
 
-    override fun dimensions() = if(aRank == 0) b.dimensions() else a.dimensions()
+    private val dimensions = if (aRank == 0) b.dimensions() else a.dimensions()
+    override fun dimensions() = dimensions
+
+    private val rank = dimensions.size
+    override fun rank() = rank
 
     override fun valueAt(p: Int): APLValue {
-        return fn.combineValues(
-            if(aRank == 0) a else a.valueAt(p),
-            if(bRank == 0) b else b.valueAt(p))
+        val v1 = if (aRank == 0) a else a.valueAt(p)
+        val v2 = if (bRank == 0) b else b.valueAt(p)
+        return if (v1.rank() == 0 && v2.rank() == 0) {
+            fn.combineValues(v1, v2)
+        } else {
+            ArraySum2Args(fn, v1, v2)
+        }
     }
+
+    override fun asDouble() = if (rank() == 0) valueAt(0).asDouble() else super.asDouble()
 }
 
 abstract class MathCombineAPLFunction : APLFunction {
@@ -118,4 +136,10 @@ class CosAPLFunction : MathCombineAPLFunction() {
 
 class TanAPLFunction : MathCombineAPLFunction() {
     override fun combine1Arg(a: APLValue) = APLDouble(tan(a.asDouble()))
+}
+
+class EqualsAPLFunction : MathCombineAPLFunction() {
+    override fun combine2Arg(a: APLValue, b: APLValue): APLValue {
+        return APLLong(if(a.asDouble() == b.asDouble()) 1 else 0)
+    }
 }

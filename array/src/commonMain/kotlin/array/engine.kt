@@ -29,6 +29,7 @@ class Engine {
         registerFunction(internSymbol("⍴"), RhoAPLFunction())
         registerFunction(internSymbol("⊢"), IdentityAPLFunction())
         registerFunction(internSymbol("⊣"), HideAPLFunction())
+        registerFunction(internSymbol("="), EqualsAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

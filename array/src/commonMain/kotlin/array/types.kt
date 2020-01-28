@@ -6,41 +6,30 @@ interface APLValue {
     fun dimensions(): Dimensions
     fun rank(): Int = dimensions().size
     fun valueAt(p: Int): APLValue
-    fun size(): Int = dimensions().reduce { a, b -> a * b }
-    fun asDouble(): Double = throw IncompatibleTypeException("Type cannot be converted to a number: ${this::class.qualifiedName}")
+    fun size(): Int = if (rank() == 0) 1 else dimensions().reduce { a, b -> a * b }
+    fun asDouble(): Double =
+        throw IncompatibleTypeException("Type cannot be converted to a number: ${this::class.qualifiedName}")
 
     fun formatted(): String = arrayAsString(this)
+    fun collapse(): APLValue
 }
 
 abstract class APLSingleValue : APLValue {
     override fun dimensions() = emptyArray<Int>()
-    override fun valueAt(p: Int): APLValue {
-        if(p != 0) {
-            throw APLIndexOutOfBoundsException("Reading index $p from scalar")
-        }
-        else {
-            return this
-        }
-    }
+    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index $p from scalar")
     override fun size() = 1
     override fun rank() = 0
+    override fun collapse() = this
 }
 
 abstract class APLArray : APLValue {
-//    override fun add(a: APLValue): APLValue {
-//        return when (a) {
-//            is APLArray -> {
-//                unless(rank() == a.rank()) {
-//                    throw IncompatibleTypeException("Arrays are of different dimensions")
-//                }
-//                ArraySum(this, a, ADD_FN)
-//            }
-//            is APLNumber -> {
-//                ArraySum(this, ConstantArray(this.dimensions(), a), ADD_FN)
-//            }
-//            else -> throw IncompatibleTypeException("Can't add an array to an object of different type")
-//        }
-//    }
+    override fun collapse(): APLValue {
+        return if(rank() == 0) {
+            valueAt(0)
+        } else {
+            APLArrayImpl(dimensions()) { valueAt(it) }
+        }
+    }
 }
 
 fun arrayAsString(array: APLValue): String {
@@ -70,6 +59,7 @@ fun arrayAsString(array: APLValue): String {
         array.rank() == 0 -> buf.append(array.valueAt(0).formatted())
         array.rank() == 1 -> outputLine(0, array.dimensions()[0])
         array.rank() == 2 -> output2D()
+        else -> TODO("Printing of arrays of dimensions >2 is not supported")
     }
 
     return buf.toString()
@@ -93,7 +83,11 @@ class APLArrayImpl(
     private val values: Array<APLValue>
 
     init {
-        values = Array(dimensions.reduce { a, b -> a * b }, init)
+        values = if (dimensions.isEmpty()) {
+            Array(1, init)
+        } else {
+            Array(dimensions.reduce { a, b -> a * b }, init)
+        }
     }
 
     override fun dimensions() = dimensions
@@ -101,9 +95,7 @@ class APLArrayImpl(
     override fun toString() = Arrays.toString(values)
 }
 
-fun make_simple_array(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements.get(it) }
-
-fun iota(n: Int) = APLArrayImpl(arrayOf(n)) { APLLong(it.toLong()) }
+fun makeSimpleArray(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements[it] }
 
 fun indexFromDimensions(d: Dimensions, p: IntArray): Int {
     val sizes = Array(d.size) { 0 }
