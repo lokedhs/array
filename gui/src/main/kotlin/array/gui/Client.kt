@@ -1,65 +1,85 @@
 package array.gui
 
+import array.APLValue
 import array.Engine
 import javafx.application.Application
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
-import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Button
-import javafx.scene.control.Label
-import javafx.scene.layout.GridPane
+import javafx.scene.control.ScrollPane
+import javafx.scene.layout.*
 import javafx.scene.text.Font
 import javafx.stage.Stage
 
 
 class Client : Application() {
-    private lateinit var engine: Engine
+    private val resultList: ResultList
+    private val entryTextField: ExtendedCharsInputField
+    private val inputFont: Font
+    private val engine = Engine()
 
-    override fun init() {
-        super.init()
-        engine = Engine()
+    init {
+        val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
+        inputFont = fontIn.use { Font.loadFont(it, 18.0) }
+
+        resultList = ResultList()
+
+        entryTextField = ExtendedCharsInputField().apply {
+            font = inputFont
+            onAction = EventHandler { sendEntry() }
+        }
+        HBox.setHgrow(entryTextField, Priority.ALWAYS)
     }
 
     override fun start(stage: Stage) {
-        val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
-        val font = fontIn.use { Font.loadFont(it, 18.0) }
-
         stage.title = "Test ui"
 
-        val grid = GridPane().apply {
-            alignment = Pos.CENTER
-            hgap = 10.0
-            vgap = 10.0
-            padding = Insets(25.0, 25.0, 25.0, 25.0)
-        }
-
-        val content = Label("This is supposed to be the results pane")
-        grid.add(content, 0, 0, 2, 1)
-
-        val entryTextField = ExtendedCharsInputField()
-        val sendEntry = { sendInput(entryTextField.text) }
-        entryTextField.font = font
-        entryTextField.onAction = EventHandler { sendEntry() }
-        grid.add(entryTextField, 0, 1)
+        val contentScrollPane = ScrollPane(resultList)
 
         val sendButton = Button("Submit").apply {
             onAction = EventHandler<ActionEvent> { sendEntry() }
+            maxHeight = Double.MAX_VALUE
         }
-        grid.add(sendButton, 1, 1)
+        HBox.setHgrow(sendButton, Priority.ALWAYS)
 
-        stage.scene = Scene(grid, 400.0, 300.0)
+        val inputContainer = HBox(entryTextField, sendButton).apply {
+            padding = Insets(5.0, 5.0, 5.0, 5.0)
+            spacing = 15.0
+        }
+
+        val border = BorderPane().apply {
+            center = contentScrollPane
+            bottom = inputContainer
+        }
+
+        stage.scene = Scene(border, 400.0, 300.0)
         stage.show()
     }
 
     private fun sendInput(text: String) {
         try {
             val instr = engine.parseString(text)
-            instr.evalWithContext(engine.makeRuntimeContext())
+            val v = instr.evalWithContext(engine.makeRuntimeContext())
+            resultList.addResult(ClientRenderContextImpl(), text, v)
         }
         catch(e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun sendEntry() {
+        sendInput(entryTextField.text)
+    }
+
+    private inner class ClientRenderContextImpl : ClientRenderContext {
+        override fun font(): Font {
+            return inputFont
+        }
+
+        override fun valueClickCallback(value: APLValue) {
+            entryTextField.text = value.toAPLExpression()
         }
     }
 }

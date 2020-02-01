@@ -12,6 +12,7 @@ interface APLValue {
 
     fun formatted(): String = arrayAsString(this)
     fun collapse(): APLValue
+    fun toAPLExpression(): String = "not implemented"
 }
 
 abstract class APLSingleValue : APLValue {
@@ -93,6 +94,17 @@ class APLArrayImpl(
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
+}
+
+class EnclosedAPLValue(val value: APLValue) : APLArray() {
+    override fun dimensions(): Dimensions = emptyArray()
+
+    override fun valueAt(p: Int): APLValue {
+        if(p != 0) {
+            throw APLIndexOutOfBoundsException("Attempt to read from a non-zero index ")
+        }
+        return value
+    }
 }
 
 fun makeSimpleArray(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements[it] }

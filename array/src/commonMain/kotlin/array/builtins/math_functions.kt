@@ -18,12 +18,14 @@ class ArraySum1Arg(
     override fun dimensions() = a.dimensions()
     override fun size() = a.size()
     override fun valueAt(p: Int): APLValue {
-        val rank = a.rank()
-        return if(rank == 0) {
-            fn.combine(a)
+        if(a is APLSingleValue) {
+            return fn.combine(a)
         }
-        else {
-            ArraySum1Arg(fn, a.valueAt(p))
+        val v = a.valueAt(p)
+        return if(v is APLSingleValue) {
+            fn.combine(v)
+        } else {
+            ArraySum1Arg(fn, v)
         }
     }
 }
@@ -50,9 +52,9 @@ class ArraySum2Args(
     override fun rank() = rank
 
     override fun valueAt(p: Int): APLValue {
-        val v1 = if (aRank == 0) a else a.valueAt(p)
-        val v2 = if (bRank == 0) b else b.valueAt(p)
-        return if (v1.rank() == 0 && v2.rank() == 0) {
+        val v1 = if (a is APLSingleValue) a else a.valueAt(p)
+        val v2 = if (b is APLSingleValue) b else b.valueAt(p)
+        return if (a is APLSingleValue && b is APLSingleValue) {
             fn.combineValues(v1, v2)
         } else {
             ArraySum2Args(fn, v1, v2)
@@ -136,6 +138,18 @@ class CosAPLFunction : MathCombineAPLFunction() {
 
 class TanAPLFunction : MathCombineAPLFunction() {
     override fun combine1Arg(a: APLValue) = APLDouble(tan(a.asDouble()))
+}
+
+class AsinAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(asin(a.asDouble()))
+}
+
+class AcosAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(acos(a.asDouble()))
+}
+
+class AtanAPLFunction : MathCombineAPLFunction() {
+    override fun combine1Arg(a: APLValue) = APLDouble(atan(a.asDouble()))
 }
 
 class EqualsAPLFunction : MathCombineAPLFunction() {

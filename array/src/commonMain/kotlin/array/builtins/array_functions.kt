@@ -8,7 +8,6 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
     override fun valueAt(p: Int): APLValue {
         return APLLong((p + start).toLong())
     }
-
 }
 
 class IotaAPLFunction : APLFunction {
@@ -60,4 +59,29 @@ class IdentityAPLFunction : APLFunction {
 class HideAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue) = arg
     override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) = arg1
+}
+
+class EncloseAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
+        return EnclosedAPLValue(arg)
+    }
+
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+        TODO("not implemented")
+    }
+}
+
+class DiscloseAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
+        val rank = arg.rank()
+        return when {
+            arg is APLSingleValue -> arg
+            rank == 0 -> arg.valueAt(0)
+            else -> arg
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+        TODO("not implemented")
+    }
 }

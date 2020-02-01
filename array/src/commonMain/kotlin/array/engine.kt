@@ -30,6 +30,8 @@ class Engine {
         registerFunction(internSymbol("⊢"), IdentityAPLFunction())
         registerFunction(internSymbol("⊣"), HideAPLFunction())
         registerFunction(internSymbol("="), EqualsAPLFunction())
+        registerFunction(internSymbol("⊂"), EncloseAPLFunction())
+        registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
@@ -38,6 +40,9 @@ class Engine {
         registerFunction(internSymbol("sin"), SinAPLFunction())
         registerFunction(internSymbol("cos"), CosAPLFunction())
         registerFunction(internSymbol("tan"), TanAPLFunction())
+        registerFunction(internSymbol("asin"), AsinAPLFunction())
+        registerFunction(internSymbol("acos"), AcosAPLFunction())
+        registerFunction(internSymbol("atan"), AtanAPLFunction())
 
         // operators
         registerOperator(internSymbol("¨"), ForEachOp())
