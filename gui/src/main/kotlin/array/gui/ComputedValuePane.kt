@@ -1,7 +1,6 @@
 package array.gui
 
 import array.APLValue
-import array.gui.tableresult.TableResult
 import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
 
