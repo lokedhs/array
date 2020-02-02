@@ -6,6 +6,10 @@ object Whitespace : Token()
 object EndOfFile : Token()
 object OpenParen : Token()
 object CloseParen : Token()
+object OpenFnDef : Token()
+object CloseFnDef : Token()
+object OpenBracket : Token()
+object CloseBracket : Token()
 object StatementSeparator : Token()
 
 class Symbol(val value: String) : Token(), Comparable<Symbol> {
@@ -29,7 +33,8 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
             "≡", "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷",
             "⌹", "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤",
             "⍥", "⍨", "⍪", "⍫", "⍬", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
-            "○", "$", "¥", "χ", "\\")
+            "○", "$", "¥", "χ", "\\"
+        )
     }
 
     fun nextTokenOrSpace(): Token {
@@ -42,8 +47,12 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         return when {
             isOpenParen(ch) -> OpenParen
             isCloseParen(ch) -> CloseParen
+            isOpenFnDef(ch) -> OpenFnDef
+            isCloseFnDef(ch) -> CloseFnDef
             isNegationSign(ch) -> collectNegativeNumber()
             isStatementSeparator(ch) -> StatementSeparator
+            isOpenBracket(ch) -> OpenBracket
+            isCloseBracket(ch) -> CloseBracket
             singleCharFunctions.contains(codepointToString(ch)) -> engine.internSymbol(codepointToString(ch))
             isDigit(ch) -> collectNumber(ch)
             isWhitespace(ch) -> Whitespace
@@ -66,6 +75,10 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private fun isCloseParen(ch: Int) = ch == ')'.toInt()
     private fun isStatementSeparator(ch: Int) = ch == '◊'.toInt()
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
+    private fun isOpenFnDef(ch: Int) = ch == '{'.toInt()
+    private fun isCloseFnDef(ch: Int) = ch == '}'.toInt()
+    private fun isOpenBracket(ch: Int) = ch == '['.toInt()
+    private fun isCloseBracket(ch: Int) = ch == ']'.toInt()
 
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
@@ -133,16 +146,17 @@ class InstructionList(val instructions: List<Instruction>) : Instruction {
     }
 }
 
-class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction) : Instruction {
-    override fun evalWithContext(context: RuntimeContext) = fn.eval1Arg(context, rightArgs.evalWithContext(context))
+class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction, val axis: Instruction?) : Instruction {
+    override fun evalWithContext(context: RuntimeContext) = fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
 
-class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val rightArgs: Instruction) : Instruction {
+class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val rightArgs: Instruction, val axis: Instruction?) : Instruction {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val leftValue = rightArgs.evalWithContext(context)
         val rightValue = leftArgs.evalWithContext(context)
-        return fn.eval2Arg(context, rightValue, leftValue)
+        val axisValue = axis?.evalWithContext(context)
+        return fn.eval2Arg(context, rightValue, leftValue, axisValue)
     }
 
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
@@ -208,9 +222,20 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         }
     }
 
+    fun processFn(fn: APLFunction): Pair<Instruction, Token> {
+        val axis = parseAxis(engine, tokeniser)
+        val parsedFn = parseOperator(fn, engine, tokeniser)
+        val (rightValue, lastToken) = parseValue(engine, tokeniser)
+        return if (leftArgs.isEmpty()) {
+            Pair(FunctionCall1Arg(parsedFn, rightValue, axis), lastToken)
+        } else {
+            Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue, axis), lastToken)
+        }
+    }
+
     while (true) {
         val token = tokeniser.nextToken()
-        if (token == CloseParen || token == EndOfFile || token == StatementSeparator) {
+        if (token == CloseParen || token == EndOfFile || token == StatementSeparator || token == CloseFnDef || token == CloseBracket) {
             return Pair(makeResultList(), token)
         }
 
@@ -218,17 +243,12 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is Symbol -> {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
-                    val parsedFn = parseOperator(fn, engine, tokeniser)
-                    val (rightValue, lastToken) = parseValue(engine, tokeniser)
-                    return if (leftArgs.isEmpty()) {
-                        Pair(FunctionCall1Arg(parsedFn, rightValue), lastToken)
-                    } else {
-                        Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue), lastToken)
-                    }
+                    return processFn(fn)
                 } else {
                     leftArgs.add(VariableRef(token))
                 }
             }
+            is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser))
             is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
             is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
             else -> throw UnexpectedToken(token)
@@ -236,21 +256,36 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
     }
 }
 
-fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator) : APLFunction {
+fun parseFnDefinition(engine: Engine, tokeniser: TokenGenerator): DeclaredFunction {
+    val instruction = parseValueToplevel(engine, tokeniser, CloseFnDef)
+    return DeclaredFunction(instruction)
+}
+
+fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator): APLFunction {
     var currentFn = fn
     var token: Token
-    while(true) {
+    while (true) {
         token = tokeniser.nextToken()
-        if(token is Symbol) {
+        if (token is Symbol) {
             val op = engine.getOperator(token) ?: break
-            currentFn = op.combineFunction(currentFn, null)
-        }
-        else {
+            val axis = parseAxis(engine, tokeniser)
+            currentFn = op.combineFunction(currentFn, axis)
+        } else {
             break
         }
     }
-    if(token != EndOfFile) {
+    if (token != EndOfFile) {
         tokeniser.pushBackToken(token)
     }
     return currentFn
+}
+
+fun parseAxis(engine: Engine, tokeniser: TokenGenerator): Instruction? {
+    val token = tokeniser.nextToken()
+    if (token != OpenBracket) {
+        tokeniser.pushBackToken(token)
+        return null
+    }
+
+    return parseValueToplevel(engine, tokeniser, CloseBracket)
 }

@@ -35,7 +35,6 @@ class ArraySum2Args(
     private val a: APLValue,
     private val b: APLValue
 ) : APLArray() {
-
     private val aRank = a.rank()
     private val bRank = b.rank()
 
@@ -65,7 +64,7 @@ class ArraySum2Args(
 }
 
 abstract class MathCombineAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
         val fn = object : CellSumFunction1Arg {
             override fun combine(a: APLValue): APLValue {
                 return combine1Arg(a)
@@ -74,7 +73,7 @@ abstract class MathCombineAPLFunction : APLFunction {
         return ArraySum1Arg(fn, arg)
     }
 
-    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {
         val fn = object : CellSumFunction2Args {
             override fun combineValues(a: APLValue, b: APLValue): APLValue {
                 return combine2Arg(a, b)

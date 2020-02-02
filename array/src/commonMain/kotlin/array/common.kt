@@ -7,6 +7,7 @@ class IllegalNumberFormat(message: String) : Exception(message)
 class UnexpectedSymbol(ch: Int) : Exception("Unexpected symbol: $ch")
 class UnexpectedToken(token: Token) : Exception("Unexpected token: $token")
 class VariableNotAssigned(name: Symbol) : Exception("Variable not assigned: $name")
+class IllegalAxisException(val axis: Int, val dimensions: Dimensions) : Exception("Axis $axis is not valid. Expected: ${dimensions.size}")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {
@@ -50,5 +51,11 @@ class Arrays {
 fun assertx(condition: Boolean, message: String = "Assertion error") {
     if(!condition) {
         throw AssertionError(message)
+    }
+}
+
+fun ensureValidAxis(axis: Int, dimensions: Dimensions) {
+    if(axis < 0 || axis >= dimensions.size) {
+        throw IllegalAxisException(axis, dimensions)
     }
 }

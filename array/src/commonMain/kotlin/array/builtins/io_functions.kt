@@ -2,9 +2,10 @@ package array.builtins
 
 import array.APLFunction
 import array.APLValue
+import array.NoAxisAPLFunction
 import array.RuntimeContext
 
-class PrintAPLFunction : APLFunction {
+class PrintAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         println(arg.formatted())
         return arg

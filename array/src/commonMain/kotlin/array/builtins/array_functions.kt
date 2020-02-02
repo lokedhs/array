@@ -10,7 +10,7 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
     }
 }
 
-class IotaAPLFunction : APLFunction {
+class IotaAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         if (arg is APLNumber) {
             return IotaArray(arg.asDouble().toInt())
@@ -29,7 +29,7 @@ class ResizedArray(private val dimensions: Dimensions, private val value: APLVal
     override fun valueAt(p: Int) = value.valueAt(p % value.size())
 }
 
-class RhoAPLFunction : APLFunction {
+class RhoAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         val argDimensions = arg.dimensions()
         return APLArrayImpl(arrayOf(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
@@ -51,17 +51,17 @@ class RhoAPLFunction : APLFunction {
     }
 }
 
-class IdentityAPLFunction : APLFunction {
+class IdentityAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue) = arg
     override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) = arg2
 }
 
-class HideAPLFunction : APLFunction {
+class HideAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue) = arg
     override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) = arg1
 }
 
-class EncloseAPLFunction : APLFunction {
+class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         return EnclosedAPLValue(arg)
     }
@@ -71,7 +71,7 @@ class EncloseAPLFunction : APLFunction {
     }
 }
 
-class DiscloseAPLFunction : APLFunction {
+class DiscloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, arg: APLValue): APLValue {
         val rank = arg.rank()
         return when {
