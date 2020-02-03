@@ -1,13 +1,14 @@
 package array
 
-class IncompatibleTypeException(message: String) : Exception(message)
-class InvalidDimensionsException(message: String) : Exception(message)
-class APLIndexOutOfBoundsException(message: String) : Exception(message)
-class IllegalNumberFormat(message: String) : Exception(message)
-class UnexpectedSymbol(ch: Int) : Exception("Unexpected symbol: $ch")
-class UnexpectedToken(token: Token) : Exception("Unexpected token: $token")
-class VariableNotAssigned(name: Symbol) : Exception("Variable not assigned: $name")
-class IllegalAxisException(val axis: Int, val dimensions: Dimensions) : Exception("Axis $axis is not valid. Expected: ${dimensions.size}")
+open class APLEvalException(message: String) : Exception(message)
+class IncompatibleTypeException(message: String) : APLEvalException(message)
+class InvalidDimensionsException(message: String) : APLEvalException(message)
+class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
+class IllegalNumberFormat(message: String) : APLEvalException(message)
+class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
+class UnexpectedToken(token: Token) : APLEvalException("Unexpected token: $token")
+class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
+class IllegalAxisException(val axis: Int, val dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if(!cond) {
@@ -58,4 +59,12 @@ fun ensureValidAxis(axis: Int, dimensions: Dimensions) {
     if(axis < 0 || axis >= dimensions.size) {
         throw IllegalAxisException(axis, dimensions)
     }
+}
+
+inline fun <T,R> List<T>.reduceWithInitial(fn: (R, T) -> R, initial: R): R {
+    var curr = initial
+    for(element in this) {
+        curr = fn(curr, element)
+    }
+    return curr
 }

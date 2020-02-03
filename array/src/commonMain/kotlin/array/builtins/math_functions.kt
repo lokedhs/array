@@ -2,6 +2,7 @@ package array.builtins
 
 import array.*
 import kotlin.math.*
+import array.builtins.MathCombineAPLFunction as MathCombineAPLFunction1
 
 interface CellSumFunction1Arg {
     fun combine(a: APLValue): APLValue
@@ -86,19 +87,19 @@ abstract class MathCombineAPLFunction : APLFunction {
     open fun combine2Arg(a: APLValue, b: APLValue): APLValue = TODO("not implemented")
 }
 
-class AddAPLFunction : MathCombineAPLFunction() {
+class AddAPLFunction : MathCombineAPLFunction1() {
     // No support for complex numbers yet
     override fun combine1Arg(a: APLValue) = a
 
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble() + b.asDouble())
 }
 
-class SubAPLFunction : MathCombineAPLFunction() {
+class SubAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(-a.asDouble())
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble() - b.asDouble())
 }
 
-class MulAPLFunction : MathCombineAPLFunction() {
+class MulAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue): APLValue {
         val v = a.asDouble()
         val res = when {
@@ -112,47 +113,79 @@ class MulAPLFunction : MathCombineAPLFunction() {
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble() * b.asDouble())
 }
 
-class DivAPLFunction : MathCombineAPLFunction() {
+class DivAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(1.0 / a.asDouble())
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble() / b.asDouble())
 }
 
-class PowerAPLFunction : MathCombineAPLFunction() {
+class PowerAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(exp(a.asDouble()))
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(a.asDouble().pow(b.asDouble()))
 }
 
-class LogAPLFunction : MathCombineAPLFunction() {
+class LogAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(ln(a.asDouble()))
     override fun combine2Arg(a: APLValue, b: APLValue) = APLDouble(log(b.asDouble(), a.asDouble()))
 }
 
-class SinAPLFunction : MathCombineAPLFunction() {
+class SinAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(sin(a.asDouble()))
 }
 
-class CosAPLFunction : MathCombineAPLFunction() {
+class CosAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(cos(a.asDouble()))
 }
 
-class TanAPLFunction : MathCombineAPLFunction() {
+class TanAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(tan(a.asDouble()))
 }
 
-class AsinAPLFunction : MathCombineAPLFunction() {
+class AsinAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(asin(a.asDouble()))
 }
 
-class AcosAPLFunction : MathCombineAPLFunction() {
+class AcosAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(acos(a.asDouble()))
 }
 
-class AtanAPLFunction : MathCombineAPLFunction() {
+class AtanAPLFunction : MathCombineAPLFunction1() {
     override fun combine1Arg(a: APLValue) = APLDouble(atan(a.asDouble()))
 }
 
-class EqualsAPLFunction : MathCombineAPLFunction() {
+class EqualsAPLFunction : MathCombineAPLFunction1() {
     override fun combine2Arg(a: APLValue, b: APLValue): APLValue {
         return APLLong(if(a.asDouble() == b.asDouble()) 1 else 0)
+    }
+}
+
+class NotEqualsAPLFunction : MathCombineAPLFunction1() {
+    override fun combine2Arg(a: APLValue, b: APLValue): APLValue {
+        return APLLong(if(a.asDouble() != b.asDouble()) 1 else 0)
+    }
+}
+
+class AndAPLFunction : MathCombineAPLFunction1() {
+    override fun combine2Arg(a: APLValue, b: APLValue): APLValue {
+        val aValue = a.asDouble()
+        val bValue = b.asDouble()
+        if((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+            return APLLong(if(aValue == 1.0 && bValue == 1.0) 1 else 0)
+        }
+        else {
+            TODO("LCM is not implemented")
+        }
+    }
+}
+
+class OrAPLFunction : MathCombineAPLFunction1() {
+    override fun combine2Arg(a: APLValue, b: APLValue): APLValue {
+        val aValue = a.asDouble()
+        val bValue = b.asDouble()
+        if((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+            return APLLong(if(aValue == 1.0 || bValue == 1.0) 1 else 0)
+        }
+        else {
+            TODO("GCD is not implemented")
+        }
     }
 }

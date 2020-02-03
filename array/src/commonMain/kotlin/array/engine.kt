@@ -60,8 +60,11 @@ class Engine {
         registerFunction(internSymbol("⊢"), IdentityAPLFunction())
         registerFunction(internSymbol("⊣"), HideAPLFunction())
         registerFunction(internSymbol("="), EqualsAPLFunction())
+        registerFunction(internSymbol("≠"), NotEqualsAPLFunction())
         registerFunction(internSymbol("⊂"), EncloseAPLFunction())
         registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
+        registerFunction(internSymbol("∧"), AndAPLFunction())
+        registerFunction(internSymbol("∨"), OrAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

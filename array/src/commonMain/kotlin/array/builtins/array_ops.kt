@@ -39,7 +39,7 @@ class ForEachOp : APLOperator {
 
 inline fun <reified T> copyArrayAndRemove(array: Array<T>, toRemove: Int): Array<T> {
     return Array(array.size - 1) { index ->
-        if (index < toRemove) array[index] else array[index - 1]
+        if (index < toRemove) array[index] else array[index + 1]
     }
 }
 
@@ -47,46 +47,46 @@ class ReduceResult1Arg(
     val context: RuntimeContext,
     val fn: APLFunction,
     val arg: APLValue,
-    val axis: Int
+    axis: Int
 ) : APLArray() {
+    private val argDimensions: Dimensions
     private val dimensions: Dimensions
     private val stepLength: Int
     private val reduceDepth: Int
+    private val fromSourceMul: Int
+    private val toDestMul: Int
 
     override fun dimensions() = dimensions
 
     init {
-        val argDimensions = arg.dimensions()
+        argDimensions = arg.dimensions()
 
         ensureValidAxis(axis, argDimensions)
 
         var sl = 1
-        for(i in 0 until axis) {
+        for (i in axis + 1 until argDimensions.size) {
             sl *= argDimensions[i]
         }
         stepLength = sl
 
         reduceDepth = argDimensions[axis]
         dimensions = copyArrayAndRemove(arg.dimensions(), axis)
+
+        var currMult = 1
+        for(d in dimensions) {
+            currMult *= d
+        }
+        fromSourceMul = currMult / stepLength
+        toDestMul = fromSourceMul * argDimensions[axis]
     }
 
     override fun valueAt(p: Int): APLValue {
-        TODO("not implemented")
-//        else if(rank == 1) {
-//            val dimensions = arg.dimensions()
-//            val length = dimensions[0]
-//            if(length == 0) {
-//                return APLDouble(0.0)
-//            }
-//            var curr = arg.valueAt(0)
-//            for(i in 1 until dimensions[0]) {
-//                curr = fn.eval2Arg(context, curr, arg.valueAt(i)).collapse()
-//            }
-//            return curr
-//        }
-//        else {
-//            TODO("Reduce is currently only supported for rank 1 arrays")
-//        }
+        val posInSrc = ((p / fromSourceMul) * toDestMul) + p % fromSourceMul
+        var curr = arg.valueAt(posInSrc)
+        for (i in 1 until reduceDepth) {
+            curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null)
+        }
+        return curr;
     }
 }
 
@@ -94,8 +94,18 @@ class ReduceOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
             override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
-                val axisInt = if (operatorAxis == null) arg.rank() - 1 else operatorAxis.evalWithContext(context).asDouble().toInt()
-                return ReduceResult1Arg(context, fn, arg, axisInt)
+                val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).asDouble().toInt() else null
+                if (arg.rank() == 0) {
+                    if (axisParam != null && axisParam != 0) {
+                        throw IllegalAxisException(axisParam, arg.dimensions())
+                    }
+                    return arg
+
+                } else {
+                    val v = axisParam ?: (arg.dimensions().size - 1)
+                    ensureValidAxis(v, arg.dimensions())
+                    return ReduceResult1Arg(context, fn, arg, v)
+                }
             }
 
             override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {

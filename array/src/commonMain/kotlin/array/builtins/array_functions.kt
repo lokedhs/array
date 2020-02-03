@@ -26,7 +26,7 @@ class IotaAPLFunction : NoAxisAPLFunction() {
 
 class ResizedArray(private val dimensions: Dimensions, private val value: APLValue) : APLArray() {
     override fun dimensions() = dimensions
-    override fun valueAt(p: Int) = value.valueAt(p % value.size())
+    override fun valueAt(p: Int) = if (value is APLSingleValue) value else value.valueAt(p % value.size())
 }
 
 class RhoAPLFunction : NoAxisAPLFunction() {
