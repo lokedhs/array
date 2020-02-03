@@ -40,7 +40,7 @@ class RhoAPLFunction : NoAxisAPLFunction() {
             throw InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array")
         }
 
-        val d1 = Array(arg1.size()) { arg1.valueAt(it).asDouble().toInt() }
+        val d1 = Array(arg1.size()) { arg1.valueAt(it).ensureNumber().asInt() }
         val d2 = arg2.dimensions()
         return if (Arrays.equals(d1, d2)) {
             // The array already has the correct dimensions, simply return the old one
@@ -82,6 +82,20 @@ class DiscloseAPLFunction : NoAxisAPLFunction() {
     }
 
     override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue): APLValue {
+        TODO("not implemented")
+    }
+}
+
+class ConcatenateAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
+        return if (arg is APLSingleValue) {
+            arg
+        } else {
+            ResizedArray(arrayOf(arg.size()), arg)
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {
         TODO("not implemented")
     }
 }

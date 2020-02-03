@@ -7,12 +7,10 @@ interface APLValue {
     fun rank(): Int = dimensions().size
     fun valueAt(p: Int): APLValue
     fun size(): Int = if (rank() == 0) 1 else dimensions().reduce { a, b -> a * b }
-    fun asDouble(): Double =
-        throw IncompatibleTypeException("Type cannot be converted to a number: ${this::class.qualifiedName}")
-
     fun formatted(): String = arrayAsString(this)
     fun collapse(): APLValue
     fun toAPLExpression(): String = "not implemented"
+    fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
 }
 
 abstract class APLSingleValue : APLValue {
@@ -105,6 +103,11 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
         }
         return value
     }
+}
+
+class APLChar(private val value: Int) : APLSingleValue() {
+    fun codepoint(): Int = value
+    fun asString(): String = charToString(value)
 }
 
 fun makeSimpleArray(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements[it] }

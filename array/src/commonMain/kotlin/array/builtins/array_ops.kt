@@ -86,7 +86,7 @@ class ReduceResult1Arg(
         for (i in 1 until reduceDepth) {
             curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null)
         }
-        return curr;
+        return curr
     }
 }
 
@@ -94,7 +94,7 @@ class ReduceOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
             override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
-                val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).asDouble().toInt() else null
+                val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
                 if (arg.rank() == 0) {
                     if (axisParam != null && axisParam != 0) {
                         throw IllegalAxisException(axisParam, arg.dimensions())

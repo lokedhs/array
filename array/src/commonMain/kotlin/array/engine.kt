@@ -65,6 +65,7 @@ class Engine {
         registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
         registerFunction(internSymbol("∧"), AndAPLFunction())
         registerFunction(internSymbol("∨"), OrAPLFunction())
+        registerFunction(internSymbol(","), ConcatenateAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
