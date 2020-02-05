@@ -1,6 +1,5 @@
 package array.builtins
 
-import array.APLFunction
 import array.APLValue
 import array.NoAxisAPLFunction
 import array.RuntimeContext
