@@ -1,5 +1,7 @@
 package array
 
+import array.rendertext.encloseInBox
+
 typealias Dimensions = Array<Int>
 
 interface APLValue {
@@ -34,10 +36,7 @@ abstract class APLArray : APLValue {
 }
 
 fun arrayAsString(array: APLValue): String {
-    return when {
-        array.rank() == 0 -> TODO("need implementation")//encloseInBox(array.valueAt(0).formatted())
-        else -> TODO("Printing of arrays of dimensions >2 is not supported")
-    }
+    return encloseInBox(array)
 }
 
 class ConstantArray(

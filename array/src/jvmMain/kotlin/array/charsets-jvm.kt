@@ -35,7 +35,7 @@ actual fun String.asCodepointList(): List<Int> {
 actual fun String.asGraphemeList(): List<String> {
     val result = ArrayList<String>()
     val iterator = BreakIterator.getCharacterInstance()
-    iterator.text = this
+    iterator.setText(this)
     var start = iterator.first()
     while(true) {
         val end = iterator.next()
@@ -43,6 +43,7 @@ actual fun String.asGraphemeList(): List<String> {
             break
         }
         result.add(this.substring(start, end))
+        start = end
     }
     return result
 }
