@@ -6,3 +6,5 @@ expect fun isWhitespace(codepoint: Int) : Boolean
 expect fun charToString(codepoint: Int): String
 
 expect fun StringBuilder.addCodepoint(codepoint: Int) : StringBuilder
+expect fun String.asCodepointList(): List<Int>
+expect fun String.asGraphemeList(): List<String>

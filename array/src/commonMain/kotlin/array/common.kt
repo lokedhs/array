@@ -8,10 +8,11 @@ class IllegalNumberFormat(message: String) : APLEvalException(message)
 class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
 class UnexpectedToken(token: Token) : APLEvalException("Unexpected token: $token")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
-class IllegalAxisException(val axis: Int, val dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
+class IllegalAxisException(val axis: Int, val dimensions: Dimensions) :
+    APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
-    if(!cond) {
+    if (!cond) {
         fn()
     }
 }
@@ -19,7 +20,7 @@ inline fun unless(cond: Boolean, fn: () -> Unit) {
 class Arrays {
     companion object {
         fun <T> equals(a: Array<T>, b: Array<T>): Boolean {
-            if(a === b) {
+            if (a === b) {
                 return true
             }
             val aLength = a.size
@@ -28,8 +29,8 @@ class Arrays {
                 return false
             }
 
-            for(i in 0 until aLength) {
-                if(a[i] != b[i]) {
+            for (i in 0 until aLength) {
+                if (a[i] != b[i]) {
                     return false
                 }
             }
@@ -50,21 +51,48 @@ class Arrays {
 }
 
 fun assertx(condition: Boolean, message: String = "Assertion error") {
-    if(!condition) {
+    if (!condition) {
         throw AssertionError(message)
     }
 }
 
 fun ensureValidAxis(axis: Int, dimensions: Dimensions) {
-    if(axis < 0 || axis >= dimensions.size) {
+    if (axis < 0 || axis >= dimensions.size) {
         throw IllegalAxisException(axis, dimensions)
     }
 }
 
-inline fun <T,R> List<T>.reduceWithInitial(fn: (R, T) -> R, initial: R): R {
+fun resolveAxis(axisParam: APLValue?, arg: APLValue): Int {
+    if (axisParam != null && axisParam.rank() != 1) {
+        throw IncompatibleTypeException("Axis should be a single integer")
+    }
+    val v = if (axisParam == null) {
+        arg.dimensions().size - 1
+    } else {
+        axisParam.ensureNumber().asInt()
+    }
+    ensureValidAxis(v, arg.dimensions())
+    return v
+}
+
+inline fun <T, R> List<T>.reduceWithInitial(fn: (R, T) -> R, initial: R): R {
     var curr = initial
-    for(element in this) {
+    for (element in this) {
         curr = fn(curr, element)
     }
     return curr
+}
+
+fun <T> stringIntersperse(list: List<T>, separator: String, fn: (T) -> String): String {
+    val buf = StringBuilder()
+    var first = true
+    for (v in list) {
+        if (first) {
+            first = false
+        } else {
+            buf.append(separator)
+        }
+        buf.append(fn(v))
+    }
+    return buf.toString()
 }

@@ -7,7 +7,7 @@ interface APLValue {
     fun rank(): Int = dimensions().size
     fun valueAt(p: Int): APLValue
     fun size(): Int = if (rank() == 0) 1 else dimensions().reduce { a, b -> a * b }
-    fun formatted(): String = arrayAsString(this)
+    fun formatted(): String = "unprintable"
     fun collapse(): APLValue
     fun toAPLExpression(): String = "not implemented"
     fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
@@ -24,44 +24,20 @@ abstract class APLSingleValue : APLValue {
 abstract class APLArray : APLValue {
     override fun collapse(): APLValue {
         return if(rank() == 0) {
-            valueAt(0)
+            EnclosedAPLValue(valueAt(0).collapse())
         } else {
-            APLArrayImpl(dimensions()) { valueAt(it) }
+            APLArrayImpl(dimensions()) { valueAt(it).collapse() }
         }
     }
+
+    override fun formatted() = arrayAsString(this)
 }
 
 fun arrayAsString(array: APLValue): String {
-    val buf = StringBuilder()
-
-    fun outputLine(start: Int, end: Int) {
-        var first = true
-        for (i in start until end) {
-            val value = array.valueAt(i)
-            if (first) first = false else buf.append(" ")
-            buf.append(value.formatted())
-        }
-    }
-
-    fun output2D() {
-        val d = array.dimensions()
-        val height = d[0]
-        val width = d[1]
-        var first = true
-        for (y in 0 until height) {
-            if (first) first = false else buf.append("\n")
-            outputLine(y * width, (y + 1) * width)
-        }
-    }
-
-    when {
-        array.rank() == 0 -> buf.append(array.valueAt(0).formatted())
-        array.rank() == 1 -> outputLine(0, array.dimensions()[0])
-        array.rank() == 2 -> output2D()
+    return when {
+        array.rank() == 0 -> TODO("need implementation")//encloseInBox(array.valueAt(0).formatted())
         else -> TODO("Printing of arrays of dimensions >2 is not supported")
     }
-
-    return buf.toString()
 }
 
 class ConstantArray(

@@ -73,7 +73,7 @@ class ReduceResult1Arg(
         dimensions = copyArrayAndRemove(arg.dimensions(), axis)
 
         var currMult = 1
-        for(d in dimensions) {
+        for (d in dimensions) {
             currMult *= d
         }
         fromSourceMul = currMult / stepLength
