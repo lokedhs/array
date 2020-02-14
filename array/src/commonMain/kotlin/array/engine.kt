@@ -3,36 +3,36 @@ package array
 import array.builtins.*
 
 interface APLFunction {
-    fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?) : APLValue
-    fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?) : APLValue
+    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) : APLValue
+    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) : APLValue
 }
 
 abstract class NoAxisAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?) : APLValue {
-        return eval1Arg(context, arg)
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) : APLValue {
+        return eval1Arg(context, a)
     }
 
-    abstract fun eval1Arg(context: RuntimeContext, arg: APLValue) : APLValue
+    abstract fun eval1Arg(context: RuntimeContext, a: APLValue) : APLValue
 
 
-    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?) : APLValue {
-        return eval2Arg(context, arg1, arg2)
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) : APLValue {
+        return eval2Arg(context, a, b)
     }
 
-    abstract fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue) : APLValue
+    abstract fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue) : APLValue
 }
 
 class DeclaredFunction(val instruction: Instruction) : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val localContext = context.link()
-        localContext.setVar(context.engine.internSymbol("⍵"), arg)
+        localContext.setVar(context.engine.internSymbol("⍵"), a)
         return instruction.evalWithContext(localContext)
     }
 
-    override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         val localContext = context.link()
-        localContext.setVar(context.engine.internSymbol("⍺"), arg1)
-        localContext.setVar(context.engine.internSymbol("⍵"), arg2)
+        localContext.setVar(context.engine.internSymbol("⍺"), a)
+        localContext.setVar(context.engine.internSymbol("⍵"), b)
         return instruction.evalWithContext(localContext)
     }
 }
@@ -61,6 +61,7 @@ class Engine {
         registerFunction(internSymbol("⊣"), HideAPLFunction())
         registerFunction(internSymbol("="), EqualsAPLFunction())
         registerFunction(internSymbol("≠"), NotEqualsAPLFunction())
+        registerFunction(internSymbol("⌷"), AccessFromIndexAPLFunction())
         registerFunction(internSymbol("⊂"), EncloseAPLFunction())
         registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
         registerFunction(internSymbol("∧"), AndAPLFunction())

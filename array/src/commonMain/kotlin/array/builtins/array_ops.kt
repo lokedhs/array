@@ -26,20 +26,14 @@ class ForEachResult2Arg(val context: RuntimeContext, val fn: APLFunction, val ar
 class ForEachOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
-                return ForEachResult1Arg(context, fn, arg, axis)
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                return ForEachResult1Arg(context, fn, a, axis)
             }
 
-            override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {
-                return ForEachResult2Arg(context, fn, arg1, arg2, axis)
+            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+                return ForEachResult2Arg(context, fn, a, b, axis)
             }
         }
-    }
-}
-
-inline fun <reified T> copyArrayAndRemove(array: Array<T>, toRemove: Int): Array<T> {
-    return Array(array.size - 1) { index ->
-        if (index < toRemove) array[index] else array[index + 1]
     }
 }
 
@@ -93,22 +87,21 @@ class ReduceResult1Arg(
 class ReduceOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, arg: APLValue, axis: APLValue?): APLValue {
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
-                if (arg.rank() == 0) {
+                if (a.rank() == 0) {
                     if (axisParam != null && axisParam != 0) {
-                        throw IllegalAxisException(axisParam, arg.dimensions())
+                        throw IllegalAxisException(axisParam, a.dimensions())
                     }
-                    return arg
-
+                    return a
                 } else {
-                    val v = axisParam ?: (arg.dimensions().size - 1)
-                    ensureValidAxis(v, arg.dimensions())
-                    return ReduceResult1Arg(context, fn, arg, v)
+                    val v = axisParam ?: (a.dimensions().size - 1)
+                    ensureValidAxis(v, a.dimensions())
+                    return ReduceResult1Arg(context, fn, a, v)
                 }
             }
 
-            override fun eval2Arg(context: RuntimeContext, arg1: APLValue, arg2: APLValue, axis: APLValue?): APLValue {
+            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                 TODO("not implemented")
             }
         }

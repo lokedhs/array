@@ -25,7 +25,7 @@ abstract class APLSingleValue : APLValue {
 
 abstract class APLArray : APLValue {
     override fun collapse(): APLValue {
-        return if(rank() == 0) {
+        return if (rank() == 0) {
             EnclosedAPLValue(valueAt(0).collapse())
         } else {
             APLArrayImpl(dimensions()) { valueAt(it).collapse() }
@@ -73,7 +73,7 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
     override fun dimensions(): Dimensions = emptyArray()
 
     override fun valueAt(p: Int): APLValue {
-        if(p != 0) {
+        if (p != 0) {
             throw APLIndexOutOfBoundsException("Attempt to read from a non-zero index ")
         }
         return value
@@ -87,7 +87,7 @@ class APLChar(private val value: Int) : APLSingleValue() {
 
 fun makeSimpleArray(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements[it] }
 
-fun indexFromDimensions(d: Dimensions, p: IntArray): Int {
+fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
     val sizes = Array(d.size) { 0 }
     var curr = 1
     for (i in (d.size - 1) downTo 0) {
@@ -105,4 +105,18 @@ fun indexFromDimensions(d: Dimensions, p: IntArray): Int {
         pos += pi * sizes[i]
     }
     return pos
+}
+
+fun dimensionsToMultipliers(dimensions: Dimensions): Array<Int> {
+    var curr = 1
+    val a = Array<Int>(dimensions.size) { 0 }
+    for (i in dimensions.size - 1..0) {
+        a[i] = curr
+        curr *= dimensions[i]
+    }
+    return a
+}
+
+fun resolveAxisFromArg(context: RuntimeContext, arg: APLValue, operatorAxis: Instruction?): Int {
+    return if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else arg.dimensions().let { it[it.size - 1] }
 }
