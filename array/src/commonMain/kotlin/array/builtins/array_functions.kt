@@ -117,8 +117,6 @@ class ConcatenateAPLFunction : APLFunction {
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
-
-        // For now, let's just raise an error if either argument are scalar
         if (a.rank() == 0 && b.rank() == 0) {
             throw InvalidDimensionsException("Both a and b are scalar")
         }
