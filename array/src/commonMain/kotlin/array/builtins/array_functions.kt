@@ -3,7 +3,7 @@ package array.builtins
 import array.*
 
 class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() {
-    override fun dimensions() = arrayOf(size)
+    override fun dimensions() = intArrayOf(size)
 
     override fun valueAt(p: Int): APLValue {
         return APLLong((p + start).toLong())
@@ -32,7 +32,7 @@ class ResizedArray(private val dimensions: Dimensions, private val value: APLVal
 class RhoAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         val argDimensions = a.dimensions()
-        return APLArrayImpl(arrayOf(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
+        return APLArrayImpl(intArrayOf(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -41,9 +41,9 @@ class RhoAPLFunction : NoAxisAPLFunction() {
         }
 
         val d1 = if (a is APLSingleValue) {
-            arrayOf(a.ensureNumber().asInt())
+            intArrayOf(a.ensureNumber().asInt())
         } else {
-            Array(a.size()) { a.valueAt(it).ensureNumber().asInt() }
+            IntArray(a.size()) { a.valueAt(it).ensureNumber().asInt() }
         }
         val d2 = b.dimensions()
         return if (Arrays.equals(d1, d2)) {
@@ -97,7 +97,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 
     private val aSize = a.dimensions()[0]
     private val bSize = b.dimensions()[0]
-    private val dimensions = arrayOf(aSize + bSize)
+    private val dimensions = intArrayOf(aSize + bSize)
 
     override fun dimensions() = dimensions
 
@@ -111,7 +111,7 @@ class ConcatenateAPLFunction : APLFunction {
         return if (a is APLSingleValue) {
             a
         } else {
-            ResizedArray(arrayOf(a.size()), a)
+            ResizedArray(intArrayOf(a.size()), a)
         }
     }
 
@@ -123,18 +123,24 @@ class ConcatenateAPLFunction : APLFunction {
             throw InvalidDimensionsException("Both a and b are scalar")
         }
 
-        val axisInt = if (axis == null) throw RuntimeException("Need the correct axis") else axis.ensureNumber().asInt()
+        val axisInt = if (axis !== null) {
+            axis.ensureNumber().asInt()
+        } else if (a.rank() == 0) {
+            b.dimensions().size - 1
+        } else {
+            a.dimensions().size - 1
+        }
 
         val a1 = if (a.rank() == 0) {
             val bDimensions = b.dimensions()
-            ConstantArray(Array(bDimensions.size) { index -> if (index == axisInt) 1 else bDimensions[index] }, a)
+            ConstantArray(IntArray(bDimensions.size) { index -> if (index == axisInt) 1 else bDimensions[index] }, a)
         } else {
             a
         }
 
         val b1 = if (b.rank() == 0) {
             val aDimensions = a.dimensions()
-            ConstantArray(Array(aDimensions.size) { index -> if (index == axisInt) 1 else aDimensions[index] }, b)
+            ConstantArray(IntArray(aDimensions.size) { index -> if (index == axisInt) 1 else aDimensions[index] }, b)
         } else {
             b
         }
@@ -191,7 +197,7 @@ class ConcatenateAPLFunction : APLFunction {
 
             axisA = ad[axis]
 
-            dimensions = Array(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] }
+            dimensions = IntArray(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] }
             multipliers = dimensionsToMultipliers(dimensions)
             aMultipliers = dimensionsToMultipliers(ad)
             bMultipliers = dimensionsToMultipliers(bd)

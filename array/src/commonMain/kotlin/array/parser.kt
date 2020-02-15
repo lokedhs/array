@@ -177,7 +177,7 @@ class Literal1DArray(val values: List<Instruction>) : Instruction {
         for (i in (size - 1) downTo 0) {
             result[i] = values[i].evalWithContext(context)
         }
-        return APLArrayImpl(arrayOf(size)) { result[it]!! }
+        return APLArrayImpl(intArrayOf(size)) { result[it]!! }
     }
 
     override fun toString() = "Literal1DArray(${values})"

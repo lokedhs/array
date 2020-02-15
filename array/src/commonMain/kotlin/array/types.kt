@@ -2,7 +2,7 @@ package array
 
 import array.rendertext.encloseInBox
 
-typealias Dimensions = Array<Int>
+typealias Dimensions = IntArray
 
 interface APLValue {
     fun dimensions(): Dimensions
@@ -16,7 +16,7 @@ interface APLValue {
 }
 
 abstract class APLSingleValue : APLValue {
-    override fun dimensions() = emptyArray<Int>()
+    override fun dimensions() = intArrayOf()
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index $p from scalar")
     override fun size() = 1
     override fun rank() = 0
@@ -70,7 +70,7 @@ class APLArrayImpl(
 }
 
 class EnclosedAPLValue(val value: APLValue) : APLArray() {
-    override fun dimensions(): Dimensions = emptyArray()
+    override fun dimensions(): Dimensions = intArrayOf()
 
     override fun valueAt(p: Int): APLValue {
         if (p != 0) {

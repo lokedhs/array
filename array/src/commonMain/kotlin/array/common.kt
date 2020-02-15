@@ -37,6 +37,24 @@ class Arrays {
             return true
         }
 
+        fun equals(a: IntArray, b: IntArray): Boolean {
+            if (a === b) {
+                return true
+            }
+
+            if (a.size != b.size) {
+                return false
+            }
+
+            for (i in a.indices) {
+                if (a[i] != b[i]) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
         fun toString(values: Array<*>): String {
             val buf = StringBuilder()
             buf.append("[")
@@ -103,6 +121,12 @@ fun checkIndexRange(array: Array<*>, index: Int) {
     }
 }
 
+fun checkIndexRange(array: IntArray, index: Int) {
+    if (index < 0 || index >= array.size) {
+        throw IndexOutOfBoundsException("Index does not fit in array. index=${index}, size=${array.size}")
+    }
+}
+
 inline fun <reified T> copyArrayAndRemove(array: Array<T>, toRemove: Int): Array<T> {
     checkIndexRange(array, toRemove)
     return Array(array.size - 1) { index ->
@@ -110,8 +134,25 @@ inline fun <reified T> copyArrayAndRemove(array: Array<T>, toRemove: Int): Array
     }
 }
 
+fun copyArrayAndRemove(array: IntArray, toRemove: Int): IntArray {
+    checkIndexRange(array, toRemove)
+    return IntArray(array.size - 1) { index ->
+        if (index < toRemove) array[index] else array[index + 1]
+    }
+}
+
 inline fun <reified T> copyArrayAndInsert(array: Array<T>, pos: Int, newValue: T): Array<T> {
     return Array(array.size + 1) { index ->
+        when {
+            index < pos -> array[index]
+            index > pos -> array[index - 1]
+            else -> newValue
+        }
+    }
+}
+
+fun copyArrayAndInsert(array: IntArray, pos: Int, newValue: Int): IntArray {
+    return IntArray(array.size + 1) { index ->
         when {
             index < pos -> array[index]
             index > pos -> array[index - 1]
