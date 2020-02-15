@@ -85,8 +85,6 @@ class APLChar(private val value: Int) : APLSingleValue() {
     fun asString(): String = charToString(value)
 }
 
-fun makeSimpleArray(vararg elements: APLValue) = APLArrayImpl(arrayOf(elements.size)) { elements[it] }
-
 fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
     val sizes = Array(d.size) { 0 }
     var curr = 1
@@ -115,8 +113,4 @@ fun dimensionsToMultipliers(dimensions: Dimensions): Array<Int> {
         curr *= dimensions[i]
     }
     return a
-}
-
-fun resolveAxisFromArg(context: RuntimeContext, arg: APLValue, operatorAxis: Instruction?): Int {
-    return if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else arg.dimensions().let { it[it.size - 1] }
 }
