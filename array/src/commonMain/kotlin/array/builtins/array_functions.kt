@@ -40,7 +40,11 @@ class RhoAPLFunction : NoAxisAPLFunction() {
             throw InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array")
         }
 
-        val d1 = Array(a.size()) { a.valueAt(it).ensureNumber().asInt() }
+        val d1 = if (a is APLSingleValue) {
+            arrayOf(a.ensureNumber().asInt())
+        } else {
+            Array(a.size()) { a.valueAt(it).ensureNumber().asInt() }
+        }
         val d2 = b.dimensions()
         return if (Arrays.equals(d1, d2)) {
             // The array already has the correct dimensions, simply return the old one
@@ -165,8 +169,9 @@ class ConcatenateAPLFunction : APLFunction {
     // This is an inner class since it's highly dependent on invariants that are established in the parent class
     class ConcatenatedMultiDimensionalArrays(val a: APLValue, val b: APLValue, val axis: Int) : APLArray() {
         private val dimensions: Dimensions
-        private val bottomMultiplier: Int
-        private val topMultiplier: Int
+        private val multipliers: Array<Int>
+        private val aMultipliers: Array<Int>
+        private val bMultipliers: Array<Int>
         private val axisA: Int
 
         init {
@@ -176,48 +181,21 @@ class ConcatenateAPLFunction : APLFunction {
             axisA = ad[axis]
 
             dimensions = Array(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] }
-
-            var currB = 1
-            for(i in dimensions.size - 1 until axis) {
-                currB *= dimensions[i]
-            }
-            bottomMultiplier = currB
-
-            val axisMultiplier = bottomMultiplier * dimensions[axis]
-            topMultiplier = size() / axisMultiplier
+            multipliers = dimensionsToMultipliers(dimensions)
+            aMultipliers = dimensionsToMultipliers(ad)
+            bMultipliers = dimensionsToMultipliers(bd)
         }
 
         override fun dimensions() = dimensions
-
-        /*
-        a * b * c * d * e
-          axisMod = c
-          divisor = d*e
-
-          multiplier = p / (d*e)
-          posAlongExtended = multiplier % c
-
-          (3 4 ⍴ ⍳100) ,[0] 100+⍳4
-          ┏→━━━━━━━━━━━━━━┓
-          ↓  0   1   2   3┃
-          ┃  4   5   6   7┃
-          ┃  8   9  10  11┃
-          ┃100 101 102 103┃
-          ┗━━━━━━━━━━━━━━━┛
-          (3 4 ⍴ ⍳100) ,[1] 100+⍳3
-          ┏→━━━━━━━━━━━━┓
-          ↓0 1  2  3 100┃
-          ┃4 5  6  7 101┃
-          ┃8 9 10 11 102┃
-          ┗━━━━━━━━━━━━━┛
-         */
+        
         override fun valueAt(p: Int): APLValue {
-            val axisCoord = (p % topMultiplier) / bottomMultiplier
-            if(axisCoord < axisA) {
-                return APLLong(1111)
-            }
-            else {
-                return APLLong(2222)
+            val highVal = p / (multipliers[axis] * dimensions[axis])
+            val lowVal = p % (multipliers[axis])
+            val axisCoord = (p % (multipliers[axis] * dimensions[axis])) / multipliers[axis]
+            return if (axisCoord < axisA) {
+                a.valueAt((highVal * aMultipliers[axis] * a.dimensions()[axis]) + (axisCoord * aMultipliers[axis]) + lowVal)
+            } else {
+                b.valueAt((highVal * bMultipliers[axis] * b.dimensions()[axis]) + ((axisCoord - axisA) * bMultipliers[axis]) + lowVal)
             }
         }
     }

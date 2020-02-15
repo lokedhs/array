@@ -110,7 +110,7 @@ fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
 fun dimensionsToMultipliers(dimensions: Dimensions): Array<Int> {
     var curr = 1
     val a = Array<Int>(dimensions.size) { 0 }
-    for (i in dimensions.size - 1..0) {
+    for (i in dimensions.size - 1 downTo 0) {
         a[i] = curr
         curr *= dimensions[i]
     }
