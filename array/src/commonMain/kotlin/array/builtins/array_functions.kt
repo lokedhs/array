@@ -119,14 +119,25 @@ class ConcatenateAPLFunction : APLFunction {
         // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
 
         // For now, let's just raise an error if either argument are scalar
-        if (a.rank() == 0 || b.rank() == 0) {
-            throw InvalidDimensionsException("scalar argument to catenate")
+        if (a.rank() == 0 && b.rank() == 0) {
+            throw InvalidDimensionsException("Both a and b are scalar")
         }
 
         val axisInt = if (axis == null) throw RuntimeException("Need the correct axis") else axis.ensureNumber().asInt()
 
-        val a1 = a
-        val b1 = b
+        val a1 = if (a.rank() == 0) {
+            val bDimensions = b.dimensions()
+            ConstantArray(Array(bDimensions.size) { index -> if (index == axisInt) 1 else bDimensions[index] }, a)
+        } else {
+            a
+        }
+
+        val b1 = if (b.rank() == 0) {
+            val aDimensions = a.dimensions()
+            ConstantArray(Array(aDimensions.size) { index -> if (index == axisInt) 1 else aDimensions[index] }, b)
+        } else {
+            b
+        }
 
         val a2 = if (b1.rank() - a1.rank() == 1) {
             // Reshape a1, inserting a new dimension at the position of the axis
@@ -148,7 +159,7 @@ class ConcatenateAPLFunction : APLFunction {
             throw InvalidDimensionsException("different ranks: ${da.size} compared to ${db.size}")
         }
 
-        for (i in 0 until da.size) {
+        for (i in da.indices) {
             if (i != axisInt && da[i] != db[i]) {
                 throw InvalidDimensionsException("dimensions at axis ${axisInt} does not match: ${da} compared to ${db}")
             }
@@ -187,7 +198,7 @@ class ConcatenateAPLFunction : APLFunction {
         }
 
         override fun dimensions() = dimensions
-        
+
         override fun valueAt(p: Int): APLValue {
             val highVal = p / (multipliers[axis] * dimensions[axis])
             val lowVal = p % (multipliers[axis])
