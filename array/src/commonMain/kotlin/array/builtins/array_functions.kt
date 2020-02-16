@@ -12,11 +12,7 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
 
 class IotaAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        if (a is APLNumber) {
-            return IotaArray(a.asDouble().toInt())
-        } else {
-            throw IllegalStateException("Needs to be rewritten once the new class hierarchy is in place")
-        }
+        return IotaArray(a.ensureNumber().asInt())
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -26,7 +22,7 @@ class IotaAPLFunction : NoAxisAPLFunction() {
 
 class ResizedArray(private val dimensions: Dimensions, private val value: APLValue) : APLArray() {
     override fun dimensions() = dimensions
-    override fun valueAt(p: Int) = if (value is APLSingleValue) value else value.valueAt(p % value.size())
+    override fun valueAt(p: Int) = if (value.isScalar()) value else value.valueAt(p % value.size())
 }
 
 class RhoAPLFunction : NoAxisAPLFunction() {
@@ -67,7 +63,12 @@ class HideAPLFunction : NoAxisAPLFunction() {
 
 class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return EnclosedAPLValue(a)
+        return if(a is APLSingleValue) {
+            a
+        }
+        else {
+            return EnclosedAPLValue(a)
+        }
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -108,7 +109,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 
 class ConcatenateAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-        return if (a is APLSingleValue) {
+        return if (a.isScalar()) {
             a
         } else {
             ResizedArray(intArrayOf(a.size()), a)

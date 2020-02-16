@@ -13,6 +13,7 @@ interface APLValue {
     fun collapse(): APLValue
     fun toAPLExpression(): String = "not implemented"
     fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
+    fun isScalar(): Boolean = rank() == 0
 }
 
 abstract class APLSingleValue : APLValue {

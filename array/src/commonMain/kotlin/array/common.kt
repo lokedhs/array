@@ -93,6 +93,20 @@ fun resolveAxis(axisParam: APLValue?, arg: APLValue): Int {
     return v
 }
 
+inline fun <T, R : Comparable<R>> List<T>.maxValueBy(fn: (T) -> R): R {
+    if(this.isEmpty()) {
+        throw RuntimeException("call to maxValueBy on empty list")
+    }
+    var currMax: R? = null
+    this.forEach { e ->
+        val res = fn(e)
+        if(currMax == null || res > currMax!!) {
+            currMax = res
+        }
+    }
+    return currMax!!
+}
+
 inline fun <T, R> List<T>.reduceWithInitial(fn: (R, T) -> R, initial: R): R {
     var curr = initial
     for (element in this) {
