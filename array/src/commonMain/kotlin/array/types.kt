@@ -14,6 +14,8 @@ interface APLValue {
     fun toAPLExpression(): String = "not implemented"
     fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
     fun isScalar(): Boolean = rank() == 0
+    fun defaultValue(): APLValue = APLLong(0)
+    fun isAtom() = false
 }
 
 abstract class APLSingleValue : APLValue {
@@ -22,6 +24,7 @@ abstract class APLSingleValue : APLValue {
     override fun size() = 1
     override fun rank() = 0
     override fun collapse() = this
+    override fun isAtom() = true
 }
 
 abstract class APLArray : APLValue {
@@ -86,6 +89,8 @@ class APLChar(private val value: Int) : APLSingleValue() {
     fun asString(): String = charToString(value)
 }
 
+class APLSymbol(private val value: Symbol) : APLSingleValue()
+
 fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
     val sizes = Array(d.size) { 0 }
     var curr = 1
@@ -106,9 +111,9 @@ fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
     return pos
 }
 
-fun dimensionsToMultipliers(dimensions: Dimensions): Array<Int> {
+fun dimensionsToMultipliers(dimensions: Dimensions): IntArray {
     var curr = 1
-    val a = Array<Int>(dimensions.size) { 0 }
+    val a = IntArray(dimensions.size) { 0 }
     for (i in dimensions.size - 1 downTo 0) {
         a[i] = curr
         curr *= dimensions[i]

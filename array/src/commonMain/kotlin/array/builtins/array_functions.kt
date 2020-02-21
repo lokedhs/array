@@ -63,10 +63,9 @@ class HideAPLFunction : NoAxisAPLFunction() {
 
 class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return if(a is APLSingleValue) {
+        return if (a is APLSingleValue) {
             a
-        }
-        else {
+        } else {
             return EnclosedAPLValue(a)
         }
     }
@@ -185,9 +184,9 @@ class ConcatenateAPLFunction : APLFunction {
     // This is an inner class since it's highly dependent on invariants that are established in the parent class
     class ConcatenatedMultiDimensionalArrays(val a: APLValue, val b: APLValue, val axis: Int) : APLArray() {
         private val dimensions: Dimensions
-        private val multipliers: Array<Int>
-        private val aMultipliers: Array<Int>
-        private val bMultipliers: Array<Int>
+        private val multipliers: IntArray
+        private val aMultipliers: IntArray
+        private val bMultipliers: IntArray
         private val axisA: Int
 
         init {
@@ -234,5 +233,40 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
         val posList = Array(ad[0]) { i -> a.valueAt(i).ensureNumber().asInt() }
         val pos = indexFromDimensions(bd, posList)
         return b.valueAt(pos)
+    }
+}
+
+class TakeAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        return when {
+            a.isAtom() -> a
+            a.isScalar() -> a.valueAt(0)
+            a.size() == 0 -> a.defaultValue()
+            else -> a.valueAt(0)
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        TODO("not implemented")
+    }
+
+}
+
+class RandomAPLFunction : NoAxisAPLFunction() {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+        return if(a.isAtom()) {
+            makeRandom(a.ensureNumber())
+        } else {
+            APLArrayImpl(a.dimensions()) { index -> makeRandom(a.valueAt(index).ensureNumber()) }
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+        TODO("not implemented")
+    }
+
+    private fun makeRandom(limit: APLNumber): APLNumber {
+        val limitLong = limit.asLong()
+        return APLLong((0 until limitLong).random())
     }
 }

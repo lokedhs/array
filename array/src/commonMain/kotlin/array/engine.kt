@@ -22,17 +22,17 @@ abstract class NoAxisAPLFunction : APLFunction {
     abstract fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue) : APLValue
 }
 
-class DeclaredFunction(val instruction: Instruction) : APLFunction {
+class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol) : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val localContext = context.link()
-        localContext.setVar(context.engine.internSymbol("⍵"), a)
+        localContext.setVar(rightArgName, a)
         return instruction.evalWithContext(localContext)
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         val localContext = context.link()
-        localContext.setVar(context.engine.internSymbol("⍺"), a)
-        localContext.setVar(context.engine.internSymbol("⍵"), b)
+        localContext.setVar(leftArgName, a)
+        localContext.setVar(rightArgName, b)
         return instruction.evalWithContext(localContext)
     }
 }
@@ -61,12 +61,18 @@ class Engine {
         registerFunction(internSymbol("⊣"), HideAPLFunction())
         registerFunction(internSymbol("="), EqualsAPLFunction())
         registerFunction(internSymbol("≠"), NotEqualsAPLFunction())
+        registerFunction(internSymbol("<"), LessThanAPLFunction())
+        registerFunction(internSymbol(">"), GreaterThanAPLFunction())
+        registerFunction(internSymbol("≤"), LessThanEqualAPLFunction())
+        registerFunction(internSymbol("≥"), GreaterThanEqualAPLFunction())
         registerFunction(internSymbol("⌷"), AccessFromIndexAPLFunction())
         registerFunction(internSymbol("⊂"), EncloseAPLFunction())
         registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
         registerFunction(internSymbol("∧"), AndAPLFunction())
         registerFunction(internSymbol("∨"), OrAPLFunction())
         registerFunction(internSymbol(","), ConcatenateAPLFunction())
+        registerFunction(internSymbol("↑"), TakeAPLFunction())
+        registerFunction(internSymbol("?"), RandomAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

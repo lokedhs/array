@@ -18,11 +18,11 @@ class ArraySum1Arg(
     override fun dimensions() = a.dimensions()
     override fun size() = a.size()
     override fun valueAt(p: Int): APLValue {
-        if(a is APLSingleValue) {
+        if (a is APLSingleValue) {
             return fn.combine(a)
         }
         val v = a.valueAt(p)
-        return if(v is APLSingleValue) {
+        return if (v is APLSingleValue) {
             fn.combine(v)
         } else {
             ArraySum1Arg(fn, v)
@@ -157,26 +157,13 @@ class AtanAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber) = APLDouble(atan(a.asDouble()))
 }
 
-class EqualsAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-        return APLLong(if(a.asDouble() == b.asDouble()) 1 else 0)
-    }
-}
-
-class NotEqualsAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-        return APLLong(if(a.asDouble() != b.asDouble()) 1 else 0)
-    }
-}
-
 class AndAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
         val aValue = a.asDouble()
         val bValue = b.asDouble()
-        if((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-            return APLLong(if(aValue == 1.0 && bValue == 1.0) 1 else 0)
-        }
-        else {
+        if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+            return APLLong(if (aValue == 1.0 && bValue == 1.0) 1 else 0)
+        } else {
             TODO("LCM is not implemented")
         }
     }
@@ -186,10 +173,9 @@ class OrAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
         val aValue = a.asDouble()
         val bValue = b.asDouble()
-        if((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-            return APLLong(if(aValue == 1.0 || bValue == 1.0) 1 else 0)
-        }
-        else {
+        if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+            return APLLong(if (aValue == 1.0 || bValue == 1.0) 1 else 0)
+        } else {
             TODO("GCD is not implemented")
         }
     }

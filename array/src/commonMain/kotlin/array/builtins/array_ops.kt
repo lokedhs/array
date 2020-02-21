@@ -89,15 +89,15 @@ class ReduceOp : APLOperator {
         return object : APLFunction {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
-                if (a.rank() == 0) {
+                return if (a.rank() == 0) {
                     if (axisParam != null && axisParam != 0) {
                         throw IllegalAxisException(axisParam, a.dimensions())
                     }
-                    return a
+                    a
                 } else {
                     val v = axisParam ?: (a.dimensions().size - 1)
                     ensureValidAxis(v, a.dimensions())
-                    return ReduceResult1Arg(context, fn, a, v)
+                    ReduceResult1Arg(context, fn, a, v)
                 }
             }
 

@@ -11,6 +11,8 @@ object CloseFnDef : Token()
 object OpenBracket : Token()
 object CloseBracket : Token()
 object StatementSeparator : Token()
+object LeftArrow : Token()
+object FnDefSym : Token()
 
 class Symbol(val value: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${value}]"
@@ -23,18 +25,38 @@ class ParsedLong(val value: Long) : Token()
 
 class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     private val singleCharFunctions: Set<String>
-    private var pos = 0
     private val pushBackQueue = ArrayList<Token>()
+
+    private val charToTokenMap = hashMapOf(
+        "(" to OpenParen,
+        ")" to CloseParen,
+        "{" to OpenFnDef,
+        "}" to CloseFnDef,
+        "[" to OpenBracket,
+        "]" to CloseBracket,
+        "←" to LeftArrow,
+        "◊" to StatementSeparator,
+        "∇" to FnDefSym
+    )
 
     init {
         singleCharFunctions = hashSetOf(
             "!", "#", "%", "&", "*", "+", ",", "-", "/", "<", "=", ">", "?", "@", "^", "|",
-            "~", "¨", "×", "÷", "←", "↑", "→", "↓", "∊", "∘", "∧", "∨", "∩", "∪", "∼", "≠",
-            "≡", "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷",
-            "⌹", "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤",
-            "⍥", "⍨", "⍪", "⍫", "⍬", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
+            "~", "¨", "×", "÷", "↑", "→", "↓", "∊", "∘", "∧", "∨", "∩", "∪", "∼", "≠", "≡",
+            "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷", "⌹",
+            "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤", "⍥",
+            "⍨", "⍪", "⍫", "⍬", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
             "○", "$", "¥", "χ", "\\"
         )
+    }
+
+    inline fun <reified T : Token> nextTokenWithType(): T {
+        val token = nextToken()
+        if (token is T) {
+            return token
+        } else {
+            throw UnexpectedToken(token)
+        }
     }
 
     fun nextTokenOrSpace(): Token {
@@ -44,16 +66,11 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
 
         val ch = content.nextCodepoint() ?: return EndOfFile
 
+        charToTokenMap[charToString(ch)]?.also { return it }
+
         return when {
-            isOpenParen(ch) -> OpenParen
-            isCloseParen(ch) -> CloseParen
-            isOpenFnDef(ch) -> OpenFnDef
-            isCloseFnDef(ch) -> CloseFnDef
+            singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
             isNegationSign(ch) -> collectNegativeNumber()
-            isStatementSeparator(ch) -> StatementSeparator
-            isOpenBracket(ch) -> OpenBracket
-            isCloseBracket(ch) -> CloseBracket
-            singleCharFunctions.contains(codepointToString(ch)) -> engine.internSymbol(codepointToString(ch))
             isDigit(ch) -> collectNumber(ch)
             isWhitespace(ch) -> Whitespace
             isLetter(ch) -> collectSymbol(ch)
@@ -65,20 +82,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         pushBackQueue.add(token)
     }
 
-    private fun codepointToString(ch: Int): String {
-        val buf = StringBuilder()
-        buf.addCodepoint(ch)
-        return buf.toString()
-    }
-
-    private fun isOpenParen(ch: Int) = ch == '('.toInt()
-    private fun isCloseParen(ch: Int) = ch == ')'.toInt()
-    private fun isStatementSeparator(ch: Int) = ch == '◊'.toInt()
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
-    private fun isOpenFnDef(ch: Int) = ch == '{'.toInt()
-    private fun isCloseFnDef(ch: Int) = ch == '}'.toInt()
-    private fun isOpenBracket(ch: Int) = ch == '['.toInt()
-    private fun isCloseBracket(ch: Int) = ch == ']'.toInt()
 
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
@@ -111,7 +115,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         while (true) {
             val ch = content.nextCodepoint() ?: break
             if (!isLetter(ch) || isDigit(ch)) {
-                pos--
+                content.revertLastChars(1)
                 break
             }
             buf.addCodepoint(ch)
@@ -123,6 +127,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         while (true) {
             val token = nextTokenOrSpace()
             if (token != Whitespace) {
+                println("token = $token")
                 return token
             }
         }
@@ -147,7 +152,9 @@ class InstructionList(val instructions: List<Instruction>) : Instruction {
 }
 
 class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction, val axis: Instruction?) : Instruction {
-    override fun evalWithContext(context: RuntimeContext) = fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
+    override fun evalWithContext(context: RuntimeContext) =
+        fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
+
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
 
@@ -193,6 +200,32 @@ class LiteralNumber(val value: Long) : Instruction {
     override fun toString() = "LiteralNumber(value=$value)"
 }
 
+class LiteralSymbol(val name: Symbol) : Instruction {
+    private val value = APLSymbol(name)
+
+    override fun evalWithContext(context: RuntimeContext): APLValue = value
+}
+
+class AssignmentInstruction(val name: Symbol, val instr: Instruction) : Instruction {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        val res = instr.evalWithContext(context)
+        context.setVar(name, res)
+        return res
+    }
+}
+
+class UserFunction(private val arg: Symbol, private val instr: Instruction) : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        val inner = context.link()
+        inner.setVar(arg, a)
+        return instr.evalWithContext(inner)
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        TODO("not implemented")
+    }
+}
+
 fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
 
@@ -233,6 +266,37 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         }
     }
 
+    fun processAssignment(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
+        // Ensure that the left argument to leftarrow is a single symbol
+        unless(leftArgs.size == 1) {
+            throw IncompatibleTypeException("Can only assign to a single variable")
+        }
+        val dest = leftArgs[0]
+        if (!(dest is VariableRef)) {
+            throw IncompatibleTypeException("Attempt to assign to a type which is not a variable")
+        }
+        val (rightValue, lastToken) = parseValue(engine, tokeniser)
+        return Pair(AssignmentInstruction(dest.name, rightValue), lastToken)
+    }
+
+    fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator): Instruction {
+        if(!leftArgs.isEmpty()) {
+            throw ParseException("Function definition with non-null left argument")
+        }
+
+        val name = tokeniser.nextTokenWithType<Symbol>()
+        val arg = tokeniser.nextTokenWithType<Symbol>()
+        // Read the opening brace
+        tokeniser.nextTokenWithType<OpenFnDef>()
+        // Parse like a normal function definition
+        val instr = parseValueToplevel(engine, tokeniser, CloseFnDef)
+
+        val obj = UserFunction(arg, instr)
+
+        engine.registerFunction(name, obj)
+        return LiteralSymbol(name)
+    }
+
     while (true) {
         val token = tokeniser.nextToken()
         if (token == CloseParen || token == EndOfFile || token == StatementSeparator || token == CloseFnDef || token == CloseBracket) {
@@ -251,14 +315,21 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser))
             is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
             is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
+            is LeftArrow -> return processAssignment(engine, tokeniser)
+            is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser))
             else -> throw UnexpectedToken(token)
         }
     }
 }
 
-fun parseFnDefinition(engine: Engine, tokeniser: TokenGenerator): DeclaredFunction {
+fun parseFnDefinition(
+    engine: Engine,
+    tokeniser: TokenGenerator,
+    leftArgName: Symbol? = null,
+    rightArgName: Symbol? = null
+): DeclaredFunction {
     val instruction = parseValueToplevel(engine, tokeniser, CloseFnDef)
-    return DeclaredFunction(instruction)
+    return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"))
 }
 
 fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator): APLFunction {

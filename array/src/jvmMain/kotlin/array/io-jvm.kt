@@ -10,6 +10,10 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
         } else {
             val result = s.codePointAt(pos)
             pos = s.offsetByCodePoints(pos, 1)
+            println("Codepoint[$pos] = ${ charToString(result)}")
+            if(result > 256) {
+                println("special!")
+            }
             result
         }
     }

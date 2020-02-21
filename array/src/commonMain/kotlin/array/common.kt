@@ -8,8 +8,8 @@ class IllegalNumberFormat(message: String) : APLEvalException(message)
 class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
 class UnexpectedToken(token: Token) : APLEvalException("Unexpected token: $token")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
-class IllegalAxisException(val axis: Int, val dimensions: Dimensions) :
-    APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
+class IllegalAxisException(axis: Int, dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
+class ParseException(message: String) : APLEvalException(message)
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if (!cond) {
@@ -94,13 +94,13 @@ fun resolveAxis(axisParam: APLValue?, arg: APLValue): Int {
 }
 
 inline fun <T, R : Comparable<R>> List<T>.maxValueBy(fn: (T) -> R): R {
-    if(this.isEmpty()) {
+    if (this.isEmpty()) {
         throw RuntimeException("call to maxValueBy on empty list")
     }
     var currMax: R? = null
     this.forEach { e ->
         val res = fn(e)
-        if(currMax == null || res > currMax!!) {
+        if (currMax == null || res > currMax!!) {
             currMax = res
         }
     }
