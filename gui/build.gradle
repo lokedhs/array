@@ -10,7 +10,7 @@ repositories {
 
 javafx {
     version = "13"
-    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml']
+    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml', 'javafx.web', 'javafx.swing']
 }
 
 dependencies {

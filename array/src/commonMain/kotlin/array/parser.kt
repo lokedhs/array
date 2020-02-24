@@ -127,7 +127,6 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         while (true) {
             val token = nextTokenOrSpace()
             if (token != Whitespace) {
-                println("token = $token")
                 return token
             }
         }

@@ -3,7 +3,6 @@ package array.gui
 import array.APLValue
 import array.Engine
 import javafx.application.Application
-import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -17,7 +16,7 @@ import javafx.stage.Stage
 
 
 class Client : Application() {
-    private val resultList: ResultList
+    private val resultList: ResultList2
     private val entryTextField: ExtendedCharsInputField
     private val inputFont: Font
     private val engine = Engine()
@@ -26,7 +25,7 @@ class Client : Application() {
         val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 
-        resultList = ResultList()
+        resultList = ResultList2(ClientRenderContextImpl())
 
         entryTextField = ExtendedCharsInputField().apply {
             font = inputFont
@@ -41,7 +40,7 @@ class Client : Application() {
         val contentScrollPane = ScrollPane(resultList)
 
         val sendButton = Button("Submit").apply {
-            onAction = EventHandler<ActionEvent> { sendEntry() }
+            onAction = EventHandler { sendEntry() }
             maxHeight = Double.MAX_VALUE
         }
         HBox.setHgrow(sendButton, Priority.ALWAYS)
@@ -64,7 +63,7 @@ class Client : Application() {
         try {
             val instr = engine.parseString(text)
             val v = instr.evalWithContext(engine.makeRuntimeContext())
-            resultList.addResult(ClientRenderContextImpl(), text, v)
+            resultList.addResult(text, v)
         }
         catch(e: Exception) {
             e.printStackTrace()
