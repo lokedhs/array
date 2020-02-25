@@ -16,6 +16,7 @@ interface APLValue {
     fun isScalar(): Boolean = rank() == 0
     fun defaultValue(): APLValue = APLLong(0)
     fun isAtom() = false
+    fun arrayify(): APLValue
 }
 
 abstract class APLSingleValue : APLValue {
@@ -25,6 +26,7 @@ abstract class APLSingleValue : APLValue {
     override fun rank() = 0
     override fun collapse() = this
     override fun isAtom() = true
+    override fun arrayify() = APLArrayImpl(intArrayOf(1)) { i -> this }
 }
 
 abstract class APLArray : APLValue {
@@ -37,6 +39,7 @@ abstract class APLArray : APLValue {
     }
 
     override fun formatted() = arrayAsString(this)
+    override fun arrayify() = if (rank() == 0) APLArrayImpl(intArrayOf(1)) { valueAt(0) } else this
 }
 
 fun arrayAsString(array: APLValue): String {

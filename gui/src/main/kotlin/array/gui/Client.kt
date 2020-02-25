@@ -17,6 +17,7 @@ import javafx.stage.Stage
 
 class Client : Application() {
     private val resultList: ResultList2
+    private var contentScrollPane: ScrollPane
     private val entryTextField: ExtendedCharsInputField
     private val inputFont: Font
     private val engine = Engine()
@@ -26,6 +27,7 @@ class Client : Application() {
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 
         resultList = ResultList2(ClientRenderContextImpl())
+        contentScrollPane = ScrollPane(resultList)
 
         entryTextField = ExtendedCharsInputField().apply {
             font = inputFont
@@ -36,8 +38,6 @@ class Client : Application() {
 
     override fun start(stage: Stage) {
         stage.title = "Test ui"
-
-        val contentScrollPane = ScrollPane(resultList)
 
         val sendButton = Button("Submit").apply {
             onAction = EventHandler { sendEntry() }
@@ -55,7 +55,7 @@ class Client : Application() {
             bottom = inputContainer
         }
 
-        stage.scene = Scene(border, 400.0, 300.0)
+        stage.scene = Scene(border, 600.0, 800.0)
         stage.show()
     }
 
@@ -64,8 +64,9 @@ class Client : Application() {
             val instr = engine.parseString(text)
             val v = instr.evalWithContext(engine.makeRuntimeContext())
             resultList.addResult(text, v)
-        }
-        catch(e: Exception) {
+            contentScrollPane.layout()
+            contentScrollPane.vvalue = contentScrollPane.vmax
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }

@@ -6,3 +6,9 @@ interface CharacterProvider {
 }
 
 expect class StringCharacterProvider(s: String) : CharacterProvider
+
+interface KeyboardInput {
+    fun readString(): String
+}
+
+expect fun makeKeyboardInput(): KeyboardInput

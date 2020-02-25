@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlin.math.min
 
 class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() {
     override fun dimensions() = intArrayOf(size)
@@ -117,41 +118,49 @@ class ConcatenateAPLFunction : APLFunction {
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
+        return if (axis == null) {
+            joinNoAxis(a, b)
+        } else {
+            joinByAxis(a, b, axis.ensureNumber().asInt())
+        }
+    }
+
+    private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
+        return when {
+            a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(intArrayOf(2)) { i -> if (i == 0) a else b }
+            a.rank() <= 1 && b.rank() <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
+            else -> joinByAxis(a, b, min(a.rank(), b.rank()))
+        }
+    }
+
+    private fun joinByAxis(a: APLValue, b: APLValue, axis: Int): APLArray {
         if (a.rank() == 0 && b.rank() == 0) {
             throw InvalidDimensionsException("Both a and b are scalar")
         }
 
-        val axisInt = if (axis !== null) {
-            axis.ensureNumber().asInt()
-        } else if (a.rank() == 0) {
-            b.dimensions().size - 1
-        } else {
-            a.dimensions().size - 1
-        }
-
         val a1 = if (a.rank() == 0) {
             val bDimensions = b.dimensions()
-            ConstantArray(IntArray(bDimensions.size) { index -> if (index == axisInt) 1 else bDimensions[index] }, a)
+            ConstantArray(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }, a)
         } else {
             a
         }
 
         val b1 = if (b.rank() == 0) {
             val aDimensions = a.dimensions()
-            ConstantArray(IntArray(aDimensions.size) { index -> if (index == axisInt) 1 else aDimensions[index] }, b)
+            ConstantArray(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }, b)
         } else {
             b
         }
 
         val a2 = if (b1.rank() - a1.rank() == 1) {
             // Reshape a1, inserting a new dimension at the position of the axis
-            ResizedArray(copyArrayAndInsert(a1.dimensions(), axisInt, 1), a1)
+            ResizedArray(copyArrayAndInsert(a1.dimensions(), axis, 1), a1)
         } else {
             a1
         }
 
         val b2 = if (a1.rank() - b1.rank() == 1) {
-            ResizedArray(copyArrayAndInsert(b1.dimensions(), axisInt, 1), b1)
+            ResizedArray(copyArrayAndInsert(b1.dimensions(), axis, 1), b1)
         } else {
             b1
         }
@@ -164,8 +173,8 @@ class ConcatenateAPLFunction : APLFunction {
         }
 
         for (i in da.indices) {
-            if (i != axisInt && da[i] != db[i]) {
-                throw InvalidDimensionsException("dimensions at axis ${axisInt} does not match: ${da} compared to ${db}")
+            if (i != axis && da[i] != db[i]) {
+                throw InvalidDimensionsException("dimensions at axis ${axis} does not match: ${da} compared to ${db}")
             }
         }
 
@@ -178,7 +187,7 @@ class ConcatenateAPLFunction : APLFunction {
             return Concatenated1DArrays(a2, b2)
         }
 
-        return ConcatenatedMultiDimensionalArrays(a2, b2, axisInt)
+        return ConcatenatedMultiDimensionalArrays(a2, b2, axis)
     }
 
     // This is an inner class since it's highly dependent on invariants that are established in the parent class
@@ -221,7 +230,8 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
         TODO("not implemented")
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+    override fun eval2Arg(context: RuntimeContext, aArg: APLValue, b: APLValue): APLValue {
+        val a = aArg.arrayify()
         val ad = a.dimensions()
         if (ad.size != 1) {
             throw InvalidDimensionsException("position argument is not rank 1")
@@ -254,7 +264,7 @@ class TakeAPLFunction : APLFunction {
 
 class RandomAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return if(a.isAtom()) {
+        return if (a.isAtom()) {
             makeRandom(a.ensureNumber())
         } else {
             APLArrayImpl(a.dimensions()) { index -> makeRandom(a.valueAt(index).ensureNumber()) }

@@ -1,7 +1,8 @@
 package array
 
+import array.repl.runRepl
+
 fun main() {
-    val engine = Engine()
-    val result = engine.parseString("10 20 foo")
-    println("result = $result")
+    println("Native version. This will run slower than the Java version.")
+    runRepl()
 }

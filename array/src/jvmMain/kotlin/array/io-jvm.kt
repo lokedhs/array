@@ -1,5 +1,8 @@
 package array
 
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
 
     private var pos = 0
@@ -17,4 +20,14 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
     override fun revertLastChars(n: Int) {
         pos = s.offsetByCodePoints(pos, -n)
     }
+}
+
+class KeyboardInputJvm() : KeyboardInput {
+    private val reader = BufferedReader(InputStreamReader(System.`in`))
+
+    override fun readString() = reader.readLine()
+}
+
+actual fun makeKeyboardInput(): KeyboardInput {
+    return KeyboardInputJvm()
 }

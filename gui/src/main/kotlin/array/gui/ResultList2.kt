@@ -4,14 +4,16 @@ import array.APLValue
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 
-class ResultList2(val context: ClientRenderContext) : TextFlow() {
+class ResultList2(private val context: ClientRenderContext) : TextFlow() {
     fun addResult(text: String, v: APLValue) {
-        children.add(TextWithStyle(text + "\n"))
-        children.add(TextWithStyle(v.formatted() + "\n"))
+        children.apply {
+            add(textWithStyle(text + "\n"))
+            add(textWithStyle(v.formatted() + "\n"))
+        }
     }
-    
-    inner class TextWithStyle(s: String) : Text(s) {
-        init {
+
+    private fun textWithStyle(s: String): Text {
+        return Text(s).apply {
             font = context.font()
         }
     }
