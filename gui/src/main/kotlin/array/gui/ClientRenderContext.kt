@@ -5,5 +5,5 @@ import javafx.scene.text.Font
 
 interface ClientRenderContext {
     fun font(): Font
-    fun valueClickCallback(value: APLValue): Unit
+    fun valueClickCallback(value: APLValue)
 }

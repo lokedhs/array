@@ -37,7 +37,7 @@ private class String2D {
             val newRow = ArrayList<String>()
             newRow.add("┃")
             newRow.addAll(row)
-            (0 until (width - row.size)).forEach { newRow.add(" ") }
+            repeat(width - row.size) { newRow.add(" ") }
             newRow.add("┃")
             newContent.add(newRow)
         }
@@ -75,48 +75,6 @@ private fun construct2DStrings(numRows: Int, numCols: Int, value: APLValue, colW
         rows.add(row)
     }
     return rows
-}
-
-private fun enclose3D(value: APLValue): String {
-    val dimensions = value.dimensions()
-    assertx(dimensions.size == 3)
-
-    val colWidths = Array(dimensions[2]) { 0 }
-    val sizeOf2DArray = dimensions[1] * dimensions[2]
-    val cellList = ArrayList<List<List<String2D>>>()
-    for (i in 0 until dimensions[0]) {
-        cellList.add(construct2DStrings(dimensions[1], dimensions[2], value, colWidths, i * sizeOf2DArray))
-    }
-
-    val allColsWidth = colWidths.reduce { x, y -> x + y } + colWidths.size - 1
-    val content = ArrayList<List<String>>()
-    content.add(topBottomRow("╔", "═", "╗", allColsWidth))
-    for (z in 0 until dimensions[0]) {
-        if (z > 0) {
-            content.add(topBottomRow("╟", "─", "╢", allColsWidth))
-        }
-        val cell = cellList[z]
-        for (y in 0 until cell.size) {
-            val row = cell[y]
-            val numInternalRows = row.maxValueBy { it.height() }
-            for (internalRowIndex in 0 until numInternalRows) {
-                val rowContent = ArrayList<String>()
-                rowContent.add("║")
-                for (x in 0 until row.size) {
-                    val v = row[x]
-                    val inner = v.row(internalRowIndex)
-                    if (x > 0) {
-                        rowContent.add(" ")
-                    }
-                    rightJustified(rowContent, inner, colWidths[x])
-                }
-                rowContent.add("║")
-                content.add(rowContent)
-            }
-        }
-    }
-    content.add(topBottomRow("╚", "═", "╝", allColsWidth))
-    return String2D(content).asString()
 }
 
 private fun encloseNDim(value: APLValue): String {

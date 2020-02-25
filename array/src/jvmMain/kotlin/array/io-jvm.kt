@@ -22,7 +22,7 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
     }
 }
 
-class KeyboardInputJvm() : KeyboardInput {
+class KeyboardInputJvm : KeyboardInput {
     private val reader = BufferedReader(InputStreamReader(System.`in`))
 
     override fun readString(): String? {

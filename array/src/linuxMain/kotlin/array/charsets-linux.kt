@@ -29,8 +29,8 @@ actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {
 
 actual fun String.asCodepointList(): List<Int> {
     val result = ArrayList<Int>()
-    for(i in 0 until this.length) {
-        val codepoint = this[i].toInt()
+    for(element in this) {
+        val codepoint = element.toInt()
         assert(codepoint < 0x10000)
         result.add(codepoint)
     }
@@ -39,8 +39,8 @@ actual fun String.asCodepointList(): List<Int> {
 
 actual fun String.asGraphemeList(): List<String> {
     val result = ArrayList<String>()
-    for(i in 0 until this.length) {
-        val codepoint = this[i].toInt()
+    for(element in this) {
+        val codepoint = element.toInt()
         assert(codepoint < 0x10000)
         result.add(codepoint.toChar().toString())
     }

@@ -22,10 +22,10 @@ class TableResult(content: APLValue) : TableView<APLRowWrapper>() {
             cols = dimensions[1]
         }
 
-        val elementList = 0.rangeTo(rows - 1).map { index -> APLRowWrapper(content, index, cols) }.toTypedArray()
+        val elementList = (0 until rows).map { index -> APLRowWrapper(content, index, cols) }.toTypedArray()
         items = FXCollections.observableArrayList(*elementList)
 
-        val colList = 0.rangeTo(cols - 1).map { index ->
+        val colList = (0 until cols).map { index ->
             TableColumn<APLRowWrapper, APLValueWrapper>().apply {
                 cellValueFactory = ResultCellValueFactory(index)
                 cellFactory = SimpleResultCellFactory()
@@ -47,8 +47,8 @@ class SimpleAPLCell : TableCell<APLRowWrapper, APLValueWrapper>() {
         super.updateItem(item, empty)
 
         if (empty || item == null) {
-            setText(null);
-            setGraphic(null);
+            text = null
+            graphic = null
         } else {
             text = item.value.formatted()
         }

@@ -92,7 +92,7 @@ class APLChar(private val value: Int) : APLSingleValue() {
     fun asString(): String = charToString(value)
 }
 
-class APLSymbol(private val value: Symbol) : APLSingleValue()
+class APLSymbol(val value: Symbol) : APLSingleValue()
 
 fun indexFromDimensions(d: Dimensions, p: Array<Int>): Int {
     val sizes = Array(d.size) { 0 }

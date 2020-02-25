@@ -199,7 +199,7 @@ class LiteralNumber(val value: Long) : Instruction {
     override fun toString() = "LiteralNumber(value=$value)"
 }
 
-class LiteralSymbol(val name: Symbol) : Instruction {
+class LiteralSymbol(name: Symbol) : Instruction {
     private val value = APLSymbol(name)
 
     override fun evalWithContext(context: RuntimeContext): APLValue = value
@@ -271,7 +271,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             throw IncompatibleTypeException("Can only assign to a single variable")
         }
         val dest = leftArgs[0]
-        if (!(dest is VariableRef)) {
+        if (dest !is VariableRef) {
             throw IncompatibleTypeException("Attempt to assign to a type which is not a variable")
         }
         val (rightValue, lastToken) = parseValue(engine, tokeniser)
