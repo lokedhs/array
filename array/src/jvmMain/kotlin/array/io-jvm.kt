@@ -8,7 +8,7 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
     private var pos = 0
 
     override fun nextCodepoint(): Int? {
-        return if(pos >= s.length) {
+        return if (pos >= s.length) {
             null
         } else {
             val result = s.codePointAt(pos)
@@ -25,7 +25,9 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
 class KeyboardInputJvm() : KeyboardInput {
     private val reader = BufferedReader(InputStreamReader(System.`in`))
 
-    override fun readString() = reader.readLine()
+    override fun readString(): String? {
+        return reader.readLine()
+    }
 }
 
 actual fun makeKeyboardInput(): KeyboardInput {

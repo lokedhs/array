@@ -1,7 +1,7 @@
 package array.builtins
 
 import array.*
-import kotlin.math.min
+import kotlin.math.max
 
 class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() {
     override fun dimensions() = intArrayOf(size)
@@ -129,7 +129,7 @@ class ConcatenateAPLFunction : APLFunction {
         return when {
             a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(intArrayOf(2)) { i -> if (i == 0) a else b }
             a.rank() <= 1 && b.rank() <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
-            else -> joinByAxis(a, b, min(a.rank(), b.rank()))
+            else -> joinByAxis(a, b, max(a.rank(), b.rank()) - 1)
         }
     }
 
@@ -174,7 +174,7 @@ class ConcatenateAPLFunction : APLFunction {
 
         for (i in da.indices) {
             if (i != axis && da[i] != db[i]) {
-                throw InvalidDimensionsException("dimensions at axis ${axis} does not match: ${da} compared to ${db}")
+                throw InvalidDimensionsException("dimensions at axis $axis does not match: $da compared to $db")
             }
         }
 
@@ -230,9 +230,9 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
         TODO("not implemented")
     }
 
-    override fun eval2Arg(context: RuntimeContext, aArg: APLValue, b: APLValue): APLValue {
-        val a = aArg.arrayify()
-        val ad = a.dimensions()
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+        val aFixed = a.arrayify()
+        val ad = aFixed.dimensions()
         if (ad.size != 1) {
             throw InvalidDimensionsException("position argument is not rank 1")
         }
@@ -240,7 +240,7 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
         if (ad[0] != bd.size) {
             throw InvalidDimensionsException("number of values in position argument must match the number of dimensions")
         }
-        val posList = Array(ad[0]) { i -> a.valueAt(i).ensureNumber().asInt() }
+        val posList = Array(ad[0]) { i -> aFixed.valueAt(i).ensureNumber().asInt() }
         val pos = indexFromDimensions(bd, posList)
         return b.valueAt(pos)
     }

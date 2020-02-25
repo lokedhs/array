@@ -128,12 +128,12 @@ private fun encloseNDim(value: APLValue): String {
     // while the grid of blocks are rendered column-major. This is because for 3D rendering, we want each
     // block to be rendered vertically, and we don't want to transpose this grid just because we add another
     // dimension.
-
+    
     val lookupByCoords: (Int, Int, Int, Int) -> Int = when (dimensions.size) {
         1 -> { a, b, c, d -> d }
-        2 -> { a, b, c, d -> c * multipliers[1] + d }
-        3 -> { a, b, c, d -> a * multipliers[1] + c * multipliers[2] + d }
-        4 -> { a, b, c, d -> b * multipliers[1] + a * multipliers[2] + c * multipliers[3] + d }
+        2 -> { a, b, c, d -> c * multipliers[0] + d }
+        3 -> { a, b, c, d -> a * multipliers[0] + c * multipliers[1] + d }
+        4 -> { a, b, c, d -> b * multipliers[0] + a * multipliers[1] + c * multipliers[2] + d }
         else -> TODO("No support for printing higher-dimension arrays")
     }
     val (s1, s2, s3, s4) = when (dimensions.size) {

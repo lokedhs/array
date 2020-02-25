@@ -11,7 +11,7 @@ fun runRepl() {
     while (true) {
         print(prompt)
         val line = keyboardInput.readString()
-        if (line.trim() == "quit") {
+        if (line == null || line.trim() == "quit") {
             break
         }
         val parsed = engine.parseString(line)
