@@ -9,14 +9,13 @@ fun runRepl() {
     val engine = Engine()
     val prompt = "> "
     while (true) {
-        print(prompt)
-        val line = keyboardInput.readString()
-        if (line == null || line.trim() == "quit") {
-            break
+        val line = keyboardInput.readString(prompt) ?: break
+        val stringTrimmed = line.trim()
+        if(stringTrimmed != "") {
+            val parsed = engine.parseString(line)
+            val context = RuntimeContext(engine, null)
+            val result = parsed.evalWithContext(context)
+            println(result.formatted())
         }
-        val parsed = engine.parseString(line)
-        val context = RuntimeContext(engine, null)
-        val result = parsed.evalWithContext(context)
-        println(result.formatted())
     }
 }

@@ -3,6 +3,7 @@ package array
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.nativeHeap.free
 import kotlinx.cinterop.toKString
 import platform.posix.fgets
 import platform.posix.stdin
@@ -21,7 +22,8 @@ actual class StringCharacterProvider actual constructor(val s: String) : Charact
 }
 
 class KeyboardInputNative : KeyboardInput {
-    override fun readString(): String? {
+    override fun readString(prompt: String): String? {
+        print(prompt)
         memScoped {
             val bufSize = 10240
             val buf = allocArray<ByteVar>(bufSize)
@@ -29,14 +31,27 @@ class KeyboardInputNative : KeyboardInput {
             return if (ret != null) {
                 ret.toKString().forEachIndexed { i, ch -> println("$i = $ch") }
                 ret.toKString()
-            }
-            else {
+            } else {
                 null
             }
         }
     }
 }
 
+class KeyboardInputLibedit : KeyboardInput {
+    override fun readString(prompt: String): String? {
+        val result = libedit.readline(prompt)
+        return if(result == null) {
+            null
+        } else {
+            val resultConverted = result.toKString()
+            free(result.rawValue)
+            resultConverted
+        }
+    }
+}
+
 actual fun makeKeyboardInput(): KeyboardInput {
-    return KeyboardInputNative()
+//    return KeyboardInputNative()
+    return KeyboardInputLibedit()
 }

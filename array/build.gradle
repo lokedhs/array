@@ -14,6 +14,9 @@ kotlin {
 
     jvm()
     linuxX64("linux") {
+        compilations.main.cinterops {
+            libedit
+        }
         binaries {
             executable {
                 // Change to specify fully qualified name of your application's entry point:

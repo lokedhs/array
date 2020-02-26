@@ -1,0 +1,6 @@
+headers = editline/readline.h
+headerFilter = editline/*
+
+compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
+linkerOpts.osx = -ledit
+linkerOpts.linux = -L/usr/lib64 -ledit
