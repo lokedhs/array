@@ -78,7 +78,7 @@ class ReduceResult1Arg(
         val posInSrc = ((p / fromSourceMul) * toDestMul) + p % fromSourceMul
         var curr = arg.valueAt(posInSrc)
         for (i in 1 until reduceDepth) {
-            curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null)
+            curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null).collapse()
         }
         return curr
     }

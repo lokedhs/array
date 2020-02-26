@@ -26,7 +26,7 @@ abstract class APLSingleValue : APLValue {
     override fun rank() = 0
     override fun collapse() = this
     override fun isAtom() = true
-    override fun arrayify() = APLArrayImpl(intArrayOf(1)) { i -> this }
+    override fun arrayify() = APLArrayImpl(intArrayOf(1)) { this }
 }
 
 abstract class APLArray : APLValue {
