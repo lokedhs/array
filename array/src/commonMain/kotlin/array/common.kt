@@ -6,10 +6,12 @@ class InvalidDimensionsException(message: String) : APLEvalException(message)
 class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
 class IllegalNumberFormat(message: String) : APLEvalException(message)
 class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
-class UnexpectedToken(token: Token) : APLEvalException("Unexpected token: $token")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
 class IllegalAxisException(axis: Int, dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
-class ParseException(message: String) : APLEvalException(message)
+class APLIllegalArgumentException(message: String) : APLEvalException(message)
+
+open class ParseException(message: String) : Exception(message)
+class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if (!cond) {

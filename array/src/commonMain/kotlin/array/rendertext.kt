@@ -190,7 +190,7 @@ fun renderStringValue(value: APLValue): String {
     for(i in 0 until value.size()) {
         val v = value.valueAt(i)
         if(v is APLChar) {
-            buf.addCodepoint(v.codepoint())
+            buf.addCodepoint(v.value)
         }
         else {
             throw IllegalStateException("String contain non-chars")

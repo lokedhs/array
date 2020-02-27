@@ -115,9 +115,8 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
     }
 }
 
-class APLChar(private val value: Int) : APLSingleValue() {
+class APLChar(val value: Int) : APLSingleValue() {
     override fun formatted() = "@${charToString(value)}"
-    fun codepoint(): Int = value
     fun asString() = charToString(value)
 }
 
