@@ -36,10 +36,18 @@ fun readExcelFile(name: String): APLValue {
 fun readRow(row: Row, evaluator: FormulaEvaluator): List<APLValue> {
     val cellList = ArrayList<APLValue>()
     val lastCellIndex = row.lastCellNum
-    for (i in 0..lastCellIndex) {
+    var numPendingNulls = 0
+    for (i in 0 until lastCellIndex) {
         val cell = row.getCell(i)
-        val value = if (cell == null) APLNullValue() else cellToAPLValue(cell, evaluator)
-        cellList.add(value)
+        if (cell == null) {
+            numPendingNulls++
+        } else {
+            repeat(numPendingNulls) {
+                cellList.add(APLNullValue())
+            }
+            numPendingNulls = 0
+            cellList.add(cellToAPLValue(cell, evaluator))
+        }
     }
     return cellList
 }
@@ -73,13 +81,13 @@ class LoadExcelFileFunction : NoAxisAPLFunction() {
     }
 
     private fun arrayToString(a: APLValue): String {
-        if(a.rank() != 1) {
+        if (a.rank() != 1) {
             throw InvalidDimensionsException("String must be rank 1")
         }
         val buf = StringBuilder()
-        for(i in 0 until a.size()) {
+        for (i in 0 until a.size()) {
             val charValue = a.valueAt(i)
-            if(charValue !is APLChar) {
+            if (charValue !is APLChar) {
                 throw IncompatibleTypeException("Value at position $i is not a character")
             }
             buf.addCodepoint(charValue.value)
