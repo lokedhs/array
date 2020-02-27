@@ -2,6 +2,7 @@ package array.gui
 
 import array.APLValue
 import array.Engine
+import array.msofficereader.LoadExcelFileFunction
 import javafx.application.Application
 import javafx.event.EventHandler
 import javafx.geometry.Insets
@@ -23,6 +24,8 @@ class Client : Application() {
     private val engine = Engine()
 
     init {
+        engine.registerFunction(engine.internSymbol("loadExcelFile"), LoadExcelFileFunction())
+
         val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 

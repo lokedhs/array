@@ -1,6 +1,8 @@
 package array
 
 import array.rendertext.encloseInBox
+import array.rendertext.renderNullValue
+import array.rendertext.renderStringValue
 
 typealias Dimensions = IntArray
 
@@ -42,8 +44,34 @@ abstract class APLArray : APLValue {
     override fun arrayify() = if (rank() == 0) APLArrayImpl(intArrayOf(1)) { valueAt(0) } else this
 }
 
+fun isNullValue(value: APLValue): Boolean {
+    val dimensions = value.dimensions()
+    return dimensions.size == 1 && dimensions[0] == 0
+}
+
+fun isStringValue(value: APLValue): Boolean {
+    val dimensions = value.dimensions()
+    if(dimensions.size == 1) {
+        for(i in 0 until value.size()) {
+            val v = value.valueAt(i)
+            if(!(v is APLChar)) {
+                return false
+            }
+        }
+        return true
+    }
+    else {
+        return false
+    }
+}
+
 fun arrayAsString(array: APLValue): String {
-    return encloseInBox(array)
+    val v = array.collapse() // This is to prevent multiple evaluations during printing
+    return when {
+        isNullValue(v) -> renderNullValue()
+        isStringValue(v) -> renderStringValue(v)
+        else -> encloseInBox(v)
+    }
 }
 
 class ConstantArray(
@@ -88,8 +116,21 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 }
 
 class APLChar(private val value: Int) : APLSingleValue() {
+    override fun formatted() = "@${charToString(value)}"
     fun codepoint(): Int = value
-    fun asString(): String = charToString(value)
+    fun asString() = charToString(value)
+}
+
+fun makeAPLString(s: String): APLValue {
+    val codepointList = s.asCodepointList()
+    return APLArrayImpl(intArrayOf(codepointList.size)) { i -> APLChar(codepointList[i]) }
+}
+
+class APLNullValue() : APLArray() {
+    val dimensions = intArrayOf(0)
+
+    override fun dimensions() = dimensions
+    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
 }
 
 class APLSymbol(val value: Symbol) : APLSingleValue()

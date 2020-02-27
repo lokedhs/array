@@ -13,6 +13,7 @@ object CloseBracket : Token()
 object StatementSeparator : Token()
 object LeftArrow : Token()
 object FnDefSym : Token()
+object APLNullSym : Token()
 
 class Symbol(val value: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${value}]"
@@ -21,9 +22,12 @@ class Symbol(val value: String) : Token(), Comparable<Symbol> {
     override fun equals(other: Any?) = other != null && other is Symbol && value == other.value
 }
 
+class StringToken(val value: String) : Token()
+
 class ParsedLong(val value: Long) : Token()
 
-class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
+class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
+    private val content = PushBackCharacterProvider(contentArg)
     private val singleCharFunctions: Set<String>
     private val pushBackQueue = ArrayList<Token>()
 
@@ -36,7 +40,8 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         "]" to CloseBracket,
         "←" to LeftArrow,
         "◊" to StatementSeparator,
-        "∇" to FnDefSym
+        "∇" to FnDefSym,
+        "⍬" to APLNullSym
     )
 
     init {
@@ -45,7 +50,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
             "~", "¨", "×", "÷", "↑", "→", "↓", "∊", "∘", "∧", "∨", "∩", "∪", "∼", "≠", "≡",
             "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷", "⌹",
             "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤", "⍥",
-            "⍨", "⍪", "⍫", "⍬", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
+            "⍨", "⍪", "⍫", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
             "○", "$", "¥", "χ", "\\"
         )
     }
@@ -74,6 +79,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
             isDigit(ch) -> collectNumber(ch)
             isWhitespace(ch) -> Whitespace
             isLetter(ch) -> collectSymbol(ch)
+            isQuoteChar(ch) -> collectString()
             else -> throw UnexpectedSymbol(ch)
         }
     }
@@ -83,6 +89,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
     }
 
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
+    private fun isQuoteChar(ch: Int) = ch == '"'.toInt()
 
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
@@ -93,7 +100,7 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
                 throw IllegalNumberFormat("Illegal number format")
             }
             if (!isDigit(ch)) {
-                content.revertLastChars(1)
+                content.pushBack(ch)
                 break
             }
             buf.addCodepoint(ch)
@@ -115,12 +122,28 @@ class TokenGenerator(val engine: Engine, val content: CharacterProvider) {
         while (true) {
             val ch = content.nextCodepoint() ?: break
             if (!isLetter(ch) || isDigit(ch)) {
-                content.revertLastChars(1)
+                content.pushBack(ch)
                 break
             }
             buf.addCodepoint(ch)
         }
         return engine.internSymbol(buf.toString())
+    }
+
+    private fun collectString(): Token {
+        val buf = StringBuilder()
+        while (true) {
+            val ch = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string")
+            if (ch == '"'.toInt()) {
+                break
+            } else if (ch == '\\'.toInt()) {
+                val next = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string")
+                buf.addCodepoint(next)
+            } else {
+                buf.addCodepoint(ch)
+            }
+        }
+        return StringToken(buf.toString())
     }
 
     fun nextToken(): Token {
@@ -201,8 +224,15 @@ class LiteralNumber(val value: Long) : Instruction {
 
 class LiteralSymbol(name: Symbol) : Instruction {
     private val value = APLSymbol(name)
-
     override fun evalWithContext(context: RuntimeContext): APLValue = value
+}
+
+class LiteralAPLNullValue : Instruction {
+    override fun evalWithContext(context: RuntimeContext) = APLNullValue()
+}
+
+class LiteralStringValue(val s: String) : Instruction {
+    override fun evalWithContext(context: RuntimeContext) = makeAPLString(s)
 }
 
 class AssignmentInstruction(val name: Symbol, val instr: Instruction) : Instruction {
@@ -279,7 +309,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
     }
 
     fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator): Instruction {
-        if(!leftArgs.isEmpty()) {
+        if (!leftArgs.isEmpty()) {
             throw ParseException("Function definition with non-null left argument")
         }
 
@@ -316,6 +346,8 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
             is LeftArrow -> return processAssignment(engine, tokeniser)
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser))
+            is APLNullSym -> leftArgs.add(LiteralAPLNullValue())
+            is StringToken -> leftArgs.add(LiteralStringValue(token.value))
             else -> throw UnexpectedToken(token)
         }
     }

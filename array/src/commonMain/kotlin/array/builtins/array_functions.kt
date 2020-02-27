@@ -64,7 +64,7 @@ class HideAPLFunction : NoAxisAPLFunction() {
 
 class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return if (a is APLSingleValue) {
+        return if (a.isAtom()) {
             a
         } else {
             return EnclosedAPLValue(a)
@@ -80,7 +80,7 @@ class DiscloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         val rank = a.rank()
         return when {
-            a is APLSingleValue -> a
+            a.isAtom() -> a
             rank == 0 -> a.valueAt(0)
             else -> a
         }

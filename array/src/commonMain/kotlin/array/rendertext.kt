@@ -184,6 +184,26 @@ private fun topBottomRow(left: String, middle: String, right: String, width: Int
     return row
 }
 
+fun renderStringValue(value: APLValue): String {
+    val buf = StringBuilder()
+    buf.append("\"")
+    for(i in 0 until value.size()) {
+        val v = value.valueAt(i)
+        if(v is APLChar) {
+            buf.addCodepoint(v.codepoint())
+        }
+        else {
+            throw IllegalStateException("String contain non-chars")
+        }
+    }
+    buf.append("\"")
+    return buf.toString()
+}
+
+fun renderNullValue(): String {
+    return "⍬"
+}
+
 fun encloseInBox(value: APLValue): String {
     return when {
         value is APLSingleValue -> value.formatted()

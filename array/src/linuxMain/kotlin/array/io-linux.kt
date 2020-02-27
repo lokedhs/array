@@ -13,12 +13,7 @@ actual class StringCharacterProvider actual constructor(val s: String) : Charact
 
     override fun nextCodepoint() = if (pos >= s.length) null else s[pos++].toInt()
 
-    override fun revertLastChars(n: Int) {
-        if (n > pos) {
-            throw IndexOutOfBoundsException("Attempt to move before beginning of string. n=$n, pos=$pos")
-        }
-        pos -= n
-    }
+    override fun close() {}
 }
 
 class KeyboardInputNative : KeyboardInput {
@@ -41,7 +36,7 @@ class KeyboardInputNative : KeyboardInput {
 class KeyboardInputLibedit : KeyboardInput {
     override fun readString(prompt: String): String? {
         val result = libedit.readline(prompt)
-        return if(result == null) {
+        return if (result == null) {
             null
         } else {
             val resultConverted = result.toKString()
@@ -54,4 +49,9 @@ class KeyboardInputLibedit : KeyboardInput {
 actual fun makeKeyboardInput(): KeyboardInput {
 //    return KeyboardInputNative()
     return KeyboardInputLibedit()
+}
+
+actual fun readFile(name: String): CharacterProvider {
+    //return FileCharacterProvider(name)
+    TODO("File reading not implemented in native mode yet")
 }

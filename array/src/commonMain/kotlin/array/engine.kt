@@ -76,6 +76,7 @@ class Engine {
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
+        registerFunction(internSymbol("readCsvFile"), ReadCSVFunction())
 
         // maths
         registerFunction(internSymbol("sin"), SinAPLFunction())

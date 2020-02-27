@@ -41,6 +41,11 @@ kotlin {
                 implementation kotlin('test-annotations-common')
             }
         }
+        jvmMain {
+            dependencies {
+                api "org.apache.poi:poi-ooxml:4.1.2"
+            }
+        }
 //
 //        commonMain {
 //            dependencies {
