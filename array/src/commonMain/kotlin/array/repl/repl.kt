@@ -11,7 +11,7 @@ fun runRepl() {
     while (true) {
         val line = keyboardInput.readString(prompt) ?: break
         val stringTrimmed = line.trim()
-        if(stringTrimmed != "") {
+        if (stringTrimmed != "") {
             val parsed = engine.parseString(line)
             val context = RuntimeContext(engine, null)
             val result = parsed.evalWithContext(context)

@@ -3,23 +3,23 @@ package array
 import array.builtins.*
 
 interface APLFunction {
-    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) : APLValue
-    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) : APLValue
+    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue
+    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue
 }
 
 abstract class NoAxisAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) : APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         return eval1Arg(context, a)
     }
 
-    abstract fun eval1Arg(context: RuntimeContext, a: APLValue) : APLValue
+    abstract fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue
 
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) : APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         return eval2Arg(context, a, b)
     }
 
-    abstract fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue) : APLValue
+    abstract fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue
 }
 
 class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol) : APLFunction {
@@ -42,10 +42,10 @@ interface APLOperator {
 }
 
 class Engine {
-    private val functions = HashMap<Symbol,APLFunction>()
-    private val operators = HashMap<Symbol,APLOperator>()
-    private val symbols = HashMap<String,Symbol>()
-    private val variables = HashMap<Symbol,APLValue>()
+    private val functions = HashMap<Symbol, APLFunction>()
+    private val operators = HashMap<Symbol, APLOperator>()
+    private val symbols = HashMap<String, Symbol>()
+    private val variables = HashMap<Symbol, APLValue>()
 
     init {
         // core functions
@@ -102,13 +102,13 @@ class Engine {
     fun getFunction(name: Symbol) = functions[name]
     fun getOperator(token: Symbol) = operators[token]
     fun parseString(input: String) = parseValueToplevel(this, TokenGenerator(this, StringCharacterProvider(input)), EndOfFile)
-    fun internSymbol(name: String): Symbol = symbols.getOrPut(name, {Symbol(name)})
+    fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
 }
 
 class RuntimeContext(val engine: Engine, val parent: RuntimeContext?) {
-    private val localVariables = HashMap<Symbol,APLValue>()
+    private val localVariables = HashMap<Symbol, APLValue>()
 
     fun lookupVar(name: Symbol): APLValue? {
         val result = localVariables[name]

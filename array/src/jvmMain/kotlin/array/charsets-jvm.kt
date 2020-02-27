@@ -25,7 +25,7 @@ actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {
 actual fun String.asCodepointList(): List<Int> {
     val result = ArrayList<Int>()
     var pos = 0
-    while(pos < this.length) {
+    while (pos < this.length) {
         result.add(this.codePointAt(pos))
         pos = this.offsetByCodePoints(pos, 1)
     }
@@ -37,9 +37,9 @@ actual fun String.asGraphemeList(): List<String> {
     val iterator = BreakIterator.getCharacterInstance()
     iterator.setText(this)
     var start = iterator.first()
-    while(true) {
+    while (true) {
         val end = iterator.next()
-        if(end == BreakIterator.DONE) {
+        if (end == BreakIterator.DONE) {
             break
         }
         result.add(this.substring(start, end))

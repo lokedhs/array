@@ -23,8 +23,7 @@ class ReadCSVFunction : NoAxisAPLFunction() {
         val source = readFile("/tmp/foo")
         try {
             return readCsv(source)
-        }
-        finally {
+        } finally {
             source.close()
         }
     }

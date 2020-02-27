@@ -86,7 +86,7 @@ private fun encloseNDim(value: APLValue): String {
     // while the grid of blocks are rendered column-major. This is because for 3D rendering, we want each
     // block to be rendered vertically, and we don't want to transpose this grid just because we add another
     // dimension.
-    
+
     val lookupByCoords: (Int, Int, Int, Int) -> Int = when (dimensions.size) {
         1 -> { a, b, c, d -> d }
         2 -> { a, b, c, d -> c * multipliers[0] + d }
@@ -187,12 +187,11 @@ private fun topBottomRow(left: String, middle: String, right: String, width: Int
 fun renderStringValue(value: APLValue): String {
     val buf = StringBuilder()
     buf.append("\"")
-    for(i in 0 until value.size()) {
+    for (i in 0 until value.size()) {
         val v = value.valueAt(i)
-        if(v is APLChar) {
+        if (v is APLChar) {
             buf.addCodepoint(v.value)
-        }
-        else {
+        } else {
             throw IllegalStateException("String contain non-chars")
         }
     }

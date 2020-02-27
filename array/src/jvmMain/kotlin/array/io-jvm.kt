@@ -42,7 +42,7 @@ class ReaderCharacterProvider(private val reader: Reader) : CharacterProvider {
     private var endOfFile = false
 
     override fun nextCodepoint(): Int? {
-        if(endOfFile) {
+        if (endOfFile) {
             return null
         }
 

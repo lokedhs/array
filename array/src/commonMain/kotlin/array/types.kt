@@ -51,16 +51,15 @@ fun isNullValue(value: APLValue): Boolean {
 
 fun isStringValue(value: APLValue): Boolean {
     val dimensions = value.dimensions()
-    if(dimensions.size == 1) {
-        for(i in 0 until value.size()) {
+    if (dimensions.size == 1) {
+        for (i in 0 until value.size()) {
             val v = value.valueAt(i)
-            if(!(v is APLChar)) {
+            if (!(v is APLChar)) {
                 return false
             }
         }
         return true
-    }
-    else {
+    } else {
         return false
     }
 }
