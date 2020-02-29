@@ -17,8 +17,8 @@ interface APLValue {
     fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
     fun isScalar(): Boolean = rank() == 0
     fun defaultValue(): APLValue = APLLong(0)
-    fun isAtom() = false
     fun arrayify(): APLValue
+    fun unwrapDeferredValue(): APLValue = this
 }
 
 abstract class APLSingleValue : APLValue {
@@ -27,16 +27,16 @@ abstract class APLSingleValue : APLValue {
     override fun size() = 1
     override fun rank() = 0
     override fun collapse() = this
-    override fun isAtom() = true
     override fun arrayify() = APLArrayImpl(intArrayOf(1)) { this }
 }
 
 abstract class APLArray : APLValue {
     override fun collapse(): APLValue {
-        return if (rank() == 0) {
-            EnclosedAPLValue(valueAt(0).collapse())
+        val v = unwrapDeferredValue()
+        return if (v.rank() == 0) {
+            EnclosedAPLValue(v.valueAt(0).collapse())
         } else {
-            APLArrayImpl(dimensions()) { valueAt(it).collapse() }
+            APLArrayImpl(dimensions()) { v.valueAt(it).collapse() }
         }
     }
 
@@ -79,7 +79,6 @@ class ConstantArray(
 ) : APLArray() {
 
     override fun dimensions() = dimensions
-
     override fun valueAt(p: Int) = value
 }
 
@@ -124,11 +123,17 @@ fun makeAPLString(s: String): APLValue {
     return APLArrayImpl(intArrayOf(codepointList.size)) { i -> APLChar(codepointList[i]) }
 }
 
-class APLNullValue() : APLArray() {
-    val dimensions = intArrayOf(0)
+class APLNullValue : APLArray() {
+    private val dimensions = intArrayOf(0)
 
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
+}
+
+abstract class DeferredResultArray : APLArray() {
+    override fun unwrapDeferredValue(): APLValue {
+        return if (dimensions().isEmpty()) valueAt(0).unwrapDeferredValue() else this
+    }
 }
 
 class APLSymbol(val value: Symbol) : APLSingleValue()

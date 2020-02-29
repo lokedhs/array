@@ -64,7 +64,8 @@ class HideAPLFunction : NoAxisAPLFunction() {
 
 class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return if (a.isAtom()) {
+        val v = a.unwrapDeferredValue()
+        return if (a is APLSingleValue) {
             a
         } else {
             return EnclosedAPLValue(a)
@@ -78,11 +79,11 @@ class EncloseAPLFunction : NoAxisAPLFunction() {
 
 class DiscloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        val rank = a.rank()
+        val v = a.unwrapDeferredValue()
         return when {
-            a.isAtom() -> a
-            rank == 0 -> a.valueAt(0)
-            else -> a
+            v is APLSingleValue -> a
+            v.isScalar() -> v.valueAt(0)
+            else -> v
         }
     }
 
@@ -248,11 +249,12 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
 
 class TakeAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        val v = a.unwrapDeferredValue()
         return when {
-            a.isAtom() -> a
-            a.isScalar() -> a.valueAt(0)
-            a.size() == 0 -> a.defaultValue()
-            else -> a.valueAt(0)
+            v is APLSingleValue -> v
+            v.isScalar() -> v.valueAt(0)
+            v.size() == 0 -> v.defaultValue()
+            else -> v.valueAt(0)
         }
     }
 
@@ -264,10 +266,11 @@ class TakeAPLFunction : APLFunction {
 
 class RandomAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return if (a.isAtom()) {
-            makeRandom(a.ensureNumber())
+        val v = a.unwrapDeferredValue()
+        return if (v is APLSingleValue) {
+            makeRandom(v.ensureNumber())
         } else {
-            APLArrayImpl(a.dimensions()) { index -> makeRandom(a.valueAt(index).ensureNumber()) }
+            APLArrayImpl(v.dimensions()) { index -> makeRandom(v.valueAt(index).ensureNumber()) }
         }
     }
 

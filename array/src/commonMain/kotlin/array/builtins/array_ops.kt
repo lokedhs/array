@@ -42,7 +42,7 @@ class ReduceResult1Arg(
     val fn: APLFunction,
     val arg: APLValue,
     axis: Int
-) : APLArray() {
+) : DeferredResultArray() {
     private val argDimensions: Dimensions
     private val dimensions: Dimensions
     private val stepLength: Int
