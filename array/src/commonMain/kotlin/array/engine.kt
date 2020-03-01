@@ -46,6 +46,7 @@ class Engine {
     private val operators = HashMap<Symbol, APLOperator>()
     private val symbols = HashMap<String, Symbol>()
     private val variables = HashMap<Symbol, APLValue>()
+    private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
 
     init {
         // core functions
@@ -91,17 +92,39 @@ class Engine {
         registerOperator(internSymbol("/"), ReduceOp())
     }
 
+    fun addFunctionDefinitionListener(listener: FunctionDefinitionListener) {
+        functionDefinitionListeners.add(listener)
+    }
+
+    fun removeFunctionDefinitionListener(listener: FunctionDefinitionListener) {
+        functionDefinitionListeners.remove(listener)
+    }
+
     fun registerFunction(name: Symbol, fn: APLFunction) {
         functions[name] = fn
+        functionDefinitionListeners.forEach { it.functionDefined(name, fn) }
     }
 
     fun registerOperator(name: Symbol, fn: APLOperator) {
         operators[name] = fn
+        functionDefinitionListeners.forEach { it.operatorDefined(name, fn) }
+    }
+
+    fun getUserDefinedFunctions(): Map<Symbol, UserFunction> {
+        val res = HashMap<Symbol, UserFunction>()
+        functions.forEach {
+            val v = it.value
+            if (v is UserFunction) {
+                res[it.key] = v
+            }
+        }
+        return res
     }
 
     fun getFunction(name: Symbol) = functions[name]
     fun getOperator(token: Symbol) = operators[token]
-    fun parseString(input: String) = parseValueToplevel(this, TokenGenerator(this, StringCharacterProvider(input)), EndOfFile)
+    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = parseValueToplevel(this, tokeniser, EndOfFile)
+    fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringCharacterProvider(input)))
     fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
@@ -124,4 +147,11 @@ class RuntimeContext(val engine: Engine, val parent: RuntimeContext?) {
     }
 
     fun link() = RuntimeContext(engine, this)
+}
+
+interface FunctionDefinitionListener {
+    fun functionDefined(name: Symbol, fn: APLFunction) = Unit
+    fun functionRemoved(name: Symbol) = Unit
+    fun operatorDefined(name: Symbol, fn: APLOperator) = Unit
+    fun operatorRemoved(name: Symbol) = Unit
 }

@@ -6,8 +6,8 @@
         <dependsOnModuleNames>array_commonTest</dependsOnModuleNames>
         <sourceSets>
           <sourceSet>array_test.array.jvmMain</sourceSet>
-          <sourceSet>array_test.array.commonMain</sourceSet>
           <sourceSet>array_test.array.commonTest</sourceSet>
+          <sourceSet>array_test.array.commonMain</sourceSet>
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
         <externalSystemTestTasks>jvmTest|:array:jvmTest|jvm</externalSystemTestTasks>

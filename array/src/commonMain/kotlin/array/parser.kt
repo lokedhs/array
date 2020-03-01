@@ -80,6 +80,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
             isWhitespace(ch) -> Whitespace
             isLetter(ch) -> collectSymbol(ch)
             isQuoteChar(ch) -> collectString()
+            isCommentChar(ch) -> skipUntilNewline()
             else -> throw UnexpectedSymbol(ch)
         }
     }
@@ -90,6 +91,17 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
 
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
     private fun isQuoteChar(ch: Int) = ch == '"'.toInt()
+    private fun isCommentChar(ch: Int) = ch == '⍝'.toInt()
+
+    private fun skipUntilNewline(): Whitespace {
+        while(true) {
+            val ch = content.nextCodepoint()
+            if(ch == null || ch == '\n'.toInt()) {
+                break
+            }
+        }
+        return Whitespace
+    }
 
     private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
         val buf = StringBuilder()
@@ -243,7 +255,11 @@ class AssignmentInstruction(val name: Symbol, val instr: Instruction) : Instruct
     }
 }
 
-class UserFunction(private val arg: Symbol, private val instr: Instruction) : APLFunction {
+class UserFunction(
+    private val arg: Symbol,
+    private val instr: Instruction,
+    val source: String? = null
+) : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val inner = context.link()
         inner.setVar(arg, a)

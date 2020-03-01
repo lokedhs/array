@@ -1,15 +1,13 @@
 package array.gui
 
 import javafx.event.EventHandler
-import javafx.scene.control.TextField
+import javafx.scene.control.TextInputControl
 import javafx.scene.input.KeyEvent
 
-class ExtendedCharsInputField : TextField() {
+class ExtendedCharsKeyboardInput {
     private val keymap: Map<KeyDescriptor, String>
 
     init {
-        onKeyTyped = EventHandler { event -> handleKeyTyped(event) }
-
         keymap = hashMapOf(
             // First row
             KeyDescriptor("`") to "◊",
@@ -65,10 +63,17 @@ class ExtendedCharsInputField : TextField() {
         )
     }
 
-    private fun handleKeyTyped(event: KeyEvent) {
+    fun addEventHandlerToNode(node: TextInputControl) {
+        node.onKeyTyped = EventHandler { event -> handleKeyTyped(node, event) }
+    }
+
+    private fun handleKeyTyped(node: TextInputControl, event: KeyEvent) {
         if (event.isAltDown) {
-            keymap[KeyDescriptor(event.character)]?.let { insertText(caretPosition, it) }
-            event.consume()
+            val desc = keymap[KeyDescriptor(event.character)]
+            if(desc != null) {
+                node.insertText(node.caretPosition, desc)
+                event.consume()
+            }
         }
     }
 
