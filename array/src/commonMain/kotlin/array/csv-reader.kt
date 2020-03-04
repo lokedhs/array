@@ -12,7 +12,7 @@ fun readCsv(source: CharacterProvider): APLValue {
     }
 
     val width = rows.maxValueBy { it.size }
-    return APLArrayImpl(intArrayOf(rows.size, width)) { index ->
+    return APLArrayImpl(dimensionsOfSize(rows.size, width)) { index ->
         val rowIndex = index / width
         val colIndex = index % width
         val row = rows[rowIndex]

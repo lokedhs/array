@@ -14,7 +14,7 @@ interface CellSumFunction2Args {
 class ArraySum1Arg(
     private val fn: CellSumFunction1Arg,
     private val a: APLValue
-) : APLArray() {
+) : DeferredResultArray() {
     override fun dimensions() = a.dimensions()
     override fun size() = a.size()
     override fun valueAt(p: Int): APLValue {
@@ -34,12 +34,12 @@ class ArraySum2Args(
     private val fn: CellSumFunction2Args,
     private val a: APLValue,
     private val b: APLValue
-) : APLArray() {
+) : DeferredResultArray() {
     private val aRank = a.rank()
     private val bRank = b.rank()
 
     init {
-        unless(aRank == 0 || bRank == 0 || Arrays.equals(a.dimensions(), b.dimensions())) {
+        unless(aRank == 0 || bRank == 0 || a.dimensions().compare(b.dimensions())) {
             throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar")
         }
     }

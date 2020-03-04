@@ -12,7 +12,7 @@ class ForEachResult1Arg(val context: RuntimeContext, val fn: APLFunction, val va
 class ForEachResult2Arg(val context: RuntimeContext, val fn: APLFunction, val arg1: APLValue, val arg2: APLValue, val axis: APLValue?) :
     APLArray() {
     init {
-        unless(Arrays.equals(arg1.dimensions(), arg2.dimensions())) {
+        unless(arg1.dimensions().compare(arg2.dimensions())) {
             throw IncompatibleTypeException("Arguments to foreach does not have the same dimensions")
         }
     }
@@ -64,10 +64,11 @@ class ReduceResult1Arg(
         stepLength = sl
 
         reduceDepth = argDimensions[axis]
-        dimensions = copyArrayAndRemove(arg.dimensions(), axis)
+        dimensions = arg.dimensions().remove(axis)
 
         var currMult = 1
-        for (d in dimensions) {
+        for (i in dimensions.indices) {
+            val d = dimensions[i]
             currMult *= d
         }
         fromSourceMul = currMult / stepLength

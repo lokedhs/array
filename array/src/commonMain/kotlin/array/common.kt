@@ -19,6 +19,11 @@ inline fun unless(cond: Boolean, fn: () -> Unit) {
     }
 }
 
+fun plusMod(value: Long, divisor: Long): Long {
+    val v = value % divisor
+    return if (v < 0) divisor + v else v
+}
+
 class Arrays {
     companion object {
         fun <T> equals(a: Array<T>, b: Array<T>): Boolean {
@@ -159,16 +164,6 @@ fun copyArrayAndRemove(array: IntArray, toRemove: Int): IntArray {
 
 inline fun <reified T> copyArrayAndInsert(array: Array<T>, pos: Int, newValue: T): Array<T> {
     return Array(array.size + 1) { index ->
-        when {
-            index < pos -> array[index]
-            index > pos -> array[index - 1]
-            else -> newValue
-        }
-    }
-}
-
-fun copyArrayAndInsert(array: IntArray, pos: Int, newValue: Int): IntArray {
-    return IntArray(array.size + 1) { index ->
         when {
             index < pos -> array[index]
             index > pos -> array[index - 1]

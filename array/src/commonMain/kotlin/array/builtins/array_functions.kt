@@ -3,8 +3,27 @@ package array.builtins
 import array.*
 import kotlin.math.max
 
+class AxisActionFactors(val dimensions: Dimensions, val axis: Int) {
+    val multipliers: IntArray
+    val multiplierAxis: Int
+    val highValFactor: Int
+
+    init {
+        multipliers = dimensionsToMultipliers(dimensions)
+        multiplierAxis = multipliers[axis]
+        highValFactor = multiplierAxis * dimensions[axis]
+    }
+
+    inline fun <T> withFactors(p: Int, fn: (high: Int, low: Int, axisCoord: Int) -> T): T {
+        val highVal = p / highValFactor
+        val lowVal = p % multiplierAxis
+        val axisCoord = (p % highValFactor) / multiplierAxis
+        return fn(highVal, lowVal, axisCoord)
+    }
+}
+
 class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() {
-    override fun dimensions() = intArrayOf(size)
+    override fun dimensions() = oneDimensionalDimensions(size)
 
     override fun valueAt(p: Int): APLValue {
         return APLLong((p + start).toLong())
@@ -29,7 +48,7 @@ class ResizedArray(private val dimensions: Dimensions, private val value: APLVal
 class RhoAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         val argDimensions = a.dimensions()
-        return APLArrayImpl(intArrayOf(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
+        return APLArrayImpl(oneDimensionalDimensions(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -37,13 +56,14 @@ class RhoAPLFunction : NoAxisAPLFunction() {
             throw InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array")
         }
 
-        val d1 = if (a is APLSingleValue) {
-            intArrayOf(a.ensureNumber().asInt())
+        val v = a.unwrapDeferredValue()
+        val d1 = if (v.isScalar()) {
+            oneDimensionalDimensions(v.ensureNumber().asInt())
         } else {
-            IntArray(a.size()) { a.valueAt(it).ensureNumber().asInt() }
+            Dimensions(IntArray(v.size()) { v.valueAt(it).ensureNumber().asInt() })
         }
         val d2 = b.dimensions()
-        return if (Arrays.equals(d1, d2)) {
+        return if (d1.compare(d2)) {
             // The array already has the correct dimensions, simply return the old one
             b
         } else {
@@ -99,7 +119,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 
     private val aSize = a.dimensions()[0]
     private val bSize = b.dimensions()[0]
-    private val dimensions = intArrayOf(aSize + bSize)
+    private val dimensions = oneDimensionalDimensions(aSize + bSize)
 
     override fun dimensions() = dimensions
 
@@ -113,7 +133,7 @@ class ConcatenateAPLFunction : APLFunction {
         return if (a.isScalar()) {
             a
         } else {
-            ResizedArray(intArrayOf(a.size()), a)
+            ResizedArray(oneDimensionalDimensions(a.size()), a)
         }
     }
 
@@ -128,7 +148,7 @@ class ConcatenateAPLFunction : APLFunction {
 
     private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
         return when {
-            a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(intArrayOf(2)) { i -> if (i == 0) a else b }
+            a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(oneDimensionalDimensions(2)) { i -> if (i == 0) a else b }
             a.rank() <= 1 && b.rank() <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
             else -> joinByAxis(a, b, max(a.rank(), b.rank()) - 1)
         }
@@ -141,27 +161,27 @@ class ConcatenateAPLFunction : APLFunction {
 
         val a1 = if (a.rank() == 0) {
             val bDimensions = b.dimensions()
-            ConstantArray(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }, a)
+            ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a)
         } else {
             a
         }
 
         val b1 = if (b.rank() == 0) {
             val aDimensions = a.dimensions()
-            ConstantArray(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }, b)
+            ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b)
         } else {
             b
         }
 
         val a2 = if (b1.rank() - a1.rank() == 1) {
             // Reshape a1, inserting a new dimension at the position of the axis
-            ResizedArray(copyArrayAndInsert(a1.dimensions(), axis, 1), a1)
+            ResizedArray(a1.dimensions().insert(axis, 1), a1)
         } else {
             a1
         }
 
         val b2 = if (a1.rank() - b1.rank() == 1) {
-            ResizedArray(copyArrayAndInsert(b1.dimensions(), axis, 1), b1)
+            ResizedArray(b1.dimensions().insert(axis, 1), b1)
         } else {
             b1
         }
@@ -194,10 +214,13 @@ class ConcatenateAPLFunction : APLFunction {
     // This is an inner class since it's highly dependent on invariants that are established in the parent class
     class ConcatenatedMultiDimensionalArrays(val a: APLValue, val b: APLValue, val axis: Int) : APLArray() {
         private val dimensions: Dimensions
-        private val multipliers: IntArray
-        private val aMultipliers: IntArray
-        private val bMultipliers: IntArray
         private val axisA: Int
+        private val multiplierAxis: Int
+        private val highValFactor: Int
+        private val aMultiplierAxis: Int
+        private val bMultiplierAxis: Int
+        private val aDimensionAxis: Int
+        private val bDimensionAxis: Int
 
         init {
             val ad = a.dimensions()
@@ -205,22 +228,28 @@ class ConcatenateAPLFunction : APLFunction {
 
             axisA = ad[axis]
 
-            dimensions = IntArray(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] }
-            multipliers = dimensionsToMultipliers(dimensions)
-            aMultipliers = dimensionsToMultipliers(ad)
-            bMultipliers = dimensionsToMultipliers(bd)
+            dimensions = Dimensions(IntArray(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] })
+            val multipliers = dimensionsToMultipliers(dimensions)
+            val aMultipliers = dimensionsToMultipliers(ad)
+            val bMultipliers = dimensionsToMultipliers(bd)
+            multiplierAxis = multipliers[axis]
+            highValFactor = multiplierAxis * dimensions[axis]
+            aMultiplierAxis = aMultipliers[axis]
+            bMultiplierAxis = bMultipliers[axis]
+            aDimensionAxis = a.dimensions()[axis]
+            bDimensionAxis = b.dimensions()[axis]
         }
 
         override fun dimensions() = dimensions
 
         override fun valueAt(p: Int): APLValue {
-            val highVal = p / (multipliers[axis] * dimensions[axis])
-            val lowVal = p % (multipliers[axis])
-            val axisCoord = (p % (multipliers[axis] * dimensions[axis])) / multipliers[axis]
+            val highVal = p / highValFactor
+            val lowVal = p % multiplierAxis
+            val axisCoord = (p % highValFactor) / multiplierAxis
             return if (axisCoord < axisA) {
-                a.valueAt((highVal * aMultipliers[axis] * a.dimensions()[axis]) + (axisCoord * aMultipliers[axis]) + lowVal)
+                a.valueAt((highVal * aMultiplierAxis * aDimensionAxis) + (axisCoord * aMultiplierAxis) + lowVal)
             } else {
-                b.valueAt((highVal * bMultipliers[axis] * b.dimensions()[axis]) + ((axisCoord - axisA) * bMultipliers[axis]) + lowVal)
+                b.valueAt((highVal * bMultiplierAxis * bDimensionAxis) + ((axisCoord - axisA) * bMultiplierAxis) + lowVal)
             }
         }
     }
@@ -282,4 +311,52 @@ class RandomAPLFunction : NoAxisAPLFunction() {
         val limitLong = limit.asLong()
         return APLLong((0 until limitLong).random())
     }
+}
+
+class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, val numShifts: Long) : APLArray() {
+    private val axisActionFactors = AxisActionFactors(source.dimensions(), axis)
+
+    override fun dimensions() = source.dimensions()
+
+    override fun valueAt(p: Int): APLValue {
+        return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
+            val coord = plusMod(axisCoord + numShifts, dimensions()[axis].toLong()).toInt()
+            println("coord = $coord")
+            source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
+        }
+    }
+
+    companion object {
+        fun make(value: APLValue, axis: Int, numShifts: Long): APLValue {
+            val dimensions = value.dimensions()
+            return if (dimensions.isEmpty() || numShifts % (dimensions[axis]) == 0L) {
+                value
+            } else {
+                RotatedAPLValue(value, axis, numShifts)
+            }
+        }
+    }
+}
+
+abstract class RotateFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        val axisInt = if (axis == null) defaultAxis(a) else axis.ensureNumber().asInt()
+        return RotatedAPLValue.make(a, axisInt, 1)
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        val numShifts = a.ensureNumber().asLong()
+        val axisInt = if (axis == null) defaultAxis(b) else axis.ensureNumber().asInt()
+        return RotatedAPLValue.make(b, axisInt, numShifts)
+    }
+
+    abstract fun defaultAxis(value: APLValue): Int
+}
+
+class RotateHorizFunction : RotateFunction() {
+    override fun defaultAxis(value: APLValue) = value.rank() - 1
+}
+
+class RotateVertFunction : RotateFunction() {
+    override fun defaultAxis(value: APLValue) = 0
 }
