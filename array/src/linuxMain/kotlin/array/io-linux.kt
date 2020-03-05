@@ -3,7 +3,6 @@ package array
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.nativeHeap.free
 import kotlinx.cinterop.toKString
 import platform.posix.fgets
 import platform.posix.stdin
@@ -12,7 +11,6 @@ actual class StringCharacterProvider actual constructor(val s: String) : Charact
     private var pos = 0
 
     override fun nextCodepoint() = if (pos >= s.length) null else s[pos++].toInt()
-
     override fun close() {}
 }
 
@@ -33,22 +31,21 @@ class KeyboardInputNative : KeyboardInput {
     }
 }
 
-class KeyboardInputLibedit : KeyboardInput {
-    override fun readString(prompt: String): String? {
-        val result = libedit.readline(prompt)
-        return if (result == null) {
-            null
-        } else {
-            val resultConverted = result.toKString()
-            free(result.rawValue)
-            resultConverted
-        }
-    }
-}
+//class KeyboardInputLibedit : KeyboardInput {
+//    override fun readString(prompt: String): String? {
+//        val result = libedit.readline(prompt)
+//        return if (result == null) {
+//            null
+//        } else {
+//            val resultConverted = result.toKString()
+//            free(result.rawValue)
+//            resultConverted
+//        }
+//    }
+//}
 
 actual fun makeKeyboardInput(): KeyboardInput {
-//    return KeyboardInputNative()
-    return KeyboardInputLibedit()
+    return KeyboardInputNative()
 }
 
 actual fun readFile(name: String): CharacterProvider {

@@ -3,7 +3,7 @@
   <component name="FacetManager">
     <facet type="kotlin-language" name="Kotlin">
       <configuration version="3" platform="Native " allPlatforms="Native []" useProjectSettings="false" isTestModule="false" externalProjectId=":array">
-        <dependsOnModuleNames>array_commonMain</dependsOnModuleNames>
+        <dependsOnModuleNames>:array:commonMain</dependsOnModuleNames>
         <sourceSets>
           <sourceSet>array_test.array.commonMain</sourceSet>
         </sourceSets>

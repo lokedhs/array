@@ -14,9 +14,9 @@ kotlin {
 
     jvm()
     linuxX64("linux") {
-        compilations.main.cinterops {
-            libedit
-        }
+//        compilations.main.cinterops {
+//            libedit
+//        }
         binaries {
             executable {
                 // Change to specify fully qualified name of your application's entry point:
@@ -46,13 +46,6 @@ kotlin {
                 api "org.apache.poi:poi-ooxml:4.1.2"
             }
         }
-//
-//        commonMain {
-//            dependencies {
-//                implementation kotlin('stdlib-common')
-//                implementation kotlin('stdlib')
-//            }
-//        }
         // Note: To enable common source sets please comment out 'kotlin.import.noCommonSourceSets' property
         // in gradle.properties file and re-import your project in IDE.
     }

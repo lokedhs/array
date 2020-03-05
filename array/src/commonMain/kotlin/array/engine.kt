@@ -132,7 +132,7 @@ class Engine {
     fun makeRuntimeContext() = RuntimeContext(this, null)
 }
 
-class RuntimeContext(val engine: Engine, val parent: RuntimeContext?) {
+class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<Symbol, APLValue>()
 
     fun lookupVar(name: Symbol): APLValue? {
