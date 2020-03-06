@@ -5,6 +5,7 @@ import array.builtins.*
 interface APLFunction {
     fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue
     fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue
+    fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
 }
 
 abstract class NoAxisAPLFunction : APLFunction {

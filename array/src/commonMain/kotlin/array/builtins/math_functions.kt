@@ -95,13 +95,15 @@ abstract class MathNumericCombineAPLFunction : MathCombineAPLFunction() {
 class AddAPLFunction : MathNumericCombineAPLFunction() {
     // No support for complex numbers yet
     override fun numberCombine1Arg(a: APLNumber) = a
-
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() + b.asDouble())
+
+    override fun identityValue() = APLLong(0)
 }
 
 class SubAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber) = APLDouble(-a.asDouble())
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() - b.asDouble())
+    override fun identityValue() = APLLong(0)
 }
 
 class MulAPLFunction : MathNumericCombineAPLFunction() {
@@ -116,16 +118,19 @@ class MulAPLFunction : MathNumericCombineAPLFunction() {
     }
 
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() * b.asDouble())
+    override fun identityValue() = APLLong(1)
 }
 
 class DivAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber) = APLDouble(1.0 / a.asDouble())
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() / b.asDouble())
+    override fun identityValue() = APLLong(1)
 }
 
 class PowerAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber) = APLDouble(exp(a.asDouble()))
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble().pow(b.asDouble()))
+    override fun identityValue() = APLLong(1)
 }
 
 class LogAPLFunction : MathNumericCombineAPLFunction() {
@@ -167,6 +172,8 @@ class AndAPLFunction : MathNumericCombineAPLFunction() {
             TODO("LCM is not implemented")
         }
     }
+
+    override fun identityValue() = APLLong(1)
 }
 
 class OrAPLFunction : MathNumericCombineAPLFunction() {
@@ -179,4 +186,6 @@ class OrAPLFunction : MathNumericCombineAPLFunction() {
             TODO("GCD is not implemented")
         }
     }
+
+    override fun identityValue() = APLLong(0)
 }

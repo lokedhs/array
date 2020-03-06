@@ -77,8 +77,8 @@ class ReduceResult1Arg(
 
     override fun valueAt(p: Int): APLValue {
         val posInSrc = ((p / fromSourceMul) * toDestMul) + p % fromSourceMul
-        var curr = arg.valueAt(posInSrc)
-        for (i in 1 until reduceDepth) {
+        var curr = fn.identityValue()
+        for (i in 0 until reduceDepth) {
             curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null).collapse()
         }
         return curr

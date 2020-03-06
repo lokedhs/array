@@ -9,6 +9,7 @@ class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
 class IllegalAxisException(axis: Int, dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
 class APLIllegalArgumentException(message: String) : APLEvalException(message)
+class APLIncompatibleDomainsException(message: String) : APLEvalException(message)
 
 open class ParseException(message: String) : Exception(message)
 class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")

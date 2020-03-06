@@ -22,7 +22,6 @@ class KeyboardInputNative : KeyboardInput {
             val buf = allocArray<ByteVar>(bufSize)
             val ret = fgets(buf, bufSize, stdin)
             return if (ret != null) {
-                ret.toKString().forEachIndexed { i, ch -> println("$i = $ch") }
                 ret.toKString()
             } else {
                 null

@@ -42,7 +42,7 @@ inline class Dimensions(val dimensions: IntArray) {
 private val EMPTY_DIMENSIONS = Dimensions(intArrayOf())
 
 fun emptyDimensions() = EMPTY_DIMENSIONS
-fun oneDimensionalDimensions(size: Int) = Dimensions(intArrayOf(size))
+fun oneDimensionalDimensions(size: Int) = dimensionsOfSize(size)
 fun dimensionsOfSize(vararg values: Int) = Dimensions(values)
 
 interface APLValue {
@@ -53,11 +53,19 @@ interface APLValue {
     fun formatted(): String = "unprintable"
     fun collapse(): APLValue
     fun toAPLExpression(): String = "not implemented"
-    fun ensureNumber(): APLNumber = throw IncompatibleTypeException("Value ${formatted()} is not a numeric value")
     fun isScalar(): Boolean = rank() == 0
     fun defaultValue(): APLValue = APLLong(0)
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
+
+    fun ensureNumber(): APLNumber {
+        val v = unwrapDeferredValue()
+        if (v == this) {
+            throw IncompatibleTypeException("Value ${formatted()} is not a numeric value (type=${this::class.qualifiedName})")
+        } else {
+            return v.ensureNumber()
+        }
+    }
 }
 
 abstract class APLSingleValue : APLValue {
@@ -135,6 +143,12 @@ class APLArrayImpl(
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
+}
+
+fun makeFromInts(d: Dimensions, vararg values: Long): APLArray {
+    return APLArrayImpl(d) { index ->
+        APLLong(values[index])
+    }
 }
 
 class EnclosedAPLValue(val value: APLValue) : APLArray() {

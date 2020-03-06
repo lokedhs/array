@@ -43,8 +43,19 @@ kotlin {
         }
         jvmMain {
             dependencies {
+                implementation kotlin('stdlib-jdk8')
                 api "org.apache.poi:poi-ooxml:4.1.2"
             }
+        }
+        jvmTest {
+            dependencies {
+                implementation kotlin('test')
+                implementation kotlin('test-junit')
+            }
+        }
+        linuxMain {
+        }
+        linuxTest {
         }
         // Note: To enable common source sets please comment out 'kotlin.import.noCommonSourceSets' property
         // in gradle.properties file and re-import your project in IDE.

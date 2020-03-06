@@ -32,7 +32,7 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
 
 class IotaAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return IotaArray(a.ensureNumber().asInt())
+        return IotaArray(a.unwrapDeferredValue().ensureNumber().asInt())
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -85,11 +85,7 @@ class HideAPLFunction : NoAxisAPLFunction() {
 class EncloseAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         val v = a.unwrapDeferredValue()
-        return if (a is APLSingleValue) {
-            a
-        } else {
-            return EnclosedAPLValue(a)
-        }
+        return if (v is APLSingleValue) v else EnclosedAPLValue(v)
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -321,7 +317,6 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
     override fun valueAt(p: Int): APLValue {
         return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
             val coord = plusMod(axisCoord + numShifts, dimensions()[axis].toLong()).toInt()
-            println("coord = $coord")
             source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
         }
     }

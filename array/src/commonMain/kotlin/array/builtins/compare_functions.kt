@@ -15,6 +15,8 @@ class EqualsAPLFunction : MathCombineAPLFunction() {
                 { x, y -> makeBoolean(x == y) })
         }
     }
+
+    override fun identityValue() = APLLong(1)
 }
 
 class NotEqualsAPLFunction : MathCombineAPLFunction() {
@@ -30,6 +32,8 @@ class NotEqualsAPLFunction : MathCombineAPLFunction() {
                 { x, y -> makeBoolean(x != y) })
         }
     }
+
+    override fun identityValue() = APLLong(0)
 }
 
 class LessThanAPLFunction : MathCombineAPLFunction() {
@@ -41,6 +45,8 @@ class LessThanAPLFunction : MathCombineAPLFunction() {
             { x, y -> makeBoolean(x < y) },
             { x, y -> makeBoolean(x < y) })
     }
+
+    override fun identityValue() = APLLong(0)
 }
 
 class GreaterThanAPLFunction : MathCombineAPLFunction() {
@@ -52,6 +58,8 @@ class GreaterThanAPLFunction : MathCombineAPLFunction() {
             { x, y -> makeBoolean(x > y) },
             { x, y -> makeBoolean(x > y) })
     }
+
+    override fun identityValue() = APLLong(0)
 }
 
 class LessThanEqualAPLFunction : MathCombineAPLFunction() {
@@ -63,6 +71,8 @@ class LessThanEqualAPLFunction : MathCombineAPLFunction() {
             { x, y -> makeBoolean(x <= y) },
             { x, y -> makeBoolean(x <= y) })
     }
+
+    override fun identityValue() = APLLong(1)
 }
 
 class GreaterThanEqualAPLFunction : MathCombineAPLFunction() {
@@ -74,6 +84,8 @@ class GreaterThanEqualAPLFunction : MathCombineAPLFunction() {
             { x, y -> makeBoolean(x >= y) },
             { x, y -> makeBoolean(x >= y) })
     }
+
+    override fun identityValue() = APLLong(1)
 }
 
 fun makeBoolean(value: Boolean): APLValue {
