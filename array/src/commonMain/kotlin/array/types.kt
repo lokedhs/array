@@ -42,7 +42,6 @@ inline class Dimensions(val dimensions: IntArray) {
 private val EMPTY_DIMENSIONS = Dimensions(intArrayOf())
 
 fun emptyDimensions() = EMPTY_DIMENSIONS
-fun oneDimensionalDimensions(size: Int) = dimensionsOfSize(size)
 fun dimensionsOfSize(vararg values: Int) = Dimensions(values)
 
 interface APLValue {
@@ -74,7 +73,7 @@ abstract class APLSingleValue : APLValue {
     override fun size() = 1
     override fun rank() = 0
     override fun collapse() = this
-    override fun arrayify() = APLArrayImpl(oneDimensionalDimensions(1)) { this }
+    override fun arrayify() = APLArrayImpl(dimensionsOfSize(1)) { this }
 }
 
 abstract class APLArray : APLValue {
@@ -88,7 +87,7 @@ abstract class APLArray : APLValue {
     }
 
     override fun formatted() = arrayAsString(this)
-    override fun arrayify() = if (rank() == 0) APLArrayImpl(oneDimensionalDimensions(1)) { valueAt(0) } else this
+    override fun arrayify() = if (rank() == 0) APLArrayImpl(dimensionsOfSize(1)) { valueAt(0) } else this
 }
 
 fun isNullValue(value: APLValue): Boolean {
@@ -169,7 +168,7 @@ class APLChar(val value: Int) : APLSingleValue() {
 
 fun makeAPLString(s: String): APLValue {
     val codepointList = s.asCodepointList()
-    return APLArrayImpl(oneDimensionalDimensions(codepointList.size)) { i -> APLChar(codepointList[i]) }
+    return APLArrayImpl(dimensionsOfSize(codepointList.size)) { i -> APLChar(codepointList[i]) }
 }
 
 class APLNullValue : APLArray() {

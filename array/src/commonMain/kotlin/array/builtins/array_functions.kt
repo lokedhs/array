@@ -23,7 +23,7 @@ class AxisActionFactors(val dimensions: Dimensions, val axis: Int) {
 }
 
 class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() {
-    override fun dimensions() = oneDimensionalDimensions(size)
+    override fun dimensions() = dimensionsOfSize(size)
 
     override fun valueAt(p: Int): APLValue {
         return APLLong((p + start).toLong())
@@ -48,7 +48,7 @@ class ResizedArray(private val dimensions: Dimensions, private val value: APLVal
 class RhoAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         val argDimensions = a.dimensions()
-        return APLArrayImpl(oneDimensionalDimensions(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
+        return APLArrayImpl(dimensionsOfSize(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -58,7 +58,7 @@ class RhoAPLFunction : NoAxisAPLFunction() {
 
         val v = a.unwrapDeferredValue()
         val d1 = if (v.isScalar()) {
-            oneDimensionalDimensions(v.ensureNumber().asInt())
+            dimensionsOfSize(v.ensureNumber().asInt())
         } else {
             Dimensions(IntArray(v.size()) { v.valueAt(it).ensureNumber().asInt() })
         }
@@ -115,7 +115,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 
     private val aSize = a.dimensions()[0]
     private val bSize = b.dimensions()[0]
-    private val dimensions = oneDimensionalDimensions(aSize + bSize)
+    private val dimensions = dimensionsOfSize(aSize + bSize)
 
     override fun dimensions() = dimensions
 
@@ -129,7 +129,7 @@ class ConcatenateAPLFunction : APLFunction {
         return if (a.isScalar()) {
             a
         } else {
-            ResizedArray(oneDimensionalDimensions(a.size()), a)
+            ResizedArray(dimensionsOfSize(a.size()), a)
         }
     }
 
@@ -144,7 +144,7 @@ class ConcatenateAPLFunction : APLFunction {
 
     private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
         return when {
-            a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(oneDimensionalDimensions(2)) { i -> if (i == 0) a else b }
+            a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
             a.rank() <= 1 && b.rank() <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
             else -> joinByAxis(a, b, max(a.rank(), b.rank()) - 1)
         }

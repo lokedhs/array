@@ -93,6 +93,7 @@ class Engine {
         // operators
         registerOperator(internSymbol("¨"), ForEachOp())
         registerOperator(internSymbol("/"), ReduceOp())
+        registerOperator(internSymbol("⌺"), OuterJoinOp())
     }
 
     fun addFunctionDefinitionListener(listener: FunctionDefinitionListener) {

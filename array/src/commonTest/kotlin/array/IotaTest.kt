@@ -8,7 +8,7 @@ class IotaTest : APLTest() {
     fun testIotaOneArg() {
         val result = parseAPLExpression("⍳10")
         assertTrue(result.dimensions().compare(dimensionsOfSize(10)))
-        assertArrayContent(result, arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+        assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), result)
     }
 
     /**
@@ -19,6 +19,6 @@ class IotaTest : APLTest() {
     fun testIotaWithExpressionArg() {
         val result = parseAPLExpression("⍳1+10")
         assertTrue(result.dimensions().compare(dimensionsOfSize(11)))
-        assertArrayContent(result, arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+        assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), result)
     }
 }
