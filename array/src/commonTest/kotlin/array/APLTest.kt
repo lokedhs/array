@@ -19,6 +19,17 @@ open class APLTest {
     }
 
     fun assertDimension(expectDimensions: Dimensions, result: APLValue) {
-        assertTrue(result.dimensions().compare(expectDimensions))
+        val dimensions = result.dimensions()
+        assertTrue(result.dimensions().compare(expectDimensions), "expected dimension: $expectDimensions, actual $dimensions")
+    }
+
+    fun assertPairs(v: APLValue, vararg values: Array<Int>) {
+        for (i in values.indices) {
+            val cell = v.valueAt(i)
+            val expectedValue = values[i]
+            for (eIndex in expectedValue.indices) {
+                assertEquals(expectedValue[eIndex].toLong(), cell.valueAt(eIndex).ensureNumber().asLong())
+            }
+        }
     }
 }

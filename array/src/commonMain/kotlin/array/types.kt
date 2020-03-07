@@ -12,11 +12,8 @@ inline class Dimensions(val dimensions: IntArray) {
         get() = dimensions.indices
 
     operator fun get(i: Int) = dimensions[i]
-
     fun contentSize() = if (dimensions.isEmpty()) 1 else dimensions.reduce { a, b -> a * b }
-
     fun isEmpty() = dimensions.isEmpty()
-
     fun compare(other: Dimensions) = Arrays.equals(dimensions, other.dimensions)
 
     fun insert(pos: Int, newValue: Int): Dimensions {
@@ -36,6 +33,19 @@ inline class Dimensions(val dimensions: IntArray) {
             if (index < toRemove) dimensions[index] else dimensions[index + 1]
         }
         return Dimensions(v)
+    }
+
+    override fun toString(): String {
+        val buf = StringBuilder()
+        buf.append("Dimensions[")
+        for(i in 0 until dimensions.size) {
+            if(i > 0) {
+                buf.append(", ")
+            }
+            buf.append(dimensions[i])
+        }
+        buf.append("]")
+        return buf.toString()
     }
 }
 
@@ -60,7 +70,7 @@ interface APLValue {
     fun ensureNumber(): APLNumber {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value ${formatted()} is not a numeric value (type=${this::class.qualifiedName})")
+            throw IncompatibleTypeException("Value $this is not a numeric value (type=${this::class.qualifiedName})")
         } else {
             return v.ensureNumber()
         }
@@ -82,7 +92,7 @@ abstract class APLArray : APLValue {
         return when {
             v is APLSingleValue -> v
             v.rank() == 0 -> EnclosedAPLValue(v.valueAt(0).collapse())
-            else -> APLArrayImpl(dimensions()) { v.valueAt(it).collapse() }
+            else -> APLArrayImpl(v.dimensions()) { v.valueAt(it).collapse() }
         }
     }
 
@@ -142,12 +152,6 @@ class APLArrayImpl(
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
-}
-
-fun makeFromInts(d: Dimensions, vararg values: Long): APLArray {
-    return APLArrayImpl(d) { index ->
-        APLLong(values[index])
-    }
 }
 
 class EnclosedAPLValue(val value: APLValue) : APLArray() {

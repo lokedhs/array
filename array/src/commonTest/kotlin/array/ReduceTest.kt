@@ -44,6 +44,16 @@ class ReduceTest : APLTest() {
         reduceTestWithFunctionName("≥", 1)
     }
 
+    @Test
+    fun reduceWithNonScalarCells() {
+        val result = parseAPLExpression("+/ (1 2 3 4) (6 7 8 9)")
+        assertDimension(emptyDimensions(), result)
+
+        val v = result.valueAt(0)
+        assertDimension(dimensionsOfSize(4), v)
+        assertArrayContent(arrayOf(7, 9, 11, 13), v)
+    }
+
     private fun reduceTestWithFunctionName(aplFn: String, correctRes: Int) {
         val result = parseAPLExpression("${aplFn}/0⍴4")
         assertTrue(result.dimensions().compare(emptyDimensions()))

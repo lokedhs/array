@@ -1,7 +1,6 @@
 package array
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class OuterJoinTest : APLTest() {
@@ -27,15 +26,5 @@ class OuterJoinTest : APLTest() {
             arrayOf(2, 7),
             arrayOf(2, 6)
         )
-    }
-
-    private fun assertPairs(v: APLValue, vararg values: Array<Int>) {
-        for (i in values.indices) {
-            val cell = v.valueAt(i)
-            val expectedValue = values[i]
-            for (eIndex in expectedValue.indices) {
-                assertEquals(expectedValue[eIndex].toLong(), cell.valueAt(eIndex).ensureNumber().asLong())
-            }
-        }
     }
 }

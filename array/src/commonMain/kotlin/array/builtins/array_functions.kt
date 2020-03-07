@@ -127,7 +127,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 class ConcatenateAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         return if (a.isScalar()) {
-            a
+            APLArrayImpl(dimensionsOfSize(1)) { a }
         } else {
             ResizedArray(dimensionsOfSize(a.size()), a)
         }
@@ -287,6 +287,31 @@ class TakeAPLFunction : APLFunction {
         TODO("not implemented")
     }
 
+}
+
+class DropResultValue(val a: APLValue) : APLArray() {
+    val dimensions: Dimensions
+
+    init {
+        val d = a.dimensions()
+        if (d.size != 1) {
+            TODO("Drop is only supported for 1-dimensional arrays")
+        }
+        dimensions = dimensionsOfSize(d[0] - 1)
+    }
+
+    override fun dimensions() = dimensions
+    override fun valueAt(p: Int) = a.valueAt(p + 1)
+}
+
+class DropAPLFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        return DropResultValue(a)
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        TODO("not implemented")
+    }
 }
 
 class RandomAPLFunction : NoAxisAPLFunction() {
