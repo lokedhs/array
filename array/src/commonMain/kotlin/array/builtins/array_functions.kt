@@ -3,16 +3,10 @@ package array.builtins
 import array.*
 import kotlin.math.max
 
-class AxisActionFactors(val dimensions: Dimensions, val axis: Int) {
-    val multipliers: IntArray
-    val multiplierAxis: Int
-    val highValFactor: Int
-
-    init {
-        multipliers = dimensions.multipliers()
-        multiplierAxis = multipliers[axis]
-        highValFactor = multiplierAxis * dimensions[axis]
-    }
+class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
+    val multipliers = dimensions.multipliers()
+    val multiplierAxis = multipliers[axis]
+    val highValFactor = multiplierAxis * dimensions[axis]
 
     inline fun <T> withFactors(p: Int, fn: (high: Int, low: Int, axisCoord: Int) -> T): T {
         val highVal = p / highValFactor

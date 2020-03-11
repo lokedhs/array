@@ -60,7 +60,7 @@ fun isStringValue(value: APLValue): Boolean {
     if (dimensions.size == 1) {
         for (i in 0 until value.size()) {
             val v = value.valueAt(i)
-            if (!(v is APLChar)) {
+            if (v !is APLChar) {
                 return false
             }
         }
@@ -93,11 +93,7 @@ class APLArrayImpl(
     init: (Int) -> APLValue
 ) : APLArray() {
 
-    private val values: Array<APLValue>
-
-    init {
-        values = Array(dimensions.contentSize(), init)
-    }
+    private val values = Array(dimensions.contentSize(), init)
 
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]

@@ -21,7 +21,7 @@ class OuterJoinResult(val context: RuntimeContext, val a: APLValue, val b: APLVa
     override fun valueAt(p: Int): APLValue {
         val aPosition = p / divisor
         val bPosition = p % divisor
-        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null);
+        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null)
     }
 }
 

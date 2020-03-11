@@ -10,8 +10,8 @@ class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigne
 class IllegalAxisException(axis: Int, dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
 class APLIllegalArgumentException(message: String) : APLEvalException(message)
 class APLIncompatibleDomainsException(message: String) : APLEvalException(message)
-class Unimplemented1ArgException() : APLEvalException("Function cannot be called with one argument")
-class Unimplemented2ArgException() : APLEvalException("Function cannot be called with two arguments")
+class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")
+class Unimplemented2ArgException : APLEvalException("Function cannot be called with two arguments")
 
 open class ParseException(message: String) : Exception(message)
 class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")

@@ -7,7 +7,6 @@ import java.io.Reader
 
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
 
-    private val pushBackList = ArrayList<Int>()
     private var pos = 0
 
     override fun nextCodepoint(): Int? {

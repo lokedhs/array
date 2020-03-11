@@ -4,10 +4,10 @@ import array.*
 
 class EqualsAPLFunction : MathCombineAPLFunction() {
     override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
-            return makeBoolean(false)
+        return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
+            makeBoolean(false)
         } else {
-            return numericRelationOperation(
+            numericRelationOperation(
                 a,
                 b,
                 { x, y -> makeBoolean(x == y) },
@@ -21,10 +21,10 @@ class EqualsAPLFunction : MathCombineAPLFunction() {
 
 class NotEqualsAPLFunction : MathCombineAPLFunction() {
     override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
-            return makeBoolean(true)
+        return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
+            makeBoolean(true)
         } else {
-            return numericRelationOperation(
+            numericRelationOperation(
                 a,
                 b,
                 { x, y -> makeBoolean(x != y) },
@@ -99,8 +99,8 @@ fun numericRelationOperation(
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnChar: ((aChar: Int, bChar: Int) -> APLValue)? = null
 ): APLValue {
-    if (a is APLNumber && b is APLNumber) {
-        return if (a is APLDouble || b is APLDouble) {
+    return if (a is APLNumber && b is APLNumber) {
+        if (a is APLDouble || b is APLDouble) {
             fnDouble(a.asDouble(), b.asDouble())
         } else {
             fnLong(a.asLong(), b.asLong())
@@ -109,7 +109,7 @@ fun numericRelationOperation(
         if (fnChar == null) {
             throw IncompatibleTypeException("Function cannot be used with characters")
         }
-        return fnChar(a.value, b.value)
+        fnChar(a.value, b.value)
     } else {
         throw IncompatibleTypeException("Incompatible argument types")
     }

@@ -20,12 +20,7 @@ class KeyboardInputNative : KeyboardInput {
         memScoped {
             val bufSize = 10240
             val buf = allocArray<ByteVar>(bufSize)
-            val ret = fgets(buf, bufSize, stdin)
-            return if (ret != null) {
-                ret.toKString()
-            } else {
-                null
-            }
+            return fgets(buf, bufSize, stdin)?.toKString()
         }
     }
 }

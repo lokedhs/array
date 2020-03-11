@@ -19,7 +19,7 @@ class Client(val application: ClientApplication, val stage: Stage)  {
     private val entryTextField: TextField
     private val inputFont: Font
     private val engine = Engine()
-    private val functionListWindow: FunctionListWindow;
+    private val functionListWindow: FunctionListWindow
     private val renderContext = ClientRenderContextImpl()
 
     init {

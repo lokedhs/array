@@ -70,7 +70,7 @@ inline class Dimensions(val dimensions: IntArray) {
     override fun toString(): String {
         val buf = StringBuilder()
         buf.append("Dimensions[")
-        for (i in 0 until dimensions.size) {
+        for (i in dimensions.indices) {
             if (i > 0) {
                 buf.append(", ")
             }

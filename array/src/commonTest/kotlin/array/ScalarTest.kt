@@ -57,14 +57,14 @@ class ScalarTest : APLTest() {
     }
 
     private fun runScalarTestSD(functionName: String, doubleFn: (Double, Double) -> Double) {
-        val result = parseAPLExpression("100 ${functionName} 100+3 4 ⍴ ⍳100")
+        val result = parseAPLExpression("100 $functionName 100+3 4 ⍴ ⍳100")
         for (i in 0 until 12) {
             assertEquals(result.valueAt(i).ensureNumber().asDouble(), doubleFn(100.0, (100 + i).toDouble()))
         }
     }
 
     private fun runScalarTestDS(functionName: String, doubleFn: (Double, Double) -> Double) {
-        val result = parseAPLExpression("(100+3 4 ⍴ ⍳100) ${functionName} 10")
+        val result = parseAPLExpression("(100+3 4 ⍴ ⍳100) $functionName 10")
         for (i in 0 until 12) {
             assertEquals(result.valueAt(i).ensureNumber().asDouble(), doubleFn((100 + i).toDouble(), 10.0))
         }

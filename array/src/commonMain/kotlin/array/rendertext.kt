@@ -63,20 +63,6 @@ private fun encloseString(s: String2D): String {
     return s.encloseInBox().asString()
 }
 
-private fun construct2DStrings(numRows: Int, numCols: Int, value: APLValue, colWidths: Array<Int>, offset: Int = 0): List<List<String2D>> {
-    val rows = ArrayList<List<String2D>>()
-    for (y in 0 until numRows) {
-        val row = ArrayList<String2D>()
-        for (x in 0 until numCols) {
-            val s2 = String2D(value.valueAt(offset + y * numCols + x).formatted())
-            row.add(s2)
-            colWidths[x] = max(colWidths[x], s2.width())
-        }
-        rows.add(row)
-    }
-    return rows
-}
-
 private fun encloseNDim(value: APLValue): String {
     val dimensions = value.dimensions()
     val multipliers = dimensions.multipliers()
