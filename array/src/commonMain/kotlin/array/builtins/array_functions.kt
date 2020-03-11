@@ -34,10 +34,6 @@ class IotaAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
         return IotaArray(a.unwrapDeferredValue().ensureNumber().asInt())
     }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
-    }
 }
 
 class ResizedArray(private val dimensions: Dimensions, private val value: APLValue) : APLArray() {
@@ -87,10 +83,6 @@ class EncloseAPLFunction : NoAxisAPLFunction() {
         val v = a.unwrapDeferredValue()
         return if (v is APLSingleValue) v else EnclosedAPLValue(v)
     }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
-    }
 }
 
 class DiscloseAPLFunction : NoAxisAPLFunction() {
@@ -101,10 +93,6 @@ class DiscloseAPLFunction : NoAxisAPLFunction() {
             v.isScalar() -> v.valueAt(0)
             else -> v
         }
-    }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
     }
 }
 
@@ -252,10 +240,6 @@ class ConcatenateAPLFunction : APLFunction {
 }
 
 class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        TODO("not implemented")
-    }
-
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
         val aFixed = a.arrayify()
         val ad = aFixed.dimensions()
@@ -282,11 +266,6 @@ class TakeAPLFunction : APLFunction {
             else -> v.valueAt(0)
         }
     }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-        TODO("not implemented")
-    }
-
 }
 
 class DropResultValue(val a: APLValue) : APLArray() {
@@ -308,10 +287,6 @@ class DropAPLFunction : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         return DropResultValue(a)
     }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-        TODO("not implemented")
-    }
 }
 
 class RandomAPLFunction : NoAxisAPLFunction() {
@@ -322,10 +297,6 @@ class RandomAPLFunction : NoAxisAPLFunction() {
         } else {
             APLArrayImpl(v.dimensions()) { index -> makeRandom(v.valueAt(index).ensureNumber()) }
         }
-    }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
     }
 
     private fun makeRandom(limit: APLNumber): APLNumber {

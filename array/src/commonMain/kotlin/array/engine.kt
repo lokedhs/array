@@ -3,8 +3,8 @@ package array
 import array.builtins.*
 
 interface APLFunction {
-    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue
-    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue
+    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException()
+    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue = throw Unimplemented2ArgException()
     fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
 }
 
@@ -13,14 +13,14 @@ abstract class NoAxisAPLFunction : APLFunction {
         return eval1Arg(context, a)
     }
 
-    abstract fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue
+    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException()
 
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         return eval2Arg(context, a, b)
     }
 
-    abstract fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue
+    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException()
 }
 
 class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol) : APLFunction {

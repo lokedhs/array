@@ -11,10 +11,6 @@ class PrintAPLFunction : NoAxisAPLFunction() {
         println(a.formatted())
         return a
     }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
-    }
 }
 
 class ReadCSVFunction : NoAxisAPLFunction() {
@@ -26,9 +22,5 @@ class ReadCSVFunction : NoAxisAPLFunction() {
         } finally {
             source.close()
         }
-    }
-
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
     }
 }

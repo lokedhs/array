@@ -28,10 +28,6 @@ class OuterJoinResult(val context: RuntimeContext, val a: APLValue, val b: APLVa
 class OuterJoinOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                TODO("not implemented")
-            }
-
             override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                 if (axis != null) {
                     throw APLIllegalArgumentException("outer join does not support axis arguments")

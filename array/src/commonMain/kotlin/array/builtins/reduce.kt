@@ -100,10 +100,6 @@ class ReduceOp : APLOperator {
                     ReduceResult1Arg(context, fn, a, v)
                 }
             }
-
-            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-                TODO("not implemented")
-            }
         }
     }
 }
