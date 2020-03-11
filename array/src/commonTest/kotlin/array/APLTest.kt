@@ -11,10 +11,10 @@ open class APLTest {
         return instr.evalWithContext(context)
     }
 
-    fun assertArrayContent(content: Array<Int>, value: APLValue) {
-        assertEquals(content.size, value.size())
-        for (i in content.indices) {
-            assertEquals(value.valueAt(i).ensureNumber().asLong(), content[i].toLong())
+    fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {
+        assertEquals(expectedValue.size, value.size())
+        for (i in expectedValue.indices) {
+            assertSimpleNumber(expectedValue[i].toLong(), value.valueAt(i))
         }
     }
 
@@ -28,8 +28,15 @@ open class APLTest {
             val cell = v.valueAt(i)
             val expectedValue = values[i]
             for (eIndex in expectedValue.indices) {
-                assertEquals(expectedValue[eIndex].toLong(), cell.valueAt(eIndex).ensureNumber().asLong())
+                assertSimpleNumber(expectedValue[eIndex].toLong(), cell.valueAt(eIndex))
             }
         }
+    }
+
+    fun assertSimpleNumber(expected: Long, value: APLValue) {
+        assertTrue(value.isScalar())
+        val v = value.unwrapDeferredValue()
+        assertTrue(v is APLNumber)
+        assertEquals(expected, value.ensureNumber().asLong())
     }
 }
