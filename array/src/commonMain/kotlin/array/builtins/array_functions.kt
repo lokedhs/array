@@ -398,7 +398,7 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue) : APLArra
                 }
             }
             if (res == -1) {
-                throw InvalidDimensionsException("Now all axis represented in transpose definition")
+                throw InvalidDimensionsException("Not all axis represented in transpose definition")
             }
             res
         }
