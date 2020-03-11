@@ -57,6 +57,6 @@ class ReduceTest : APLTest() {
     private fun reduceTestWithFunctionName(aplFn: String, correctRes: Int) {
         val result = parseAPLExpression("${aplFn}/0⍴4")
         assertTrue(result.dimensions().compare(emptyDimensions()))
-        assertEquals(correctRes.toLong(), result.valueAt(0).ensureNumber().asLong())
+        assertSimpleNumber(correctRes.toLong(), result.valueAt(0))
     }
 }
