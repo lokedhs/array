@@ -78,6 +78,7 @@ class Engine {
         registerFunction(internSymbol("⌽"), RotateHorizFunction())
         registerFunction(internSymbol("⊖"), RotateVertFunction())
         registerFunction(internSymbol("↓"), DropAPLFunction())
+        registerFunction(internSymbol("⍉"), TransposeFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

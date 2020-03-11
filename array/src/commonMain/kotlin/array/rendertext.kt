@@ -79,7 +79,7 @@ private fun construct2DStrings(numRows: Int, numCols: Int, value: APLValue, colW
 
 private fun encloseNDim(value: APLValue): String {
     val dimensions = value.dimensions()
-    val multipliers = dimensionsToMultipliers(dimensions)
+    val multipliers = dimensions.multipliers()
     val renderedValues = (0 until value.size()).map { index -> String2D(value.valueAt(index).formatted()) }
 
     // 4-dimensional rendering may seem a bit backwards, where each 2D block is rendered in row-major style,

@@ -9,7 +9,7 @@ class AxisActionFactors(val dimensions: Dimensions, val axis: Int) {
     val highValFactor: Int
 
     init {
-        multipliers = dimensionsToMultipliers(dimensions)
+        multipliers = dimensions.multipliers()
         multiplierAxis = multipliers[axis]
         highValFactor = multiplierAxis * dimensions[axis]
     }
@@ -225,9 +225,9 @@ class ConcatenateAPLFunction : APLFunction {
             axisA = ad[axis]
 
             dimensions = Dimensions(IntArray(ad.size) { i -> if (i == axis) ad[i] + bd[i] else ad[i] })
-            val multipliers = dimensionsToMultipliers(dimensions)
-            val aMultipliers = dimensionsToMultipliers(ad)
-            val bMultipliers = dimensionsToMultipliers(bd)
+            val multipliers = dimensions.multipliers()
+            val aMultipliers = ad.multipliers()
+            val bMultipliers = bd.multipliers()
             multiplierAxis = multipliers[axis]
             highValFactor = multiplierAxis * dimensions[axis]
             aMultiplierAxis = aMultipliers[axis]
@@ -266,8 +266,8 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
         if (ad[0] != bd.size) {
             throw InvalidDimensionsException("number of values in position argument must match the number of dimensions")
         }
-        val posList = Array(ad[0]) { i -> aFixed.valueAt(i).ensureNumber().asInt() }
-        val pos = indexFromDimensions(bd, posList)
+        val posList = IntArray(ad[0]) { i -> aFixed.valueAt(i).ensureNumber().asInt() }
+        val pos = bd.indexFromPosition(posList)
         return b.valueAt(pos)
     }
 }
@@ -379,4 +379,70 @@ class RotateHorizFunction : RotateFunction() {
 
 class RotateVertFunction : RotateFunction() {
     override fun defaultAxis(value: APLValue) = 0
+}
+
+class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue) : APLArray() {
+    private val dimensions: Dimensions
+    private val multipliers: IntArray
+    private val bDimensions: Dimensions
+    private val inverseTransposedAxis: IntArray
+
+    init {
+        bDimensions = b.dimensions()
+        inverseTransposedAxis = IntArray(bDimensions.size) { index ->
+            var res = -1
+            for (i in transposeAxis.indices) {
+                if (transposeAxis[i] == index) {
+                    res = i
+                    break
+                }
+            }
+            if (res == -1) {
+                throw InvalidDimensionsException("Now all axis represented in transpose definition")
+            }
+            res
+        }
+        dimensions = Dimensions(IntArray(bDimensions.size) { index -> bDimensions[inverseTransposedAxis[index]] })
+        multipliers = dimensions.multipliers()
+    }
+
+    override fun dimensions() = dimensions
+
+    override fun valueAt(p: Int): APLValue {
+        val c = dimensions.positionFromIndex(p)
+        val newPos = IntArray(dimensions.size) { index -> c[transposeAxis[index]] }
+        return b.valueAt(bDimensions.indexFromPosition(newPos))
+    }
+}
+
+class TransposeFunction : APLFunction {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        return if (a.isScalar()) {
+            a
+        } else {
+            val size = a.dimensions().size
+            val axisArg = IntArray(size) { i -> size - i - 1 }
+            TransposedAPLValue(axisArg, a)
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        val a1 = a.arrayify()
+        val aDimensions = a1.dimensions()
+        val bDimensions = b.dimensions()
+        if (aDimensions.size != 1 || aDimensions[0] != bDimensions.size) {
+            throw InvalidDimensionsException("Transpose arguments have wrong dimensions")
+        }
+
+        if (b.isScalar()) {
+            if (aDimensions[0] == 0) {
+                return b
+            } else {
+                throw InvalidDimensionsException("Transpose of scalar values requires empty left argument")
+            }
+        }
+
+        val transposeAxis = IntArray(aDimensions[0]) { index -> a1.valueAt(index).ensureNumber().asInt() }
+        return TransposedAPLValue(transposeAxis, b)
+    }
 }

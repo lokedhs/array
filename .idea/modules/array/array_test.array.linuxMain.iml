@@ -22,6 +22,11 @@
           <option name="errors">
             <ArgumentParseErrors />
           </option>
+          <option name="internalArguments">
+            <list>
+              <ManualLanguageFeatureSetting />
+            </list>
+          </option>
         </compilerArguments>
       </configuration>
     </facet>

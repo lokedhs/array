@@ -137,38 +137,8 @@ fun <T> stringIntersperse(list: List<T>, separator: String, fn: (T) -> String): 
     return buf.toString()
 }
 
-fun checkIndexRange(array: Array<*>, index: Int) {
-    if (index < 0 || index >= array.size) {
-        throw IndexOutOfBoundsException("Index does not fit in array. index=${index}, size=${array.size}")
-    }
-}
-
 fun checkIndexRange(array: IntArray, index: Int) {
     if (index < 0 || index >= array.size) {
         throw IndexOutOfBoundsException("Index does not fit in array. index=${index}, size=${array.size}")
-    }
-}
-
-inline fun <reified T> copyArrayAndRemove(array: Array<T>, toRemove: Int): Array<T> {
-    checkIndexRange(array, toRemove)
-    return Array(array.size - 1) { index ->
-        if (index < toRemove) array[index] else array[index + 1]
-    }
-}
-
-fun copyArrayAndRemove(array: IntArray, toRemove: Int): IntArray {
-    checkIndexRange(array, toRemove)
-    return IntArray(array.size - 1) { index ->
-        if (index < toRemove) array[index] else array[index + 1]
-    }
-}
-
-inline fun <reified T> copyArrayAndInsert(array: Array<T>, pos: Int, newValue: T): Array<T> {
-    return Array(array.size + 1) { index ->
-        when {
-            index < pos -> array[index]
-            index > pos -> array[index - 1]
-            else -> newValue
-        }
     }
 }

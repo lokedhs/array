@@ -9,7 +9,7 @@
         </sourceSets>
         <newMppModelJpsModuleKind>COMPILATION_AND_SOURCE_SET_HOLDER</newMppModelJpsModuleKind>
         <compilerSettings>
-          <option name="additionalArguments" value="-Xallow-no-source-files" />
+          <option name="additionalArguments" value="-Xallow-no-source-files -XXLanguage:+InlineClasses" />
         </compilerSettings>
         <compilerArguments>
           <option name="destination" value="$MODULE_DIR$/../../../array/build/classes/kotlin/jvm/main" />
