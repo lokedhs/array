@@ -88,7 +88,7 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
     }
 
     skipWhitespace()
-    if (atEol() || line[pos] == '#') {
+    if (atEol()) {
         return null
     }
 

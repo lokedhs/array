@@ -184,7 +184,7 @@ class CsvTest : APLTest() {
     }
 
     @Test
-    fun emptyLinesAndComments() {
+    fun emptyLines() {
         val content = """
             |1,2,3,4
             |
@@ -192,7 +192,6 @@ class CsvTest : APLTest() {
             |
             |
             |9,10,11,12
-            |# comment line
             |13,14,15,16
             |17,18,19,20
             |21,22,23,24
