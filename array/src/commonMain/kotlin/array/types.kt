@@ -70,6 +70,24 @@ fun isStringValue(value: APLValue): Boolean {
     }
 }
 
+fun arrayAsStringValue(array: APLValue): String {
+    val dimensions = array.dimensions()
+    if (dimensions.size != 1) {
+        throw IncompatibleTypeException("Argument is not a string")
+    }
+
+    val buf = StringBuilder()
+    for (i in 0 until array.size()) {
+        val v = array.valueAt(i)
+        if (v !is APLChar) {
+            throw IncompatibleTypeException("Argument is not a string")
+        }
+        buf.append(v.asString())
+    }
+
+    return buf.toString()
+}
+
 fun arrayAsString(array: APLValue): String {
     val v = array.collapse() // This is to prevent multiple evaluations during printing
     return when {
@@ -114,6 +132,7 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 class APLChar(val value: Int) : APLSingleValue() {
     override fun formatted() = "@${charToString(value)}"
     fun asString() = charToString(value)
+    override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 }
 
 fun makeAPLString(s: String): APLValue {
@@ -121,8 +140,10 @@ fun makeAPLString(s: String): APLValue {
     return APLArrayImpl(dimensionsOfSize(codepointList.size)) { i -> APLChar(codepointList[i]) }
 }
 
+private val NULL_DIMENSIONS = dimensionsOfSize(0)
+
 class APLNullValue : APLArray() {
-    override fun dimensions() = emptyDimensions()
+    override fun dimensions() = NULL_DIMENSIONS
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
 }
 

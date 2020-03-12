@@ -1,10 +1,7 @@
 package array.builtins
 
-import array.APLValue
-import array.NoAxisAPLFunction
-import array.RuntimeContext
+import array.*
 import array.csv.readCsv
-import array.readFile
 
 class PrintAPLFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
@@ -15,8 +12,7 @@ class PrintAPLFunction : NoAxisAPLFunction() {
 
 class ReadCSVFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        // filename is hardcoded at the moment since string functions are not working
-        val source = readFile("/tmp/foo")
+        val source = readFile(arrayAsStringValue(a))
         try {
             return readCsv(source)
         } finally {

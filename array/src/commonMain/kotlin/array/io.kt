@@ -3,6 +3,20 @@ package array
 interface CharacterProvider {
     fun nextCodepoint(): Int?
     fun close()
+
+    fun nextLine(): String? {
+        val buf = StringBuilder()
+        while (true) {
+            val ch = nextCodepoint()
+            if (ch == null) {
+                val s = buf.toString()
+                return if (s.isEmpty()) null else s
+            } else if (ch == '\n'.toInt()) {
+                return buf.toString()
+            }
+            buf.addCodepoint(ch)
+        }
+    }
 }
 
 class PushBackCharacterProvider(val source: CharacterProvider) : CharacterProvider {

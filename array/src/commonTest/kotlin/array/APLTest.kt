@@ -39,4 +39,23 @@ open class APLTest {
         assertTrue(v is APLNumber)
         assertEquals(expected, value.ensureNumber().asLong())
     }
+
+    fun assertSimpleDouble(expected: Pair<Double, Double>, value: APLValue) {
+        assertTrue(value.isScalar())
+        val v = value.unwrapDeferredValue()
+        assertTrue(v is APLNumber)
+        val num = value.ensureNumber().asDouble()
+        assertTrue(expected.first <= num)
+        assertTrue(expected.second >= num)
+    }
+
+    fun assertString(expected: String, value: APLValue) {
+        assertEquals(1, value.dimensions().size)
+        assertEquals(expected, arrayAsStringValue(value))
+    }
+
+    fun assertAPLNull(value: APLValue) {
+        assertDimension(dimensionsOfSize(0), value)
+        assertEquals(0, value.dimensions()[0])
+    }
 }
