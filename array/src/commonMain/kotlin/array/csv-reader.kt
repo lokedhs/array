@@ -52,8 +52,7 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
             if (atEol()) {
                 throw CsvParseException("Unterminated string", lineNumber, pos)
             }
-            val ch = line[pos++]
-            when (ch) {
+            when (val ch = line[pos++]) {
                 '\"' -> break@loop
                 '\\' -> {
                     if (atEol()) {
@@ -97,9 +96,9 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
         skipWhitespace()
         if (atEol()) break
         val ch = line[pos++]
-        val field = when {
-            ch == '"' -> makeAPLString(readQuotedField())
-            ch == ',' -> {
+        val field = when (ch) {
+            '"' -> makeAPLString(readQuotedField())
+            ',' -> {
                 pos--
                 makeAPLString("")
             }
