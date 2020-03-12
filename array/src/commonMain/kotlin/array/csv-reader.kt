@@ -93,7 +93,7 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
         return null
     }
 
-    loop@ while (true) {
+    while (true) {
         skipWhitespace()
         if (atEol()) break
         val ch = line[pos++]
