@@ -12,7 +12,7 @@ class PrintAPLFunction : NoAxisAPLFunction() {
 
 class ReadCSVFunction : NoAxisAPLFunction() {
     override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        val source = readFile(arrayAsStringValue(a))
+        val source = openCharFile(arrayAsStringValue(a))
         try {
             return readCsv(source)
         } finally {

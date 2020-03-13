@@ -1,5 +1,24 @@
 package array
 
+class MPFileException(message: String, cause: Exception? = null) : Exception(message, cause)
+
+interface NativeCloseable {
+    fun close()
+}
+
+fun <T : NativeCloseable, R> T.use(fn: (T) -> R): R {
+    try {
+        return fn(this)
+    } finally {
+        close()
+    }
+}
+
+interface ByteProvider : NativeCloseable {
+    fun readByte(): Byte?
+    fun readBlock(buffer: ByteArray, start: Int? = null, length: Int? = null): Int?
+}
+
 interface CharacterProvider {
     fun nextCodepoint(): Int?
     fun close()
@@ -47,4 +66,5 @@ interface KeyboardInput {
 
 expect fun makeKeyboardInput(): KeyboardInput
 
-expect fun readFile(name: String): CharacterProvider
+expect fun openFile(name: String): ByteProvider
+expect fun openCharFile(name: String): CharacterProvider

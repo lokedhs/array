@@ -1,11 +1,9 @@
 package array
 
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.toKString
-import platform.posix.fgets
-import platform.posix.stdin
+import kotlinx.cinterop.*
+import platform.posix.*
+
+class NativeFileException(message: String) : Exception(message)
 
 actual class StringCharacterProvider actual constructor(val s: String) : CharacterProvider {
     private var pos = 0
@@ -42,7 +40,56 @@ actual fun makeKeyboardInput(): KeyboardInput {
     return KeyboardInputNative()
 }
 
-actual fun readFile(name: String): CharacterProvider {
+actual fun openCharFile(name: String): CharacterProvider {
     //return FileCharacterProvider(name)
     TODO("File reading not implemented in native mode yet")
+}
+
+class LinuxByteProvider(val fd: Int) : ByteProvider {
+    @ExperimentalUnsignedTypes
+    override fun readByte(): Byte? {
+        val buf = ByteArray(1)
+        val result = readBlock(buf, 0, 1)
+        return if (result == 0) {
+            null
+        } else {
+            buf[0]
+        }
+    }
+
+    @ExperimentalUnsignedTypes
+    override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
+        val startPos = start ?: 0
+        val lengthInt = length ?: buffer.size - startPos
+        memScoped {
+            val buf = allocArray<ByteVar>(lengthInt)
+            val result = read(fd, buf, lengthInt.toULong())
+            if (result == -1L) {
+                throw NativeFileException(nativeErrorString())
+            }
+            val resultLen = result.toInt()
+            for (i in 0 until resultLen) {
+                buffer[startPos + i] = buf[i].toByte()
+            }
+            return resultLen
+        }
+    }
+
+    override fun close() {
+        if (close(fd) == -1) {
+            throw NativeFileException(nativeErrorString())
+        }
+    }
+}
+
+actual fun openFile(name: String): ByteProvider {
+    val fd = open(name, O_RDONLY)
+    if (fd == -1) {
+        throw NativeFileException(nativeErrorString())
+    }
+    return LinuxByteProvider(fd)
+}
+
+private fun nativeErrorString(): String {
+    return strerror(errno)?.toKString() ?: "unknown error"
 }

@@ -1,9 +1,6 @@
 package array
 
-import java.io.BufferedReader
-import java.io.FileReader
-import java.io.InputStreamReader
-import java.io.Reader
+import java.io.*
 
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
 
@@ -68,6 +65,37 @@ class ReaderCharacterProvider(private val reader: Reader) : CharacterProvider {
 
 }
 
-actual fun readFile(name: String): CharacterProvider {
+actual fun openCharFile(name: String): CharacterProvider {
     return ReaderCharacterProvider(BufferedReader(FileReader(name, Charsets.UTF_8)))
+}
+
+class InputStreamByteProvider(private val input: InputStream) : ByteProvider {
+    override fun readByte(): Byte? {
+        val result = input.read()
+        return if (result == -1) null else result.toByte()
+    }
+
+    override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
+        val startPos = start ?: 0
+        val result = input.read(buffer, startPos, length ?: buffer.size - startPos)
+        return if (result == -1) null else result
+    }
+
+    override fun close() {
+        input.close()
+    }
+}
+
+actual fun openFile(name: String): ByteProvider {
+    return transformIOException {
+        InputStreamByteProvider(FileInputStream(name))
+    }
+}
+
+private fun <T> transformIOException(fn: () -> T): T {
+    try {
+        return fn()
+    } catch (e: IOException) {
+        throw MPFileException(e.toString(), e)
+    }
 }
