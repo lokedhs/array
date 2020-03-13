@@ -95,35 +95,64 @@ abstract class MathNumericCombineAPLFunction : MathCombineAPLFunction() {
 class AddAPLFunction : MathNumericCombineAPLFunction() {
     // No support for complex numbers yet
     override fun numberCombine1Arg(a: APLNumber) = a
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() + b.asDouble())
+    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+        return numericRelationOperation(
+            a,
+            b,
+            { x, y -> APLLong(x + y) },
+            { x, y -> APLDouble(x + y) })
+    }
 
     override fun identityValue() = APLLong(0)
 }
 
 class SubAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber) = APLDouble(-a.asDouble())
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() - b.asDouble())
+    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+        return numericRelationOperation(
+            a,
+            b,
+            { x, y -> APLLong(x - y) },
+            { x, y -> APLDouble(x - y) })
+    }
+
     override fun identityValue() = APLLong(0)
 }
 
 class MulAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine1Arg(a: APLNumber): APLValue {
-        val v = a.asDouble()
-        val res = when {
-            v > 0 -> 1.0
-            v < 0 -> -1.0
-            else -> 0.0
-        }
-        return APLDouble(res)
+    override fun numberCombine1Arg(a: APLNumber) = APLLong(a.asDouble().sign.toLong())
+
+    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+        return numericRelationOperation(
+            a,
+            b,
+            { x, y -> APLLong(x * y) },
+            { x, y -> APLDouble(x * y) })
     }
 
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() * b.asDouble())
     override fun identityValue() = APLLong(1)
 }
 
 class DivAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine1Arg(a: APLNumber) = APLDouble(1.0 / a.asDouble())
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble() / b.asDouble())
+    override fun numberCombine1Arg(a: APLNumber): APLValue {
+        val aDouble = a.asDouble()
+        return APLDouble(if (aDouble == 0.0) 0.0 else 1.0 / aDouble)
+    }
+
+    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+        return numericRelationOperation(
+            a,
+            b,
+            { x, y ->
+                when {
+                    y == 0L -> APLLong(0)
+                    x % y == 0L -> APLLong(x / y)
+                    else -> APLDouble(x.toDouble() / y.toDouble())
+                }
+            },
+            { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) })
+    }
+
     override fun identityValue() = APLLong(1)
 }
 

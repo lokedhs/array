@@ -23,8 +23,8 @@ class Symbol(val value: String) : Token(), Comparable<Symbol> {
 }
 
 class StringToken(val value: String) : Token()
-
 class ParsedLong(val value: Long) : Token()
+class ParsedDouble(val value: Double) : Token()
 
 class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private val content = PushBackCharacterProvider(contentArg)
@@ -92,35 +92,60 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
     private fun isQuoteChar(ch: Int) = ch == '"'.toInt()
     private fun isCommentChar(ch: Int) = ch == '⍝'.toInt()
+    private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.toInt()
+    private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
 
     private fun skipUntilNewline(): Whitespace {
-        while(true) {
+        while (true) {
             val ch = content.nextCodepoint()
-            if(ch == null || ch == '\n'.toInt()) {
+            if (ch == null || ch == '\n'.toInt()) {
                 break
             }
         }
         return Whitespace
     }
 
-    private fun collectNumber(firstChar: Int, isNegative: Boolean = false): ParsedLong {
+    private enum class NumberParsingState {
+        IntegerPart,
+        FractionPart
+    }
+
+    private fun collectNumber(firstChar: Int, isNegative: Boolean = false): Token {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
-        while (true) {
+
+        var state = NumberParsingState.IntegerPart
+
+        loop@ while (true) {
             val ch = content.nextCodepoint() ?: break
-            if (isLetter(ch)) {
-                throw IllegalNumberFormat("Illegal number format")
-            }
-            if (!isDigit(ch)) {
-                content.pushBack(ch)
-                break
+            when {
+                isSymbolStartChar(ch) -> {
+                    throw IllegalNumberFormat("Garbage after number")
+                }
+                ch == '.'.toInt() -> {
+                    if (state != NumberParsingState.IntegerPart) {
+                        throw IllegalNumberFormat("Multiple periods in number")
+                    }
+                    state = NumberParsingState.FractionPart
+                }
+                !isDigit(ch) -> {
+                    content.pushBack(ch)
+                    break@loop
+                }
             }
             buf.addCodepoint(ch)
         }
-        return ParsedLong(buf.toString().toLong() * if (isNegative) -1 else 1)
+
+        val s = buf.toString()
+        val withNeg = if (isNegative) "-$s" else s
+        return when {
+            FLOAT_PATTERN.matches(s) -> ParsedDouble(withNeg.toDouble())
+            INTEGER_PATTERN.matches(s) -> ParsedLong(withNeg.toLong())
+            else -> throw IllegalNumberFormat("Illeagal number format: ${withNeg}")
+        }
     }
 
-    private fun collectNegativeNumber(): ParsedLong {
+    private fun collectNegativeNumber(): Token {
         val ch = content.nextCodepoint()
         if (ch == null || !isDigit(ch)) {
             throw IllegalNumberFormat("Negation sign not followed by number")
@@ -165,6 +190,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                 return token
             }
         }
+    }
+
+    companion object {
+        private val FLOAT_PATTERN = "^[0-9]+\\.[0-9]*\$".toRegex()
+        private val INTEGER_PATTERN = "^[0-9]+$".toRegex()
     }
 }
 
@@ -229,9 +259,14 @@ class LiteralScalarValue(val value: Instruction) : Instruction {
     override fun toString() = "LiteralScalarValue(${value})"
 }
 
-class LiteralNumber(val value: Long) : Instruction {
+class LiteralInteger(val value: Long) : Instruction {
     override fun evalWithContext(context: RuntimeContext) = APLLong(value)
-    override fun toString() = "LiteralNumber(value=$value)"
+    override fun toString() = "LiteralInteger[value=$value]"
+}
+
+class LiteralDouble(val value: Double) : Instruction {
+    override fun evalWithContext(context: RuntimeContext) = APLDouble(value)
+    override fun toString() = "LiterlDouble[value=$value]"
 }
 
 class LiteralSymbol(name: Symbol) : Instruction {
@@ -359,7 +394,8 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             }
             is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser))
             is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
-            is ParsedLong -> leftArgs.add(LiteralNumber(token.value))
+            is ParsedLong -> leftArgs.add(LiteralInteger(token.value))
+            is ParsedDouble -> leftArgs.add(LiteralDouble(token.value))
             is LeftArrow -> return processAssignment(engine, tokeniser)
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser))
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue())

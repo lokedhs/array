@@ -1,6 +1,7 @@
 package array
 
 import kotlin.math.pow
+import kotlin.math.sign
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -42,6 +43,26 @@ class ScalarTest : APLTest() {
     }
 
     @Test
+    fun testAdd1Arg() {
+        runScalarTest1Arg("+") { a -> a }
+    }
+
+    @Test
+    fun testSub1Arg() {
+        runScalarTest1Arg("-") { a -> -a }
+    }
+
+    @Test
+    fun testMulArg() {
+        runScalarTest1Arg("×") { a -> a.sign }
+    }
+
+    @Test
+    fun testDivArg() {
+        runScalarTest1Arg("÷") { a -> if (a == 0.0) 0.0 else 1 / a }
+    }
+
+    @Test
     fun testCompareEquals() {
         runScalarTest("=") { a, b -> if (a == b) 1.0 else 0.0 }
     }
@@ -51,6 +72,18 @@ class ScalarTest : APLTest() {
         runScalarTest("≠") { a, b -> if (a != b) 1.0 else 0.0 }
     }
 
+    private fun runScalarTest1Arg(functionName: String, doubleFn: (Double) -> Double) {
+        val result = parseAPLExpression("${functionName} ¯4+⍳10")
+        assertDimension(dimensionsOfSize(10), result)
+        for (i in 0 until result.dimensions()[0]) {
+            assertEquals(
+                doubleFn((i - 4).toDouble()),
+                result.valueAt(i).ensureNumber().asDouble(),
+                "function: ${functionName}, arg: ${i - 4}"
+            )
+        }
+    }
+
     private fun runScalarTest(functionName: String, doubleFn: (Double, Double) -> Double) {
         runScalarTestSD(functionName, doubleFn)
         runScalarTestDS(functionName, doubleFn)
@@ -58,15 +91,25 @@ class ScalarTest : APLTest() {
 
     private fun runScalarTestSD(functionName: String, doubleFn: (Double, Double) -> Double) {
         val result = parseAPLExpression("100 $functionName 100+3 4 ⍴ ⍳100")
-        for (i in 0 until 12) {
-            assertEquals(result.valueAt(i).ensureNumber().asDouble(), doubleFn(100.0, (100 + i).toDouble()))
+        assertDimension(dimensionsOfSize(3, 4), result)
+        for (i in 0 until result.size()) {
+            assertEquals(
+                doubleFn(100.0, (100 + i).toDouble()),
+                result.valueAt(i).ensureNumber().asDouble(),
+                "function: ${functionName}}, index: ${i}"
+            )
         }
     }
 
     private fun runScalarTestDS(functionName: String, doubleFn: (Double, Double) -> Double) {
         val result = parseAPLExpression("(100+3 4 ⍴ ⍳100) $functionName 10")
-        for (i in 0 until 12) {
-            assertEquals(result.valueAt(i).ensureNumber().asDouble(), doubleFn((100 + i).toDouble(), 10.0))
+        assertDimension(dimensionsOfSize(3, 4), result)
+        for (i in 0 until result.size()) {
+            assertEquals(
+                doubleFn((100 + i).toDouble(), 10.0),
+                result.valueAt(i).ensureNumber().asDouble(),
+                "function: ${functionName}}. index: ${i}"
+            )
         }
     }
 }

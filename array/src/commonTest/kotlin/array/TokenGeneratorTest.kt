@@ -57,6 +57,40 @@ class TokenGeneratorTest {
     }
 
     @Test
+    fun parseNumberTypes() {
+        val gen = makeGenerator("1 2 1.2 2.0 9. ¯2.3 ¯2. 0 0.0")
+        assertInteger(1, gen.nextToken())
+        assertInteger(2, gen.nextToken())
+        assertDouble(Pair(1.11119, 1.20001), gen.nextToken())
+        assertDouble(Pair(1.99999, 2.00001), gen.nextToken())
+        assertDouble(Pair(8.99999, 9.00001), gen.nextToken())
+        assertDouble(Pair(-2.30001, -2.29999), gen.nextToken())
+        assertDouble(Pair(-2.00001, -1.99999), gen.nextToken())
+        assertInteger(0, gen.nextToken())
+        assertDouble(Pair(-0.00001, 0.00001), gen.nextToken())
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    private fun assertDouble(expected: Pair<Double, Double>, token: Token) {
+        assertTrue(token is ParsedDouble)
+        assertTrue(expected.first <= token.value)
+        assertTrue(expected.second >= token.value)
+    }
+
+    private fun assertInteger(expected: Long, token: Token) {
+        assertTrue(token is ParsedLong)
+        assertEquals(expected, token.value)
+    }
+
+    @Test
+    fun parseInvalidNumbers() {
+        assertFailsWith<IllegalNumberFormat> {
+            val gen = makeGenerator("2000a")
+            gen.nextToken()
+        }
+    }
+
+    @Test
     fun parseComments() {
         val gen = makeGenerator("foo ⍝ test comment")
         val token = gen.nextToken()
