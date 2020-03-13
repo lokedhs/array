@@ -141,7 +141,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         return when {
             FLOAT_PATTERN.matches(s) -> ParsedDouble(withNeg.toDouble())
             INTEGER_PATTERN.matches(s) -> ParsedLong(withNeg.toLong())
-            else -> throw IllegalNumberFormat("Illeagal number format: ${withNeg}")
+            else -> throw IllegalNumberFormat("Illegal number format: ${withNeg}")
         }
     }
 
