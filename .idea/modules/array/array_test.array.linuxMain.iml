@@ -23,9 +23,7 @@
             <ArgumentParseErrors />
           </option>
           <option name="internalArguments">
-            <list>
-              <ManualLanguageFeatureSetting />
-            </list>
+            <list />
           </option>
         </compilerArguments>
       </configuration>
