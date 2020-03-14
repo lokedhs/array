@@ -23,6 +23,12 @@ class NumbersTest : APLTest() {
         assertSimpleDouble(Pair(3.33332, 3.33334), parseAPLExpression("10÷3"))
     }
 
+    @Test
+    fun functionAliases() {
+        val result = parseAPLExpression("2*4")
+        assertSimpleNumber(16, result)
+    }
+
     private fun assertMathsOperation(op: (Long, Long) -> Long, name: String) {
         val args: Array<Long> =
             arrayOf(0, 1, -1, 2, 3, 10, 100, 123456, -12345, Int.MAX_VALUE.toLong(), Int.MIN_VALUE.toLong(), Long.MAX_VALUE, Long.MIN_VALUE)

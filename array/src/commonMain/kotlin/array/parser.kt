@@ -1,5 +1,7 @@
 package array
 
+import array.complex.Complex
+
 abstract class Token
 
 object Whitespace : Token()
@@ -25,6 +27,7 @@ class Symbol(val value: String) : Token(), Comparable<Symbol> {
 class StringToken(val value: String) : Token()
 class ParsedLong(val value: Long) : Token()
 class ParsedDouble(val value: Double) : Token()
+class ParsedComplex(val value: Complex) : Token()
 
 class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private val content = PushBackCharacterProvider(contentArg)
@@ -75,8 +78,9 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
 
         return when {
             singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
-            isNegationSign(ch) -> collectNegativeNumber()
-            isDigit(ch) -> collectNumber(ch)
+            isNegationSign(ch) || isDigit(ch) -> {
+                content.pushBack(ch); collectNumber()
+            }
             isWhitespace(ch) -> Whitespace
             isLetter(ch) -> collectSymbol(ch)
             isQuoteChar(ch) -> collectString()
@@ -94,6 +98,8 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isCommentChar(ch: Int) = ch == '⍝'.toInt()
     private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.toInt()
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
+    private fun isNumericConstituent(ch: Int) =
+        isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
@@ -105,30 +111,20 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         return Whitespace
     }
 
-    private enum class NumberParsingState {
-        IntegerPart,
-        FractionPart
-    }
-
-    private fun collectNumber(firstChar: Int, isNegative: Boolean = false): Token {
+    private fun collectNumber(): Token {
         val buf = StringBuilder()
-        buf.addCodepoint(firstChar)
-
-        var state = NumberParsingState.IntegerPart
-
+        var foundComplex = false
         loop@ while (true) {
             val ch = content.nextCodepoint() ?: break
             when {
-                isSymbolStartChar(ch) -> {
-                    throw IllegalNumberFormat("Garbage after number")
-                }
-                ch == '.'.toInt() -> {
-                    if (state != NumberParsingState.IntegerPart) {
-                        throw IllegalNumberFormat("Multiple periods in number")
+                ch == 'j'.toInt() || ch == 'J'.toInt() -> {
+                    if (foundComplex) {
+                        throw IllegalNumberFormat("Garbage after number")
                     }
-                    state = NumberParsingState.FractionPart
+                    foundComplex = true
                 }
-                !isDigit(ch) -> {
+                isLetter(ch) -> throw IllegalNumberFormat("Garbage after number")
+                !isNumericConstituent(ch) -> {
                     content.pushBack(ch)
                     break@loop
                 }
@@ -137,20 +133,13 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         }
 
         val s = buf.toString()
-        val withNeg = if (isNegative) "-$s" else s
-        return when {
-            FLOAT_PATTERN.matches(s) -> ParsedDouble(withNeg.toDouble())
-            INTEGER_PATTERN.matches(s) -> ParsedLong(withNeg.toLong())
-            else -> throw IllegalNumberFormat("Illegal number format: ${withNeg}")
+        for (parser in NUMBER_PARSERS) {
+            val result = parser.process(s)
+            if (result != null) {
+                return result
+            }
         }
-    }
-
-    private fun collectNegativeNumber(): Token {
-        val ch = content.nextCodepoint()
-        if (ch == null || !isDigit(ch)) {
-            throw IllegalNumberFormat("Negation sign not followed by number")
-        }
-        return collectNumber(ch, true)
+        throw IllegalNumberFormat("Content cannot be parsed as a number")
     }
 
     private fun collectSymbol(firstChar: Int): Symbol {
@@ -158,7 +147,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         buf.addCodepoint(firstChar)
         while (true) {
             val ch = content.nextCodepoint() ?: break
-            if (!isLetter(ch) || isDigit(ch)) {
+            if (!isSymbolContinuation(ch)) {
                 content.pushBack(ch)
                 break
             }
@@ -192,9 +181,47 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         }
     }
 
+    private class NumberParser(val pattern: Regex, val fn: (MatchResult) -> Token) {
+        fun process(s: String): Token? {
+            val result = pattern.matchEntire(s)
+            return if (result == null) {
+                null
+            } else {
+                fn(result)
+            }
+        }
+    }
+
     companion object {
-        private val FLOAT_PATTERN = "^[0-9]+\\.[0-9]*\$".toRegex()
-        private val INTEGER_PATTERN = "^[0-9]+$".toRegex()
+        private fun withNeg(isNegative: Boolean, s: String) = if (isNegative) "-$s" else s
+
+        private val NUMBER_PARSERS = listOf(
+            NumberParser("^(¯?)([0-9]+\\.[0-9]*)\$".toRegex()) { result ->
+                val groups = result.groups
+                val sign = groups.get(1) ?: throw IllegalNumberFormat("Illegal format of sign")
+                val s = groups.get(2) ?: throw IllegalNumberFormat("Illegal format of number part")
+                ParsedDouble(withNeg(sign.value != "", s.value).toDouble())
+            },
+            NumberParser("^(¯?)([0-9]+)$".toRegex()) { result ->
+                val groups = result.groups
+                val sign = groups.get(1) ?: throw IllegalNumberFormat("Illegal format of sign")
+                val s = groups.get(2) ?: throw IllegalNumberFormat("Illegal format of number part")
+                ParsedLong(withNeg(sign.value != "", s.value).toLong())
+            },
+            NumberParser("^(¯?)([0-9]+(?:\\.[0-9]*)?)[jJ](¯?)([0-9]+(?:\\.[0-9]*)?)$".toRegex()) { result ->
+                val groups = result.groups
+                val realSign = groups.get(1) ?: throw IllegalNumberFormat("Illegal format of sign in real part")
+                val realS = groups.get(2) ?: throw IllegalNumberFormat("Illegal format of number in real part")
+                val complexSign = groups.get(3) ?: throw IllegalNumberFormat("Illegal format of sign in complex")
+                val complexS = groups.get(4) ?: throw IllegalNumberFormat("Illegal format of number in complex part")
+                ParsedComplex(
+                    Complex(
+                        withNeg(realSign.value != "", realS.value).toDouble(),
+                        withNeg(complexSign.value != "", complexS.value).toDouble()
+                    )
+                )
+            }
+        )
     }
 }
 
@@ -266,7 +293,12 @@ class LiteralInteger(val value: Long) : Instruction {
 
 class LiteralDouble(val value: Double) : Instruction {
     override fun evalWithContext(context: RuntimeContext) = APLDouble(value)
-    override fun toString() = "LiterlDouble[value=$value]"
+    override fun toString() = "LiteralDouble[value=$value]"
+}
+
+class LiteralComplex(val value: Complex) : Instruction {
+    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
+    override fun toString() = "LiteralComplex[value=$value]"
 }
 
 class LiteralSymbol(name: Symbol) : Instruction {
@@ -396,6 +428,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
             is ParsedLong -> leftArgs.add(LiteralInteger(token.value))
             is ParsedDouble -> leftArgs.add(LiteralDouble(token.value))
+            is ParsedComplex -> leftArgs.add(LiteralComplex(token.value))
             is LeftArrow -> return processAssignment(engine, tokeniser)
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser))
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue())

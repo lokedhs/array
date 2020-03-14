@@ -1,5 +1,6 @@
 package array
 
+import array.complex.Complex
 import kotlin.test.*
 
 class TokenGeneratorTest {
@@ -117,6 +118,61 @@ class TokenGeneratorTest {
         val gen = makeGenerator("\"bar")
         assertFailsWith<ParseException> {
             gen.nextToken()
+        }
+    }
+
+    @Test
+    fun testSymbolsWithNumbers() {
+        val gen = makeGenerator("a1 a2 a3b aa2233")
+        gen.nextToken().let { token ->
+            assertTokenIsSymbol(gen, token, "a1")
+        }
+        gen.nextToken().let { token ->
+            assertTokenIsSymbol(gen, token, "a2")
+        }
+        gen.nextToken().let { token ->
+            assertTokenIsSymbol(gen, token, "a3b")
+        }
+        gen.nextToken().let { token ->
+            assertTokenIsSymbol(gen, token, "aa2233")
+        }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    @Test
+    fun complexNumbers() {
+        val gen = makeGenerator("1j2 0j2 2j0 1J2 0J2 ¯1j2 1j¯2 ¯1j¯2")
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(1.0, 2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(0.0, 2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(2.0, 0.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(1.0, 2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(0.0, 2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(-1.0, 2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(1.0, -2.0), token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedComplex)
+            assertEquals(Complex(-1.0, -2.0), token.value)
         }
     }
 

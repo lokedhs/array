@@ -48,6 +48,7 @@ class Engine {
     private val symbols = HashMap<String, Symbol>()
     private val variables = HashMap<Symbol, APLValue>()
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
+    private val functionAliases = HashMap<Symbol, Symbol>()
 
     init {
         // core functions
@@ -96,6 +97,9 @@ class Engine {
         registerOperator(internSymbol("¨"), ForEachOp())
         registerOperator(internSymbol("/"), ReduceOp())
         registerOperator(internSymbol("⌺"), OuterJoinOp())
+
+        // function aliases
+        functionAliases[internSymbol("*")] = internSymbol("⋆")
     }
 
     fun addFunctionDefinitionListener(listener: FunctionDefinitionListener) {
@@ -127,13 +131,15 @@ class Engine {
         return res
     }
 
-    fun getFunction(name: Symbol) = functions[name]
-    fun getOperator(token: Symbol) = operators[token]
+    fun getFunction(name: Symbol) = functions[resolveAlias(name)]
+    fun getOperator(name: Symbol) = operators[resolveAlias(name)]
     fun parseWithTokenGenerator(tokeniser: TokenGenerator) = parseValueToplevel(this, tokeniser, EndOfFile)
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringCharacterProvider(input)))
     fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
+
+    private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
 }
 
 class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {

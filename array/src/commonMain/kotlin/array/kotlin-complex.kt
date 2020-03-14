@@ -1,8 +1,10 @@
 package array.complex
 
-import kotlin.math.hypot
+import kotlin.math.*
 
 data class Complex(val real: Double, val imaginary: Double) {
+
+    constructor(value: Double) : this(value, 0.0)
 
     fun reciprocal(): Complex {
         val scale = (real * real) + (imaginary * imaginary)
@@ -31,7 +33,18 @@ data class Complex(val real: Double, val imaginary: Double) {
 
     operator fun div(other: Complex): Complex = this * other.reciprocal()
 
+    fun pow(complex: Complex): Complex {
+        val arg = atan2(this.imaginary, this.real)
+        val resultAbsolute = exp(ln(this.abs()) * complex.real - (arg * complex.imaginary))
+        val resultArg = ln(this.abs()) * complex.imaginary + arg * complex.real
+        return fromPolarCoord(resultAbsolute, resultArg)
+    }
+
     companion object {
+        fun fromPolarCoord(absolute: Double, arg: Double): Complex {
+            return Complex(cos(arg) * absolute, sin(arg) * absolute)
+        }
+
         val ZERO = Complex(0.0, 0.0)
     }
 }
@@ -40,4 +53,6 @@ operator fun Double.plus(complex: Complex) = Complex(this, 0.0) + complex
 operator fun Double.times(complex: Complex) = Complex(this, 0.0) * complex
 operator fun Double.minus(complex: Complex) = Complex(this, 0.0) - complex
 operator fun Double.div(complex: Complex) = Complex(this, 0.0) / complex
+
 fun Double.toComplex() = Complex(this, 0.0)
+fun Double.pow(complex: Complex) = Complex(this, 0.0).pow(complex)

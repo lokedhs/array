@@ -73,7 +73,7 @@ class ScalarTest : APLTest() {
     }
 
     private fun runScalarTest1Arg(functionName: String, doubleFn: (Double) -> Double) {
-        val result = parseAPLExpression("${functionName} ¯4+⍳10")
+        val result = parseAPLExpression("${functionName} ¯4.0+⍳10")
         assertDimension(dimensionsOfSize(10), result)
         for (i in 0 until result.dimensions()[0]) {
             assertEquals(

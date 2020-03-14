@@ -1,7 +1,7 @@
 package array
 
 open class APLEvalException(message: String) : Exception(message)
-class IncompatibleTypeException(message: String) : APLEvalException(message)
+open class IncompatibleTypeException(message: String) : APLEvalException(message)
 class InvalidDimensionsException(message: String) : APLEvalException(message)
 class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
 class IllegalNumberFormat(message: String) : APLEvalException(message)

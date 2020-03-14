@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import array.complex.Complex
 import kotlin.math.*
 
 interface CellSumFunction1Arg {
@@ -93,41 +94,69 @@ abstract class MathNumericCombineAPLFunction : MathCombineAPLFunction() {
 }
 
 class AddAPLFunction : MathNumericCombineAPLFunction() {
-    // No support for complex numbers yet
-    override fun numberCombine1Arg(a: APLNumber) = a
+    override fun numberCombine1Arg(a: APLNumber): APLValue {
+        return singleArgNumericRelationOperation(
+            a,
+            { x -> x.makeAPLNumber() },
+            { x -> x.makeAPLNumber() },
+            { x -> Complex(x.real, -x.imaginary).makeAPLNumber() }
+        )
+    }
+
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
         return numericRelationOperation(
             a,
             b,
-            { x, y -> APLLong(x + y) },
-            { x, y -> APLDouble(x + y) })
+            { x, y -> (x + y).makeAPLNumber() },
+            { x, y -> (x + y).makeAPLNumber() },
+            { x, y -> (x + y).makeAPLNumber() }
+        )
     }
 
     override fun identityValue() = APLLong(0)
 }
 
 class SubAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine1Arg(a: APLNumber) = APLDouble(-a.asDouble())
+    override fun numberCombine1Arg(a: APLNumber): APLValue {
+        return singleArgNumericRelationOperation(
+            a,
+            { x -> (-x).makeAPLNumber() },
+            { x -> (-x).makeAPLNumber() },
+            { x -> (-x).makeAPLNumber() }
+        )
+    }
+
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
         return numericRelationOperation(
             a,
             b,
-            { x, y -> APLLong(x - y) },
-            { x, y -> APLDouble(x - y) })
+            { x, y -> (x - y).makeAPLNumber() },
+            { x, y -> (x - y).makeAPLNumber() },
+            { x, y -> (x - y).makeAPLNumber() }
+        )
     }
 
     override fun identityValue() = APLLong(0)
 }
 
 class MulAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine1Arg(a: APLNumber) = APLLong(a.asDouble().sign.toLong())
+    override fun numberCombine1Arg(a: APLNumber): APLValue {
+        return singleArgNumericRelationOperation(
+            a,
+            { x -> x.sign.toLong().makeAPLNumber() },
+            { x -> x.sign.makeAPLNumber() },
+            { x -> x.abs().makeAPLNumber() }
+        )
+    }
 
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
         return numericRelationOperation(
             a,
             b,
-            { x, y -> APLLong(x * y) },
-            { x, y -> APLDouble(x * y) })
+            { x, y -> (x * y).makeAPLNumber() },
+            { x, y -> (x * y).makeAPLNumber() },
+            { x, y -> (x * y).makeAPLNumber() }
+        )
     }
 
     override fun identityValue() = APLLong(1)
@@ -135,8 +164,12 @@ class MulAPLFunction : MathNumericCombineAPLFunction() {
 
 class DivAPLFunction : MathNumericCombineAPLFunction() {
     override fun numberCombine1Arg(a: APLNumber): APLValue {
-        val aDouble = a.asDouble()
-        return APLDouble(if (aDouble == 0.0) 0.0 else 1.0 / aDouble)
+        return singleArgNumericRelationOperation(
+            a,
+            { x -> if (x == 0L) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
+            { x -> if (x == 0.0) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
+            { x -> if (x == Complex.ZERO) 0.makeAPLNumber() else x.reciprocal().makeAPLNumber() }
+        )
     }
 
     override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
@@ -150,15 +183,34 @@ class DivAPLFunction : MathNumericCombineAPLFunction() {
                     else -> APLDouble(x.toDouble() / y.toDouble())
                 }
             },
-            { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) })
+            { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) },
+            { x, y -> if (y == Complex.ZERO) APLDouble(0.0) else APLComplex(x / y) }
+        )
     }
 
     override fun identityValue() = APLLong(1)
 }
 
 class PowerAPLFunction : MathNumericCombineAPLFunction() {
-    override fun numberCombine1Arg(a: APLNumber) = APLDouble(exp(a.asDouble()))
-    override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(a.asDouble().pow(b.asDouble()))
+    override fun numberCombine1Arg(a: APLNumber): APLValue {
+        return singleArgNumericRelationOperation(
+            a,
+            { x -> exp(x.toDouble()).makeAPLNumber() },
+            { x -> exp(x).makeAPLNumber() },
+            { x -> Complex(E).pow(x).makeAPLNumber() }
+        )
+    }
+
+    override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+        return numericRelationOperation(
+            a,
+            b,
+            { x, y -> x.toDouble().pow(y.toDouble()).makeAPLNumber() },
+            { x, y -> x.pow(y).makeAPLNumber() },
+            { x, y -> x.pow(y).makeAPLNumber() }
+        )
+    }
+
     override fun identityValue() = APLLong(1)
 }
 
