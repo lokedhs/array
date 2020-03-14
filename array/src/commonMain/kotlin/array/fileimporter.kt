@@ -1,5 +1,5 @@
 package array
 
 interface FileImporter {
-    fun import(content: ByteProvider)
+    fun import(content: ByteProvider): APLValue
 }
