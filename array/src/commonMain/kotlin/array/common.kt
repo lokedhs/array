@@ -1,6 +1,7 @@
 package array
 
-open class APLEvalException(message: String) : Exception(message)
+open class APLGenericException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class APLEvalException(message: String) : APLGenericException(message)
 open class IncompatibleTypeException(message: String) : APLEvalException(message)
 class InvalidDimensionsException(message: String) : APLEvalException(message)
 class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
@@ -13,7 +14,7 @@ class APLIncompatibleDomainsException(message: String) : APLEvalException(messag
 class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")
 class Unimplemented2ArgException : APLEvalException("Function cannot be called with two arguments")
 
-open class ParseException(message: String) : Exception(message)
+open class ParseException(message: String) : APLGenericException(message)
 class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {

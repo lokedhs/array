@@ -1,5 +1,6 @@
 package array.gui
 
+import array.APLGenericException
 import array.APLValue
 import array.Engine
 import array.msofficereader.LoadExcelFileFunction
@@ -87,10 +88,12 @@ class Client(val application: ClientApplication, val stage: Stage)  {
     private fun sendInput(text: String) {
         try {
             val instr = engine.parseString(text)
-            val v = instr.evalWithContext(engine.makeRuntimeContext())
+            val v = instr.evalWithContext(engine.makeRuntimeContext()).collapse()
             resultList.addResult(text, v)
             contentScrollPane.layout()
             contentScrollPane.vvalue = contentScrollPane.vmax
+        } catch (e: APLGenericException) {
+            resultList.addResult(text, e)
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -1,15 +1,27 @@
 package array.gui
 
+import array.APLGenericException
 import array.APLValue
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 
 class ResultList2(private val context: ClientRenderContext) : TextFlow() {
+
+    private fun addInput(text: String) {
+        children.add(textWithStyle(text + "\n"))
+    }
+
     fun addResult(text: String, v: APLValue) {
-        children.apply {
-            add(textWithStyle(text + "\n"))
-            add(textWithStyle(v.formatted() + "\n"))
+        addInput(text)
+        children.add(textWithStyle(v.formatted() + "\n"))
+    }
+
+    fun addResult(text: String, exception: APLGenericException) {
+        addInput(text)
+        val errorMessage = textWithStyle((exception.message ?: "no text") + "\n").apply {
+            style = "-fx-fill: #ff0000;"
         }
+        children.add(errorMessage)
     }
 
     private fun textWithStyle(s: String): Text {
