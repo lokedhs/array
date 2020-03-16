@@ -86,19 +86,27 @@ class ReduceResult1Arg(
 }
 
 class ReduceOp : APLOperator {
-    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
-        return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
-                return if (a.rank() == 0) {
-                    if (axisParam != null && axisParam != 0) {
-                        throw IllegalAxisException(axisParam, a.dimensions())
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+        return ReduceOpFunctionDescriptor(fn, operatorAxis)
+    }
+
+    class ReduceOpFunctionDescriptor(val fnDescriptor: APLFunctionDescriptor, val operatorAxis: Instruction?) : APLFunctionDescriptor {
+        override fun make(pos: Position): APLFunction {
+            return object : APLFunction(pos) {
+                val fn = fnDescriptor.make(pos)
+
+                override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                    val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
+                    return if (a.rank() == 0) {
+                        if (axisParam != null && axisParam != 0) {
+                            throw IllegalAxisException(axisParam, a.dimensions())
+                        }
+                        a
+                    } else {
+                        val v = axisParam ?: (a.dimensions().size - 1)
+                        ensureValidAxis(v, a.dimensions())
+                        ReduceResult1Arg(context, fn, a, v, pos)
                     }
-                    a
-                } else {
-                    val v = axisParam ?: (a.dimensions().size - 1)
-                    ensureValidAxis(v, a.dimensions())
-                    ReduceResult1Arg(context, fn, a, v, pos)
                 }
             }
         }

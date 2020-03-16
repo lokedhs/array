@@ -75,27 +75,31 @@ fun parseEvaluatedCell(cell: Cell, evaluator: FormulaEvaluator): APLValue {
     }
 }
 
-class LoadExcelFileFunction : NoAxisAPLFunction() {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-        return readExcelFile(arrayToString(a))
-    }
-
-    private fun arrayToString(a: APLValue): String {
-        if (a.rank() != 1) {
-            throw InvalidDimensionsException("String must be rank 1")
+class LoadExcelFileFunction : APLFunctionDescriptor {
+    class LoadExcelFileFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return readExcelFile(arrayToString(a))
         }
-        val buf = StringBuilder()
-        for (i in 0 until a.size()) {
-            val charValue = a.valueAt(i)
-            if (charValue !is APLChar) {
-                throw IncompatibleTypeException("Value at position $i is not a character")
+
+        private fun arrayToString(a: APLValue): String {
+            if (a.rank() != 1) {
+                throw InvalidDimensionsException("String must be rank 1")
             }
-            buf.addCodepoint(charValue.value)
+            val buf = StringBuilder()
+            for (i in 0 until a.size()) {
+                val charValue = a.valueAt(i)
+                if (charValue !is APLChar) {
+                    throw IncompatibleTypeException("Value at position $i is not a character")
+                }
+                buf.addCodepoint(charValue.value)
+            }
+            return buf.toString()
         }
-        return buf.toString()
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            TODO("not implemented")
+        }
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-        TODO("not implemented")
-    }
+    override fun make(pos: Position) = LoadExcelFileFunctionImpl(pos)
 }

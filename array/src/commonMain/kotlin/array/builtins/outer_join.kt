@@ -32,18 +32,26 @@ class OuterJoinResult(
 }
 
 class OuterJoinOp : APLOperator {
-    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
-        return object : APLFunction(fn.pos) {
-            override fun eval2Arg(
-                context: RuntimeContext,
-                a: APLValue,
-                b: APLValue,
-                axis: APLValue?
-            ): APLValue {
-                if (axis != null) {
-                    throw APLIllegalArgumentException("outer join does not support axis arguments")
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+        return OuterJoinFunctionDescriptor(fn)
+    }
+
+    class OuterJoinFunctionDescriptor(val fnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
+        override fun make(pos: Position): APLFunction {
+            val fn = fnDescriptor.make(pos)
+
+            return object : APLFunction(fn.pos) {
+                override fun eval2Arg(
+                    context: RuntimeContext,
+                    a: APLValue,
+                    b: APLValue,
+                    axis: APLValue?
+                ): APLValue {
+                    if (axis != null) {
+                        throw APLIllegalArgumentException("outer join does not support axis arguments")
+                    }
+                    return OuterJoinResult(context, a, b, fn, pos)
                 }
-                return OuterJoinResult(context, a, b, fn, pos)
             }
         }
     }

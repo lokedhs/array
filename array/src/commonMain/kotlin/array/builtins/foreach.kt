@@ -37,19 +37,27 @@ class ForEachResult2Arg(
 }
 
 class ForEachOp : APLOperator {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunction {
-        return object : APLFunction() {
-            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                return ForEachResult1Arg(context, fn, a, axis, pos)
-            }
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+        return ForEachFunctionDescriptor(fn)
+    }
 
-            override fun eval2Arg(
-                context: RuntimeContext,
-                a: APLValue,
-                b: APLValue,
-                axis: APLValue?
-            ): APLValue {
-                return ForEachResult2Arg(context, fn, a, b, axis, pos)
+    class ForEachFunctionDescriptor(val fnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
+        override fun make(pos: Position): APLFunction {
+            return object : APLFunction(pos) {
+                private val fn = fnDescriptor.make(pos)
+
+                override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                    return ForEachResult1Arg(context, fn, a, axis, pos)
+                }
+
+                override fun eval2Arg(
+                    context: RuntimeContext,
+                    a: APLValue,
+                    b: APLValue,
+                    axis: APLValue?
+                ): APLValue {
+                    return ForEachResult2Arg(context, fn, a, b, axis, pos)
+                }
             }
         }
     }
