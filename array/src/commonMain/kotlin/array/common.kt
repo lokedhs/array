@@ -1,6 +1,6 @@
 package array
 
-open class APLGenericException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause)
 open class APLEvalException(message: String) : APLGenericException(message)
 open class IncompatibleTypeException(message: String) : APLEvalException(message)
 class InvalidDimensionsException(message: String) : APLEvalException(message)

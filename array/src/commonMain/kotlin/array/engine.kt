@@ -23,7 +23,7 @@ abstract class NoAxisAPLFunction : APLFunction {
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException()
 }
 
-class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol) : APLFunction {
+class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol, val pos: Position) : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val localContext = context.link()
         localContext.setVar(rightArgName, a)

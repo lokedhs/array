@@ -8,6 +8,7 @@ class NativeFileException(message: String) : Exception(message)
 actual class StringCharacterProvider actual constructor(val s: String) : CharacterProvider {
     private var pos = 0
 
+    override fun sourceName() = null
     override fun nextCodepoint() = if (pos >= s.length) null else s[pos++].toInt()
     override fun close() {}
 }

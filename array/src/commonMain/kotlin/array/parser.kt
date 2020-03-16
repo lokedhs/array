@@ -29,6 +29,8 @@ class ParsedLong(val value: Long) : Token()
 class ParsedDouble(val value: Double) : Token()
 class ParsedComplex(val value: Complex) : Token()
 
+class Position(val sourceText: String, val line: Int, val col: Int)
+
 class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private val content = PushBackCharacterProvider(contentArg)
     private val singleCharFunctions: Set<String>
@@ -67,26 +69,31 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         }
     }
 
-    fun nextTokenOrSpace(): Token {
+    fun nextTokenOrSpace(): Pair<Token, Position> {
+        val posBeforeParse = content.pos()
+        fun mkpos(token: Token) = Pair(token, posBeforeParse)
+
         if (!pushBackQueue.isEmpty()) {
-            return pushBackQueue.removeAt(pushBackQueue.size - 1)
+            return mkpos(pushBackQueue.removeAt(pushBackQueue.size - 1))
         }
 
-        val ch = content.nextCodepoint() ?: return EndOfFile
+        val ch = content.nextCodepoint() ?: return mkpos(EndOfFile)
 
-        charToTokenMap[charToString(ch)]?.also { return it }
+        charToTokenMap[charToString(ch)]?.also { return mkpos(it) }
 
-        return when {
-            singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
-            isNegationSign(ch) || isDigit(ch) -> {
-                content.pushBack(ch); collectNumber()
+        return mkpos(
+            when {
+                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
+                isNegationSign(ch) || isDigit(ch) -> {
+                    content.pushBack(); collectNumber()
+                }
+                isWhitespace(ch) -> Whitespace
+                isLetter(ch) -> collectSymbol(ch)
+                isQuoteChar(ch) -> collectString()
+                isCommentChar(ch) -> skipUntilNewline()
+                else -> throw UnexpectedSymbol(ch)
             }
-            isWhitespace(ch) -> Whitespace
-            isLetter(ch) -> collectSymbol(ch)
-            isQuoteChar(ch) -> collectString()
-            isCommentChar(ch) -> skipUntilNewline()
-            else -> throw UnexpectedSymbol(ch)
-        }
+        )
     }
 
     fun pushBackToken(token: Token) {
@@ -125,7 +132,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                 }
                 isLetter(ch) -> throw IllegalNumberFormat("Garbage after number")
                 !isNumericConstituent(ch) -> {
-                    content.pushBack(ch)
+                    content.pushBack()
                     break@loop
                 }
             }
@@ -148,7 +155,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         while (true) {
             val ch = content.nextCodepoint() ?: break
             if (!isSymbolContinuation(ch)) {
-                content.pushBack(ch)
+                content.pushBack()
                 break
             }
             buf.addCodepoint(ch)
@@ -173,10 +180,14 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     }
 
     fun nextToken(): Token {
+        return nextTokenWithPosition().first
+    }
+
+    fun nextTokenWithPosition(): Pair<Token, Position> {
         while (true) {
-            val token = nextTokenOrSpace()
-            if (token != Whitespace) {
-                return token
+            val tokenAndPos = nextTokenOrSpace()
+            if (tokenAndPos.first != Whitespace) {
+                return tokenAndPos
             }
         }
     }
@@ -225,11 +236,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     }
 }
 
-interface Instruction {
-    fun evalWithContext(context: RuntimeContext): APLValue
+abstract class Instruction(val pos: Position? = null) {
+    abstract fun evalWithContext(context: RuntimeContext): APLValue
 }
 
-class InstructionList(val instructions: List<Instruction>) : Instruction {
+class InstructionList(val instructions: List<Instruction>) : Instruction() {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         var result: APLValue? = null
         for (instr in instructions) {
@@ -242,14 +253,25 @@ class InstructionList(val instructions: List<Instruction>) : Instruction {
     }
 }
 
-class FunctionCall1Arg(val fn: APLFunction, val rightArgs: Instruction, val axis: Instruction?) : Instruction {
+class FunctionCall1Arg(
+    val fn: APLFunction,
+    val rightArgs: Instruction,
+    val axis: Instruction?,
+    pos: Position
+) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) =
         fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
 
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
 
-class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val rightArgs: Instruction, val axis: Instruction?) : Instruction {
+class FunctionCall2Arg(
+    val fn: APLFunction,
+    val leftArgs: Instruction,
+    val rightArgs: Instruction,
+    val axis: Instruction?,
+    pos: Position
+) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val leftValue = rightArgs.evalWithContext(context)
         val rightValue = leftArgs.evalWithContext(context)
@@ -260,7 +282,7 @@ class FunctionCall2Arg(val fn: APLFunction, val leftArgs: Instruction, val right
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
 }
 
-class VariableRef(val name: Symbol) : Instruction {
+class VariableRef(val name: Symbol, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return context.lookupVar(name) ?: throw VariableNotAssigned(name)
     }
@@ -268,7 +290,7 @@ class VariableRef(val name: Symbol) : Instruction {
     override fun toString() = "Var(${name})"
 }
 
-class Literal1DArray(val values: List<Instruction>) : Instruction {
+class Literal1DArray(val values: List<Instruction>) : Instruction() {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val size = values.size
         val result = Array<APLValue?>(size) { null }
@@ -281,40 +303,40 @@ class Literal1DArray(val values: List<Instruction>) : Instruction {
     override fun toString() = "Literal1DArray(${values})"
 }
 
-class LiteralScalarValue(val value: Instruction) : Instruction {
+class LiteralScalarValue(val value: Instruction) : Instruction() {
     override fun evalWithContext(context: RuntimeContext) = value.evalWithContext(context)
     override fun toString() = "LiteralScalarValue(${value})"
 }
 
-class LiteralInteger(val value: Long) : Instruction {
+class LiteralInteger(val value: Long, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLLong(value)
     override fun toString() = "LiteralInteger[value=$value]"
 }
 
-class LiteralDouble(val value: Double) : Instruction {
+class LiteralDouble(val value: Double, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLDouble(value)
     override fun toString() = "LiteralDouble[value=$value]"
 }
 
-class LiteralComplex(val value: Complex) : Instruction {
+class LiteralComplex(val value: Complex, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
     override fun toString() = "LiteralComplex[value=$value]"
 }
 
-class LiteralSymbol(name: Symbol) : Instruction {
+class LiteralSymbol(name: Symbol) : Instruction() {
     private val value = APLSymbol(name)
     override fun evalWithContext(context: RuntimeContext): APLValue = value
 }
 
-class LiteralAPLNullValue : Instruction {
+class LiteralAPLNullValue(pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLNullValue()
 }
 
-class LiteralStringValue(val s: String) : Instruction {
+class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = makeAPLString(s)
 }
 
-class AssignmentInstruction(val name: Symbol, val instr: Instruction) : Instruction {
+class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val res = instr.evalWithContext(context)
         context.setVar(name, res)
@@ -325,7 +347,7 @@ class AssignmentInstruction(val name: Symbol, val instr: Instruction) : Instruct
 class UserFunction(
     private val arg: Symbol,
     private val instr: Instruction,
-    val source: String? = null
+    val pos: Position
 ) : APLFunction {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val inner = context.link()
@@ -358,7 +380,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
 
     fun makeResultList(): Instruction {
         if (leftArgs.isEmpty()) {
-            throw IllegalStateException("Argument list should not be empty")
+            throw ParseException("Argument list should not be empty")
         }
         return if (leftArgs.size == 1) {
             LiteralScalarValue(leftArgs[0])
@@ -367,18 +389,18 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         }
     }
 
-    fun processFn(fn: APLFunction): Pair<Instruction, Token> {
+    fun processFn(fn: APLFunction, pos: Position): Pair<Instruction, Token> {
         val axis = parseAxis(engine, tokeniser)
         val parsedFn = parseOperator(fn, engine, tokeniser)
         val (rightValue, lastToken) = parseValue(engine, tokeniser)
         return if (leftArgs.isEmpty()) {
-            Pair(FunctionCall1Arg(parsedFn, rightValue, axis), lastToken)
+            Pair(FunctionCall1Arg(parsedFn, rightValue, axis, pos), lastToken)
         } else {
-            Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue, axis), lastToken)
+            Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue, axis, pos), lastToken)
         }
     }
 
-    fun processAssignment(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
+    fun processAssignment(engine: Engine, tokeniser: TokenGenerator, pos: Position): Pair<Instruction, Token> {
         // Ensure that the left argument to leftarrow is a single symbol
         unless(leftArgs.size == 1) {
             throw IncompatibleTypeException("Can only assign to a single variable")
@@ -388,10 +410,10 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             throw IncompatibleTypeException("Attempt to assign to a type which is not a variable")
         }
         val (rightValue, lastToken) = parseValue(engine, tokeniser)
-        return Pair(AssignmentInstruction(dest.name, rightValue), lastToken)
+        return Pair(AssignmentInstruction(dest.name, rightValue, pos), lastToken)
     }
 
-    fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator): Instruction {
+    fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator, pos: Position): Instruction {
         if (!leftArgs.isEmpty()) {
             throw ParseException("Function definition with non-null left argument")
         }
@@ -403,14 +425,14 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         // Parse like a normal function definition
         val instr = parseValueToplevel(engine, tokeniser, CloseFnDef)
 
-        val obj = UserFunction(arg, instr)
+        val obj = UserFunction(arg, instr, pos)
 
         engine.registerFunction(name, obj)
         return LiteralSymbol(name)
     }
 
     while (true) {
-        val token = tokeniser.nextToken()
+        val (token, pos) = tokeniser.nextTokenWithPosition()
         if (token == CloseParen || token == EndOfFile || token == StatementSeparator || token == CloseFnDef || token == CloseBracket) {
             return Pair(makeResultList(), token)
         }
@@ -419,20 +441,20 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is Symbol -> {
                 val fn = engine.getFunction(token)
                 if (fn != null) {
-                    return processFn(fn)
+                    return processFn(fn, pos)
                 } else {
-                    leftArgs.add(VariableRef(token))
+                    leftArgs.add(VariableRef(token, pos))
                 }
             }
-            is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser))
+            is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser, pos), pos)
             is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
-            is ParsedLong -> leftArgs.add(LiteralInteger(token.value))
-            is ParsedDouble -> leftArgs.add(LiteralDouble(token.value))
-            is ParsedComplex -> leftArgs.add(LiteralComplex(token.value))
-            is LeftArrow -> return processAssignment(engine, tokeniser)
-            is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser))
-            is APLNullSym -> leftArgs.add(LiteralAPLNullValue())
-            is StringToken -> leftArgs.add(LiteralStringValue(token.value))
+            is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
+            is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
+            is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
+            is LeftArrow -> return processAssignment(engine, tokeniser, pos)
+            is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser, pos))
+            is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))
+            is StringToken -> leftArgs.add(LiteralStringValue(token.value, pos))
             else -> throw UnexpectedToken(token)
         }
     }
@@ -441,11 +463,12 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
 fun parseFnDefinition(
     engine: Engine,
     tokeniser: TokenGenerator,
+    pos: Position,
     leftArgName: Symbol? = null,
     rightArgName: Symbol? = null
 ): DeclaredFunction {
     val instruction = parseValueToplevel(engine, tokeniser, CloseFnDef)
-    return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"))
+    return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"), pos)
 }
 
 fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator): APLFunction {

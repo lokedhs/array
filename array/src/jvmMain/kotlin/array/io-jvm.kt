@@ -6,6 +6,8 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
 
     private var pos = 0
 
+    override fun sourceName() = "[inline code]"
+
     override fun nextCodepoint(): Int? {
         return if (pos >= s.length) {
             null
@@ -34,8 +36,10 @@ actual fun makeKeyboardInput(): KeyboardInput {
 
 class InvalidCharacter : Exception()
 
-class ReaderCharacterProvider(private val reader: Reader) : CharacterProvider {
+class ReaderCharacterProvider(private val reader: Reader, val sourceName: String? = null) : CharacterProvider {
     private var endOfFile = false
+
+    override fun sourceName() = sourceName
 
     override fun nextCodepoint(): Int? {
         if (endOfFile) {

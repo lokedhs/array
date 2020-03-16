@@ -174,6 +174,47 @@ class TokenGeneratorTest {
             assertTrue(token is ParsedComplex)
             assertEquals(Complex(-1.0, -2.0), token.value)
         }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    @Test
+    fun testParserPosition() {
+        val gen = makeGenerator("foo bar 10 1.2\nx y")
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTokenIsSymbol(gen, token, "foo")
+            assertEquals(0, pos.line)
+            assertEquals(0, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTokenIsSymbol(gen, token, "bar")
+            assertEquals(0, pos.line)
+            assertEquals(4, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTrue(token is ParsedLong)
+            assertEquals(10, token.value)
+            assertEquals(0, pos.line)
+            assertEquals(8, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTrue(token is ParsedDouble)
+            val value = token.value
+            assertTrue(1.11119 <= value)
+            assertTrue(2.00001 >= value)
+            assertEquals(0, pos.line)
+            assertEquals(11, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTokenIsSymbol(gen, token, "x")
+            assertEquals(1, pos.line)
+            assertEquals(0, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertTokenIsSymbol(gen, token, "y")
+            assertEquals(1, pos.line)
+            assertEquals(2, pos.col)
+        }
+        assertSame(EndOfFile, gen.nextToken())
     }
 
     private fun makeGenerator(content: String): TokenGenerator {

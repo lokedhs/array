@@ -20,6 +20,7 @@ interface ByteProvider : NativeCloseable {
 }
 
 interface CharacterProvider {
+    fun sourceName(): String?
     fun nextCodepoint(): Int?
     fun close()
 
@@ -38,24 +39,52 @@ interface CharacterProvider {
     }
 }
 
+@OptIn(ExperimentalStdlibApi::class)
 class PushBackCharacterProvider(val source: CharacterProvider) : CharacterProvider {
-    private val pushBackList = ArrayList<Int>()
+    private class CharWithPosition(val character: Int, val line: Int, val col: Int)
+
+    private val pushBackList = ArrayList<CharWithPosition>()
+    private val pushBackHistory = ArrayDeque<CharWithPosition>()
+
+    private var line = 0
+    private var col = 0
 
     override fun nextCodepoint(): Int? {
-        return if (pushBackList.isNotEmpty()) {
+        val ch = if (pushBackList.isNotEmpty()) {
             pushBackList.removeAt(pushBackList.size - 1)
         } else {
-            source.nextCodepoint()
+            val ch = source.nextCodepoint() ?: return null
+            val chWithPos = CharWithPosition(ch, line, col)
+            pushBackHistory.addLast(chWithPos)
+            // Keep the pushback list at 5 elements at most
+            while (pushBackHistory.size > 5) {
+                pushBackHistory.removeFirst()
+            }
+            chWithPos
         }
+        if (ch.character == '\n'.toInt()) {
+            line++
+            col = 0
+        } else {
+            col++
+        }
+        return ch.character
     }
 
-    fun pushBack(ch: Int) {
+    fun pushBack() {
+        val ch = pushBackHistory.removeLast()
         pushBackList.add(ch)
+        line = ch.line
+        col = ch.col
     }
+
+    fun pos() = Position(sourceName() ?: "no source", line, col)
 
     override fun close() {
         source.close()
     }
+
+    override fun sourceName() = source.sourceName()
 }
 
 expect class StringCharacterProvider(s: String) : CharacterProvider
