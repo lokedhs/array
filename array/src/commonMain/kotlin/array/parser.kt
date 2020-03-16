@@ -260,7 +260,7 @@ class FunctionCall1Arg(
     pos: Position
 ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) =
-        fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context), pos)
+        fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
 
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
@@ -276,7 +276,7 @@ class FunctionCall2Arg(
         val leftValue = rightArgs.evalWithContext(context)
         val rightValue = leftArgs.evalWithContext(context)
         val axisValue = axis?.evalWithContext(context)
-        return fn.eval2Arg(context, rightValue, leftValue, axisValue, pos)
+        return fn.eval2Arg(context, rightValue, leftValue, axisValue)
     }
 
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
@@ -344,20 +344,24 @@ class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Posit
     }
 }
 
-class UserFunction(
-    private val arg: Symbol,
-    private val instr: Instruction,
-    val pos: Position
-) : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
-        val inner = context.link()
-        inner.setVar(arg, a)
-        return instr.evalWithContext(inner)
+class UserFunction(private val arg: Symbol, private val instr: Instruction) : APLFunctionDescriptor {
+    class UserFunctionImpl(
+        private val arg: Symbol,
+        private val instr: Instruction,
+        pos: Position
+    ) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            val inner = context.link()
+            inner.setVar(arg, a)
+            return instr.evalWithContext(inner)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            TODO("not implemented")
+        }
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
-        TODO("not implemented")
-    }
+    override fun make(pos: Position) = UserFunctionImpl(arg, instr, pos)
 }
 
 fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
@@ -389,14 +393,14 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         }
     }
 
-    fun processFn(fn: APLFunction, pos: Position): Pair<Instruction, Token> {
+    fun processFn(fn: APLFunctionDescriptor, pos: Position): Pair<Instruction, Token> {
         val axis = parseAxis(engine, tokeniser)
         val parsedFn = parseOperator(fn, engine, tokeniser)
         val (rightValue, lastToken) = parseValue(engine, tokeniser)
         return if (leftArgs.isEmpty()) {
-            Pair(FunctionCall1Arg(parsedFn, rightValue, axis, pos), lastToken)
+            Pair(FunctionCall1Arg(parsedFn.make(pos), rightValue, axis, pos), lastToken)
         } else {
-            Pair(FunctionCall2Arg(parsedFn, makeResultList(), rightValue, axis, pos), lastToken)
+            Pair(FunctionCall2Arg(parsedFn.make(pos), makeResultList(), rightValue, axis, pos), lastToken)
         }
     }
 
@@ -425,7 +429,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         // Parse like a normal function definition
         val instr = parseValueToplevel(engine, tokeniser, CloseFnDef)
 
-        val obj = UserFunction(arg, instr, pos)
+        val obj = UserFunction(arg, instr)
 
         engine.registerFunction(name, obj)
         return LiteralSymbol(name, pos)
@@ -471,7 +475,7 @@ fun parseFnDefinition(
     return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"), pos)
 }
 
-fun parseOperator(fn: APLFunction, engine: Engine, tokeniser: TokenGenerator): APLFunction {
+fun parseOperator(fn: APLFunctionDescriptor, engine: Engine, tokeniser: TokenGenerator): APLFunctionDescriptor {
     var currentFn = fn
     var token: Token
     while (true) {

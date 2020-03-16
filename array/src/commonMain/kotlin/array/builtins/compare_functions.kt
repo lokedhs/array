@@ -3,96 +3,120 @@ package array.builtins
 import array.*
 import array.complex.Complex
 
-class EqualsAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
-            makeBoolean(false)
-        } else {
-            numericRelationOperation(
+class EqualsAPLFunction : APLFunctionDescriptor {
+    class EqualsAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
+                makeBoolean(false)
+            } else {
+                numericRelationOperation(
+                    a,
+                    b,
+                    { x, y -> makeBoolean(x == y) },
+                    { x, y -> makeBoolean(x == y) },
+                    { x, y -> makeBoolean(x == y) },
+                    { x, y -> makeBoolean(x == y) })
+            }
+        }
+
+        override fun identityValue() = APLLong(1)
+    }
+
+    override fun make(pos: Position) = EqualsAPLFunctionImpl(pos)
+}
+
+class NotEqualsAPLFunction : APLFunctionDescriptor {
+    class NotEqualsAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
+                makeBoolean(true)
+            } else {
+                numericRelationOperation(
+                    a,
+                    b,
+                    { x, y -> makeBoolean(x != y) },
+                    { x, y -> makeBoolean(x != y) },
+                    { x, y -> makeBoolean(x != y) },
+                    { x, y -> makeBoolean(x != y) })
+            }
+        }
+
+        override fun identityValue() = APLLong(0)
+    }
+
+    override fun make(pos: Position) = NotEqualsAPLFunctionImpl(pos)
+}
+
+class LessThanAPLFunction : APLFunctionDescriptor {
+    class LessThanAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
                 a,
                 b,
-                { x, y -> makeBoolean(x == y) },
-                { x, y -> makeBoolean(x == y) },
-                { x, y -> makeBoolean(x == y) },
-                { x, y -> makeBoolean(x == y) })
+                { x, y -> makeBoolean(x < y) },
+                { x, y -> makeBoolean(x < y) },
+                { x, y -> makeBoolean(if (x.real == y.real) x.imaginary < y.imaginary else x.real < y.real) },
+                { x, y -> makeBoolean(x < y) })
         }
+
+        override fun identityValue() = APLLong(0)
     }
 
-    override fun identityValue() = APLLong(1)
+    override fun make(pos: Position) = LessThanAPLFunctionImpl(pos)
 }
 
-class NotEqualsAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return if ((a is APLChar && b !is APLChar) || a !is APLChar && b is APLChar) {
-            makeBoolean(true)
-        } else {
-            numericRelationOperation(
+class GreaterThanAPLFunction : APLFunctionDescriptor {
+    class GreaterThanAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
                 a,
                 b,
-                { x, y -> makeBoolean(x != y) },
-                { x, y -> makeBoolean(x != y) },
-                { x, y -> makeBoolean(x != y) },
-                { x, y -> makeBoolean(x != y) })
+                { x, y -> makeBoolean(x > y) },
+                { x, y -> makeBoolean(x > y) },
+                { x, y -> makeBoolean(if (x.real == y.real) x.imaginary > y.imaginary else x.real > y.real) },
+                { x, y -> makeBoolean(x > y) })
         }
+
+        override fun identityValue() = APLLong(0)
     }
 
-    override fun identityValue() = APLLong(0)
+    override fun make(pos: Position) = GreaterThanAPLFunctionImpl(pos)
 }
 
-class LessThanAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return numericRelationOperation(
-            a,
-            b,
-            { x, y -> makeBoolean(x < y) },
-            { x, y -> makeBoolean(x < y) },
-            { x, y -> makeBoolean(if (x.real == y.real) x.imaginary < y.imaginary else x.real < y.real) },
-            { x, y -> makeBoolean(x < y) })
+class LessThanEqualAPLFunction : APLFunctionDescriptor {
+    class LessThanEqualAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                a,
+                b,
+                { x, y -> makeBoolean(x <= y) },
+                { x, y -> makeBoolean(x <= y) },
+                { x, y -> makeBoolean(if (x.real == y.real) x.imaginary <= y.imaginary else x.real < y.real) },
+                { x, y -> makeBoolean(x <= y) })
+        }
+
+        override fun identityValue() = APLLong(1)
     }
 
-    override fun identityValue() = APLLong(0)
+    override fun make(pos: Position) = LessThanEqualAPLFunctionImpl(pos)
 }
 
-class GreaterThanAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return numericRelationOperation(
-            a,
-            b,
-            { x, y -> makeBoolean(x > y) },
-            { x, y -> makeBoolean(x > y) },
-            { x, y -> makeBoolean(if (x.real == y.real) x.imaginary > y.imaginary else x.real > y.real) },
-            { x, y -> makeBoolean(x > y) })
+class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
+    class GreaterThanEqualAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                a,
+                b,
+                { x, y -> makeBoolean(x >= y) },
+                { x, y -> makeBoolean(x >= y) },
+                { x, y -> makeBoolean(if (x.real == y.real) x.imaginary >= y.imaginary else x.real > y.real) },
+                { x, y -> makeBoolean(x >= y) })
+        }
+
+        override fun identityValue() = APLLong(1)
     }
 
-    override fun identityValue() = APLLong(0)
-}
-
-class LessThanEqualAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return numericRelationOperation(
-            a,
-            b,
-            { x, y -> makeBoolean(x <= y) },
-            { x, y -> makeBoolean(x <= y) },
-            { x, y -> makeBoolean(if (x.real == y.real) x.imaginary <= y.imaginary else x.real < y.real) },
-            { x, y -> makeBoolean(x <= y) })
-    }
-
-    override fun identityValue() = APLLong(1)
-}
-
-class GreaterThanEqualAPLFunction : MathCombineAPLFunction() {
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
-        return numericRelationOperation(
-            a,
-            b,
-            { x, y -> makeBoolean(x >= y) },
-            { x, y -> makeBoolean(x >= y) },
-            { x, y -> makeBoolean(if (x.real == y.real) x.imaginary >= y.imaginary else x.real > y.real) },
-            { x, y -> makeBoolean(x >= y) })
-    }
-
-    override fun identityValue() = APLLong(1)
+    override fun make(pos: Position) = GreaterThanEqualAPLFunctionImpl(pos)
 }
 
 fun makeBoolean(value: Boolean): APLValue {

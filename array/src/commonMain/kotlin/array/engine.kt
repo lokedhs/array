@@ -2,50 +2,63 @@ package array
 
 import array.builtins.*
 
-interface APLFunction {
-    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue = throw Unimplemented1ArgException()
-    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue =
-        throw Unimplemented2ArgException()
-
-    fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
+interface APLFunctionDescriptor {
+    fun make(pos: Position): APLFunction
 }
 
-abstract class NoAxisAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
+abstract class APLFunction(val pos: Position) {
+    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException()
+    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue =
+        throw Unimplemented2ArgException()
+
+    open fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
+}
+
+abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         return eval1Arg(context, a)
     }
 
     open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException()
 
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         return eval2Arg(context, a, b)
     }
 
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException()
 }
 
-class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol, val pos: Position) : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
-        val localContext = context.link()
-        localContext.setVar(rightArgName, a)
-        return instruction.evalWithContext(localContext)
+class DeclaredFunction(
+    val instruction: Instruction,
+    val leftArgName: Symbol,
+    val rightArgName: Symbol,
+    val declaredPos: Position
+) : APLFunctionDescriptor {
+    inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            val localContext = context.link()
+            localContext.setVar(rightArgName, a)
+            return instruction.evalWithContext(localContext)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            val localContext = context.link()
+            localContext.setVar(leftArgName, a)
+            localContext.setVar(rightArgName, b)
+            return instruction.evalWithContext(localContext)
+        }
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
-        val localContext = context.link()
-        localContext.setVar(leftArgName, a)
-        localContext.setVar(rightArgName, b)
-        return instruction.evalWithContext(localContext)
-    }
+    override fun make(pos: Position) = DeclaredFunctionImpl(pos)
 }
 
 interface APLOperator {
-    fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction
+    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
 }
 
 class Engine {
-    private val functions = HashMap<Symbol, APLFunction>()
+    private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
     private val symbols = HashMap<String, Symbol>()
     private val variables = HashMap<Symbol, APLValue>()
@@ -112,7 +125,7 @@ class Engine {
         functionDefinitionListeners.remove(listener)
     }
 
-    fun registerFunction(name: Symbol, fn: APLFunction) {
+    fun registerFunction(name: Symbol, fn: APLFunctionDescriptor) {
         functions[name] = fn
         functionDefinitionListeners.forEach { it.functionDefined(name, fn) }
     }
@@ -164,7 +177,7 @@ class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
 }
 
 interface FunctionDefinitionListener {
-    fun functionDefined(name: Symbol, fn: APLFunction) = Unit
+    fun functionDefined(name: Symbol, fn: APLFunctionDescriptor) = Unit
     fun functionRemoved(name: Symbol) = Unit
     fun operatorDefined(name: Symbol, fn: APLOperator) = Unit
     fun operatorRemoved(name: Symbol) = Unit

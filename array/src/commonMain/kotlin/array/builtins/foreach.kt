@@ -11,7 +11,7 @@ class ForEachResult1Arg(
 ) : APLArray() {
     override fun dimensions(): Dimensions = value.dimensions()
     override fun rank() = value.rank()
-    override fun valueAt(p: Int) = fn.eval1Arg(context, value.valueAt(p), axis, pos)
+    override fun valueAt(p: Int) = fn.eval1Arg(context, value.valueAt(p), axis)
     override fun size() = value.size()
 }
 
@@ -32,14 +32,14 @@ class ForEachResult2Arg(
 
     override fun dimensions(): Dimensions = arg1.dimensions()
     override fun rank() = arg1.rank()
-    override fun valueAt(p: Int) = fn.eval2Arg(context, arg1.valueAt(p), arg2.valueAt(p), axis, pos)
+    override fun valueAt(p: Int) = fn.eval2Arg(context, arg1.valueAt(p), arg2.valueAt(p), axis)
     override fun size() = arg1.size()
 }
 
 class ForEachOp : APLOperator {
-    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
-        return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunction {
+        return object : APLFunction() {
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 return ForEachResult1Arg(context, fn, a, axis, pos)
             }
 
@@ -47,8 +47,7 @@ class ForEachOp : APLOperator {
                 context: RuntimeContext,
                 a: APLValue,
                 b: APLValue,
-                axis: APLValue?,
-                pos: Position
+                axis: APLValue?
             ): APLValue {
                 return ForEachResult2Arg(context, fn, a, b, axis, pos)
             }

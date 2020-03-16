@@ -27,19 +27,18 @@ class OuterJoinResult(
     override fun valueAt(p: Int): APLValue {
         val aPosition = p / divisor
         val bPosition = p % divisor
-        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null, pos)
+        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null)
     }
 }
 
 class OuterJoinOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
-        return object : APLFunction {
+        return object : APLFunction(fn.pos) {
             override fun eval2Arg(
                 context: RuntimeContext,
                 a: APLValue,
                 b: APLValue,
-                axis: APLValue?,
-                pos: Position
+                axis: APLValue?
             ): APLValue {
                 if (axis != null) {
                     throw APLIllegalArgumentException("outer join does not support axis arguments")
