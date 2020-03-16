@@ -6,7 +6,8 @@ class ReduceResult1Arg(
     val context: RuntimeContext,
     val fn: APLFunction,
     val arg: APLValue,
-    axis: Int
+    axis: Int,
+    val pos: Position
 ) : APLArray() {
     private val argDimensions: Dimensions
     private val dimensions: Dimensions
@@ -47,7 +48,7 @@ class ReduceResult1Arg(
         } else {
             var curr = arg.valueAt(posInSrc)
             for (i in 1 until reduceDepth) {
-                curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null).collapse()
+                curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null, pos).collapse()
             }
             curr
         }
@@ -87,7 +88,7 @@ class ReduceResult1Arg(
 class ReduceOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
-            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
                 val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
                 return if (a.rank() == 0) {
                     if (axisParam != null && axisParam != 0) {
@@ -97,7 +98,7 @@ class ReduceOp : APLOperator {
                 } else {
                     val v = axisParam ?: (a.dimensions().size - 1)
                     ensureValidAxis(v, a.dimensions())
-                    ReduceResult1Arg(context, fn, a, v)
+                    ReduceResult1Arg(context, fn, a, v, pos)
                 }
             }
         }

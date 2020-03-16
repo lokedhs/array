@@ -18,7 +18,7 @@ class ResultList2(private val context: ClientRenderContext) : TextFlow() {
 
     fun addResult(text: String, exception: APLGenericException) {
         addInput(text)
-        val errorMessage = textWithStyle((exception.message ?: "no text") + "\n").apply {
+        val errorMessage = textWithStyle(exception.formattedError() + "\n").apply {
             style = "-fx-fill: #ff0000;"
         }
         children.add(errorMessage)

@@ -2,7 +2,13 @@ package array.builtins
 
 import array.*
 
-class OuterJoinResult(val context: RuntimeContext, val a: APLValue, val b: APLValue, val fn: APLFunction) : APLArray() {
+class OuterJoinResult(
+    val context: RuntimeContext,
+    val a: APLValue,
+    val b: APLValue,
+    val fn: APLFunction,
+    val pos: Position
+) : APLArray() {
     private val dimensions: Dimensions
     private val divisor: Int
 
@@ -21,18 +27,24 @@ class OuterJoinResult(val context: RuntimeContext, val a: APLValue, val b: APLVa
     override fun valueAt(p: Int): APLValue {
         val aPosition = p / divisor
         val bPosition = p % divisor
-        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null)
+        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null, pos)
     }
 }
 
 class OuterJoinOp : APLOperator {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?): APLFunction {
         return object : APLFunction {
-            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            override fun eval2Arg(
+                context: RuntimeContext,
+                a: APLValue,
+                b: APLValue,
+                axis: APLValue?,
+                pos: Position
+            ): APLValue {
                 if (axis != null) {
                     throw APLIllegalArgumentException("outer join does not support axis arguments")
                 }
-                return OuterJoinResult(context, a, b, fn)
+                return OuterJoinResult(context, a, b, fn, pos)
             }
         }
     }

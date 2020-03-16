@@ -1,9 +1,19 @@
 package array
 
-open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause)
-open class APLEvalException(message: String) : APLGenericException(message)
+open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause) {
+    fun formattedError(): String {
+        val exceptionText = message ?: "no message"
+        return if (pos != null) {
+            "Error at: ${pos.line + 1}:${pos.col + 1}: ${exceptionText}"
+        } else {
+            "Error: ${exceptionText}"
+        }
+    }
+}
+
+open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 open class IncompatibleTypeException(message: String) : APLEvalException(message)
-class InvalidDimensionsException(message: String) : APLEvalException(message)
+class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
 class IllegalNumberFormat(message: String) : APLEvalException(message)
 class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")

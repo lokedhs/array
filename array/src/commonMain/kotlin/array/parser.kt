@@ -236,11 +236,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     }
 }
 
-abstract class Instruction(val pos: Position? = null) {
+abstract class Instruction(val pos: Position) {
     abstract fun evalWithContext(context: RuntimeContext): APLValue
 }
 
-class InstructionList(val instructions: List<Instruction>) : Instruction() {
+class InstructionList(val instructions: List<Instruction>) : Instruction(instructions[0].pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         var result: APLValue? = null
         for (instr in instructions) {
@@ -260,7 +260,7 @@ class FunctionCall1Arg(
     pos: Position
 ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) =
-        fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context))
+        fn.eval1Arg(context, rightArgs.evalWithContext(context), axis?.evalWithContext(context), pos)
 
     override fun toString() = "FunctionCall1Arg(fn=${fn}, rightArgs=${rightArgs})"
 }
@@ -276,7 +276,7 @@ class FunctionCall2Arg(
         val leftValue = rightArgs.evalWithContext(context)
         val rightValue = leftArgs.evalWithContext(context)
         val axisValue = axis?.evalWithContext(context)
-        return fn.eval2Arg(context, rightValue, leftValue, axisValue)
+        return fn.eval2Arg(context, rightValue, leftValue, axisValue, pos)
     }
 
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
@@ -290,7 +290,7 @@ class VariableRef(val name: Symbol, pos: Position) : Instruction(pos) {
     override fun toString() = "Var(${name})"
 }
 
-class Literal1DArray(val values: List<Instruction>) : Instruction() {
+class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val size = values.size
         val result = Array<APLValue?>(size) { null }
@@ -303,7 +303,7 @@ class Literal1DArray(val values: List<Instruction>) : Instruction() {
     override fun toString() = "Literal1DArray(${values})"
 }
 
-class LiteralScalarValue(val value: Instruction) : Instruction() {
+class LiteralScalarValue(val value: Instruction) : Instruction(value.pos) {
     override fun evalWithContext(context: RuntimeContext) = value.evalWithContext(context)
     override fun toString() = "LiteralScalarValue(${value})"
 }
@@ -323,7 +323,7 @@ class LiteralComplex(val value: Complex, pos: Position) : Instruction(pos) {
     override fun toString() = "LiteralComplex[value=$value]"
 }
 
-class LiteralSymbol(name: Symbol) : Instruction() {
+class LiteralSymbol(name: Symbol, pos: Position) : Instruction(pos) {
     private val value = APLSymbol(name)
     override fun evalWithContext(context: RuntimeContext): APLValue = value
 }
@@ -349,13 +349,13 @@ class UserFunction(
     private val instr: Instruction,
     val pos: Position
 ) : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         val inner = context.link()
         inner.setVar(arg, a)
         return instr.evalWithContext(inner)
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         TODO("not implemented")
     }
 }
@@ -428,7 +428,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         val obj = UserFunction(arg, instr, pos)
 
         engine.registerFunction(name, obj)
-        return LiteralSymbol(name)
+        return LiteralSymbol(name, pos)
     }
 
     while (true) {

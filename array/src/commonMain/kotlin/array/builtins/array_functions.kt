@@ -107,7 +107,7 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 }
 
 class ConcatenateAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         return if (a.isScalar()) {
             APLArrayImpl(dimensionsOfSize(1)) { a }
         } else {
@@ -115,7 +115,7 @@ class ConcatenateAPLFunction : APLFunction {
         }
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
         return if (axis == null) {
             joinNoAxis(a, b)
@@ -251,7 +251,7 @@ class AccessFromIndexAPLFunction : NoAxisAPLFunction() {
 }
 
 class TakeAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         val v = a.unwrapDeferredValue()
         return when {
             v is APLSingleValue -> v
@@ -278,7 +278,7 @@ class DropResultValue(val a: APLValue) : APLArray() {
 }
 
 class DropAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         return DropResultValue(a)
     }
 }
@@ -324,12 +324,12 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
 }
 
 abstract class RotateFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         val axisInt = if (axis == null) defaultAxis(a) else axis.ensureNumber().asInt()
         return RotatedAPLValue.make(a, axisInt, 1)
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         val numShifts = a.ensureNumber().asLong()
         val axisInt = if (axis == null) defaultAxis(b) else axis.ensureNumber().asInt()
         return RotatedAPLValue.make(b, axisInt, numShifts)
@@ -346,7 +346,7 @@ class RotateVertFunction : RotateFunction() {
     override fun defaultAxis(value: APLValue) = 0
 }
 
-class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue) : APLArray() {
+class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Position) : APLArray() {
     private val dimensions: Dimensions
     private val multipliers: IntArray
     private val bDimensions: Dimensions
@@ -363,7 +363,7 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue) : APLArra
                 }
             }
             if (res == -1) {
-                throw InvalidDimensionsException("Not all axis represented in transpose definition")
+                throw InvalidDimensionsException("Not all axis represented in transpose definition", pos)
             }
             res
         }
@@ -381,17 +381,17 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue) : APLArra
 }
 
 class TransposeFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         return if (a.isScalar()) {
             a
         } else {
             val size = a.dimensions().size
             val axisArg = IntArray(size) { i -> size - i - 1 }
-            TransposedAPLValue(axisArg, a)
+            TransposedAPLValue(axisArg, a, pos)
         }
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         val a1 = a.arrayify()
         val aDimensions = a1.dimensions()
         val bDimensions = b.dimensions()
@@ -408,6 +408,6 @@ class TransposeFunction : APLFunction {
         }
 
         val transposeAxis = IntArray(aDimensions[0]) { index -> a1.valueAt(index).ensureNumber().asInt() }
-        return TransposedAPLValue(transposeAxis, b)
+        return TransposedAPLValue(transposeAxis, b, pos)
     }
 }

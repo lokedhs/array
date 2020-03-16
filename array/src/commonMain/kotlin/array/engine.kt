@@ -3,20 +3,22 @@ package array
 import array.builtins.*
 
 interface APLFunction {
-    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException()
-    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue = throw Unimplemented2ArgException()
+    fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue = throw Unimplemented1ArgException()
+    fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue =
+        throw Unimplemented2ArgException()
+
     fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
 }
 
 abstract class NoAxisAPLFunction : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         return eval1Arg(context, a)
     }
 
     open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException()
 
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         return eval2Arg(context, a, b)
     }
 
@@ -24,13 +26,13 @@ abstract class NoAxisAPLFunction : APLFunction {
 }
 
 class DeclaredFunction(val instruction: Instruction, val leftArgName: Symbol, val rightArgName: Symbol, val pos: Position) : APLFunction {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?, pos: Position): APLValue {
         val localContext = context.link()
         localContext.setVar(rightArgName, a)
         return instruction.evalWithContext(localContext)
     }
 
-    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
         val localContext = context.link()
         localContext.setVar(leftArgName, a)
         localContext.setVar(rightArgName, b)
