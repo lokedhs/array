@@ -78,7 +78,7 @@ class FunctionListPanel(engine: Engine) : TableView<FunctionRow>() {
     }
 
     private inner class FunctionListener : FunctionDefinitionListener {
-        override fun functionDefined(name: Symbol, fn: APLFunction) {
+        override fun functionDefined(name: Symbol, fn: APLFunctionDescriptor) {
             if (fn is UserFunction) {
                 val functionRow = FunctionRow(name, fn)
                 val result = Collections.binarySearch(items, functionRow, { a, b -> a.name.compareTo(b.name) })

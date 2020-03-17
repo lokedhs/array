@@ -15,8 +15,9 @@ import javafx.scene.text.Font
 import javafx.stage.Stage
 
 class Client(val application: ClientApplication, val stage: Stage)  {
-    private val resultList: ResultList2
-    private var contentScrollPane: ScrollPane
+    private val resultList: ResultList3
+
+    //    private var contentScrollPane: ScrollPane
     private val entryTextField: TextField
     private val inputFont: Font
     private val engine = Engine()
@@ -29,8 +30,8 @@ class Client(val application: ClientApplication, val stage: Stage)  {
         val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 
-        resultList = ResultList2(renderContext)
-        contentScrollPane = ScrollPane(resultList)
+        resultList = ResultList3(renderContext)
+//        contentScrollPane = ScrollPane(resultList.getNode())
 
         entryTextField = TextField().apply {
             font = inputFont
@@ -54,7 +55,7 @@ class Client(val application: ClientApplication, val stage: Stage)  {
 
         val border = BorderPane().apply {
             top = makeMenuBar()
-            center = contentScrollPane
+            center = resultList.getNode()//contentScrollPane
             bottom = inputContainer
         }
 
@@ -90,8 +91,8 @@ class Client(val application: ClientApplication, val stage: Stage)  {
             val instr = engine.parseString(text)
             val v = instr.evalWithContext(engine.makeRuntimeContext()).collapse()
             resultList.addResult(text, v)
-            contentScrollPane.layout()
-            contentScrollPane.vvalue = contentScrollPane.vmax
+//            contentScrollPane.layout()
+//            contentScrollPane.vvalue = contentScrollPane.vmax
         } catch (e: APLGenericException) {
             resultList.addResult(text, e)
         } catch (e: Exception) {
