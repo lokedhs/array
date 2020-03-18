@@ -2,23 +2,20 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
-import array.gui.styledarea.ParStyle
-import array.gui.styledarea.TextStyle
+import array.gui.styledarea.*
 import javafx.scene.Node
 import javafx.scene.text.TextFlow
 import org.fxmisc.flowless.VirtualizedScrollPane
-import org.fxmisc.richtext.GenericStyledArea
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.richtext.TextExt
 import org.fxmisc.richtext.model.*
-import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Function
 
 class ResultList3(val renderContext: ClientRenderContext) {
     private val styledTextOps = SegmentOps.styledTextOps<TextStyle>()
-    private val styledArea: GenericStyledArea<ParStyle, String, TextStyle>
-    private val scrollArea: VirtualizedScrollPane<GenericStyledArea<ParStyle, String, TextStyle>>
+    private val styledArea: ROStyledArea
+    private val scrollArea: VirtualizedScrollPane<ROStyledArea>
 
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
@@ -33,16 +30,26 @@ class ResultList3(val renderContext: ClientRenderContext) {
 
         val segmentOps: TextOps<String, TextStyle> = styledTextOps
 
-        styledArea = GenericStyledArea(
+        //val document = ROEditableStyledDocument()
+        val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
+        styledArea = ROStyledArea(
             ParStyle(),
             applyParagraphStyle,
             TextStyle(),
+            document,
             segmentOps,
             nodeFactory
         )
 
-        styledArea.isEditable = false
+        //styledArea.isEditable = false
         styledArea.isWrapText = false
+
+        val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, EditParStyle())
+            .addParagraph(listOf(
+                StyledSegment("> ", TextStyle(TextStyle.Type.PROMPT)),
+                StyledSegment("X", TextStyle(TextStyle.Type.INPUT))))
+            .build()
+        styledArea.insert(0, inputDocument)
 
         scrollArea = VirtualizedScrollPane(styledArea)
     }

@@ -3,5 +3,6 @@ package array.gui.styledarea
 /**
  * Holds information about the style of a paragraph.
  */
-class ParStyle() {
-}
+open class ParStyle
+class ResultParStyle : ParStyle()
+class EditParStyle : ParStyle()
