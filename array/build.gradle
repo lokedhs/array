@@ -12,7 +12,14 @@ kotlin {
     // For MacOS, should be changed to e.g. macosX64
     // For Windows, should be changed to e.g. mingwX64
 
-    jvm()
+    jvm() {
+        compilations.main.kotlinOptions {
+            jvmTarget = "11"
+        }
+        compilations.test.kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
     linuxX64("linux") {
 //        compilations.main.cinterops {
 //            libedit
