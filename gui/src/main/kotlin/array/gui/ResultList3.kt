@@ -2,7 +2,10 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
-import array.gui.styledarea.*
+import array.gui.styledarea.EditParStyle
+import array.gui.styledarea.ParStyle
+import array.gui.styledarea.ROStyledArea
+import array.gui.styledarea.TextStyle
 import javafx.scene.Node
 import javafx.scene.text.TextFlow
 import org.fxmisc.flowless.VirtualizedScrollPane
@@ -23,14 +26,13 @@ class ResultList3(val renderContext: ClientRenderContext) {
         }
         val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
             val applyStyle = { a: TextExt, b: TextStyle ->
-                a.font = renderContext.font()
+                b.styleContent(a, renderContext)
             }
             StyledTextArea.createStyledTextNode(seg.segment, seg.style, applyStyle)
         }
 
         val segmentOps: TextOps<String, TextStyle> = styledTextOps
 
-        //val document = ROEditableStyledDocument()
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
         styledArea = ROStyledArea(
             ParStyle(),
@@ -44,12 +46,14 @@ class ResultList3(val renderContext: ClientRenderContext) {
         //styledArea.isEditable = false
         styledArea.isWrapText = false
 
-        val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, EditParStyle())
-            .addParagraph(listOf(
-                StyledSegment("> ", TextStyle(TextStyle.Type.PROMPT)),
-                StyledSegment("X", TextStyle(TextStyle.Type.INPUT))))
-            .build()
-        styledArea.insert(0, inputDocument)
+        styledArea.withUpdateEnabled {
+            val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, EditParStyle())
+                .addParagraph(listOf(
+                    StyledSegment("> ", TextStyle(TextStyle.Type.PROMPT)),
+                    StyledSegment("X", TextStyle(TextStyle.Type.INPUT))))
+                .build()
+            styledArea.insert(0, inputDocument)
+        }
 
         scrollArea = VirtualizedScrollPane(styledArea)
     }
@@ -58,48 +62,15 @@ class ResultList3(val renderContext: ClientRenderContext) {
 
     fun addResult(text: String, v: APLValue) {
         addInput(text)
-        styledArea.appendText(v.formatted() + "\n")
+        styledArea.appendTextEnd(v.formatted() + "\n", TextStyle(TextStyle.Type.RESULT))
     }
 
     fun addResult(text: String, e: APLGenericException) {
         addInput(text)
-        styledArea.appendText(e.formattedError() + "\n")
+        styledArea.appendTextEnd(e.formattedError() + "\n", TextStyle(TextStyle.Type.ERROR))
     }
 
     private fun addInput(text: String) {
-        //val doc: StyledDocument<ParStyle, String, TextStyle> = HistoryEntryDocument(text)
-        val doc = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, ParStyle())
-            .addParagraph(text + "\n", TextStyle())
-            .build()
-        styledArea.insert(styledArea.length, doc)
+        styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT))
     }
-
-    inner class HistoryEntryDocument(private val text: String) : StyledDocument<ParStyle, String, TextStyle> {
-        override fun length() = text.length
-
-        override fun concat(that: StyledDocument<ParStyle, String, TextStyle>?): StyledDocument<ParStyle, String, TextStyle> {
-            TODO("not implemented")
-        }
-
-        override fun getText() = text
-
-        override fun offsetToPosition(offset: Int, bias: TwoDimensional.Bias?): TwoDimensional.Position {
-            TODO("not implemented")
-        }
-
-        override fun position(major: Int, minor: Int): TwoDimensional.Position {
-            TODO("not implemented")
-        }
-
-        override fun getParagraphs(): MutableList<Paragraph<ParStyle, String, TextStyle>> {
-            val paragraph = Paragraph<ParStyle, String, TextStyle>(ParStyle(), styledTextOps, text + "\n", HistoryEntryStyle())
-            return arrayListOf(paragraph)
-        }
-
-        override fun subSequence(start: Int, end: Int): StyledDocument<ParStyle, String, TextStyle> {
-            return HistoryEntryDocument(text.substring(start, end))
-        }
-    }
-
-    class HistoryEntryStyle : TextStyle()
 }
