@@ -2,7 +2,6 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
-import array.gui.styledarea.EditParStyle
 import array.gui.styledarea.ParStyle
 import array.gui.styledarea.ROStyledArea
 import array.gui.styledarea.TextStyle
@@ -15,7 +14,7 @@ import org.fxmisc.richtext.model.*
 import java.util.function.BiConsumer
 import java.util.function.Function
 
-class ResultList3(val renderContext: ClientRenderContext) {
+class ResultList3(val client: Client) {
     private val styledTextOps = SegmentOps.styledTextOps<TextStyle>()
     private val styledArea: ROStyledArea
     private val scrollArea: VirtualizedScrollPane<ROStyledArea>
@@ -26,7 +25,7 @@ class ResultList3(val renderContext: ClientRenderContext) {
         }
         val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
             val applyStyle = { a: TextExt, b: TextStyle ->
-                b.styleContent(a, renderContext)
+                b.styleContent(a, client.renderContext)
             }
             StyledTextArea.createStyledTextNode(seg.segment, seg.style, applyStyle)
         }
@@ -35,7 +34,7 @@ class ResultList3(val renderContext: ClientRenderContext) {
 
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
         styledArea = ROStyledArea(
-            renderContext,
+            client.renderContext,
             ParStyle(),
             applyParagraphStyle,
             TextStyle(),
@@ -44,36 +43,49 @@ class ResultList3(val renderContext: ClientRenderContext) {
             nodeFactory
         )
 
-        styledArea.addCommandListener { text -> println("Got command: ${text}") }
+        styledArea.addCommandListener(::processCommand)
 
         //styledArea.isEditable = false
         styledArea.isWrapText = false
 
-        styledArea.withUpdateEnabled {
-            val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, EditParStyle())
-                .addParagraph(listOf(
-                    StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
-                    StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
-                .build()
-            styledArea.insert(0, inputDocument)
-        }
-
         scrollArea = VirtualizedScrollPane(styledArea)
+    }
+
+    private fun processCommand(text: String) {
+        if(text.trim().isNotBlank()) {
+            addInput(text)
+            client.sendInput(text)
+        }
+        styledArea.displayPrompt()
     }
 
     fun getNode() = scrollArea
 
-    fun addResult(text: String, v: APLValue) {
-        addInput(text)
-        styledArea.appendTextEnd(v.formatted() + "\n", TextStyle(TextStyle.Type.RESULT))
+    fun addResult(v: APLValue) {
+        styledArea.withUpdateEnabled {
+            styledArea.appendTextEnd(v.formatted() + "\n", TextStyle(TextStyle.Type.RESULT))
+        }
     }
 
     fun addResult(text: String, e: APLGenericException) {
-        addInput(text)
-        styledArea.appendTextEnd(e.formattedError() + "\n", TextStyle(TextStyle.Type.ERROR))
+        styledArea.withUpdateEnabled {
+            styledArea.appendTextEnd(e.formattedError() + "\n", TextStyle(TextStyle.Type.ERROR))
+        }
+    }
+
+    fun addOutput(text: String) {
+        styledArea.withUpdateEnabled {
+            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.OUTPUT))
+        }
     }
 
     private fun addInput(text: String) {
-        styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT))
+        styledArea.withUpdateEnabled {
+            val doc = GenericEditableStyledDocument(Paragraph(ParStyle(indent = true),
+                styledTextOps,
+                text + "\n",
+                TextStyle(TextStyle.Type.LOG_INPUT)))
+            styledArea.append(doc)
+        }
     }
 }

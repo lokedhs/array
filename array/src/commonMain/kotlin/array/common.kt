@@ -1,5 +1,7 @@
 package array
 
+import kotlin.contracts.contract
+
 open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause) {
     fun formattedError(): String {
         val exceptionText = message ?: "no message"
@@ -89,7 +91,9 @@ class Arrays {
     }
 }
 
+@OptIn(kotlin.contracts.ExperimentalContracts::class)
 fun assertx(condition: Boolean, message: String = "Assertion error") {
+    contract { returns() implies condition }
     if (!condition) {
         throw AssertionError(message)
     }

@@ -97,3 +97,11 @@ expect fun makeKeyboardInput(): KeyboardInput
 
 expect fun openFile(name: String): ByteProvider
 expect fun openCharFile(name: String): CharacterProvider
+
+interface CharacterOutput {
+    fun writeString(s: String)
+}
+
+class NullCharacterOutput : CharacterOutput {
+    override fun writeString(s: String) = Unit
+}

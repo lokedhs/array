@@ -6,7 +6,7 @@ import array.csv.readCsv
 class PrintAPLFunction : APLFunctionDescriptor {
     class PrintAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            println(a.formatted())
+            context.engine.standardOutput.writeString(a.formatted())
             return a
         }
     }

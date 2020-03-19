@@ -65,6 +65,8 @@ class Engine {
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
     private val functionAliases = HashMap<Symbol, Symbol>()
 
+    var standardOutput: CharacterOutput = NullCharacterOutput()
+
     init {
         // core functions
         registerFunction(internSymbol("+"), AddAPLFunction())

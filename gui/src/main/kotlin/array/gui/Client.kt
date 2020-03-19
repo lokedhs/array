@@ -1,62 +1,41 @@
 package array.gui
 
 import array.APLGenericException
-import array.APLValue
+import array.CharacterOutput
 import array.Engine
 import array.msofficereader.LoadExcelFileFunction
 import javafx.event.EventHandler
-import javafx.geometry.Insets
 import javafx.scene.Scene
-import javafx.scene.control.*
+import javafx.scene.control.Menu
+import javafx.scene.control.MenuBar
+import javafx.scene.control.MenuItem
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.Priority
 import javafx.scene.text.Font
 import javafx.stage.Stage
 
-class Client(val application: ClientApplication, val stage: Stage)  {
+class Client(val application: ClientApplication, val stage: Stage) {
     private val resultList: ResultList3
 
-    //    private var contentScrollPane: ScrollPane
-    private val entryTextField: TextField
     private val inputFont: Font
     private val engine = Engine()
     private val functionListWindow: FunctionListWindow
-    private val renderContext = ClientRenderContextImpl()
+
+    val renderContext: ClientRenderContext = ClientRenderContextImpl()
 
     init {
         engine.registerFunction(engine.internSymbol("loadExcelFile"), LoadExcelFileFunction())
+        engine.standardOutput = SendToMainCharacterOutput()
 
         val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 
-        resultList = ResultList3(renderContext)
-//        contentScrollPane = ScrollPane(resultList.getNode())
-
-        entryTextField = TextField().apply {
-            font = inputFont
-            onAction = EventHandler { sendEntry() }
-            renderContext.extendedInput().addEventHandlerToNode(this)
-        }
-        HBox.setHgrow(entryTextField, Priority.ALWAYS)
+        resultList = ResultList3(this)
 
         stage.title = "Test ui"
-
-        val sendButton = Button("Submit").apply {
-            onAction = EventHandler { sendEntry() }
-            maxHeight = Double.MAX_VALUE
-        }
-        HBox.setHgrow(entryTextField, Priority.ALWAYS)
-
-        val inputContainer = HBox(entryTextField, sendButton).apply {
-            padding = Insets(5.0, 5.0, 5.0, 5.0)
-            spacing = 15.0
-        }
 
         val border = BorderPane().apply {
             top = makeMenuBar()
             center = resultList.getNode()//contentScrollPane
-            bottom = inputContainer
         }
 
         functionListWindow = FunctionListWindow.create(renderContext, engine)
@@ -74,7 +53,7 @@ class Client(val application: ClientApplication, val stage: Stage)  {
                 items.add(closeItem)
             }
             menus.add(fileMenu)
-            
+
             val windowMenu = Menu("Window").apply {
                 items.add(MenuItem("Keyboard"))
                 val functionsItem = MenuItem("Functions").apply {
@@ -86,22 +65,16 @@ class Client(val application: ClientApplication, val stage: Stage)  {
         }
     }
 
-    private fun sendInput(text: String) {
+    fun sendInput(text: String) {
         try {
             val instr = engine.parseString(text)
             val v = instr.evalWithContext(engine.makeRuntimeContext()).collapse()
-            resultList.addResult(text, v)
-//            contentScrollPane.layout()
-//            contentScrollPane.vvalue = contentScrollPane.vmax
+            resultList.addResult(v)
         } catch (e: APLGenericException) {
             resultList.addResult(text, e)
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun sendEntry() {
-        sendInput(entryTextField.text)
     }
 
     private inner class ClientRenderContextImpl : ClientRenderContext {
@@ -110,9 +83,11 @@ class Client(val application: ClientApplication, val stage: Stage)  {
         override fun engine() = engine
         override fun font() = inputFont
         override fun extendedInput() = extendedInput
+    }
 
-        override fun valueClickCallback(value: APLValue) {
-            entryTextField.text = value.toAPLExpression()
+    private inner class SendToMainCharacterOutput : CharacterOutput {
+        override fun writeString(s: String) {
+            resultList.addOutput(s)
         }
     }
 

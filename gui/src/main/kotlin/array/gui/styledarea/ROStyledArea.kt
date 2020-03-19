@@ -1,5 +1,6 @@
 package array.gui.styledarea
 
+import array.assertx
 import array.gui.ClientRenderContext
 import javafx.event.Event
 import javafx.scene.Node
@@ -32,9 +33,6 @@ class ROStyledArea(
     segmentOps,
     nodeFactory
 ) {
-//    override fun replace(start: Int, end: Int, seg: String?, style: TextStyle?) {
-//        super.replace(start, end, seg, style)
-//    }
 
     private var updatesEnabled = false
     private var defaultKeymap: InputMap<*>
@@ -43,6 +41,18 @@ class ROStyledArea(
     init {
         defaultKeymap = Nodes.getInputMap(this)
         updateKeymap()
+        displayPrompt()
+    }
+
+    fun displayPrompt() {
+        withUpdateEnabled {
+            val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(segOps, ParStyle())
+                .addParagraph(listOf(
+                    StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
+                    StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
+                .build()
+            insert(document.length(), inputDocument)
+        }
     }
 
     fun addCommandListener(fn: (String) -> Unit) {
@@ -62,50 +72,32 @@ class ROStyledArea(
         Nodes.pushInputMap(this, InputMap.sequence(*entries.toTypedArray()))
     }
 
-    enum class State {
-        INITIAL,
-    }
-
     fun sendCurrentContent() {
-        var state = State.INITIAL
-        var promptStartPos: Int? = null
-        var startPos = 0
-        var endPos: Int? = null
-        loop@ for (span in document.getStyleSpans(0, document.length())) {
-            when (state) {
-                // do some things here
+        var pos = document.length() - 1
+        while (pos >= 0) {
+            val style = document.getStyleOfChar(pos)
+            if(style.promptTag) {
+                break
             }
+            pos--
         }
-        loop@ for (span in document.getStyleSpans(0, document.length())) {
-            when (span.style.type) {
-                TextStyle.Type.PROMPT -> {
-                    if (promptStartPos != null) {
-                        throw Exception("Multiple prompt segments")
-                    }
-                    promptStartPos = startPos
-                }
-                TextStyle.Type.INPUT -> {
-                    endPos = startPos + span.length
-                    break@loop
-                }
+        assertx(pos >= 0)
+
+        val inputStartPos = pos + 1
+        while(pos >= 0) {
+            val style = document.getStyleOfChar(pos)
+            if(style.type != TextStyle.Type.PROMPT) {
+                break
             }
-            startPos += span.length
+            pos--
         }
-        if (endPos == null) {
-            return
-        }
-        if (promptStartPos == null) {
-            throw Exception("No prompt segment")
-        }
-        val caretPos = caretPosition
-        if (caretPos < startPos || caretPos > endPos) {
-            return
-        }
-        val text = document.subSequence(startPos, endPos).text
+
+        val promptStartPos = pos + 1
+        val text = document.subSequence(inputStartPos, document.length()).text
         withUpdateEnabled {
-            deleteText(startPos, endPos)
+            deleteText(promptStartPos, document.length())
         }
-        commandListeners.forEach { listener -> listener(text) }
+        commandListeners.forEach { callback -> callback(text) }
     }
 
     fun withUpdateEnabled(fn: () -> Unit) {

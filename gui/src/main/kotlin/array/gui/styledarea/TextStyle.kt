@@ -10,7 +10,7 @@ open class TextStyle(val type: Type = Type.DEFAULT, val promptTag: Boolean = fal
             Type.ERROR -> "-fx-fill: #ff0000;"
             Type.PROMPT -> "-fx-font-weight: bold;"
             Type.OUTPUT -> "-fx-fill: #000000;"
-            Type.RESULT -> "-fx-fill: #d0ffd0;"
+            Type.RESULT -> "-fx-fill: #005000;"
             else -> null
         }
         if (css != null) {
