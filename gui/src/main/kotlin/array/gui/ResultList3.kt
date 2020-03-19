@@ -35,6 +35,7 @@ class ResultList3(val renderContext: ClientRenderContext) {
 
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
         styledArea = ROStyledArea(
+            renderContext,
             ParStyle(),
             applyParagraphStyle,
             TextStyle(),
@@ -43,14 +44,16 @@ class ResultList3(val renderContext: ClientRenderContext) {
             nodeFactory
         )
 
+        styledArea.addCommandListener { text -> println("Got command: ${text}") }
+
         //styledArea.isEditable = false
         styledArea.isWrapText = false
 
         styledArea.withUpdateEnabled {
             val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(styledTextOps, EditParStyle())
                 .addParagraph(listOf(
-                    StyledSegment("> ", TextStyle(TextStyle.Type.PROMPT)),
-                    StyledSegment("X", TextStyle(TextStyle.Type.INPUT))))
+                    StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
+                    StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
                 .build()
             styledArea.insert(0, inputDocument)
         }
