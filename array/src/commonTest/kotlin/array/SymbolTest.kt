@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
-class SymbolTest {
+class SymbolTest : APLTest() {
     @Test
     fun testIntern() {
         val engine = Engine()
@@ -14,5 +14,13 @@ class SymbolTest {
         assertNotSame(symbol1, symbol2)
         assertNotSame(symbol2, symbol3)
         assertSame(symbol1, symbol3)
+    }
+
+    @Test
+    fun testParseSymbol() {
+        val engine = Engine()
+        val instr = engine.parseString("'foo")
+        val result = instr.evalWithContext(RuntimeContext(engine))
+        assertSame(engine.internSymbol("foo"), result.ensureSymbol().value)
     }
 }

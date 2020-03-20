@@ -113,7 +113,7 @@ class FunctionNameCell : TableCell<FunctionRow, APLSymbolWrapper>() {
             text = null
             graphic = null
         } else {
-            text = item.symbol.value
+            text = item.symbol.symbolName
         }
     }
 }

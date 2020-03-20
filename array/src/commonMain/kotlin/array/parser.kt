@@ -16,12 +16,13 @@ object StatementSeparator : Token()
 object LeftArrow : Token()
 object FnDefSym : Token()
 object APLNullSym : Token()
+object QuotePrefix : Token()
 
-class Symbol(val value: String) : Token(), Comparable<Symbol> {
-    override fun toString() = "Symbol[name=${value}]"
-    override fun compareTo(other: Symbol) = value.compareTo(other.value)
-    override fun hashCode() = value.hashCode()
-    override fun equals(other: Any?) = other != null && other is Symbol && value == other.value
+class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
+    override fun toString() = "Symbol[name=${symbolName}]"
+    override fun compareTo(other: Symbol) = symbolName.compareTo(other.symbolName)
+    override fun hashCode() = symbolName.hashCode()
+    override fun equals(other: Any?) = other != null && other is Symbol && symbolName == other.symbolName
 }
 
 class StringToken(val value: String) : Token()
@@ -91,6 +92,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                 isLetter(ch) -> collectSymbol(ch)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
+                isQuotePrefixChar(ch) -> QuotePrefix
                 else -> throw UnexpectedSymbol(ch)
             }
         )
@@ -107,6 +109,8 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
+
+    private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
@@ -459,6 +463,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser, pos))
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))
             is StringToken -> leftArgs.add(LiteralStringValue(token.value, pos))
+            is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
             else -> throw UnexpectedToken(token)
         }
     }

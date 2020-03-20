@@ -110,6 +110,9 @@ class Engine {
         registerFunction(internSymbol("acos"), AcosAPLFunction())
         registerFunction(internSymbol("atan"), AtanAPLFunction())
 
+        // metafunctions
+        registerFunction(internSymbol("typeof"), TypeofFunction())
+
         // operators
         registerOperator(internSymbol("¨"), ForEachOp())
         registerOperator(internSymbol("/"), ReduceOp())

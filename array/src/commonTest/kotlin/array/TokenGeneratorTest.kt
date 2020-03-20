@@ -225,6 +225,6 @@ class TokenGeneratorTest {
     private fun assertTokenIsSymbol(gen: TokenGenerator, token: Token, name: String) {
         assertTrue(token is Symbol)
         assertEquals(gen.engine.internSymbol(name), token)
-        assertEquals(name, token.value)
+        assertEquals(name, token.symbolName)
     }
 }

@@ -4,6 +4,15 @@ import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
 
+enum class APLValueType(val typeName: String) {
+    INTEGER("integer"),
+    FLOAT("float"),
+    COMPLEX("complex"),
+    CHAR("char"),
+    ARRAY("array"),
+    SYMBOL("symbol")
+}
+
 interface APLValue {
     fun dimensions(): Dimensions
     fun rank(): Int = dimensions().size
@@ -17,12 +26,23 @@ interface APLValue {
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
 
+    val aplValueType: APLValueType
+
     fun ensureNumber(): APLNumber {
         val v = unwrapDeferredValue()
         if (v == this) {
             throw IncompatibleTypeException("Value $this is not a numeric value (type=${this::class.qualifiedName})")
         } else {
             return v.ensureNumber()
+        }
+    }
+
+    fun ensureSymbol(): APLSymbol {
+        val v = unwrapDeferredValue()
+        if (v == this) {
+            throw IncompatibleTypeException("Value $this is not a symbol (type=${this::class.qualifiedName})")
+        } else {
+            return v.ensureSymbol()
         }
     }
 }
@@ -37,6 +57,8 @@ abstract class APLSingleValue : APLValue {
 }
 
 abstract class APLArray : APLValue {
+    override val aplValueType: APLValueType = APLValueType.ARRAY
+
     override fun collapse(): APLValue {
         val v = unwrapDeferredValue()
         return when {
@@ -130,6 +152,7 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 }
 
 class APLChar(val value: Int) : APLSingleValue() {
+    override val aplValueType: APLValueType = APLValueType.CHAR
     override fun formatted() = "@${charToString(value)}"
     fun asString() = charToString(value)
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
@@ -153,4 +176,8 @@ abstract class DeferredResultArray : APLArray() {
     }
 }
 
-class APLSymbol(val value: Symbol) : APLSingleValue()
+class APLSymbol(val value: Symbol) : APLSingleValue() {
+    override val aplValueType: APLValueType = APLValueType.SYMBOL
+    override fun formatted() = "'" + value.symbolName
+    override fun ensureSymbol() = this
+}
