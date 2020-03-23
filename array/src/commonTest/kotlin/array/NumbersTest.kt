@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class NumbersTest : APLTest() {
     @Test
@@ -21,6 +22,22 @@ class NumbersTest : APLTest() {
         assertSimpleNumber(2, parseAPLExpression("4÷2"))
         assertSimpleNumber(20, parseAPLExpression("40÷2"))
         assertSimpleDouble(Pair(3.33332, 3.33334), parseAPLExpression("10÷3"))
+    }
+
+    @Test
+    fun invalidExpressions() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("1+")
+        }
+        assertFailsWith<ParseException> {
+            parseAPLExpression("1++")
+        }
+        assertFailsWith<ParseException> {
+            parseAPLExpression("-")
+        }
+        assertFailsWith<ParseException> {
+            parseAPLExpression("1 2 3 4+")
+        }
     }
 
     @Test

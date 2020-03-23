@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class IotaTest : APLTest() {
@@ -20,5 +21,12 @@ class IotaTest : APLTest() {
         val result = parseAPLExpression("⍳1+10")
         assertTrue(result.dimensions().compare(dimensionsOfSize(11)))
         assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), result)
+    }
+
+    @Test
+    fun failWithComplexArgument() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍳2J1")
+        }
     }
 }

@@ -3,6 +3,7 @@ package array
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
+import kotlin.reflect.KClass
 
 enum class APLValueType(val typeName: String) {
     INTEGER("integer"),
@@ -10,7 +11,8 @@ enum class APLValueType(val typeName: String) {
     COMPLEX("complex"),
     CHAR("char"),
     ARRAY("array"),
-    SYMBOL("symbol")
+    SYMBOL("symbol"),
+    LAMBDA_FN("function")
 }
 
 interface APLValue {
@@ -180,4 +182,9 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
     override val aplValueType: APLValueType = APLValueType.SYMBOL
     override fun formatted() = "'" + value.symbolName
     override fun ensureSymbol() = this
+}
+
+class LambdaValue(val fn: APLFunction) : APLSingleValue() {
+    override val aplValueType: APLValueType = APLValueType.LAMBDA_FN
+    override fun formatted() = "function"
 }

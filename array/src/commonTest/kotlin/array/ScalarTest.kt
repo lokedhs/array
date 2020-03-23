@@ -10,11 +10,8 @@ class ScalarTest : APLTest() {
     @Test
     fun testReshape() {
         val result = parseAPLExpression("3 4 ⍴ ⍳100")
-        assertEquals(result.size(), 12)
-        assertTrue(result.dimensions().compare(dimensionsOfSize(3, 4)))
-        for (i in 0 until 12) {
-            assertEquals(result.valueAt(i).ensureNumber().asLong(), i.toLong())
-        }
+        assertDimension(dimensionsOfSize(3,4), result)
+        assertArrayContent(arrayOf(0,1,2,3,4,5,6,7,8,9,10,11), result)
     }
 
     @Test

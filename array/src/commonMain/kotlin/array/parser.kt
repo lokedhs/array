@@ -17,6 +17,8 @@ object LeftArrow : Token()
 object FnDefSym : Token()
 object APLNullSym : Token()
 object QuotePrefix : Token()
+object LambdaToken : Token()
+object ApplyToken : Token()
 
 class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${symbolName}]"
@@ -47,7 +49,9 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         "←" to LeftArrow,
         "◊" to StatementSeparator,
         "∇" to FnDefSym,
-        "⍬" to APLNullSym
+        "⍬" to APLNullSym,
+        "λ" to LambdaToken,
+        "⍞" to ApplyToken
     )
 
     init {
@@ -286,6 +290,31 @@ class FunctionCall2Arg(
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"
 }
 
+class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor {
+    inner class DynamicFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            return resolveFn(context).eval1Arg(context, a, axis)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            return resolveFn(context).eval2Arg(context, a, b, axis)
+        }
+
+        private fun resolveFn(context: RuntimeContext): APLFunction {
+            val result = instr.evalWithContext(context)
+            val v = result.unwrapDeferredValue()
+            if(v !is LambdaValue) {
+                throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}")
+            }
+            return v.fn
+        }
+    }
+
+    override fun make(pos: Position): APLFunction {
+        return DynamicFunctionImpl(pos)
+    }
+}
+
 class VariableRef(val name: Symbol, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return context.lookupVar(name) ?: throw VariableNotAssigned(name)
@@ -411,11 +440,11 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
     fun processAssignment(engine: Engine, tokeniser: TokenGenerator, pos: Position): Pair<Instruction, Token> {
         // Ensure that the left argument to leftarrow is a single symbol
         unless(leftArgs.size == 1) {
-            throw IncompatibleTypeException("Can only assign to a single variable")
+            throw IncompatibleTypeParseException("Can only assign to a single variable")
         }
         val dest = leftArgs[0]
         if (dest !is VariableRef) {
-            throw IncompatibleTypeException("Attempt to assign to a type which is not a variable")
+            throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable")
         }
         val (rightValue, lastToken) = parseValue(engine, tokeniser)
         return Pair(AssignmentInstruction(dest.name, rightValue, pos), lastToken)
@@ -464,8 +493,37 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))
             is StringToken -> leftArgs.add(LiteralStringValue(token.value, pos))
             is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
+            is LambdaToken -> leftArgs.add(processLambda(engine, tokeniser, pos))
+            is ApplyToken -> return processFn(parseApplyDefinition(engine, tokeniser), pos)
             else -> throw UnexpectedToken(token)
         }
+    }
+}
+
+fun parseApplyDefinition(engine: Engine, tokeniser: TokenGenerator): APLFunctionDescriptor {
+    val (token, firstPos) = tokeniser.nextTokenWithPosition()
+    val ref = when (token) {
+        is Symbol -> VariableRef(token, firstPos)
+        is OpenParen -> parseValueToplevel(engine, tokeniser, CloseParen)
+        else -> throw UnexpectedToken(token)
+    }
+    return DynamicFunctionDescriptor(ref)
+}
+
+class EvalLambdaFnx(val fn: APLFunction, pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        return LambdaValue(fn)
+    }
+}
+
+fun processLambda(engine: Engine, tokeniser: TokenGenerator, pos: Position): EvalLambdaFnx {
+    val token = tokeniser.nextToken()
+    return when (token) {
+        is OpenFnDef -> {
+            val fnDefinition = parseFnDefinition(engine, tokeniser, pos)
+            EvalLambdaFnx(fnDefinition.make(pos), pos)
+        }
+        else -> throw UnexpectedToken(token)
     }
 }
 

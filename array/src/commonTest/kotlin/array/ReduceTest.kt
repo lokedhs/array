@@ -54,6 +54,12 @@ class ReduceTest : APLTest() {
         assertArrayContent(arrayOf(7, 9, 11, 13), v)
     }
 
+    @Test
+    fun reduceCustomFn() {
+        val result = parseAPLExpression("{⍺+⍵+10}/⍳6")
+        assertSimpleNumber(65, result)
+    }
+
     private fun reduceTestWithFunctionName(aplFn: String, correctRes: Int) {
         val result = parseAPLExpression("${aplFn}/0⍴4")
         assertTrue(result.dimensions().compare(emptyDimensions()))

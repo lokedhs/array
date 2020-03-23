@@ -28,6 +28,7 @@ class Unimplemented2ArgException : APLEvalException("Function cannot be called w
 
 open class ParseException(message: String) : APLGenericException(message)
 class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")
+class IncompatibleTypeParseException(message: String) : ParseException(message)
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if (!cond) {

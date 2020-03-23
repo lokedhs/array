@@ -41,4 +41,32 @@ class AssignmentTest : APLTest() {
         val result = parseAPLExpression("a←1 ◊ b←a ◊ a←2 ◊ a+b")
         assertSimpleNumber(3, result)
     }
+
+    @Test
+    fun invalidVariable() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("foo")
+        }
+    }
+
+    @Test
+    fun invalidVariableInExpression() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1+foo")
+        }
+    }
+
+    @Test
+    fun assignmentToNonVariable() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("10←20")
+        }
+    }
+
+    @Test
+    fun assignmentToList() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("foo bar←10")
+        }
+    }
 }
