@@ -14,19 +14,20 @@ import javafx.scene.text.Font
 import javafx.stage.Stage
 
 class Client(val application: ClientApplication, val stage: Stage) {
+    val renderContext: ClientRenderContext = ClientRenderContextImpl()
+
     private val resultList: ResultList3
 
     private val inputFont: Font
     private val engine = Engine()
     private val functionListWindow: FunctionListWindow
-
-    val renderContext: ClientRenderContext = ClientRenderContextImpl()
+    private val keyboardHelpWindow: KeyboardHelpWindow
 
     init {
         engine.registerFunction(engine.internSymbol("loadExcelFile"), LoadExcelFileFunction())
         engine.standardOutput = SendToMainCharacterOutput()
 
-        val fontIn = Client::class.java.getResourceAsStream("fonts/FreeMono.otf")
+        val fontIn = javaClass.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
 
         resultList = ResultList3(this)
@@ -39,6 +40,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
         }
 
         functionListWindow = FunctionListWindow.create(renderContext, engine)
+        keyboardHelpWindow = KeyboardHelpWindow(renderContext)
 
         stage.scene = Scene(border, 600.0, 800.0)
         stage.show()
@@ -55,11 +57,12 @@ class Client(val application: ClientApplication, val stage: Stage) {
             menus.add(fileMenu)
 
             val windowMenu = Menu("Window").apply {
-                items.add(MenuItem("Keyboard"))
-                val functionsItem = MenuItem("Functions").apply {
+                items.add(MenuItem("Keyboard").apply {
+                    onAction = EventHandler { keyboardHelpWindow.show() }
+                })
+                items.add(MenuItem("Functions").apply {
                     onAction = EventHandler { functionListWindow.show() }
-                }
-                items.add(functionsItem)
+                })
             }
             menus.add(windowMenu)
         }
