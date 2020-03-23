@@ -74,7 +74,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
             val v = instr.evalWithContext(engine.makeRuntimeContext()).collapse()
             resultList.addResult(v)
         } catch (e: APLGenericException) {
-            resultList.addResult(text, e)
+            resultList.addResult(e)
         } catch (e: Exception) {
             e.printStackTrace()
         }

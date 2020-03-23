@@ -67,7 +67,7 @@ class ResultList3(val client: Client) {
         }
     }
 
-    fun addResult(text: String, e: APLGenericException) {
+    fun addResult(e: APLGenericException) {
         styledArea.withUpdateEnabled {
             styledArea.appendTextEnd(e.formattedError() + "\n", TextStyle(TextStyle.Type.ERROR))
         }

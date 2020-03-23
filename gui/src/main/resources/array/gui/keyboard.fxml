@@ -15,45 +15,60 @@
           prefHeight="400.0" prefWidth="600.0"
           vgap="1"
           hgap="1"
-          style="-fx-background-color: red;">
+          style="-fx-background-color: red;"
+          id="gridPane">
     <padding><Insets top="2" bottom="2" left="2" right="2"/></padding>
     <columnConstraints>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
-        <ColumnConstraints prefWidth="15"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="19"/>
     </columnConstraints>
     <!-- Row 1 -->
-    <KeyboardButtonLabel lowerLabel="`" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="1" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="2" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="4" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="3" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="6" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="4" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="6" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="5" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="8" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="6" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="10" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="7" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="12" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="8" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="14" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="9" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="16" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="0" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="18" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="-" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="20" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="=" upperLabel="a" GridPane.rowIndex="0" GridPane.columnIndex="22" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="Bs" GridPane.rowIndex="0" GridPane.columnIndex="24" GridPane.columnSpan="4"/>
+    <KeyboardButtonLabel lowerLabel="`" upperLabel="~" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="1" upperLabel="!" GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="2" upperLabel="\@" GridPane.rowIndex="0" GridPane.columnIndex="4" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="3" upperLabel="#" GridPane.rowIndex="0" GridPane.columnIndex="6" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="4" upperLabel="\$" GridPane.rowIndex="0" GridPane.columnIndex="8" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="5" upperLabel="\%" GridPane.rowIndex="0" GridPane.columnIndex="10" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="6" upperLabel="^" GridPane.rowIndex="0" GridPane.columnIndex="12" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="7" upperLabel="&amp;" GridPane.rowIndex="0" GridPane.columnIndex="14" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="8" upperLabel="*" GridPane.rowIndex="0" GridPane.columnIndex="16" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="9" upperLabel="(" GridPane.rowIndex="0" GridPane.columnIndex="18" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="0" upperLabel=")" GridPane.rowIndex="0" GridPane.columnIndex="20" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="-" upperLabel="_" GridPane.rowIndex="0" GridPane.columnIndex="22" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="=" upperLabel="+" GridPane.rowIndex="0" GridPane.columnIndex="24" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="Bs" GridPane.rowIndex="0" GridPane.columnIndex="26" GridPane.columnSpan="4"/>
     <!-- Row 2 -->
     <KeyboardButtonLabel lowerLabel="Tab" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="3"/>
     <KeyboardButtonLabel lowerLabel="q" upperLabel="Q" GridPane.rowIndex="1" GridPane.columnIndex="3" GridPane.columnSpan="2"/>
@@ -68,7 +83,7 @@
     <KeyboardButtonLabel lowerLabel="p" upperLabel="P" GridPane.rowIndex="1" GridPane.columnIndex="21" GridPane.columnSpan="2"/>
     <KeyboardButtonLabel lowerLabel="[" upperLabel="{" GridPane.rowIndex="1" GridPane.columnIndex="23" GridPane.columnSpan="2"/>
     <KeyboardButtonLabel lowerLabel="]" upperLabel="}" GridPane.rowIndex="1" GridPane.columnIndex="25" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="b" upperLabel="|" GridPane.rowIndex="1" GridPane.columnIndex="27" GridPane.columnSpan="3"/>
+    <KeyboardButtonLabel lowerLabel="\\" upperLabel="|" GridPane.rowIndex="1" GridPane.columnIndex="27" GridPane.columnSpan="3"/>
     <!-- Row 3 -->
     <KeyboardButtonLabel lowerLabel="Caps" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="4"/>
     <KeyboardButtonLabel lowerLabel="a" upperLabel="A" GridPane.rowIndex="2" GridPane.columnIndex="4" GridPane.columnSpan="2"/>
@@ -81,17 +96,19 @@
     <KeyboardButtonLabel lowerLabel="k" upperLabel="K" GridPane.rowIndex="2" GridPane.columnIndex="18" GridPane.columnSpan="2"/>
     <KeyboardButtonLabel lowerLabel="l" upperLabel="L" GridPane.rowIndex="2" GridPane.columnIndex="20" GridPane.columnSpan="2"/>
     <KeyboardButtonLabel lowerLabel=";" upperLabel=":" GridPane.rowIndex="2" GridPane.columnIndex="22" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="'" upperLabel="q" GridPane.rowIndex="2" GridPane.columnIndex="24" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="'" upperLabel="&quot;" GridPane.rowIndex="2" GridPane.columnIndex="24" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="Enter" GridPane.rowIndex="2" GridPane.columnIndex="26" GridPane.columnSpan="4"/>
     <!-- Row 4 -->
-    <KeyboardButtonLabel lowerLabel="Shift" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="5"/>
-    <KeyboardButtonLabel lowerLabel="z" upperLabel="Z" GridPane.rowIndex="2" GridPane.columnIndex="5" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="x" upperLabel="X" GridPane.rowIndex="2" GridPane.columnIndex="7" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="c" upperLabel="C" GridPane.rowIndex="2" GridPane.columnIndex="9" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="v" upperLabel="V" GridPane.rowIndex="2" GridPane.columnIndex="11" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="b" upperLabel="B" GridPane.rowIndex="2" GridPane.columnIndex="13" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="n" upperLabel="N" GridPane.rowIndex="2" GridPane.columnIndex="15" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="m" upperLabel="M" GridPane.rowIndex="2" GridPane.columnIndex="17" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="," upperLabel="l" GridPane.rowIndex="2" GridPane.columnIndex="19" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="." upperLabel="g" GridPane.rowIndex="2" GridPane.columnIndex="21" GridPane.columnSpan="2"/>
-    <KeyboardButtonLabel lowerLabel="/" upperLabel="/" GridPane.rowIndex="2" GridPane.columnIndex="23" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="Shift" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="5"/>
+    <KeyboardButtonLabel lowerLabel="z" upperLabel="Z" GridPane.rowIndex="3" GridPane.columnIndex="5" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="x" upperLabel="X" GridPane.rowIndex="3" GridPane.columnIndex="7" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="c" upperLabel="C" GridPane.rowIndex="3" GridPane.columnIndex="9" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="v" upperLabel="V" GridPane.rowIndex="3" GridPane.columnIndex="11" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="b" upperLabel="B" GridPane.rowIndex="3" GridPane.columnIndex="13" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="n" upperLabel="N" GridPane.rowIndex="3" GridPane.columnIndex="15" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="m" upperLabel="M" GridPane.rowIndex="3" GridPane.columnIndex="17" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="," upperLabel="&lt;" GridPane.rowIndex="3" GridPane.columnIndex="19" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="." upperLabel="&gt;" GridPane.rowIndex="3" GridPane.columnIndex="21" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="/" upperLabel="?" GridPane.rowIndex="3" GridPane.columnIndex="23" GridPane.columnSpan="2"/>
+    <KeyboardButtonLabel lowerLabel="Shift" GridPane.rowIndex="3" GridPane.columnIndex="25" GridPane.columnSpan="5"/>
 </GridPane>
