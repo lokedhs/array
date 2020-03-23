@@ -1,0 +1,7 @@
+.keyboard-button-label-clickable {
+    -fx-background-color: transparent;
+}
+
+.keyboard-button-label-clickable:hover {
+    -fx-background-color: #d0d0d0;
+}
