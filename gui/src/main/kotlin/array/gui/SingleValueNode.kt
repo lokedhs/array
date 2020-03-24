@@ -6,7 +6,7 @@ import javafx.scene.control.Label
 
 class SingleValueNode(context: ClientRenderContext, value: APLValue) : Label() {
     init {
-        text = value.formatted()
+        text = value.formatted(APLValue.FormatStyle.PRETTY)
         font = context.font()
         alignment = Pos.BASELINE_RIGHT
         maxWidth = Double.MAX_VALUE

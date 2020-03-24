@@ -63,7 +63,7 @@ class ResultList3(val client: Client) {
 
     fun addResult(v: APLValue) {
         styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(v.formatted() + "\n", TextStyle(TextStyle.Type.RESULT))
+            styledArea.appendTextEnd(v.formatted(APLValue.FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
         }
     }
 

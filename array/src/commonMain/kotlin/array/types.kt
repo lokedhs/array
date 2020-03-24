@@ -3,7 +3,6 @@ package array
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
-import kotlin.reflect.KClass
 
 enum class APLValueType(val typeName: String) {
     INTEGER("integer"),
@@ -16,13 +15,18 @@ enum class APLValueType(val typeName: String) {
 }
 
 interface APLValue {
+    enum class FormatStyle {
+        PLAIN,
+        READABLE,
+        PRETTY
+    }
+
     fun dimensions(): Dimensions
     fun rank(): Int = dimensions().size
     fun valueAt(p: Int): APLValue
     fun size(): Int = dimensions().contentSize()
-    fun formatted(): String = "unprintable"
+    fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
     fun collapse(): APLValue
-    fun toAPLExpression(): String = "not implemented"
     fun isScalar(): Boolean = rank() == 0
     fun defaultValue(): APLValue = APLLong(0)
     fun arrayify(): APLValue
@@ -70,8 +74,52 @@ abstract class APLArray : APLValue {
         }
     }
 
-    override fun formatted() = arrayAsString(this)
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> arrayAsString(this, APLValue.FormatStyle.PLAIN)
+            APLValue.FormatStyle.PRETTY -> arrayAsString(this, APLValue.FormatStyle.PRETTY)
+            APLValue.FormatStyle.READABLE -> arrayToAPLFormat(this)
+        }
+
     override fun arrayify() = if (rank() == 0) APLArrayImpl(dimensionsOfSize(1)) { valueAt(0) } else this
+}
+
+private fun arrayToAPLFormat(value: APLArray): String {
+    val v = value.collapse()
+    return if (isStringValue(v)) {
+        renderStringValue(v, APLValue.FormatStyle.READABLE)
+    } else {
+        arrayToAPLFormatStandard(v as APLArray)
+    }
+}
+
+private fun arrayToAPLFormatStandard(value: APLArray): String {
+    val buf = StringBuilder()
+    val dimensions = value.dimensions()
+    if (dimensions.size == 0) {
+        buf.append("⊂")
+        buf.append(value.valueAt(0).formatted(APLValue.FormatStyle.READABLE))
+    } else {
+        for (i in dimensions.indices) {
+            if (i > 0) {
+                buf.append(" ")
+            }
+            buf.append(dimensions[i])
+        }
+        buf.append("⍴")
+        if (value.size() == 0) {
+            buf.append("1")
+        } else {
+            for (i in 0 until value.size()) {
+                val a = value.valueAt(i)
+                if (i > 0) {
+                    buf.append(" ")
+                }
+                buf.append(a.formatted(APLValue.FormatStyle.READABLE))
+            }
+        }
+    }
+    return buf.toString()
 }
 
 fun isNullValue(value: APLValue): Boolean {
@@ -112,11 +160,11 @@ fun arrayAsStringValue(array: APLValue): String {
     return buf.toString()
 }
 
-fun arrayAsString(array: APLValue): String {
+fun arrayAsString(array: APLValue, style: APLValue.FormatStyle): String {
     val v = array.collapse() // This is to prevent multiple evaluations during printing
     return when {
         isNullValue(v) -> renderNullValue()
-        isStringValue(v) -> renderStringValue(v)
+        isStringValue(v) -> renderStringValue(v, style)
         else -> encloseInBox(v)
     }
 }
@@ -155,8 +203,13 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 
 class APLChar(val value: Int) : APLSingleValue() {
     override val aplValueType: APLValueType = APLValueType.CHAR
-    override fun formatted() = "@${charToString(value)}"
     fun asString() = charToString(value)
+    override fun formatted(style: APLValue.FormatStyle) = when (style) {
+        APLValue.FormatStyle.PLAIN -> charToString(value)
+        APLValue.FormatStyle.PRETTY -> "@${charToString(value)}"
+        APLValue.FormatStyle.READABLE -> "@${charToString(value)}"
+    }
+
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 }
 
@@ -180,11 +233,22 @@ abstract class DeferredResultArray : APLArray() {
 
 class APLSymbol(val value: Symbol) : APLSingleValue() {
     override val aplValueType: APLValueType = APLValueType.SYMBOL
-    override fun formatted() = "'" + value.symbolName
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> value.symbolName
+            APLValue.FormatStyle.PRETTY -> value.symbolName
+            APLValue.FormatStyle.READABLE -> "'" + value.symbolName
+        }
+
     override fun ensureSymbol() = this
 }
 
 class LambdaValue(val fn: APLFunction) : APLSingleValue() {
     override val aplValueType: APLValueType = APLValueType.LAMBDA_FN
-    override fun formatted() = "function"
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> "function"
+            APLValue.FormatStyle.READABLE -> throw IllegalArgumentException("Functions can't be printed in readable form")
+            APLValue.FormatStyle.PRETTY -> "function"
+        }
 }

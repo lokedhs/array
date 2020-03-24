@@ -3,7 +3,7 @@ package array
 import array.complex.Complex
 
 abstract class APLNumber : APLSingleValue() {
-    override fun toString() = "APLNumber(${formatted()})"
+    override fun toString() = "APLNumber(${formatted(APLValue.FormatStyle.PRETTY)})"
     override fun ensureNumber() = this
 
     abstract fun asDouble(): Double
@@ -28,8 +28,13 @@ class APLLong(val value: Long) : APLNumber() {
     override fun asLong() = value
     override fun asComplex() = Complex(value.toDouble())
     override fun isComplex() = false
-    override fun formatted() = value.toString()
-    override fun toString() = "APLLong(${formatted()})"
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> value.toString()
+            APLValue.FormatStyle.READABLE -> value.toString()
+            APLValue.FormatStyle.PRETTY -> value.toString()
+        }
+    override fun toString() = "APLLong(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
 
 class APLDouble(val value: Double) : APLNumber() {
@@ -39,19 +44,24 @@ class APLDouble(val value: Double) : APLNumber() {
     override fun asComplex() = Complex(value)
     override fun isComplex() = false
 
-    override fun formatted(): String {
-        // Kotlin native doesn't have a decent formatter, so we'll take the easy way out:
-        // We'll check if the value fits in a Long and if it does, use it for rendering.
-        // This is the easiest way to avoid displaying a decimal point for integers.
-        // Let's hope this changes sooner rather than later.
-        return if (value.rem(1) == 0.0 && value <= Long.MAX_VALUE && value >= Long.MIN_VALUE) {
-            value.toLong().toString()
-        } else {
-            value.toString()
-        }
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> value.toString()
+            APLValue.FormatStyle.PRETTY -> {
+                // Kotlin native doesn't have a decent formatter, so we'll take the easy way out:
+                // We'll check if the value fits in a Long and if it does, use it for rendering.
+                // This is the easiest way to avoid displaying a decimal point for integers.
+                // Let's hope this changes sooner rather than later.
+                if (value.rem(1) == 0.0 && value <= Long.MAX_VALUE && value >= Long.MIN_VALUE) {
+                    value.toLong().toString()
+                } else {
+                    value.toString()
+                }
+            }
+            APLValue.FormatStyle.READABLE -> if(value < 0) "¯" + (-value).toString() else value.toString()
     }
 
-    override fun toString() = "APLDouble(${formatted()})"
+    override fun toString() = "APLDouble(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
 
 class NumberComplexException(value: Complex) : IncompatibleTypeException("Number is complex: ${value}")
@@ -76,9 +86,14 @@ class APLComplex(val value: Complex) : APLNumber() {
     override fun asComplex() = value
     override fun isComplex() = value.imaginary != 0.0
 
-    override fun formatted(): String {
-        return "${value.real}J${value.imaginary}"
-    }
+    override fun formatted(style: APLValue.FormatStyle) =
+        when (style) {
+            APLValue.FormatStyle.PLAIN -> formatToAPL()
+            APLValue.FormatStyle.PRETTY -> formatToAPL()
+            APLValue.FormatStyle.READABLE -> formatToAPL()
+        }
+
+    private fun formatToAPL() = "${value.real}J${value.imaginary}"
 }
 
 fun Int.makeAPLNumber() = APLLong(this.toLong())

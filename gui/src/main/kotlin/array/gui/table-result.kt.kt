@@ -50,7 +50,7 @@ class SimpleAPLCell : TableCell<APLRowWrapper, APLValueWrapper>() {
             text = null
             graphic = null
         } else {
-            text = item.value.formatted()
+            text = item.value.formatted(APLValue.FormatStyle.PRETTY)
         }
     }
 }

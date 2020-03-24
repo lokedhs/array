@@ -13,7 +13,7 @@ class ResultList2(private val context: ClientRenderContext) : TextFlow() {
 
     fun addResult(text: String, v: APLValue) {
         addInput(text)
-        children.add(textWithStyle(v.formatted() + "\n"))
+        children.add(textWithStyle(v.formatted(APLValue.FormatStyle.PRETTY) + "\n"))
     }
 
     fun addResult(text: String, exception: APLGenericException) {

@@ -57,7 +57,7 @@ class TransposeTest : APLTest() {
     @Test
     fun renderTransposedArray() {
         val result = parseAPLExpression("2 3 1 0 ⍉ 2 3 4 5 ⍴ ⍳120")
-        assertTrue(result.formatted().length > 100)
+        assertTrue(result.formatted(APLValue.FormatStyle.PRETTY).length > 100)
     }
 
     @Test
