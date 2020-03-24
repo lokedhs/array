@@ -31,6 +31,7 @@ class StringToken(val value: String) : Token()
 class ParsedLong(val value: Long) : Token()
 class ParsedDouble(val value: Double) : Token()
 class ParsedComplex(val value: Complex) : Token()
+class ParsedCharacter(val value: Int) : Token()
 
 class Position(val sourceText: String, val line: Int, val col: Int)
 
@@ -56,7 +57,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
 
     init {
         singleCharFunctions = hashSetOf(
-            "!", "#", "%", "&", "*", "+", ",", "-", "/", "<", "=", ">", "?", "@", "^", "|",
+            "!", "#", "%", "&", "*", "+", ",", "-", "/", "<", "=", ">", "?", "^", "|",
             "~", "¨", "×", "÷", "↑", "→", "↓", "∊", "∘", "∧", "∨", "∩", "∪", "∼", "≠", "≡",
             "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷", "⌹",
             "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤", "⍥",
@@ -93,6 +94,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                     content.pushBack(); collectNumber()
                 }
                 isWhitespace(ch) -> Whitespace
+                isCharacterPrefixChar(ch) -> collectChar()
                 isLetter(ch) -> collectSymbol(ch)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
@@ -115,6 +117,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
 
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
+    private fun isCharacterPrefixChar(ch: Int) = ch == '@'.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
@@ -124,6 +127,14 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
             }
         }
         return Whitespace
+    }
+
+    private fun collectChar(): ParsedCharacter {
+        val ch = content.nextCodepoint()
+        if (ch == null) {
+            throw ParseException("Incomplete character in input")
+        }
+        return ParsedCharacter(ch)
     }
 
     private fun collectNumber(): Token {
@@ -303,7 +314,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
         private fun resolveFn(context: RuntimeContext): APLFunction {
             val result = instr.evalWithContext(context)
             val v = result.unwrapDeferredValue()
-            if(v !is LambdaValue) {
+            if (v !is LambdaValue) {
                 throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}")
             }
             return v.fn
@@ -354,6 +365,10 @@ class LiteralDouble(val value: Double, pos: Position) : Instruction(pos) {
 class LiteralComplex(val value: Complex, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
     override fun toString() = "LiteralComplex[value=$value]"
+}
+
+class LiteralCharacter(val value: Int, pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext) = APLChar(value)
 }
 
 class LiteralSymbol(name: Symbol, pos: Position) : Instruction(pos) {
@@ -488,6 +503,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
             is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
             is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
+            is ParsedCharacter -> leftArgs.add(LiteralCharacter(token.value, pos))
             is LeftArrow -> return processAssignment(engine, tokeniser, pos)
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser, pos))
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))

@@ -4,7 +4,7 @@ import array.complex.Complex
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class PrintFunctionTest : APLTest() {
+class StringsTest : APLTest() {
     @Test
     fun testPrint() {
         val out = parseWithOutput("print 200")
@@ -38,6 +38,12 @@ class PrintFunctionTest : APLTest() {
         val out = parseWithOutput("'read print 1J2")
         assertEquals(Complex(1.0, 2.0), out.result.ensureNumber().asComplex())
         assertEquals("1.0J2.0", out.output)
+    }
+
+    @Test
+    fun readCharsAsString() {
+        val result = parseAPLExpression("@a @b")
+        assertString("ab", result)
     }
 
     class OutputResult(val engine: Engine, val output: String, val result: APLValue)

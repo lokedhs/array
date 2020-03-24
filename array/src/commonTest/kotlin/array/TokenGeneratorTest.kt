@@ -140,6 +140,35 @@ class TokenGeneratorTest {
     }
 
     @Test
+    fun testCharacters() {
+        val gen = makeGenerator("@a @b @1 @2")
+        assertTokenIsCharacter('a'.toInt(), gen.nextToken())
+        assertTokenIsCharacter('b'.toInt(), gen.nextToken())
+        assertTokenIsCharacter('1'.toInt(), gen.nextToken())
+        assertTokenIsCharacter('2'.toInt(), gen.nextToken())
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    @Test
+    fun testSymbolsInStrings() {
+        val gen = makeGenerator("\"a\"  \"foo@bar\"  ")
+        gen.nextToken().let { token ->
+            assertTrue(token is StringToken)
+            assertEquals("a", token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is StringToken)
+            assertEquals("foo@bar", token.value)
+        }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    private fun assertTokenIsCharacter(expected: Int, token: Token) {
+        assertTrue(token is ParsedCharacter, "actual type was: ${token}")
+        assertEquals(expected, token.value)
+    }
+
+    @Test
     fun complexNumbers() {
         val gen = makeGenerator("1j2 0j2 2j0 1J2 0J2 ¯1j2 1j¯2 ¯1j¯2")
         gen.nextToken().let { token ->
