@@ -44,11 +44,17 @@ class TypesTest : APLTest() {
         testResultType("typeof 1 2 3 4 5 6", APLValueType.ARRAY)
         testResultType("typeof ⍳100", APLValueType.ARRAY)
         testResultType("typeof (⍳100) × ⍳100", APLValueType.ARRAY)
+        testResultType("typeof ⍬", APLValueType.ARRAY)
     }
 
     @Test
     fun testSymbol() {
         testResultType("typeof 'foo", APLValueType.SYMBOL)
+    }
+
+    @Test
+    fun testLambdaFunction() {
+        testResultType("typeof λ { ⍺+⍵+1 }", APLValueType.LAMBDA_FN)
     }
 
     private fun testResultType(expression: String, expectedResultSym: APLValueType) {

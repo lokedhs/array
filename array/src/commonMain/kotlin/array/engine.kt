@@ -117,6 +117,7 @@ class Engine {
         registerOperator(internSymbol("¨"), ForEachOp())
         registerOperator(internSymbol("/"), ReduceOp())
         registerOperator(internSymbol("⌺"), OuterJoinOp())
+        registerOperator(internSymbol("⍨"), CommuteOp())
 
         // function aliases
         functionAliases[internSymbol("*")] = internSymbol("⋆")
