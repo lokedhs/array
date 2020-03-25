@@ -25,6 +25,14 @@ class NumbersTest : APLTest() {
     }
 
     @Test
+    fun testNegation() {
+        assertSimpleNumber(0, parseAPLExpression("-0"))
+        assertSimpleNumber(1, parseAPLExpression("-(1-2)"))
+        assertSimpleNumber(-3, parseAPLExpression("-3"))
+        assertSimpleNumber(-6, parseAPLExpression("-2+4"))
+    }
+
+    @Test
     fun invalidExpressions() {
         assertFailsWith<ParseException> {
             parseAPLExpression("1+")

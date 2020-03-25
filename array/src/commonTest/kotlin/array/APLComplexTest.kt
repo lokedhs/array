@@ -13,9 +13,51 @@ class APLComplexTest : APLTest() {
     }
 
     @Test
+    fun addIntAndComplex() {
+        val result = parseAPLExpression("6+3J4")
+        assertEquals(Complex(9.0, 4.0), result.ensureNumber().asComplex())
+    }
+
+    @Test
+    fun addComplexAndInt() {
+        val result = parseAPLExpression("3J4+6")
+        assertEquals(Complex(9.0, 4.0), result.ensureNumber().asComplex())
+    }
+
+    @Test
+    fun convertIntToComplex() {
+        val result = parseAPLExpression("1+3")
+        assertEquals(Complex(4.0, 0.0), result.ensureNumber().asComplex())
+    }
+
+    @Test
+    fun convertFloatToComplex() {
+        val result = parseAPLExpression("1.0+3.0")
+        assertEquals(Complex(4.0, 0.0), result.ensureNumber().asComplex())
+    }
+
+    @Test
     fun complexConjugate() {
         val result = parseAPLExpression("+5j¯2")
         assertEquals(Complex(5.0, 2.0), result.ensureNumber().asComplex())
+    }
+
+    @Test
+    fun convertComplexToIntSuccess() {
+        val result = parseAPLExpression("2J3-1J3")
+        assertEquals(1, result.ensureNumber().asInt())
+    }
+
+    @Test
+    fun convertComplexToDoubleSuccess() {
+        val result = parseAPLExpression("2J3-1J3")
+        assertEquals(1.0, result.ensureNumber().asDouble())
+    }
+
+    @Test
+    fun negateComplexTest() {
+        val result = parseAPLExpression("-2J3")
+        assertEquals(Complex(-2.0, -3.0), result.ensureNumber().asComplex())
     }
 
     @Test

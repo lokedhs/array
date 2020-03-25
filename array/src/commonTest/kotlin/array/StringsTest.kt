@@ -13,6 +13,13 @@ class StringsTest : APLTest() {
     }
 
     @Test
+    fun testPrintPretty() {
+        val out = parseWithOutput("'pretty print \"a\"")
+        assertString("a", out.result)
+        assertEquals("\"a\"", out.output)
+    }
+
+    @Test
     fun testPrintString() {
         val out = parseWithOutput("print \"a\"")
         assertString("a", out.result)
