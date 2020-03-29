@@ -4,14 +4,14 @@ import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 class ScalarTest : APLTest() {
     @Test
     fun testReshape() {
         val result = parseAPLExpression("3 4 ⍴ ⍳100")
-        assertDimension(dimensionsOfSize(3,4), result)
-        assertArrayContent(arrayOf(0,1,2,3,4,5,6,7,8,9,10,11), result)
+        assertDimension(dimensionsOfSize(3, 4), result)
+        assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), result)
     }
 
     @Test
@@ -67,6 +67,55 @@ class ScalarTest : APLTest() {
     @Test
     fun testCompareNotEquals() {
         runScalarTest("≠") { a, b -> if (a != b) 1.0 else 0.0 }
+    }
+
+    @Test
+    fun additionWithAxis0() {
+        val result = parseAPLExpression("10 20 30 40 +[0] 4 3 2 ⍴ 100+⍳24")
+        assertDimension(dimensionsOfSize(4, 3, 2), result)
+        assertArrayContent(arrayOf(
+            110, 111, 112, 113, 114, 115, 126, 127, 128, 129, 130, 131, 142, 143, 144, 145, 146, 147, 158, 159, 160, 161, 162, 163),
+            result)
+    }
+
+    @Test
+    fun additionWithAxis1() {
+        val result = parseAPLExpression("10 20 30 +[1] 4 3 2 ⍴ 100+⍳24")
+        assertDimension(dimensionsOfSize(4, 3, 2), result)
+        assertArrayContent(arrayOf(
+            110, 111, 122, 123, 134, 135, 116, 117, 128, 129, 140, 141, 122, 123, 134, 135, 146, 147, 128, 129, 140, 141, 152, 153),
+            result)
+    }
+
+    @Test
+    fun additionWithAxis2() {
+        val result = parseAPLExpression("10 20 +[2] 4 3 2 ⍴ 100+⍳24")
+        assertDimension(dimensionsOfSize(4, 3, 2), result)
+        assertArrayContent(arrayOf(
+            110, 121, 112, 123, 114, 125, 116, 127, 118, 129, 120, 131, 122, 133,
+            124, 135, 126, 137, 128, 139, 130, 141, 132, 143),
+            result)
+    }
+
+    @Test
+    fun failWithWrongRank() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("(2 3 ⍴ ⍳6) +[0] 2 3 4 ⍴ ⍳24")
+        }
+    }
+
+    @Test
+    fun failWithWrongDimension() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1 2 3 4 +[0] 5 6 7 ⍴ ⍳24")
+        }
+    }
+
+    @Test
+    fun failWithWrongAxis() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1 2 3 4 +[3] 5 6 7 ⍴ ⍳24")
+        }
     }
 
     private fun runScalarTest1Arg(functionName: String, doubleFn: (Double) -> Double) {

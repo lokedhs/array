@@ -78,7 +78,42 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
                 return combine2Arg(a, b)
             }
         }
-        return ArraySum2Args(fn, a, b)
+
+        if (axis != null) {
+            val aDimensions = a.dimensions()
+            val bDimensions = b.dimensions()
+
+            val axisInt = axis.ensureNumber().asInt()
+
+            fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
+                if (d1[0] != d2[axisInt]) {
+                    throw InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}")
+                }
+                val d = d2.remove(axisInt).insert(d2.size - 1, d2[axisInt])
+                val transposeAxis = IntArray(d2.size) { i ->
+                    when {
+                        i == d2.size - 1 -> axisInt
+                        i < axisInt -> i
+                        else -> i - 1
+                    }
+                }
+                return TransposedAPLValue(transposeAxis, ResizedArray(d, baseVal), pos)
+            }
+
+            // When an axis is given, one of the arguments must be rank 1, and its dimension must be equal to the
+            // dimension of the other arguments across the axis
+            val (a1, b1) = when {
+                aDimensions.size == 1 && bDimensions.size == 1 -> if (axisInt == 0) Pair(a, b) else throw IllegalAxisException(axisInt,
+                    aDimensions)
+                aDimensions.size == 1 -> Pair(computeTransformation(a, aDimensions, bDimensions), b)
+                bDimensions.size == 1 -> Pair(a, computeTransformation(b, bDimensions, aDimensions))
+                else -> throw APLIllegalArgumentException("When specifying an axis, A or B has ro be rank 1")
+            }
+
+            return ArraySum2Args(fn, a1, b1)
+        } else {
+            return ArraySum2Args(fn, a, b)
+        }
     }
 
     open fun combine1Arg(a: APLSingleValue): APLValue = TODO("not implemented")
