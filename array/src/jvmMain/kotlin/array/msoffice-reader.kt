@@ -89,7 +89,7 @@ class LoadExcelFileFunction : APLFunctionDescriptor {
             for (i in 0 until a.size()) {
                 val charValue = a.valueAt(i)
                 if (charValue !is APLChar) {
-                    throw IncompatibleTypeException("Value at position $i is not a character")
+                    throw IncompatibleTypeException("Value at position $i is not a character", pos)
                 }
                 buf.addCodepoint(charValue.value)
             }

@@ -37,7 +37,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
 class ReadCSVFunction : APLFunctionDescriptor {
     class ReadCSVFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val source = openCharFile(arrayAsStringValue(a))
+            val source = openCharFile(arrayAsStringValue(a, pos))
             try {
                 return readCsv(source)
             } finally {

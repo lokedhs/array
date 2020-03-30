@@ -1,5 +1,6 @@
 package array
 
+import array.complex.Complex
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -41,13 +42,35 @@ open class APLTest {
         assertEquals(expected, value.ensureNumber().asLong(), exprMessage)
     }
 
-    fun assertSimpleDouble(expected: Pair<Double, Double>, value: APLValue) {
+    fun assertDoubleWithRange(expected: Pair<Double, Double>, value: APLValue) {
         assertTrue(value.isScalar())
         val v = value.unwrapDeferredValue()
         assertTrue(v is APLNumber)
         val num = value.ensureNumber().asDouble()
         assertTrue(expected.first <= num)
         assertTrue(expected.second >= num)
+    }
+
+    fun assertSimpleDouble(expected: Double, value: APLValue) {
+        assertTrue(value.isScalar())
+        val v = value.unwrapDeferredValue()
+        assertTrue(v is APLNumber)
+        assertEquals(expected, v.ensureNumber().asDouble())
+    }
+
+    fun assertComplexWithRange(real: Pair<Double, Double>, imaginary: Pair<Double, Double>, result: APLValue) {
+        assertTrue(result.isScalar())
+        val complex = result.ensureNumber().asComplex()
+        val message = "expected: ${real} ${imaginary}, actual: ${complex}"
+        assertTrue(real.first <= complex.real && real.second >= complex.real, message)
+        assertTrue(imaginary.first <= complex.imaginary && imaginary.second >= complex.imaginary, message)
+    }
+
+    fun assertSimpleComplex(expected: Complex, result: APLValue) {
+        assertTrue(result.isScalar())
+        val v = result.unwrapDeferredValue()
+        assertTrue(v is APLNumber)
+        assertEquals(expected, v.ensureNumber().asComplex())
     }
 
     fun assertString(expected: String, value: APLValue) {

@@ -32,7 +32,14 @@ class IotaTest : APLTest() {
     @Test
     fun failWithComplexArgument() {
         assertFailsWith<APLEvalException> {
-            parseAPLExpression("⍳2J1")
+            parseAPLExpression("⍳2J1").collapse()
+        }
+    }
+
+    @Test
+    fun failWithCharArgument() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍳@p").collapse()
         }
     }
 

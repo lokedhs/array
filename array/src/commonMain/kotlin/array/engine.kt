@@ -97,6 +97,8 @@ class Engine {
         registerFunction(internSymbol("⊖"), RotateVertFunction())
         registerFunction(internSymbol("↓"), DropAPLFunction())
         registerFunction(internSymbol("⍉"), TransposeFunction())
+        registerFunction(internSymbol("⌊"), MinAPLFunction())
+        registerFunction(internSymbol("⌈"), MaxAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

@@ -14,14 +14,16 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
 }
 
 open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos)
-open class IncompatibleTypeException(message: String) : APLEvalException(message)
+open class IncompatibleTypeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIndexOutOfBoundsException(message: String) : APLEvalException(message)
 class IllegalNumberFormat(message: String) : APLEvalException(message)
 class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
-class IllegalAxisException(axis: Int, dimensions: Dimensions) : APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}")
-class APLIllegalArgumentException(message: String) : APLEvalException(message)
+class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
+    APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
+
+class APLIllegalArgumentException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIncompatibleDomainsException(message: String) : APLEvalException(message)
 class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")
 class Unimplemented2ArgException : APLEvalException("Function cannot be called with two arguments")
@@ -106,9 +108,9 @@ fun ensureValidAxis(axis: Int, dimensions: Dimensions) {
     }
 }
 
-fun resolveAxis(axisParam: APLValue?, arg: APLValue): Int {
+fun resolveAxis(axisParam: APLValue?, arg: APLValue, pos: Position): Int {
     if (axisParam != null && axisParam.rank() != 1) {
-        throw IncompatibleTypeException("Axis should be a single integer")
+        throw IncompatibleTypeException("Axis should be a single integer", pos)
     }
     val v = if (axisParam == null) {
         arg.dimensions().size - 1

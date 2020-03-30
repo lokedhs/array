@@ -34,14 +34,15 @@ class ArraySum1Arg(
 class ArraySum2Args(
     private val fn: CellSumFunction2Args,
     private val a: APLValue,
-    private val b: APLValue
+    private val b: APLValue,
+    private val pos: Position
 ) : DeferredResultArray() {
     private val aRank = a.rank()
     private val bRank = b.rank()
 
     init {
         unless(aRank == 0 || bRank == 0 || a.dimensions().compare(b.dimensions())) {
-            throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar")
+            throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos)
         }
     }
 
@@ -57,7 +58,7 @@ class ArraySum2Args(
         return if (v1 is APLSingleValue && v2 is APLSingleValue) {
             fn.combineValues(v1, v2)
         } else {
-            ArraySum2Args(fn, v1, v2)
+            ArraySum2Args(fn, v1, v2, pos)
         }
     }
 }
@@ -88,7 +89,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
                 ensureValidAxis(axisInt, d2)
                 if (d1[0] != d2[axisInt]) {
-                    throw InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}")
+                    throw InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}", pos)
                 }
                 val d = d2.remove(axisInt).insert(d2.size - 1, d2[axisInt])
                 val transposeAxis = IntArray(d2.size) { i ->
@@ -104,16 +105,17 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             // When an axis is given, one of the arguments must be rank 1, and its dimension must be equal to the
             // dimension of the other arguments across the axis
             val (a1, b1) = when {
-                aDimensions.size == 1 && bDimensions.size == 1 -> if (axisInt == 0) Pair(a, b) else throw IllegalAxisException(axisInt,
-                    aDimensions)
+                aDimensions.size == 1 && bDimensions.size == 1 -> {
+                    if (axisInt == 0) Pair(a, b) else throw IllegalAxisException(axisInt, aDimensions, pos)
+                }
                 aDimensions.size == 1 -> Pair(computeTransformation(a, aDimensions, bDimensions), b)
                 bDimensions.size == 1 -> Pair(a, computeTransformation(b, bDimensions, aDimensions))
-                else -> throw APLIllegalArgumentException("When specifying an axis, A or B has ro be rank 1")
+                else -> throw APLIllegalArgumentException("When specifying an axis, A or B has ro be rank 1", pos)
             }
 
-            return ArraySum2Args(fn, a1, b1)
+            return ArraySum2Args(fn, a1, b1, pos)
         } else {
-            return ArraySum2Args(fn, a, b)
+            return ArraySum2Args(fn, a, b, pos)
         }
     }
 
@@ -134,6 +136,7 @@ class AddAPLFunction : APLFunctionDescriptor {
     class AddAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
+                pos,
                 a,
                 { x -> x.makeAPLNumber() },
                 { x -> x.makeAPLNumber() },
@@ -143,6 +146,7 @@ class AddAPLFunction : APLFunctionDescriptor {
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> (x + y).makeAPLNumber() },
@@ -161,6 +165,7 @@ class SubAPLFunction : APLFunctionDescriptor {
     class SubAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
+                pos,
                 a,
                 { x -> (-x).makeAPLNumber() },
                 { x -> (-x).makeAPLNumber() },
@@ -170,6 +175,7 @@ class SubAPLFunction : APLFunctionDescriptor {
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> (x - y).makeAPLNumber() },
@@ -188,6 +194,7 @@ class MulAPLFunction : APLFunctionDescriptor {
     class MulAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
+                pos,
                 a,
                 { x -> x.sign.toLong().makeAPLNumber() },
                 { x -> x.sign.makeAPLNumber() },
@@ -197,6 +204,7 @@ class MulAPLFunction : APLFunctionDescriptor {
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> (x * y).makeAPLNumber() },
@@ -215,6 +223,7 @@ class DivAPLFunction : APLFunctionDescriptor {
     class DivAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
+                pos,
                 a,
                 { x -> if (x == 0L) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
                 { x -> if (x == 0.0) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
@@ -224,6 +233,7 @@ class DivAPLFunction : APLFunctionDescriptor {
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y ->
@@ -248,6 +258,7 @@ class PowerAPLFunction : APLFunctionDescriptor {
     class PowerAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
+                pos,
                 a,
                 { x -> exp(x.toDouble()).makeAPLNumber() },
                 { x -> exp(x).makeAPLNumber() },
@@ -257,6 +268,7 @@ class PowerAPLFunction : APLFunctionDescriptor {
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> x.toDouble().pow(y.toDouble()).makeAPLNumber() },
@@ -270,6 +282,86 @@ class PowerAPLFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = PowerAPLFunctionImpl(pos)
 
+}
+
+fun complexFloor(z: Complex): Complex {
+    var fr = floor(z.real)
+    var dr = z.real - fr
+    var fi = floor(z.imaginary)
+    var di = z.imaginary - fi
+    if (dr > 1) {
+        fr += 1.0
+        dr = 0.0
+    }
+    if (di > 1) {
+        fi += 1.0
+        di = 0.0
+    }
+    return when {
+        dr + di < 1 -> Complex(fr, fi)
+        dr < di -> Complex(fr, fi + 1.0)
+        else -> Complex(fr + 1.0, fi)
+    }
+}
+
+class MinAPLFunction : APLFunctionDescriptor {
+    class MinAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun combine1Arg(a: APLSingleValue): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> x.makeAPLNumber() },
+                { x -> floor(x).makeAPLNumber() },
+                { x -> complexFloor(x).makeAPLNumber() }
+            )
+        }
+
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                pos,
+                a,
+                b,
+                { x, y -> if (x < y) x.makeAPLNumber() else y.makeAPLNumber() },
+                { x, y -> if (x < y) x.makeAPLNumber() else y.makeAPLNumber() },
+                { x, y -> (if (x.real < y.real || (x.real == y.real && x.imaginary < y.imaginary)) x else y).makeAPLNumber() },
+                { x, y -> if (x < y) APLChar(x) else APLChar(y) }
+            )
+        }
+    }
+
+    override fun make(pos: Position) = MinAPLFunctionImpl(pos)
+}
+
+fun complexCeiling(value: Complex): Complex {
+    return -complexFloor(-value)
+}
+
+class MaxAPLFunction : APLFunctionDescriptor {
+    class MaxAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun combine1Arg(a: APLSingleValue): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> x.makeAPLNumber() },
+                { x -> ceil(x).makeAPLNumber() },
+                { x -> complexCeiling(x).makeAPLNumber() }
+            )
+        }
+
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                pos,
+                a,
+                b,
+                { x, y -> if (x > y) x.makeAPLNumber() else y.makeAPLNumber() },
+                { x, y -> if (x > y) x.makeAPLNumber() else y.makeAPLNumber() },
+                { x, y -> (if (x.real > y.real || (x.real == y.real && x.imaginary > y.imaginary)) x else y).makeAPLNumber() },
+                { x, y -> if (x > y) APLChar(x) else APLChar(y) }
+            )
+        }
+    }
+
+    override fun make(pos: Position) = MaxAPLFunctionImpl(pos)
 }
 
 class LogAPLFunction : APLFunctionDescriptor {

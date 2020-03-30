@@ -21,7 +21,7 @@ class NumbersTest : APLTest() {
         assertSimpleNumber(0, parseAPLExpression("2.0÷0.0"))
         assertSimpleNumber(2, parseAPLExpression("4÷2"))
         assertSimpleNumber(20, parseAPLExpression("40÷2"))
-        assertSimpleDouble(Pair(3.33332, 3.33334), parseAPLExpression("10÷3"))
+        assertDoubleWithRange(Pair(3.33332, 3.33334), parseAPLExpression("10÷3"))
     }
 
     @Test
@@ -30,6 +30,14 @@ class NumbersTest : APLTest() {
         assertSimpleNumber(1, parseAPLExpression("-(1-2)"))
         assertSimpleNumber(-3, parseAPLExpression("-3"))
         assertSimpleNumber(-6, parseAPLExpression("-2+4"))
+    }
+
+    @Test
+    fun testExponential() {
+        assertSimpleNumber(1024, parseAPLExpression("2⋆10"))
+        assertDoubleWithRange(Pair(0.0009, 0.0011), parseAPLExpression("10⋆¯3"))
+        assertSimpleNumber(0, parseAPLExpression("0⋆10"))
+        assertSimpleNumber(1, parseAPLExpression("10⋆0"))
     }
 
     @Test

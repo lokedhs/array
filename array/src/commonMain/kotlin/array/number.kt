@@ -64,7 +64,7 @@ class APLDouble(val value: Double) : APLNumber() {
     override fun toString() = "APLDouble(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
 
-class NumberComplexException(value: Complex) : IncompatibleTypeException("Number is complex: ${value}")
+class NumberComplexException(value: Complex, pos: Position? = null) : IncompatibleTypeException("Number is complex: ${value}", pos)
 
 class APLComplex(val value: Complex) : APLNumber() {
     override val aplValueType: APLValueType = APLValueType.COMPLEX

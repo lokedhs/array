@@ -1,10 +1,12 @@
 package array
 
+import array.complex.Complex
 import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class ScalarTest : APLTest() {
     @Test
@@ -105,6 +107,123 @@ class ScalarTest : APLTest() {
     }
 
     @Test
+    fun testMax() {
+        // ints
+        runMaxTest(2, "⌈", "1", "2")
+        runMaxTest(0, "⌈", "0", "0")
+        runMaxTest(1, "⌈", "1", "0")
+        runMaxTest(2, "⌈", "¯10", "2")
+        runMaxTest(-10, "⌈", "¯10", "¯20")
+        // doubles
+        runMaxTest(2.0, "⌈", "1.0", "2.0")
+        runMaxTest(0.0, "⌈", "0.0", "0.0")
+        runMaxTest(1.0, "⌈", "1.0", "0.0")
+        runMaxTest(2.0, "⌈", "¯10.0", "2.0")
+        runMaxTest(-10.0, "⌈", "¯10.0", "¯20.0")
+        // combination
+        runMaxTest(2, "⌈", "2", "1.0")
+        runMaxTest(2.0, "⌈", "2.0", "¯9")
+        runMaxTest(0.0, "⌈", "0.0", "¯2")
+        runMaxTest(10, "⌈", "10", "1.0")
+        // complex
+        runMaxTest(Complex(2.0, 3.0), "⌈", "2J3", "1J4")
+        runMaxTest(Complex(4.0, 6.0), "⌈", "4J2", "4J6")
+        // characters
+        parseAPLExpression("@a⌈@b").let { result ->
+            val v = result.unwrapDeferredValue()
+            assertTrue(v is APLChar)
+            assertEquals('b'.toInt(), v.value)
+        }
+        parseAPLExpression("@C⌈@D").let { result ->
+            val v = result.unwrapDeferredValue()
+            assertTrue(v is APLChar)
+            assertEquals('D'.toInt(), v.value)
+        }
+    }
+
+    @Test
+    fun testMin() {
+        runMaxTest(1, "⌊", "1", "2")
+        runMaxTest(0, "⌊", "0", "0")
+        runMaxTest(0, "⌊", "1", "0")
+        runMaxTest(-10, "⌊", "¯10", "2")
+        runMaxTest(-20, "⌊", "¯10", "¯20")
+
+        runMaxTest(1.0, "⌊", "1.0", "2.0")
+        runMaxTest(0.0, "⌊", "0.0", "0.0")
+        runMaxTest(0.0, "⌊", "1.0", "0.0")
+        runMaxTest(-10.0, "⌊", "¯10.0", "2.0")
+        runMaxTest(-20.0, "⌊", "¯10.0", "¯20.0")
+
+        runMaxTest(1.0, "⌊", "2", "1.0")
+        runMaxTest(-9, "⌊", "2.0", "¯9")
+        runMaxTest(-2, "⌊", "0.0", "¯2")
+        runMaxTest(1.0, "⌊", "10", "1.0")
+
+        runMaxTest(Complex(1.0, 4.0), "⌊", "2J3", "1J4")
+        runMaxTest(Complex(4.0, 2.0), "⌊", "4J2", "4J6")
+
+        parseAPLExpression("@a⌊@b").let { result ->
+            val v = result.unwrapDeferredValue()
+            assertTrue(v is APLChar)
+            assertEquals('a'.toInt(), v.value)
+        }
+        parseAPLExpression("@C⌊@D").let { result ->
+            val v = result.unwrapDeferredValue()
+            assertTrue(v is APLChar)
+            assertEquals('C'.toInt(), v.value)
+        }
+    }
+
+    @Test
+    fun minComparingIncompatibleTypes() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("@a⌈1").collapse()
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1⌈@a").collapse()
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("@a⌊1").collapse()
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1⌊@a").collapse()
+        }
+    }
+
+    @Test
+    fun testCeiling() {
+        assertSimpleDouble(2.0, parseAPLExpression("⌈1.4"))
+        assertSimpleDouble(3.0, parseAPLExpression("⌈2.9"))
+        assertSimpleDouble(-3.0, parseAPLExpression("⌈¯3.1"))
+        assertSimpleDouble(9.0, parseAPLExpression("⌈9"))
+        assertSimpleComplex(Complex(4.0, 6.0), parseAPLExpression("⌈4.1J5.2"))
+        assertSimpleComplex(Complex(91.0, 2.0), parseAPLExpression("⌈90.8J1.9"))
+        assertSimpleComplex(Complex(-1.0, -5.0), parseAPLExpression("⌈¯1.8J¯4.82"))
+        assertSimpleComplex(Complex(-10.0, -40.0), parseAPLExpression("⌈¯10.1J¯40.1"))
+    }
+
+    @Test
+    fun testFloor() {
+        assertSimpleDouble(5.0, parseAPLExpression("⌊5.9"))
+        assertSimpleDouble(3.0, parseAPLExpression("⌊3.1"))
+        assertSimpleDouble(-6.0, parseAPLExpression("⌊¯5.1"))
+        assertSimpleDouble(-9.0, parseAPLExpression("⌊¯8.9"))
+        assertSimpleComplex(Complex(1.0, 4.0), parseAPLExpression("⌊1.1J3.9"))
+        assertSimpleComplex(Complex(2.0, 3.0), parseAPLExpression("⌊1.9J3.9"))
+        assertSimpleComplex(Complex(-2.0, -7.0), parseAPLExpression("⌊¯1.3J¯7.0"))
+        assertSimpleComplex(Complex(-4.0, -6.0), parseAPLExpression("⌊-4.1J5.2"))
+        assertSimpleComplex(Complex(1.0, 9.0), parseAPLExpression("⌊1.01J9.9"))
+    }
+
+    @Test
+    fun ceilingWithIllegalType() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⌈@a").collapse()
+        }
+    }
+
+    @Test
     fun failWithWrongDimension() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("1 2 3 4 +[0] 5 6 7 ⍴ ⍳24")
@@ -112,10 +231,41 @@ class ScalarTest : APLTest() {
     }
 
     @Test
+    fun floorWithIllegalType() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⌊@x").collapse()
+        }
+    }
+
+    @Test
+
     fun failWithWrongAxis() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("1 2 3 4 +[3] 5 6 7 ⍴ ⍳24")
         }
+    }
+
+    @Test
+    fun floorConvertsComplexToDouble() {
+        val result = parseAPLExpression("⌊3.4J0.01")
+        val v = result.unwrapDeferredValue()
+        assertTrue(v is APLDouble, "expected APLDouble, actual type: ${v::class.qualifiedName}")
+        assertSimpleDouble(3.0, v)
+    }
+
+    private fun runMaxTest(expected: Any, op: String, a: String, b: String) {
+        fun compare(result: APLValue) {
+            when (expected) {
+                is Int -> assertSimpleNumber(expected.toLong(), result)
+                is Long -> assertSimpleNumber(expected, result)
+                is Double -> assertSimpleDouble(expected, result)
+                is Complex -> assertSimpleComplex(expected, result)
+                else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.qualifiedName}")
+            }
+        }
+
+        compare(parseAPLExpression("${a}${op}${b}"))
+        compare(parseAPLExpression("${b}${op}${a}"))
     }
 
     private fun runScalarTest1Arg(functionName: String, doubleFn: (Double) -> Double) {

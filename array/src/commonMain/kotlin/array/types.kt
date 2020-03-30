@@ -142,17 +142,17 @@ fun isStringValue(value: APLValue): Boolean {
     }
 }
 
-fun arrayAsStringValue(array: APLValue): String {
+fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
     val dimensions = array.dimensions()
     if (dimensions.size != 1) {
-        throw IncompatibleTypeException("Argument is not a string")
+        throw IncompatibleTypeException("Argument is not a string", pos)
     }
 
     val buf = StringBuilder()
     for (i in 0 until array.size()) {
         val v = array.valueAt(i)
         if (v !is APLChar) {
-            throw IncompatibleTypeException("Argument is not a string")
+            throw IncompatibleTypeException("Argument is not a string", pos)
         }
         buf.append(v.asString())
     }

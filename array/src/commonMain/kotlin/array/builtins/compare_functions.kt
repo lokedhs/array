@@ -10,6 +10,7 @@ class EqualsAPLFunction : APLFunctionDescriptor {
                 makeBoolean(false)
             } else {
                 numericRelationOperation(
+                    pos,
                     a,
                     b,
                     { x, y -> makeBoolean(x == y) },
@@ -32,6 +33,7 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
                 makeBoolean(true)
             } else {
                 numericRelationOperation(
+                    pos,
                     a,
                     b,
                     { x, y -> makeBoolean(x != y) },
@@ -51,6 +53,7 @@ class LessThanAPLFunction : APLFunctionDescriptor {
     class LessThanAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> makeBoolean(x < y) },
@@ -69,6 +72,7 @@ class GreaterThanAPLFunction : APLFunctionDescriptor {
     class GreaterThanAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> makeBoolean(x > y) },
@@ -87,6 +91,7 @@ class LessThanEqualAPLFunction : APLFunctionDescriptor {
     class LessThanEqualAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> makeBoolean(x <= y) },
@@ -105,6 +110,7 @@ class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
     class GreaterThanEqualAPLFunctionImpl(pos: Position) : MathCombineAPLFunction(pos) {
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
             return numericRelationOperation(
+                pos,
                 a,
                 b,
                 { x, y -> makeBoolean(x >= y) },
@@ -124,6 +130,7 @@ fun makeBoolean(value: Boolean): APLValue {
 }
 
 fun numericRelationOperation(
+    pos: Position,
     a: APLSingleValue,
     b: APLSingleValue,
     fnLong: (al: Long, bl: Long) -> APLValue,
@@ -141,15 +148,16 @@ fun numericRelationOperation(
         }
         a is APLChar && b is APLChar -> {
             if (fnChar == null) {
-                throw IncompatibleTypeException("Function cannot be used with characters")
+                throw IncompatibleTypeException("Function cannot be used with characters", pos)
             }
             fnChar(a.value, b.value)
         }
-        else -> throw IncompatibleTypeException("Incompatible argument types")
+        else -> throw IncompatibleTypeException("Incompatible argument types", pos)
     }
 }
 
 fun singleArgNumericRelationOperation(
+    pos: Position,
     a: APLSingleValue,
     fnLong: (a: Long) -> APLValue,
     fnDouble: (a: Double) -> APLValue,
@@ -162,11 +170,11 @@ fun singleArgNumericRelationOperation(
         is APLComplex -> fnComplex(a.asComplex())
         is APLChar -> {
             if (fnChar == null) {
-                throw IncompatibleTypeException("Function cannot be used with characters")
+                throw IncompatibleTypeException("Function cannot be used with characters", pos)
             } else {
                 fnChar(a.value)
             }
         }
-        else -> throw IncompatibleTypeException("Incompatible argument types")
+        else -> throw IncompatibleTypeException("Incompatible argument types", pos)
     }
 }

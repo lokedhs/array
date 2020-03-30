@@ -91,10 +91,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
             when {
                 singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
                 isNegationSign(ch) || isDigit(ch) -> {
-                    content.pushBack(); collectNumber()
+                    content.pushBack();
+                    collectNumber()
                 }
                 isWhitespace(ch) -> Whitespace
-                isCharacterPrefixChar(ch) -> collectChar()
+                isCharQuote(ch) -> collectChar()
                 isLetter(ch) -> collectSymbol(ch)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
@@ -115,6 +116,8 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
+
+    private fun isCharQuote(ch: Int) = ch == '@'.toInt()
 
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
     private fun isCharacterPrefixChar(ch: Int) = ch == '@'.toInt()
@@ -315,7 +318,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
             val result = instr.evalWithContext(context)
             val v = result.unwrapDeferredValue()
             if (v !is LambdaValue) {
-                throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}")
+                throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}", pos)
             }
             return v.fn
         }
@@ -369,6 +372,7 @@ class LiteralComplex(val value: Complex, pos: Position) : Instruction(pos) {
 
 class LiteralCharacter(val value: Int, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLChar(value)
+    override fun toString() = "LiteralCharacter[value=$value]"
 }
 
 class LiteralSymbol(name: Symbol, pos: Position) : Instruction(pos) {
