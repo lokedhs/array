@@ -118,11 +118,8 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
-
     private fun isCharQuote(ch: Int) = ch == '@'.toInt()
-
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
-    private fun isCharacterPrefixChar(ch: Int) = ch == '@'.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
@@ -135,9 +132,9 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     }
 
     private fun collectChar(): ParsedCharacter {
-        val ch = content.nextCodepoint()
+        val (ch, pos) = content.nextCodepointWithPos()
         if (ch == null) {
-            throw ParseException("Incomplete character in input")
+            throw ParseException("Incomplete character in input", pos)
         }
         return ParsedCharacter(ch)
     }
@@ -190,11 +187,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun collectString(): Token {
         val buf = StringBuilder()
         while (true) {
-            val ch = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string")
+            val ch = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string", content.pos())
             if (ch == '"'.toInt()) {
                 break
             } else if (ch == '\\'.toInt()) {
-                val next = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string")
+                val next = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string", content.pos())
                 buf.addCodepoint(next)
             } else {
                 buf.addCodepoint(ch)
@@ -500,7 +497,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
 
     fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator, pos: Position): Instruction {
         if (!leftArgs.isEmpty()) {
-            throw ParseException("Function definition with non-null left argument")
+            throw ParseException("Function definition with non-null left argument", pos)
         }
 
         val name = tokeniser.nextTokenWithType<Symbol>()
@@ -516,6 +513,18 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         return LiteralSymbol(name, pos)
     }
 
+    fun addLeftArg(instr: Instruction) {
+        val (token, pos) = tokeniser.nextTokenWithPosition()
+        val instrWithIndex = if (token == OpenBracket) {
+            val indexInstr = parseValueToplevel(engine, tokeniser, CloseBracket)
+            ArrayIndex(instr, indexInstr, pos)
+        } else {
+            tokeniser.pushBackToken(token)
+            instr
+        }
+        leftArgs.add(instrWithIndex)
+    }
+
     while (true) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         if (listOf(CloseParen, EndOfFile, StatementSeparator, CloseFnDef, CloseBracket, ListSeparator).contains(token)) {
@@ -528,11 +537,11 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
                 if (fn != null) {
                     return processFn(fn, pos)
                 } else {
-                    leftArgs.add(VariableRef(token, pos))
+                    addLeftArg(VariableRef(token, pos))
                 }
             }
             is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser, pos), pos)
-            is OpenParen -> leftArgs.add(parseValueToplevel(engine, tokeniser, CloseParen))
+            is OpenParen -> addLeftArg(parseValueToplevel(engine, tokeniser, CloseParen))
             is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
             is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
             is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
@@ -544,6 +553,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
             is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
             is LambdaToken -> leftArgs.add(processLambda(engine, tokeniser, pos))
             is ApplyToken -> return processFn(parseApplyDefinition(engine, tokeniser), pos)
+            //is OpenBracket -> return processArrayIndex(engine, tokeniser, pos)
             else -> throw UnexpectedToken(token)
         }
     }

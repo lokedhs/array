@@ -49,6 +49,11 @@ class PushBackCharacterProvider(val source: CharacterProvider) : CharacterProvid
     private var line = 0
     private var col = 0
 
+    fun nextCodepointWithPos(): Pair<Int?, Position> {
+        val pos = pos()
+        return Pair(nextCodepoint(), pos)
+    }
+
     override fun nextCodepoint(): Int? {
         val ch = if (pushBackList.isNotEmpty()) {
             pushBackList.removeAt(pushBackList.size - 1)

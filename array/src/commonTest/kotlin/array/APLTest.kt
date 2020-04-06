@@ -35,9 +35,10 @@ open class APLTest {
     }
 
     fun assertSimpleNumber(expected: Long, value: APLValue, expr: String? = null) {
-        assertTrue(value.isScalar())
         val v = value.unwrapDeferredValue()
-        val exprMessage = if (expr == null) null else "Expression: ${expr}"
+        val prefix = "Expected value: ${expected}, actual: ${value}"
+        val exprMessage = if (expr == null) prefix else "${prefix}, expr: ${expr}"
+        assertTrue(v.isScalar(), exprMessage)
         assertTrue(v is APLNumber, exprMessage)
         assertEquals(expected, value.ensureNumber().asLong(), exprMessage)
     }

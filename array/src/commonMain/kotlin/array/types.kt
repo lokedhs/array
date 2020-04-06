@@ -35,30 +35,30 @@ interface APLValue {
 
     val aplValueType: APLValueType
 
-    fun ensureNumber(): APLNumber {
+    fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a numeric value (type=${this::class.qualifiedName})")
+            throw IncompatibleTypeException("Value $this is not a numeric value (type=${this::class.qualifiedName})", pos)
         } else {
-            return v.ensureNumber()
+            return v.ensureNumber(pos)
         }
     }
 
-    fun ensureSymbol(): APLSymbol {
+    fun ensureSymbol(pos: Position? = null): APLSymbol {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a symbol (type=${this::class.qualifiedName})")
+            throw IncompatibleTypeException("Value $this is not a symbol (type=${this::class.qualifiedName})", pos)
         } else {
-            return v.ensureSymbol()
+            return v.ensureSymbol(pos)
         }
     }
 
-    fun ensureList(): APLList {
+    fun ensureList(pos: Position? = null): APLList {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a list (type=${this::class.qualifiedName})")
+            throw IncompatibleTypeException("Value $this is not a list (type=${this::class.qualifiedName})", pos)
         } else {
-            return v.ensureList()
+            return v.ensureList(pos)
         }
     }
 }
@@ -94,7 +94,7 @@ abstract class APLArray : APLValue {
     override fun arrayify() = if (rank() == 0) APLArrayImpl(dimensionsOfSize(1)) { valueAt(0) } else this
 }
 
-class APLList(val elements: ArrayList<APLValue>) : APLValue {
+class APLList(val elements: List<APLValue>) : APLValue {
     override val aplValueType: APLValueType = APLValueType.LIST
 
     override fun dimensions() = emptyDimensions()
@@ -123,7 +123,7 @@ class APLList(val elements: ArrayList<APLValue>) : APLValue {
         TODO("not implemented")
     }
 
-    override fun ensureList() = this
+    override fun ensureList(pos: Position?) = this
 
     fun listSize() = elements.size
     fun listElement(index: Int) = elements[index]
@@ -285,7 +285,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
             APLValue.FormatStyle.READABLE -> "'" + value.symbolName
         }
 
-    override fun ensureSymbol() = this
+    override fun ensureSymbol(pos: Position?) = this
 }
 
 class LambdaValue(val fn: APLFunction) : APLSingleValue() {

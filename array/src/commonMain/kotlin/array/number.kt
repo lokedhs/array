@@ -4,7 +4,7 @@ import array.complex.Complex
 
 abstract class APLNumber : APLSingleValue() {
     override fun toString() = "APLNumber(${formatted(APLValue.FormatStyle.PRETTY)})"
-    override fun ensureNumber() = this
+    override fun ensureNumber(pos: Position?) = this
 
     abstract fun asDouble(): Double
     abstract fun asLong(): Long

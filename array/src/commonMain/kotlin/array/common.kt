@@ -28,9 +28,9 @@ class APLIncompatibleDomainsException(message: String) : APLEvalException(messag
 class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")
 class Unimplemented2ArgException : APLEvalException("Function cannot be called with two arguments")
 
-open class ParseException(message: String) : APLGenericException(message)
-class UnexpectedToken(token: Token) : ParseException("Unexpected token: $token")
-class IncompatibleTypeParseException(message: String) : ParseException(message)
+open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
+class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: $token", pos)
+class IncompatibleTypeParseException(message: String, pos: Position? = null) : ParseException(message, pos)
 
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     if (!cond) {
