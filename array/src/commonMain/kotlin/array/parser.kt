@@ -19,6 +19,7 @@ object APLNullSym : Token()
 object QuotePrefix : Token()
 object LambdaToken : Token()
 object ApplyToken : Token()
+object ListSeparator : Token()
 
 class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${symbolName}]"
@@ -52,7 +53,8 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         "∇" to FnDefSym,
         "⍬" to APLNullSym,
         "λ" to LambdaToken,
-        "⍞" to ApplyToken
+        "⍞" to ApplyToken,
+        ";" to ListSeparator
     )
 
     init {
@@ -275,6 +277,16 @@ class InstructionList(val instructions: List<Instruction>) : Instruction(instruc
     }
 }
 
+class ParsedAPLList(val instructions: List<Instruction>) : Instruction(instructions[0].pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        val resultList = ArrayList<APLValue>()
+        instructions.forEach { instr ->
+            resultList.add(instr.evalWithContext(context))
+        }
+        return APLList(resultList)
+    }
+}
+
 class FunctionCall1Arg(
     val fn: APLFunction,
     val rightArgs: Instruction,
@@ -418,15 +430,32 @@ class UserFunction(private val arg: Symbol, private val instr: Instruction) : AP
 
 fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
-
     while (true) {
-        val (instr, lastToken) = parseValue(engine, tokeniser)
+        val (instr, lastToken) = parseList(engine, tokeniser)
         statementList.add(instr)
         if (lastToken == endToken) {
             assertx(!statementList.isEmpty())
             return if (statementList.size == 1) instr else InstructionList(statementList)
         } else if (lastToken != StatementSeparator) {
             throw UnexpectedToken(lastToken)
+        }
+    }
+}
+
+fun parseList(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
+    val statementList = ArrayList<Instruction>()
+    while (true) {
+        val (instr, lastToken) = parseValue(engine, tokeniser)
+        if (lastToken == ListSeparator) {
+            statementList.add(instr)
+        } else {
+            val list = if (statementList.isEmpty()) {
+                instr
+            } else {
+                statementList.add(instr)
+                ParsedAPLList(statementList)
+            }
+            return Pair(list, lastToken)
         }
     }
 }
@@ -489,7 +518,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
 
     while (true) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
-        if (token == CloseParen || token == EndOfFile || token == StatementSeparator || token == CloseFnDef || token == CloseBracket) {
+        if (listOf(CloseParen, EndOfFile, StatementSeparator, CloseFnDef, CloseBracket, ListSeparator).contains(token)) {
             return Pair(makeResultList(), token)
         }
 

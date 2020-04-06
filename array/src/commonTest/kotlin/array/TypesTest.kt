@@ -57,6 +57,11 @@ class TypesTest : APLTest() {
         testResultType("typeof λ { ⍺+⍵+1 }", APLValueType.LAMBDA_FN)
     }
 
+    @Test
+    fun testList() {
+        testResultType("typeof (1;2;3)", APLValueType.LIST)
+    }
+
     private fun testResultType(expression: String, expectedResultSym: APLValueType) {
         val engine = Engine()
         val instr = engine.parseString(expression)

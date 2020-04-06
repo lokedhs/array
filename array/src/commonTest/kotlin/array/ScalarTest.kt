@@ -254,18 +254,8 @@ class ScalarTest : APLTest() {
     }
 
     private fun runMaxTest(expected: Any, op: String, a: String, b: String) {
-        fun compare(result: APLValue) {
-            when (expected) {
-                is Int -> assertSimpleNumber(expected.toLong(), result)
-                is Long -> assertSimpleNumber(expected, result)
-                is Double -> assertSimpleDouble(expected, result)
-                is Complex -> assertSimpleComplex(expected, result)
-                else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.qualifiedName}")
-            }
-        }
-
-        compare(parseAPLExpression("${a}${op}${b}"))
-        compare(parseAPLExpression("${b}${op}${a}"))
+        assertAPLValue(expected, parseAPLExpression("${a}${op}${b}"))
+        assertAPLValue(expected, parseAPLExpression("${b}${op}${a}"))
     }
 
     private fun runScalarTest1Arg(functionName: String, doubleFn: (Double) -> Double) {

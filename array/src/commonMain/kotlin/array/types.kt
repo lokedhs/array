@@ -11,7 +11,8 @@ enum class APLValueType(val typeName: String) {
     CHAR("char"),
     ARRAY("array"),
     SYMBOL("symbol"),
-    LAMBDA_FN("function")
+    LAMBDA_FN("function"),
+    LIST("list")
 }
 
 interface APLValue {
@@ -51,6 +52,15 @@ interface APLValue {
             return v.ensureSymbol()
         }
     }
+
+    fun ensureList(): APLList {
+        val v = unwrapDeferredValue()
+        if (v == this) {
+            throw IncompatibleTypeException("Value $this is not a list (type=${this::class.qualifiedName})")
+        } else {
+            return v.ensureList()
+        }
+    }
 }
 
 abstract class APLSingleValue : APLValue {
@@ -82,6 +92,41 @@ abstract class APLArray : APLValue {
         }
 
     override fun arrayify() = if (rank() == 0) APLArrayImpl(dimensionsOfSize(1)) { valueAt(0) } else this
+}
+
+class APLList(val elements: ArrayList<APLValue>) : APLValue {
+    override val aplValueType: APLValueType = APLValueType.LIST
+
+    override fun dimensions() = emptyDimensions()
+
+    override fun valueAt(p: Int): APLValue {
+        TODO("not implemented")
+    }
+
+    override fun formatted(style: APLValue.FormatStyle): String {
+        val buf = StringBuilder()
+        var first = true
+        for (v in elements) {
+            if (first) {
+                first = false
+            } else {
+                buf.append("\n; value\n")
+            }
+            buf.append(v.formatted())
+        }
+        return buf.toString()
+    }
+
+    override fun collapse() = this
+
+    override fun arrayify(): APLValue {
+        TODO("not implemented")
+    }
+
+    override fun ensureList() = this
+
+    fun listSize() = elements.size
+    fun listElement(index: Int) = elements[index]
 }
 
 private fun arrayToAPLFormat(value: APLArray): String {

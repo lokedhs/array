@@ -82,4 +82,15 @@ open class APLTest {
         assertDimension(dimensionsOfSize(0), value)
         assertEquals(0, value.dimensions()[0])
     }
+
+    fun assertAPLValue(expected: Any, result: APLValue) {
+        when (expected) {
+            is Int -> assertSimpleNumber(expected.toLong(), result)
+            is Long -> assertSimpleNumber(expected, result)
+            is Double -> assertSimpleDouble(expected, result)
+            is Complex -> assertSimpleComplex(expected, result)
+            is String -> assertString(expected, result)
+            else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.qualifiedName}")
+        }
+    }
 }
