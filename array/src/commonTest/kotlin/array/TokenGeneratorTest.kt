@@ -35,6 +35,17 @@ class TokenGeneratorTest {
     }
 
     @Test
+    fun testNewline() {
+        val gen = makeGenerator("foo\nbar test")
+        val expextedTokens = arrayOf("foo", "bar", "test")
+        expextedTokens.forEach { name ->
+            val token = gen.nextToken()
+            assertTokenIsSymbol(gen, token, name)
+        }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
+    @Test
     fun singleCharFunction() {
         val gen = makeGenerator("+-,,")
         val expectedTokens = arrayOf("+", "-", ",", ",")

@@ -64,12 +64,4 @@ class StringsTest : APLTest() {
         val result = instr.evalWithContext(RuntimeContext(engine))
         return OutputResult(engine, output.buf.toString(), result)
     }
-
-    private class StringBuilderOutput : CharacterOutput {
-        val buf = StringBuilder()
-
-        override fun writeString(s: String) {
-            buf.append(s)
-        }
-    }
 }

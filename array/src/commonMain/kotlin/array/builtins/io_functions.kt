@@ -16,10 +16,10 @@ class PrintAPLFunction : APLFunctionDescriptor {
             val readSym = context.engine.internSymbol("read")
 
             val styleName = a.ensureSymbol().value
-            val style = when {
-                styleName == plainSym -> APLValue.FormatStyle.PLAIN
-                styleName == prettySym -> APLValue.FormatStyle.PRETTY
-                styleName == readSym -> APLValue.FormatStyle.READABLE
+            val style = when (styleName) {
+                plainSym -> APLValue.FormatStyle.PLAIN
+                prettySym -> APLValue.FormatStyle.PRETTY
+                readSym -> APLValue.FormatStyle.READABLE
                 else -> throw APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}")
             }
             printValue(context, b, style)

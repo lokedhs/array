@@ -69,11 +69,11 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     }
 
     inline fun <reified T : Token> nextTokenWithType(): T {
-        val token = nextToken()
+        val (token, pos) = nextTokenWithPosition()
         if (token is T) {
             return token
         } else {
-            throw UnexpectedToken(token)
+            throw UnexpectedToken(token, pos)
         }
     }
 
@@ -118,6 +118,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
+
     private fun isCharQuote(ch: Int) = ch == '@'.toInt()
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
 
@@ -405,24 +406,34 @@ class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Posit
     }
 }
 
-class UserFunction(private val arg: Symbol, private val instr: Instruction) : APLFunctionDescriptor {
-    class UserFunctionImpl(
-        private val arg: Symbol,
-        private val instr: Instruction,
+class UserFunction(
+    private val leftFnArgs: List<Symbol>,
+    private val rightFnArgs: List<Symbol>,
+    private val instr: Instruction
+) : APLFunctionDescriptor {
+    inner class UserFunctionImpl(
         pos: Position
     ) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            val inner = context.link()
-            inner.setVar(arg, a)
+            if (leftFnArgs.isNotEmpty()) {
+                throw APLIllegalArgumentException("Left argument is empty", pos)
+            }
+            val inner = context.link().apply {
+                assignArgs(rightFnArgs, a)
+            }
             return instr.evalWithContext(inner)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            TODO("not implemented")
+            val inner = context.link().apply {
+                assignArgs(leftFnArgs, a)
+                assignArgs(rightFnArgs, b)
+            }
+            return instr.evalWithContext(inner)
         }
     }
 
-    override fun make(pos: Position) = UserFunctionImpl(arg, instr, pos)
+    override fun make(pos: Position) = UserFunctionImpl(pos)
 }
 
 fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
@@ -495,19 +506,62 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         return Pair(AssignmentInstruction(dest.name, rightValue, pos), lastToken)
     }
 
+    fun parseFnArgs(): List<Symbol> {
+        val initial = tokeniser.nextToken()
+        if (initial != OpenParen) {
+            tokeniser.pushBackToken(initial)
+            return emptyList()
+        }
+
+        val result = ArrayList<Symbol>()
+
+        val (token, pos) = tokeniser.nextTokenWithPosition()
+        when (token) {
+            is CloseParen -> return result
+            is Symbol -> result.add(token)
+            else -> throw ParseException("Token is not a symbol: ${token}", pos)
+        }
+        while (true) {
+            val (newToken, newPos) = tokeniser.nextTokenWithPosition()
+            when {
+                newToken == CloseParen -> return result
+                newToken != ListSeparator -> throw ParseException("Expected separator or end of list, got ${newToken}", newPos)
+                else -> {
+                    val symbolToken = tokeniser.nextTokenWithType<Symbol>()
+                    result.add(symbolToken)
+                }
+            }
+        }
+    }
+
     fun processFunctionDefinition(engine: Engine, tokeniser: TokenGenerator, pos: Position): Instruction {
         if (!leftArgs.isEmpty()) {
             throw ParseException("Function definition with non-null left argument", pos)
         }
 
+        val leftFnArgs = parseFnArgs()
         val name = tokeniser.nextTokenWithType<Symbol>()
-        val arg = tokeniser.nextTokenWithType<Symbol>()
+        val rightFnArgs = parseFnArgs()
+
+        // Ensure that no arguments are duplicated
+        val argNames = HashSet<Symbol>()
+        fun checkArgs(list: List<Symbol>) {
+            list.forEach { element ->
+                if (argNames.contains(element)) {
+                    throw ParseException("Symbol ${element.symbolName} in multiple positions", pos)
+                }
+                argNames.add(element)
+            }
+        }
+        checkArgs(leftFnArgs)
+        checkArgs(rightFnArgs)
+
         // Read the opening brace
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
         val instr = parseValueToplevel(engine, tokeniser, CloseFnDef)
 
-        val obj = UserFunction(arg, instr)
+        val obj = UserFunction(leftFnArgs, rightFnArgs, instr)
 
         engine.registerFunction(name, obj)
         return LiteralSymbol(name, pos)

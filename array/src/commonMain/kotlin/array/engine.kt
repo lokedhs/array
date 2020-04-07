@@ -182,6 +182,25 @@ class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
     }
 
     fun link() = RuntimeContext(engine, this)
+
+    fun assignArgs(args: List<Symbol>, a: APLValue, pos: Position? = null) {
+        fun checkLength(expectedLength: Int, actualLength: Int) {
+            if (expectedLength != actualLength) {
+                throw APLIllegalArgumentException("Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}", pos)
+            }
+        }
+
+        val v = a.unwrapDeferredValue()
+        if (v is APLList) {
+            checkLength(args.size, v.listSize())
+            for (i in args.indices) {
+                setVar(args[i], v.listElement(i))
+            }
+        } else {
+            checkLength(args.size, 1)
+            setVar(args[0], a)
+        }
+    }
 }
 
 interface FunctionDefinitionListener {

@@ -28,7 +28,7 @@ class ComplexExpressionsTest : APLTest() {
 
     @Test
     fun nestedArrayWithScalarValueFromFn() {
-        val result = parseAPLExpression("∇ foo x {1+x} ◊ (foo 1) (foo 6)")
+        val result = parseAPLExpression("∇ foo (x) {1+x} ◊ (foo 1) (foo 6)")
         assertDimension(dimensionsOfSize(2), result)
         assertSimpleNumber(2, result.valueAt(0))
         assertSimpleNumber(7, result.valueAt(1))
