@@ -37,8 +37,8 @@ class TokenGeneratorTest {
     @Test
     fun testNewline() {
         val gen = makeGenerator("foo\nbar test")
-        val expextedTokens = arrayOf("foo", "bar", "test")
-        expextedTokens.forEach { name ->
+        val expectedTokens = arrayOf("foo", "bar", "test")
+        expectedTokens.forEach { name ->
             val token = gen.nextToken()
             assertTokenIsSymbol(gen, token, name)
         }
