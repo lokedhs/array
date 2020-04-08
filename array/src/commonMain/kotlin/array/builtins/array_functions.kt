@@ -20,6 +20,9 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
     override fun dimensions() = dimensionsOfSize(size)
 
     override fun valueAt(p: Int): APLValue {
+        if (p < 0 || p >= size) {
+            throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}")
+        }
         return APLLong((p + start).toLong())
     }
 }
@@ -356,12 +359,36 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
     }
 
     companion object {
-        fun make(value: APLValue, axis: Int, numShifts: Long): APLValue {
-            val dimensions = value.dimensions()
+        fun make(source: APLValue, axis: Int, numShifts: Long): APLValue {
+            val dimensions = source.dimensions()
             return if (dimensions.isEmpty() || numShifts % (dimensions[axis]) == 0L) {
-                value
+                source
             } else {
-                RotatedAPLValue(value, axis, numShifts)
+                RotatedAPLValue(source, axis, numShifts)
+            }
+        }
+    }
+}
+
+class InverseAPLValue private constructor(val source: APLValue, val axis: Int) : APLArray() {
+    private val axisActionFactors = AxisActionFactors(source.dimensions(), axis)
+
+    override fun dimensions() = source.dimensions()
+
+    override fun valueAt(p: Int): APLValue {
+        return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
+            val coord = axisActionFactors.dimensions[axis] - axisCoord - 1
+            source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
+        }
+    }
+
+    companion object {
+        fun make(source: APLValue, axis: Int): APLValue {
+            val dimensions = source.dimensions()
+            return if (dimensions.isEmpty() || dimensions[axis] <= 1) {
+                source
+            } else {
+                InverseAPLValue(source, axis)
             }
         }
     }
@@ -370,7 +397,7 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
 abstract class RotateFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val axisInt = if (axis == null) defaultAxis(a) else axis.ensureNumber().asInt()
-        return RotatedAPLValue.make(a, axisInt, 1)
+        return InverseAPLValue.make(a, axisInt)
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
