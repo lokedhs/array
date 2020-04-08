@@ -3,6 +3,7 @@ package array.gui
 import array.APLGenericException
 import array.CharacterOutput
 import array.Engine
+import array.RuntimeContext
 import array.msofficereader.LoadExcelFileFunction
 import javafx.event.EventHandler
 import javafx.scene.Scene
@@ -19,11 +20,15 @@ class Client(val application: ClientApplication, val stage: Stage) {
     private val resultList: ResultList3
 
     private val inputFont: Font
-    private val engine = Engine()
+    private val engine: Engine
+    private val context: RuntimeContext
     private val functionListWindow: FunctionListWindow
     private val keyboardHelpWindow: KeyboardHelpWindow
 
     init {
+        engine = Engine()
+        context = engine.makeRuntimeContext()
+
         engine.registerFunction(engine.internSymbol("loadExcelFile"), LoadExcelFileFunction())
         engine.standardOutput = SendToMainCharacterOutput()
 
@@ -71,7 +76,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     fun sendInput(text: String) {
         try {
             val instr = engine.parseString(text)
-            val v = instr.evalWithContext(engine.makeRuntimeContext()).collapse()
+            val v = instr.evalWithContext(context).collapse()
             resultList.addResult(v)
         } catch (e: APLGenericException) {
             resultList.addResult(e)
