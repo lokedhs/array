@@ -76,7 +76,7 @@ class ROStyledArea(
         var pos = document.length() - 1
         while (pos >= 0) {
             val style = document.getStyleOfChar(pos)
-            if(style.promptTag) {
+            if (style.promptTag) {
                 break
             }
             pos--
@@ -84,9 +84,9 @@ class ROStyledArea(
         assertx(pos >= 0)
 
         val inputStartPos = pos + 1
-        while(pos >= 0) {
+        while (pos >= 0) {
             val style = document.getStyleOfChar(pos)
-            if(style.type != TextStyle.Type.PROMPT) {
+            if (style.type != TextStyle.Type.PROMPT) {
                 break
             }
             pos--
@@ -112,10 +112,9 @@ class ROStyledArea(
 
     fun appendTextEnd(text: String, style: TextStyle) {
         withUpdateEnabled {
-            val doc = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
-                .addParagraph(text, style)
-                .build()
-            insert(document.length(), doc)
+            val builder = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
+            text.split("\n").forEach { part -> builder.addParagraph(part, style) }
+            insert(document.length(), builder.build())
         }
     }
 
