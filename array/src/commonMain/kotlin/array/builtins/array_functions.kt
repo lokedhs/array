@@ -350,7 +350,7 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
 
     override fun valueAt(p: Int): APLValue {
         return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
-            val coord = plusMod(axisCoord + numShifts, dimensions()[axis].toLong()).toInt()
+            val coord = (axisCoord + numShifts).plusMod(dimensions()[axis].toLong()).toInt()
             source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
         }
     }

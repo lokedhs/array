@@ -254,6 +254,33 @@ class DivAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = DivAPLFunctionImpl(pos)
 }
 
+class ModAPLFunction : APLFunctionDescriptor {
+    class ModAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun numberCombine1Arg(a: APLNumber): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> abs(x).makeAPLNumber() },
+                { x -> abs(x).makeAPLNumber() },
+                { x -> hypot(x.real, x.imaginary).makeAPLNumber() }
+            )
+        }
+
+        override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+            return numericRelationOperation(
+                pos,
+                a,
+                b,
+                { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
+                { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
+                { x, y -> TODO("Not implemented") }
+            )
+        }
+    }
+
+    override fun make(pos: Position) = ModAPLFunctionImpl(pos)
+}
+
 class PowerAPLFunction : APLFunctionDescriptor {
     class PowerAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
@@ -281,7 +308,6 @@ class PowerAPLFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = PowerAPLFunctionImpl(pos)
-
 }
 
 fun complexFloor(z: Complex): Complex {

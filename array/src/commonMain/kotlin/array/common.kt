@@ -38,8 +38,8 @@ inline fun unless(cond: Boolean, fn: () -> Unit) {
     }
 }
 
-fun plusMod(value: Long, divisor: Long): Long {
-    val v = value % divisor
+fun Long.plusMod(divisor: Long): Long {
+    val v = this % divisor
     return if (v < 0) divisor + v else v
 }
 

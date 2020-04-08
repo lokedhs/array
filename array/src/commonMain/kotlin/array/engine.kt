@@ -99,6 +99,7 @@ class Engine {
         registerFunction(internSymbol("⍉"), TransposeFunction())
         registerFunction(internSymbol("⌊"), MinAPLFunction())
         registerFunction(internSymbol("⌈"), MaxAPLFunction())
+        registerFunction(internSymbol("|"), ModAPLFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
