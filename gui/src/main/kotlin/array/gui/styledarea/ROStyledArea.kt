@@ -14,7 +14,6 @@ import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 import java.util.function.BiConsumer
 import java.util.function.Function
-import java.util.logging.Level
 import java.util.logging.Logger
 
 class ROStyledArea(
@@ -37,6 +36,7 @@ class ROStyledArea(
     private var updatesEnabled = false
     private var defaultKeymap: InputMap<*>
     private val commandListeners = ArrayList<(String) -> Unit>()
+    private val historyListeners = ArrayList<HistoryListener>()
 
     init {
         defaultKeymap = Nodes.getInputMap(this)
@@ -59,20 +59,63 @@ class ROStyledArea(
         commandListeners.add(fn)
     }
 
+    private var prefixActive = false
+
     private fun updateKeymap() {
         val entries = ArrayList<InputMap<out Event>>()
-        for (e in renderContext.extendedInput().keymap) {
+
+        // Keymap
+        renderContext.extendedInput().keymap.forEach { e ->
             val modifiers =
                 if (e.key.shift) arrayOf(KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN) else arrayOf(KeyCombination.ALT_DOWN)
-            val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers)) { replaceSelection(e.value) }
+            val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers), { replaceSelection(e.value) })
             entries.add(v)
         }
-        entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER)) { sendCurrentContent() })
+        entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), { sendCurrentContent() }))
+
+        // History navigation
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.DOWN), { atEditboxEnd() }, { nextHistory() }))
+
+        // Prefix input
+        entries.add(makePrefixInputKeymap())
+
         entries.add(defaultKeymap)
         Nodes.pushInputMap(this, InputMap.sequence(*entries.toTypedArray()))
     }
 
-    fun sendCurrentContent() {
+    private fun makePrefixInputKeymap(): InputMap<out Event> {
+        fun verifyPrefixActive() = prefixActive
+        val entries = ArrayList<InputMap<out Event>>()
+        entries.add(InputMap.consumeWhen(EventPattern.keyTyped("."), { !prefixActive }) { prefixActive = true })
+        renderContext.extendedInput().keymap.forEach { e ->
+            val modifiers = if (e.key.shift) arrayOf(KeyCombination.SHIFT_DOWN) else emptyArray()
+            entries.add(InputMap.consumeWhen(EventPattern.keyTyped(e.key.character, *modifiers),
+                ::verifyPrefixActive,
+                { replaceSelection(e.value) }))
+        }
+        return InputMap.sequence(*entries.toTypedArray())
+    }
+
+    private fun atEditboxStart(): Boolean {
+        println("Should check if we're at the top of the editbox")
+        return true
+    }
+
+    private fun atEditboxEnd(): Boolean {
+        println("Should check if we're at the bottom of the editbox")
+        return true
+    }
+
+    private fun prevHistory() {
+        historyListeners.forEach { it.prevHistory() }
+    }
+
+    private fun nextHistory() {
+        historyListeners.forEach { it.nextHistory() }
+    }
+
+    private fun findInputStartEnd(): InputPositions {
         var pos = document.length() - 1
         while (pos >= 0) {
             val style = document.getStyleOfChar(pos)
@@ -93,9 +136,14 @@ class ROStyledArea(
         }
 
         val promptStartPos = pos + 1
-        val text = document.subSequence(inputStartPos, document.length()).text
+        return InputPositions(promptStartPos, inputStartPos, document.length())
+    }
+
+    private fun sendCurrentContent() {
+        val inputPosition = findInputStartEnd()
+        val text = document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
         withUpdateEnabled {
-            deleteText(promptStartPos, document.length())
+            deleteText(inputPosition.promptStartPos, document.length())
         }
         commandListeners.forEach { callback -> callback(text) }
     }
@@ -116,19 +164,19 @@ class ROStyledArea(
             text.split("\n").forEach { part -> builder.addParagraph(part, style) }
             insert(document.length(), builder.build())
         }
+        showParagraphAtTop(document.paragraphs.size - 1)
     }
 
     override fun replace(start: Int, end: Int, replacement: StyledDocument<ParStyle, String, TextStyle>) {
-        LOGGER.log(Level.INFO, "replacing: pos:(${start} - ${end}): ${replacement.text}: ${replacement}")
         when {
             updatesEnabled -> super.replace(start, end, replacement)
-            isAtInput(start, end) -> super.replace(start, end, makeInputStyle(replacement))
+            isAtInput(start, end) -> super.replace(start, end, makeInputStyle(replacement.text))
         }
     }
 
-    private fun makeInputStyle(doc: StyledDocument<ParStyle, String, TextStyle>): StyledDocument<ParStyle, String, TextStyle> {
+    private fun makeInputStyle(s: String): StyledDocument<ParStyle, String, TextStyle> {
         return ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
-            .addParagraph(doc.text, TextStyle(type = TextStyle.Type.INPUT))
+            .addParagraph(s, TextStyle(type = TextStyle.Type.INPUT))
             .build()
     }
 
@@ -143,6 +191,20 @@ class ROStyledArea(
             firstNonInputSpan == null
         }
     }
+
+    fun addHistoryListener(historyListener: HistoryListener) {
+        historyListeners.add(historyListener)
+    }
+
+    fun replaceInputText(s: String) {
+        val inputPos = findInputStartEnd()
+        withUpdateEnabled {
+            deleteText(inputPos.inputStart, inputPos.inputEnd)
+            replace(inputPos.inputStart, inputPos.inputStart, makeInputStyle(s))
+        }
+    }
+
+    data class InputPositions(val promptStartPos: Int, val inputStart: Int, val inputEnd: Int)
 
     companion object {
         val LOGGER = Logger.getLogger(ROStyledArea::class.qualifiedName)

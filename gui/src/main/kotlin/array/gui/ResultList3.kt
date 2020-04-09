@@ -2,6 +2,7 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
+import array.gui.styledarea.HistoryListener
 import array.gui.styledarea.ParStyle
 import array.gui.styledarea.ROStyledArea
 import array.gui.styledarea.TextStyle
@@ -19,9 +20,12 @@ class ResultList3(val client: Client) {
     private val styledArea: ROStyledArea
     private val scrollArea: VirtualizedScrollPane<ROStyledArea>
 
+    val history = ArrayList<String>()
+    var historyPos = 0
+
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
-            println("accept: t=${t}, u=${u}")
+            //println("accept: t=${t}, u=${u}")
         }
         val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
             val applyStyle = { a: TextExt, b: TextStyle ->
@@ -45,6 +49,9 @@ class ResultList3(val client: Client) {
 
         styledArea.addCommandListener(::processCommand)
 
+        val historyListener = ResultHistoryListener()
+        styledArea.addHistoryListener(historyListener)
+
         //styledArea.isEditable = false
         styledArea.isWrapText = false
 
@@ -52,7 +59,10 @@ class ResultList3(val client: Client) {
     }
 
     private fun processCommand(text: String) {
-        if(text.trim().isNotBlank()) {
+        if (text.trim().isNotBlank()) {
+            println("adding command: $text, size = ${history.size}")
+            history.add(text)
+            historyPos = history.size
             addInput(text)
             client.sendInput(text)
         }
@@ -86,6 +96,22 @@ class ResultList3(val client: Client) {
                 text + "\n",
                 TextStyle(TextStyle.Type.LOG_INPUT)))
             styledArea.append(doc)
+        }
+    }
+
+    inner class ResultHistoryListener : HistoryListener {
+        override fun prevHistory() {
+            if (historyPos > 0) {
+                historyPos--
+                styledArea.replaceInputText(history[historyPos])
+            }
+        }
+
+        override fun nextHistory() {
+            if (historyPos < history.size - 1) {
+                historyPos++
+                styledArea.replaceInputText(history[historyPos])
+            }
         }
     }
 }
