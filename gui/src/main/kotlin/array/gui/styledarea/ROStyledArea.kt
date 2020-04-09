@@ -14,7 +14,6 @@ import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 import java.util.function.BiConsumer
 import java.util.function.Function
-import java.util.logging.Logger
 
 class ROStyledArea(
     val renderContext: ClientRenderContext,
@@ -77,22 +76,40 @@ class ROStyledArea(
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.DOWN), { atEditboxEnd() }, { nextHistory() }))
 
+        // Cursor movement
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.HOME), { atEditbox() }, { moveToBeginningOfInput() }))
+
         // Prefix input
-        entries.add(makePrefixInputKeymap())
+        val prefixChar = "." // this should be read from config
+        entries.add(makePrefixInputKeymap(prefixChar))
 
         entries.add(defaultKeymap)
         Nodes.pushInputMap(this, InputMap.sequence(*entries.toTypedArray()))
     }
 
-    private fun makePrefixInputKeymap(): InputMap<out Event> {
-        fun verifyPrefixActive() = prefixActive
+    private fun makePrefixInputKeymap(prefixChar: String): InputMap<out Event> {
+        fun verifyPrefixActive(): Boolean {
+            return prefixActive
+        }
+
+        fun disableAndAdd(s: String) {
+            prefixActive = false
+            replaceSelection(s)
+        }
+
         val entries = ArrayList<InputMap<out Event>>()
-        entries.add(InputMap.consumeWhen(EventPattern.keyTyped("."), { !prefixActive }) { prefixActive = true })
+        entries.add(InputMap.consume(EventPattern.keyTyped(prefixChar), {
+            if (!prefixActive) {
+                prefixActive = true
+            } else {
+                disableAndAdd(prefixChar)
+            }
+        }))
         renderContext.extendedInput().keymap.forEach { e ->
             val modifiers = if (e.key.shift) arrayOf(KeyCombination.SHIFT_DOWN) else emptyArray()
             entries.add(InputMap.consumeWhen(EventPattern.keyTyped(e.key.character, *modifiers),
                 ::verifyPrefixActive,
-                { replaceSelection(e.value) }))
+                { disableAndAdd(e.value) }))
         }
         return InputMap.sequence(*entries.toTypedArray())
     }
@@ -105,6 +122,26 @@ class ROStyledArea(
     private fun atEditboxEnd(): Boolean {
         println("Should check if we're at the bottom of the editbox")
         return true
+    }
+
+    private fun atEditbox(): Boolean {
+        return true
+    }
+
+    private fun isAtInput(start: Int, end: Int): Boolean {
+        return if (start == end && document.getStyleAtPosition(start).promptTag) {
+            true
+        } else {
+            val spans = document.getStyleSpans(start, end)
+            val firstNonInputSpan = spans.find { span ->
+                span.style.type != TextStyle.Type.INPUT
+            }
+            firstNonInputSpan == null
+        }
+    }
+
+    fun addHistoryListener(historyListener: HistoryListener) {
+        historyListeners.add(historyListener)
     }
 
     private fun prevHistory() {
@@ -148,6 +185,11 @@ class ROStyledArea(
         commandListeners.forEach { callback -> callback(text) }
     }
 
+    fun currentInput(): String {
+        val inputPosition = findInputStartEnd()
+        return document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
+    }
+
     fun withUpdateEnabled(fn: () -> Unit) {
         val oldEnabled = updatesEnabled
         updatesEnabled = true
@@ -180,22 +222,6 @@ class ROStyledArea(
             .build()
     }
 
-    private fun isAtInput(start: Int, end: Int): Boolean {
-        return if (start == end && document.getStyleAtPosition(start).promptTag) {
-            true
-        } else {
-            val spans = document.getStyleSpans(start, end)
-            val firstNonInputSpan = spans.find { span ->
-                span.style.type != TextStyle.Type.INPUT
-            }
-            firstNonInputSpan == null
-        }
-    }
-
-    fun addHistoryListener(historyListener: HistoryListener) {
-        historyListeners.add(historyListener)
-    }
-
     fun replaceInputText(s: String) {
         val inputPos = findInputStartEnd()
         withUpdateEnabled {
@@ -204,9 +230,10 @@ class ROStyledArea(
         }
     }
 
-    data class InputPositions(val promptStartPos: Int, val inputStart: Int, val inputEnd: Int)
-
-    companion object {
-        val LOGGER = Logger.getLogger(ROStyledArea::class.qualifiedName)
+    private fun moveToBeginningOfInput() {
+        val inputPosition = findInputStartEnd()
+        caretSelectionBind.moveTo(inputPosition.inputStart)
     }
+
+    data class InputPositions(val promptStartPos: Int, val inputStart: Int, val inputEnd: Int)
 }

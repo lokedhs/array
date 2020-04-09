@@ -22,6 +22,7 @@ class ResultList3(val client: Client) {
 
     val history = ArrayList<String>()
     var historyPos = 0
+    var pendingInput: String? = null
 
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
@@ -63,6 +64,7 @@ class ResultList3(val client: Client) {
             println("adding command: $text, size = ${history.size}")
             history.add(text)
             historyPos = history.size
+            pendingInput = null
             addInput(text)
             client.sendInput(text)
         }
@@ -102,15 +104,25 @@ class ResultList3(val client: Client) {
     inner class ResultHistoryListener : HistoryListener {
         override fun prevHistory() {
             if (historyPos > 0) {
+                if (historyPos == history.size) {
+                    pendingInput = styledArea.currentInput()
+                }
                 historyPos--
                 styledArea.replaceInputText(history[historyPos])
             }
         }
 
         override fun nextHistory() {
-            if (historyPos < history.size - 1) {
-                historyPos++
-                styledArea.replaceInputText(history[historyPos])
+            when {
+                historyPos < history.size - 1 -> {
+                    historyPos++
+                    styledArea.replaceInputText(history[historyPos])
+                }
+                historyPos == history.size - 1 -> {
+                    historyPos++
+                    styledArea.replaceInputText(pendingInput ?: "")
+                    pendingInput = null
+                }
             }
         }
     }

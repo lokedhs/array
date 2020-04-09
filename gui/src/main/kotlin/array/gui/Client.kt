@@ -24,6 +24,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     private val context: RuntimeContext
     private val functionListWindow: FunctionListWindow
     private val keyboardHelpWindow: KeyboardHelpWindow
+    private val aboutWindow: AboutWindow
 
     init {
         engine = Engine()
@@ -41,11 +42,12 @@ class Client(val application: ClientApplication, val stage: Stage) {
 
         val border = BorderPane().apply {
             top = makeMenuBar()
-            center = resultList.getNode()//contentScrollPane
+            center = resultList.getNode()
         }
 
         functionListWindow = FunctionListWindow.create(renderContext, engine)
         keyboardHelpWindow = KeyboardHelpWindow(renderContext)
+        aboutWindow = AboutWindow()
 
         stage.scene = Scene(border, 600.0, 800.0)
         stage.show()
@@ -54,6 +56,10 @@ class Client(val application: ClientApplication, val stage: Stage) {
     private fun makeMenuBar(): MenuBar {
         return MenuBar().apply {
             val fileMenu = Menu("File").apply {
+                val settingsItem = MenuItem("Settings").apply {
+                    onAction = EventHandler { openSettings() }
+                }
+                items.add(settingsItem)
                 val closeItem = MenuItem("Close").apply {
                     onAction = EventHandler { stage.close() }
                 }
@@ -70,7 +76,18 @@ class Client(val application: ClientApplication, val stage: Stage) {
                 })
             }
             menus.add(windowMenu)
+
+            val helpMenu = Menu("Help").apply {
+                items.add(MenuItem("About").apply {
+                    onAction = EventHandler { aboutWindow.show() }
+                })
+            }
+            menus.add(helpMenu)
         }
+    }
+
+    fun openSettings() {
+        println("Settings panel not implemented")
     }
 
     fun sendInput(text: String) {

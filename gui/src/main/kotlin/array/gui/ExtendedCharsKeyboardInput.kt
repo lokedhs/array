@@ -58,7 +58,7 @@ class ExtendedCharsKeyboardInput {
             makeKeyDescriptor("n") to "⊤", makeKeyDescriptor("N", Flag.SHIFT) to "λ",
             makeKeyDescriptor("m") to "|",
             makeKeyDescriptor(",") to "⍝", makeKeyDescriptor("<", Flag.SHIFT) to "⍪",
-            makeKeyDescriptor(".") to "⍝", makeKeyDescriptor(">", Flag.SHIFT) to "⍀",
+            makeKeyDescriptor(">", Flag.SHIFT) to "⍀",
             makeKeyDescriptor("/") to "⌿", makeKeyDescriptor("?", Flag.SHIFT) to "⍠")
     }
 
