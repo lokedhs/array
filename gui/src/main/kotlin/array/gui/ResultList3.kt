@@ -11,7 +11,10 @@ import javafx.scene.text.TextFlow
 import org.fxmisc.flowless.VirtualizedScrollPane
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.richtext.TextExt
-import org.fxmisc.richtext.model.*
+import org.fxmisc.richtext.model.GenericEditableStyledDocument
+import org.fxmisc.richtext.model.SegmentOps
+import org.fxmisc.richtext.model.StyledSegment
+import org.fxmisc.richtext.model.TextOps
 import java.util.function.BiConsumer
 import java.util.function.Function
 
@@ -93,11 +96,7 @@ class ResultList3(val client: Client) {
 
     private fun addInput(text: String) {
         styledArea.withUpdateEnabled {
-            val doc = GenericEditableStyledDocument(Paragraph(ParStyle(indent = true),
-                styledTextOps,
-                text + "\n",
-                TextStyle(TextStyle.Type.LOG_INPUT)))
-            styledArea.append(doc)
+            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT))
         }
     }
 
