@@ -257,6 +257,20 @@ class TokenGeneratorTest {
         assertSame(EndOfFile, gen.nextToken())
     }
 
+    @Test
+    fun nonBmpStandaloneChars() {
+        val gen = makeGenerator("@\uD835\uDC9F @b")
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedCharacter)
+            assertEquals(0x1d49f, token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedCharacter)
+            assertEquals('b'.toInt(), token.value)
+        }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
     private fun makeGenerator(content: String): TokenGenerator {
         val engine = Engine()
         return TokenGenerator(engine, StringCharacterProvider(content))

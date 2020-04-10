@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class ArrayLookupTest : APLTest() {
     @Test
@@ -13,5 +14,12 @@ class ArrayLookupTest : APLTest() {
     fun testSimpleArrayLookupFromFunctionInvocation() {
         val result = parseAPLExpression("2 ⌷ 10 + 10 11 12 13")
         assertSimpleNumber(22, result)
+    }
+
+    @Test
+    fun testIllegalIndex() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("3 ⌷ 1 2 3").collapse()
+        }
     }
 }

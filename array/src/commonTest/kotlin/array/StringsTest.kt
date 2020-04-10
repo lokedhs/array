@@ -3,6 +3,7 @@ package array
 import array.complex.Complex
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class StringsTest : APLTest() {
     @Test
@@ -51,6 +52,21 @@ class StringsTest : APLTest() {
     fun readCharsAsString() {
         val result = parseAPLExpression("@a @b")
         assertString("ab", result)
+    }
+
+    @Test
+    fun nonBmpCharsInString() {
+        val result = parseAPLExpression("\"\uD835\uDC9F\"")
+        assertDimension(dimensionsOfSize(1), result)
+        assertString("\uD835\uDC9F", result)
+    }
+
+    @Test
+    fun nonBmpExplicitCharacter() {
+        val result = parseAPLExpression("@\uD835\uDC9F")
+        val v = result.unwrapDeferredValue()
+        assertTrue(v is APLChar)
+        assertEquals("\uD835\uDC9F", v.asString())
     }
 
     class OutputResult(val engine: Engine, val output: String, val result: APLValue)

@@ -1,49 +1,64 @@
 package array
 
 actual fun isLetter(codepoint: Int): Boolean {
-    assert(codepoint < 0x10000)
-    val lowCodepoint = codepoint.toChar()
-    return lowCodepoint.isLetter()
+    return if (codepoint < 0x10000) {
+        codepoint.toChar().isLetter()
+    } else {
+        false
+    }
 }
 
 actual fun isDigit(codepoint: Int): Boolean {
-    assert(codepoint < 0x10000)
-    val lowCodepoint = codepoint.toChar()
-    return lowCodepoint.isDigit()
+    return if (codepoint < 0x10000) {
+        codepoint.toChar().isDigit()
+    } else {
+        false
+    }
 }
 
 actual fun isWhitespace(codepoint: Int): Boolean {
-    assert(codepoint < 0x10000)
-    val lowCodepoint = codepoint.toChar()
-    return lowCodepoint.isWhitespace()
+    return if (codepoint < 0x10000) {
+        codepoint.toChar().isWhitespace()
+    } else {
+        false
+    }
 }
 
 actual fun charToString(codepoint: Int): String {
-    assert(codepoint < 0x10000)
-    return codepoint.toChar().toString()
+    return String(Char.toChars(codepoint))
 }
 
 actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {
-    assert(codepoint < 0x10000)
-    return this.append(codepoint.toChar())
+    val v = Char.toChars(codepoint)
+    v.forEach {
+        this.append(it)
+    }
+    return this
 }
 
 actual fun String.asCodepointList(): List<Int> {
     val result = ArrayList<Int>()
-    for (element in this) {
-        val codepoint = element.toInt()
-        assert(codepoint < 0x10000)
-        result.add(codepoint)
+    var i = 0
+    while (i < this.length) {
+        val ch = this[i++]
+        val v = when {
+            ch.isHighSurrogate() -> {
+                val low = this[i++]
+                if (low.isLowSurrogate()) {
+                    Char.toCodePoint(ch, low)
+                } else {
+                    throw IllegalStateException("Expected low surrogate, got: ${low.toInt()}")
+                }
+            }
+            ch.isLowSurrogate() -> throw IllegalStateException("Standalone low surrogate found: ${ch.toInt()}")
+            else -> ch.toInt()
+        }
+        result.add(v)
     }
     return result
 }
 
 actual fun String.asGraphemeList(): List<String> {
-    val result = ArrayList<String>()
-    for (element in this) {
-        val codepoint = element.toInt()
-        assert(codepoint < 0x10000)
-        result.add(codepoint.toChar().toString())
-    }
-    return result
+    // TODO: Need ICU for this
+    return this.asCodepointList().map(::charToString)
 }
