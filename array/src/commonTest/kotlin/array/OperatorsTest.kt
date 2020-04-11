@@ -21,4 +21,11 @@ class OperatorsTest : APLTest() {
         assertDimension(dimensionsOfSize(10), result)
         assertArrayContent(arrayOf(0, 4, 8, 12, 16, 20, 24, 28, 32, 36), result)
     }
+
+    @Test
+    fun multiOperators() {
+        val result = parseAPLExpression("+⌺⍨1 2 3")
+        assertDimension(dimensionsOfSize(3, 3), result)
+        assertArrayContent(arrayOf(2, 3, 4, 3, 4, 5, 4, 5, 6), result)
+    }
 }

@@ -162,3 +162,8 @@ fun checkIndexRange(array: IntArray, index: Int) {
         throw IndexOutOfBoundsException("Index does not fit in array. index=${index}, size=${array.size}")
     }
 }
+
+sealed class Either<out A, out B> {
+    class Left<A>(val value: A) : Either<A, Nothing>()
+    class Right<B>(val value: B) : Either<Nothing, B>()
+}

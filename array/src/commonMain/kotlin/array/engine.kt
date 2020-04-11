@@ -55,6 +55,9 @@ class DeclaredFunction(
 
 interface APLOperator {
     fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
+    fun arity() = Arity.ONE
+
+    enum class Arity { ONE, TWO }
 }
 
 class Engine {

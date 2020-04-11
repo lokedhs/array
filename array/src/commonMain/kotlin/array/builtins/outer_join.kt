@@ -56,3 +56,20 @@ class OuterJoinOp : APLOperator {
         }
     }
 }
+
+class NullFunction : APLFunctionDescriptor {
+    class NullFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            throw APLEvalException("null function cannot be called")
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            throw APLEvalException("null function cannot be called")
+        }
+    }
+
+    override fun make(pos: Position): APLFunction {
+        return NullFunctionImpl(pos)
+    }
+
+}
