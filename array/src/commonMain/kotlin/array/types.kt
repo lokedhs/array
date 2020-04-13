@@ -33,6 +33,14 @@ interface APLValue {
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
 
+    fun singleValueOrError(): APLValue {
+        return when {
+            rank() == 0 -> this
+            size() == 1 -> valueAt(0)
+            else -> throw IllegalStateException("Value does not have a single element")
+        }
+    }
+
     val aplValueType: APLValueType
 
     fun ensureNumber(pos: Position? = null): APLNumber {
@@ -69,7 +77,7 @@ abstract class APLSingleValue : APLValue {
     override fun size() = 1
     override fun rank() = 0
     override fun collapse() = this
-    override fun arrayify() = APLArrayImpl(dimensionsOfSize(1)) { this }
+    override fun arrayify() = APLArrayImpl.make(dimensionsOfSize(1)) { this }
 }
 
 abstract class APLArray : APLValue {
@@ -80,7 +88,7 @@ abstract class APLArray : APLValue {
         return when {
             v is APLSingleValue -> v
             v.rank() == 0 -> EnclosedAPLValue(v.valueAt(0).collapse())
-            else -> APLArrayImpl(v.dimensions()) { v.valueAt(it).collapse() }
+            else -> APLArrayImpl.make(v.dimensions()) { v.valueAt(it).collapse() }
         }
     }
 
@@ -91,7 +99,7 @@ abstract class APLArray : APLValue {
             APLValue.FormatStyle.READABLE -> arrayToAPLFormat(this)
         }
 
-    override fun arrayify() = if (rank() == 0) APLArrayImpl(dimensionsOfSize(1)) { valueAt(0) } else this
+    override fun arrayify() = if (rank() == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 }
 
 class APLList(val elements: List<APLValue>) : APLValue {
@@ -225,14 +233,21 @@ class ConstantArray(
 
 class APLArrayImpl(
     private val dimensions: Dimensions,
-    init: (Int) -> APLValue
+    content: Array<APLValue>
 ) : APLArray() {
 
-    private val values = Array(dimensions.contentSize(), init)
+    private val values = content
 
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
+
+    companion object {
+        inline fun make(dimensions: Dimensions, fn: (index: Int) -> APLValue): APLArrayImpl {
+            val content = Array(dimensions.contentSize()) { index -> fn(index) }
+            return APLArrayImpl(dimensions, content)
+        }
+    }
 }
 
 class EnclosedAPLValue(val value: APLValue) : APLArray() {
@@ -260,7 +275,7 @@ class APLChar(val value: Int) : APLSingleValue() {
 
 fun makeAPLString(s: String): APLValue {
     val codepointList = s.asCodepointList()
-    return APLArrayImpl(dimensionsOfSize(codepointList.size)) { i -> APLChar(codepointList[i]) }
+    return APLArrayImpl.make(dimensionsOfSize(codepointList.size)) { i -> APLChar(codepointList[i]) }
 }
 
 private val NULL_DIMENSIONS = dimensionsOfSize(0)

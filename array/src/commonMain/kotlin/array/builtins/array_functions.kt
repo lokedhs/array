@@ -46,7 +46,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
     class RhoAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val argDimensions = a.dimensions()
-            return APLArrayImpl(dimensionsOfSize(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
+            return APLArrayImpl.make(dimensionsOfSize(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -137,7 +137,7 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
     class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             return if (a.isScalar()) {
-                APLArrayImpl(dimensionsOfSize(1)) { a }
+                APLArrayImpl.make(dimensionsOfSize(1)) { a }
             } else {
                 ResizedArray(dimensionsOfSize(a.size()), a)
             }
@@ -154,7 +154,7 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
 
         private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
             return when {
-                a.rank() == 0 && b.rank() == 0 -> APLArrayImpl(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
+                a.rank() == 0 && b.rank() == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
                 a.rank() <= 1 && b.rank() <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
                 else -> joinByAxis(a, b, max(a.rank(), b.rank()) - 1)
             }
@@ -333,7 +333,7 @@ class RandomAPLFunction : APLFunctionDescriptor {
             return if (v is APLSingleValue) {
                 makeRandom(v.ensureNumber())
             } else {
-                APLArrayImpl(v.dimensions()) { index -> makeRandom(v.valueAt(index).ensureNumber()) }
+                APLArrayImpl.make(v.dimensions()) { index -> makeRandom(v.valueAt(index).ensureNumber()) }
             }
         }
 

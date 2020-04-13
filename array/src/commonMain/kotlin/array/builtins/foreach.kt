@@ -22,8 +22,7 @@ class ForEachResult2Arg(
     val arg2: APLValue,
     val axis: APLValue?,
     val pos: Position
-) :
-    APLArray() {
+) : APLArray() {
     init {
         unless(arg1.dimensions().compare(arg2.dimensions())) {
             throw IncompatibleTypeException("Arguments to foreach does not have the same dimensions", pos)
@@ -36,7 +35,7 @@ class ForEachResult2Arg(
     override fun size() = arg1.size()
 }
 
-class ForEachOp : APLOperator {
+class ForEachOp : APLOperatorOneArg {
     override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
         return ForEachFunctionDescriptor(fn)
     }

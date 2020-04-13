@@ -18,7 +18,7 @@ open class IncompatibleTypeException(message: String, pos: Position? = null) : A
 class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIndexOutOfBoundsException(message: String, pos: Position? = null) : APLEvalException("Index out of bounds: ${message}", pos)
 class IllegalNumberFormat(message: String) : APLEvalException(message)
-class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: $ch")
+class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: '${charToString(ch)}' (${ch})")
 class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
 class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
     APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)

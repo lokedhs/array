@@ -2,7 +2,7 @@ package array.builtins
 
 import array.*
 
-class CommuteOp : APLOperator {
+class CommuteOp : APLOperatorOneArg {
     override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
         if (operatorAxis != null) {
             throw APLIllegalArgumentException("Axis argument passed to commute")

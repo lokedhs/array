@@ -16,13 +16,13 @@ fun readCsv(source: CharacterProvider): APLValue {
     }
 
     if (rows.isEmpty()) {
-        return APLArrayImpl(dimensionsOfSize(0, 0)) {
+        return APLArrayImpl.make(dimensionsOfSize(0, 0)) {
             throw Exception("Attempt to read a value when initialising empty array")
         }
     }
 
     val width = rows.maxValueBy { it.size }
-    return APLArrayImpl(dimensionsOfSize(rows.size, width)) { index ->
+    return APLArrayImpl.make(dimensionsOfSize(rows.size, width)) { index ->
         val rowIndex = index / width
         val colIndex = index % width
         val row = rows[rowIndex]

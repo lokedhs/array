@@ -1,9 +1,9 @@
 package array
 
-fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Token): Instruction {
+fun parseValueToplevel(tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val (instr, lastToken) = parseList(engine, tokeniser)
+        val (instr, lastToken) = parseList(tokeniser)
         statementList.add(instr)
         if (lastToken == endToken) {
             assertx(!statementList.isEmpty())
@@ -14,10 +14,10 @@ fun parseValueToplevel(engine: Engine, tokeniser: TokenGenerator, endToken: Toke
     }
 }
 
-fun parseList(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
+fun parseList(tokeniser: TokenGenerator): Pair<Instruction, Token> {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val (instr, lastToken) = parseValue(engine, tokeniser)
+        val (instr, lastToken) = parseValue(tokeniser)
         if (lastToken == ListSeparator) {
             statementList.add(instr)
         } else {
@@ -32,7 +32,8 @@ fun parseList(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Toke
     }
 }
 
-fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Token> {
+fun parseValue(tokeniser: TokenGenerator): Pair<Instruction, Token> {
+    val engine = tokeniser.engine
     val leftArgs = ArrayList<Instruction>()
 
     fun makeResultList(): Instruction {
@@ -47,9 +48,9 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
     }
 
     fun processFn(fn: APLFunctionDescriptor, pos: Position): Pair<Instruction, Token> {
-        val axis = parseAxis(engine, tokeniser)
-        val parsedFn = parseOperator(fn, engine, tokeniser)
-        val (rightValue, lastToken) = parseValue(engine, tokeniser)
+        val axis = parseAxis(tokeniser)
+        val parsedFn = parseOperator(fn, tokeniser)
+        val (rightValue, lastToken) = parseValue(tokeniser)
         return if (leftArgs.isEmpty()) {
             Pair(FunctionCall1Arg(parsedFn.make(pos), rightValue, axis, pos), lastToken)
         } else {
@@ -57,7 +58,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         }
     }
 
-    fun processAssignment(engine: Engine, tokeniser: TokenGenerator, pos: Position): Pair<Instruction, Token> {
+    fun processAssignment(tokeniser: TokenGenerator, pos: Position): Pair<Instruction, Token> {
         // Ensure that the left argument to leftarrow is a single symbol
         unless(leftArgs.size == 1) {
             throw IncompatibleTypeParseException("Can only assign to a single variable")
@@ -66,7 +67,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         if (dest !is VariableRef) {
             throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable")
         }
-        val (rightValue, lastToken) = parseValue(engine, tokeniser)
+        val (rightValue, lastToken) = parseValue(tokeniser)
         return Pair(AssignmentInstruction(dest.name, rightValue, pos), lastToken)
     }
 
@@ -123,7 +124,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
         // Read the opening brace
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
-        val instr = parseValueToplevel(engine, tokeniser, CloseFnDef)
+        val instr = parseValueToplevel(tokeniser, CloseFnDef)
 
         val obj = UserFunction(leftFnArgs, rightFnArgs, instr)
 
@@ -134,7 +135,7 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
     fun addLeftArg(instr: Instruction) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         val instrWithIndex = if (token == OpenBracket) {
-            val indexInstr = parseValueToplevel(engine, tokeniser, CloseBracket)
+            val indexInstr = parseValueToplevel(tokeniser, CloseBracket)
             ArrayIndex(instr, indexInstr, pos)
         } else {
             tokeniser.pushBackToken(token)
@@ -158,29 +159,29 @@ fun parseValue(engine: Engine, tokeniser: TokenGenerator): Pair<Instruction, Tok
                     addLeftArg(VariableRef(token, pos))
                 }
             }
-            is OpenParen -> addLeftArg(parseValueToplevel(engine, tokeniser, CloseParen))
-            is OpenFnDef -> return processFn(parseFnDefinition(engine, tokeniser, pos), pos)
+            is OpenParen -> addLeftArg(parseValueToplevel(tokeniser, CloseParen))
+            is OpenFnDef -> return processFn(parseFnDefinition(tokeniser, pos), pos)
             is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
             is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
             is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
             is ParsedCharacter -> leftArgs.add(LiteralCharacter(token.value, pos))
-            is LeftArrow -> return processAssignment(engine, tokeniser, pos)
+            is LeftArrow -> return processAssignment(tokeniser, pos)
             is FnDefSym -> leftArgs.add(processFunctionDefinition(engine, tokeniser, pos))
             is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))
             is StringToken -> leftArgs.add(LiteralStringValue(token.value, pos))
             is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
-            is LambdaToken -> leftArgs.add(processLambda(engine, tokeniser, pos))
-            is ApplyToken -> return processFn(parseApplyDefinition(engine, tokeniser), pos)
+            is LambdaToken -> leftArgs.add(processLambda(tokeniser, pos))
+            is ApplyToken -> return processFn(parseApplyDefinition(tokeniser), pos)
             else -> throw UnexpectedToken(token, pos)
         }
     }
 }
 
-fun parseApplyDefinition(engine: Engine, tokeniser: TokenGenerator): APLFunctionDescriptor {
+fun parseApplyDefinition(tokeniser: TokenGenerator): APLFunctionDescriptor {
     val (token, firstPos) = tokeniser.nextTokenWithPosition()
     val ref = when (token) {
         is Symbol -> VariableRef(token, firstPos)
-        is OpenParen -> parseValueToplevel(engine, tokeniser, CloseParen)
+        is OpenParen -> parseValueToplevel(tokeniser, CloseParen)
         else -> throw UnexpectedToken(token)
     }
     return DynamicFunctionDescriptor(ref)
@@ -192,11 +193,11 @@ class EvalLambdaFnx(val fn: APLFunction, pos: Position) : Instruction(pos) {
     }
 }
 
-fun processLambda(engine: Engine, tokeniser: TokenGenerator, pos: Position): EvalLambdaFnx {
+fun processLambda(tokeniser: TokenGenerator, pos: Position): EvalLambdaFnx {
     val token = tokeniser.nextToken()
     return when (token) {
         is OpenFnDef -> {
-            val fnDefinition = parseFnDefinition(engine, tokeniser, pos)
+            val fnDefinition = parseFnDefinition(tokeniser, pos)
             EvalLambdaFnx(fnDefinition.make(pos), pos)
         }
         else -> throw UnexpectedToken(token)
@@ -204,41 +205,61 @@ fun processLambda(engine: Engine, tokeniser: TokenGenerator, pos: Position): Eva
 }
 
 fun parseFnDefinition(
-    engine: Engine,
     tokeniser: TokenGenerator,
     pos: Position,
     leftArgName: Symbol? = null,
     rightArgName: Symbol? = null
 ): DeclaredFunction {
-    val instruction = parseValueToplevel(engine, tokeniser, CloseFnDef)
+    val engine = tokeniser.engine
+    val instruction = parseValueToplevel(tokeniser, CloseFnDef)
     return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"), pos)
 }
 
-fun parseOperator(fn: APLFunctionDescriptor, engine: Engine, tokeniser: TokenGenerator): APLFunctionDescriptor {
+fun parseTwoArgOperatorArgument(
+    tokeniser: TokenGenerator
+): APLFunctionDescriptor {
+    val (token, pos) = tokeniser.nextTokenWithPosition()
+    return when (token) {
+        is Symbol -> {
+            val fn = tokeniser.engine.getFunction(token)
+            if (fn == null) throw ParseException("Symbol is not a function", pos)
+            parseOperator(fn, tokeniser)
+        }
+        is OpenFnDef -> {
+            parseFnDefinition(tokeniser, pos)
+        }
+        else -> throw ParseException("Expected function, got: ${token}", pos)
+    }
+}
+
+fun parseOperator(fn: APLFunctionDescriptor, tokeniser: TokenGenerator): APLFunctionDescriptor {
     var currentFn = fn
     var token: Token
-    while (true) {
+    loop@ while (true) {
         token = tokeniser.nextToken()
         if (token is Symbol) {
-            val op = engine.getOperator(token) ?: break
-            val axis = parseAxis(engine, tokeniser)
-            currentFn = op.combineFunction(currentFn, axis)
+            val op = tokeniser.engine.getOperator(token) ?: break
+            val axis = parseAxis(tokeniser)
+            when (op) {
+                is APLOperatorOneArg -> currentFn = op.combineFunction(currentFn, axis)
+                is APLOperatorTwoArg -> currentFn = op.combineFunction(fn, parseTwoArgOperatorArgument(tokeniser), axis)
+                else -> throw IllegalStateException("Operators must be either one or two arg")
+            }
+
         } else {
             break
         }
     }
-    if (token != EndOfFile) {
-        tokeniser.pushBackToken(token)
-    }
+    tokeniser.pushBackToken(token)
     return currentFn
 }
 
-fun parseAxis(engine: Engine, tokeniser: TokenGenerator): Instruction? {
+fun parseAxis(tokeniser: TokenGenerator): Instruction? {
     val token = tokeniser.nextToken()
     if (token != OpenBracket) {
         tokeniser.pushBackToken(token)
         return null
     }
 
-    return parseValueToplevel(engine, tokeniser, CloseBracket)
+    return parseValueToplevel(tokeniser, CloseBracket)
 }

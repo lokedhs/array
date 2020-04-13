@@ -20,7 +20,7 @@ fun readExcelFile(name: String): APLValue {
     }
 
     val width = rows.maxValueBy { it.size }
-    val value = APLArrayImpl(dimensionsOfSize(rows.size, width)) { i ->
+    val value = APLArrayImpl.make(dimensionsOfSize(rows.size, width)) { i ->
         val rowIndex = i / width
         val colIndex = i % width
         val row = rows[rowIndex]

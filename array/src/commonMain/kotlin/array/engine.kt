@@ -53,11 +53,14 @@ class DeclaredFunction(
     override fun make(pos: Position) = DeclaredFunctionImpl(pos)
 }
 
-interface APLOperator {
-    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
-    fun arity() = Arity.ONE
+interface APLOperator
 
-    enum class Arity { ONE, TWO }
+interface APLOperatorOneArg : APLOperator {
+    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
+}
+
+interface APLOperatorTwoArg : APLOperator {
+    fun combineFunction(fn1: APLFunctionDescriptor, fn2: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
 }
 
 class Engine {
@@ -103,6 +106,7 @@ class Engine {
         registerFunction(internSymbol("⌊"), MinAPLFunction())
         registerFunction(internSymbol("⌈"), MaxAPLFunction())
         registerFunction(internSymbol("|"), ModAPLFunction())
+        registerFunction(internSymbol("∘"), NullFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())
@@ -123,6 +127,7 @@ class Engine {
         registerOperator(internSymbol("¨"), ForEachOp())
         registerOperator(internSymbol("/"), ReduceOp())
         registerOperator(internSymbol("⌺"), OuterJoinOp())
+        registerOperator(internSymbol("."), OuterInnerJoinOp())
         registerOperator(internSymbol("⍨"), CommuteOp())
 
         // function aliases
@@ -160,7 +165,7 @@ class Engine {
 
     fun getFunction(name: Symbol) = functions[resolveAlias(name)]
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
-    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = parseValueToplevel(this, tokeniser, EndOfFile)
+    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = parseValueToplevel(tokeniser, EndOfFile)
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringCharacterProvider(input)))
     fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
     fun lookupVar(name: Symbol): APLValue? = variables[name]

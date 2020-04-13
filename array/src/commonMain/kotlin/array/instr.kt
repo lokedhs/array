@@ -98,7 +98,7 @@ class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos)
         for (i in (size - 1) downTo 0) {
             result[i] = values[i].evalWithContext(context)
         }
-        return APLArrayImpl(dimensionsOfSize(size)) { result[it]!! }
+        return APLArrayImpl.make(dimensionsOfSize(size)) { result[it]!! }
     }
 
     override fun toString() = "Literal1DArray(${values})"
