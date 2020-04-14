@@ -24,7 +24,9 @@ inline class Dimensions(val dimensions: IntArray) {
     }
 
     fun remove(toRemove: Int): Dimensions {
-        checkIndexRange(dimensions, toRemove)
+        if (toRemove < 0 || toRemove >= dimensions.size) {
+            throw IndexOutOfBoundsException("Index does not fit in array. index=${toRemove}, size=${dimensions.size}")
+        }
         val v = IntArray(dimensions.size - 1) { index ->
             if (index < toRemove) dimensions[index] else dimensions[index + 1]
         }

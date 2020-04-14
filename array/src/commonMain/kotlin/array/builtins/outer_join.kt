@@ -57,21 +57,21 @@ class InnerJoinResult(
             if (index < leftSize) aDimensions[index] else bDimensions[index - leftSize + 1]
         })
 
-        val m = dimensions.multipliers()
-        highFactor = if (leftSize == 0) aDimensions.contentSize() else m[leftSize - 1]
-
         axisSize = aDimensions[aDimensions.size - 1]
         axisDimensions = dimensionsOfSize(axisSize)
         bStepSize = bDimensions.multipliers()[0]
+
+        val m = dimensions.multipliers()
+        highFactor = (if (leftSize == 0) dimensions.contentSize() else m[leftSize - 1])
     }
 
     override fun dimensions() = dimensions
 
     override fun valueAt(p: Int): APLValue {
-        val posInA = p / highFactor
+        val posInA = (p / highFactor) * axisSize
         val posInB = p % highFactor
 
-        var pa = posInA * aDimensions[aDimensions.size - 1]
+        var pa = posInA
         val leftArg = APLArrayImpl.make(axisDimensions) { a.valueAt(pa++) }
 
         var pb = posInB
@@ -133,14 +133,14 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     val aDimensions = a.dimensions()
                     val bDimensions = b.dimensions()
                     val a1 = when {
-                        a.size() == 1 && b.size() != 1 -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
                         a.size() == 1 && b.size() == 1 -> a.arrayify()
+                        a.size() == 1 -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
                         else -> a
                     }
                     val b1 = when {
-                        a.size() != 1 && b.size() == 1 -> ConstantArray(dimensionsOfSize(aDimensions[aDimensions.size - 1]),
-                            b.singleValueOrError())
                         a.size() == 1 && b.size() == 1 -> b.arrayify()
+                        b.size() == 1 -> ConstantArray(dimensionsOfSize(aDimensions[aDimensions.size - 1]),
+                            b.singleValueOrError())
                         else -> b
                     }
                     val a1Dimensions = a1.dimensions()

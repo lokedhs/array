@@ -60,4 +60,11 @@ class ArrayLookupBracketsTest : APLTest() {
             parseAPLExpression("(2 3 4)]")
         }
     }
+
+    @Test
+    fun lookupIllegalIndex() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("(1 2 3 4)[5]").collapse()
+        }
+    }
 }

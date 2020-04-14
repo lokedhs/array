@@ -37,7 +37,7 @@ interface APLValue {
         return when {
             rank() == 0 -> this
             size() == 1 -> valueAt(0)
-            else -> throw IllegalStateException("Value does not have a single element")
+            else -> throw IllegalStateException("Expected a single element in array, found ${size()} elements")
         }
     }
 
@@ -46,7 +46,7 @@ interface APLValue {
     fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a numeric value (type=${this::class.qualifiedName})", pos)
+            throw IncompatibleTypeException("Value $this is not a numeric value (type=${aplValueType.typeName})", pos)
         } else {
             return v.ensureNumber(pos)
         }
@@ -55,7 +55,7 @@ interface APLValue {
     fun ensureSymbol(pos: Position? = null): APLSymbol {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a symbol (type=${this::class.qualifiedName})", pos)
+            throw IncompatibleTypeException("Value $this is not a symbol (type=${aplValueType.typeName})", pos)
         } else {
             return v.ensureSymbol(pos)
         }
@@ -64,7 +64,7 @@ interface APLValue {
     fun ensureList(pos: Position? = null): APLList {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a list (type=${this::class.qualifiedName})", pos)
+            throw IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos)
         } else {
             return v.ensureList(pos)
         }
@@ -233,10 +233,8 @@ class ConstantArray(
 
 class APLArrayImpl(
     private val dimensions: Dimensions,
-    content: Array<APLValue>
+    private val values: Array<APLValue>
 ) : APLArray() {
-
-    private val values = content
 
     override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]

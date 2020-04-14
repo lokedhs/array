@@ -1,9 +1,7 @@
 package array
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class DiscloseTest : APLTest() {
     @Test
@@ -17,10 +15,6 @@ class DiscloseTest : APLTest() {
     @Test
     fun discloseNumberTest() {
         val result = parseAPLExpression("⊃6")
-        assertTrue(result.isScalar())
-        assertDimension(emptyDimensions(), result)
-        assertEquals(1, result.size())
-        val number = result.ensureNumber().asLong()
-        assertEquals(6L, number)
+        assertSimpleNumber(6, result)
     }
 }

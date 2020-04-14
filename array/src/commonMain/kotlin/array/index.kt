@@ -1,6 +1,6 @@
 package array
 
-private class IndexedArrayValue(val content: APLValue, val indexValue: Array<AxisSelection>) : APLArray() {
+private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Either<Int, IntArray>>) : APLArray() {
     private val dimensions: Dimensions
     private val destToSourceAxis: IntArray
     private val constantOffset: Int
@@ -12,11 +12,14 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Axi
         val a = ArrayList<Int>()
         val destAxis = ArrayList<Int>()
         indexValue.forEachIndexed { i, selection ->
-            if (selection.multiIndex != null) {
-                a.add(selection.multiIndex.size)
-                destAxis.add(contentMult[i])
-            } else {
-                offset += contentMult[i] * selection.singleIndex!!
+            when (selection) {
+                is Either.Left -> {
+                    offset += contentMult[i] * selection.value
+                }
+                is Either.Right -> {
+                    a.add(selection.value.size)
+                    destAxis.add(contentMult[i])
+                }
             }
         }
         dimensions = Dimensions(a.toIntArray())
@@ -32,8 +35,10 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Axi
         for (i in positionArray.indices) {
             val positionInAxis = positionArray[i]
             val selection = indexValue[i]
-            val m = selection.multiIndex
-            result += destToSourceAxis[i] * if (m != null) m[positionInAxis] else selection.singleIndex!!
+            result += destToSourceAxis[i] * when (selection) {
+                is Either.Left -> selection.value
+                is Either.Right -> selection.value[positionInAxis]
+            }
         }
         return content.valueAt(result)
     }
@@ -50,37 +55,30 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Axi
     }
 }
 
-private class AxisSelection {
-    val singleIndex: Int?
-    val multiIndex: IntArray?
-
-    constructor(s: Int) {
-        singleIndex = s
-        multiIndex = null
-    }
-
-    constructor(m: IntArray) {
-        singleIndex = null
-        multiIndex = m
-    }
-}
-
 class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val contentValue = content.evalWithContext(context)
         val indexValue = indexInstr.evalWithContext(context)
 
+        val aDimensions = contentValue.dimensions()
+
         val indexAsList = convertToList(indexValue)
         if (indexAsList.listSize() != contentValue.dimensions().size) {
-            throw InvalidDimensionsException("Rank of argument does not match index. Argument=${contentValue.dimensions().size}, index=${indexAsList.listSize()}",
+            throw InvalidDimensionsException("Rank of argument does not match index. Argument=${aDimensions.size}, index=${indexAsList.listSize()}",
                 pos)
         }
         val axis = Array(indexAsList.listSize()) { i ->
             val v = indexAsList.listElement(i).unwrapDeferredValue()
             val d = v.dimensions()
             when (d.size) {
-                0 -> AxisSelection(v.ensureNumber(pos).asInt())
-                1 -> AxisSelection(IntArray(d[0]) { i2 -> v.valueAt(i2).ensureNumber(pos).asInt() })
+                0 -> {
+                    Either.Left(v.ensureNumber(pos).asInt()
+                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i) })
+                }
+                1 -> Either.Right(IntArray(d[0]) { i2 ->
+                    v.valueAt(i2).ensureNumber(pos).asInt()
+                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i) }
+                })
                 else -> throw InvalidDimensionsException("Invalid dimension in array index argument ${i}", pos)
             }
         }

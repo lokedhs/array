@@ -127,7 +127,7 @@ class OuterJoinTest : APLTest() {
 
     @Test
     fun singleNumberWithMultiDimensionalArrayLeftArg() {
-        parseAPLExpression("10 10 10 +.× 3 4 5 ⍴ ⍳1000").let { result ->
+        parseAPLExpression("10 +.× 3 4 5 ⍴ ⍳1000").let { result ->
             assertDimension(dimensionsOfSize(4, 5), result)
             assertArrayContent(arrayOf(
                 600, 630, 660, 690, 720,
