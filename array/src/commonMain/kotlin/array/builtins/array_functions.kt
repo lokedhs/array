@@ -545,7 +545,7 @@ class CompareFunction : APLFunctionDescriptor {
 class CompareNotEqualFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return makeBoolean(a.compare(b))
+            return makeBoolean(!a.compare(b))
         }
     }
 
