@@ -238,13 +238,13 @@ class DivAPLFunction : APLFunctionDescriptor {
                 b,
                 { x, y ->
                     when {
-                        y == 0L -> APLLong(0)
-                        x % y == 0L -> APLLong(x / y)
-                        else -> APLDouble(x.toDouble() / y.toDouble())
+                        y == 0L -> 0.makeAPLNumber()
+                        x % y == 0L -> (x / y).makeAPLNumber()
+                        else -> (x.toDouble() / y.toDouble()).makeAPLNumber()
                     }
                 },
                 { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) },
-                { x, y -> if (y == Complex.ZERO) APLDouble(0.0) else APLComplex(x / y) }
+                { x, y -> if (y == Complex.ZERO) APLDouble(0.0) else (x / y).makeAPLNumber() }
             )
         }
 
@@ -453,7 +453,7 @@ class AndAPLFunction : APLFunctionDescriptor {
             val aValue = a.asDouble()
             val bValue = b.asDouble()
             if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-                return APLLong(if (aValue == 1.0 && bValue == 1.0) 1 else 0)
+                return (if (aValue == 1.0 && bValue == 1.0) 1 else 0).makeAPLNumber()
             } else {
                 TODO("LCM is not implemented")
             }
@@ -471,7 +471,7 @@ class OrAPLFunction : APLFunctionDescriptor {
             val aValue = a.asDouble()
             val bValue = b.asDouble()
             if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-                return APLLong(if (aValue == 1.0 || bValue == 1.0) 1 else 0)
+                return (if (aValue == 1.0 || bValue == 1.0) 1 else 0).makeAPLNumber()
             } else {
                 TODO("GCD is not implemented")
             }

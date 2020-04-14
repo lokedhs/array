@@ -1,6 +1,7 @@
 package array.msofficereader
 
 import array.*
+import array.builtins.makeBoolean
 import org.apache.poi.ss.usermodel.*
 import java.io.File
 
@@ -55,8 +56,8 @@ fun readRow(row: Row, evaluator: FormulaEvaluator): List<APLValue> {
 fun cellToAPLValue(cell: Cell, evaluator: FormulaEvaluator): APLValue {
     return when (cell.cellType) {
         CellType.FORMULA -> parseEvaluatedCell(cell, evaluator)
-        CellType.BOOLEAN -> if (cell.booleanCellValue) APLLong(1) else APLLong(0)
-        CellType.BLANK -> APLLong(0)
+        CellType.BOOLEAN -> makeBoolean(cell.booleanCellValue)
+        CellType.BLANK -> 0.makeAPLNumber()
         CellType.NUMERIC -> APLDouble(cell.numericCellValue)
         CellType.STRING -> makeAPLString(cell.stringCellValue)
         else -> throw IllegalStateException("Unknown cell type: ${cell.cellType}")
@@ -67,9 +68,9 @@ fun parseEvaluatedCell(cell: Cell, evaluator: FormulaEvaluator): APLValue {
     val v = evaluator.evaluate(cell)
     return when (cell.cellType) {
         CellType.FORMULA -> throw IllegalStateException("The result of an evaluation should not be a formula")
-        CellType.BOOLEAN -> if (v.booleanValue) APLLong(1) else APLLong(0)
-        CellType.BLANK -> APLLong(0)
-        CellType.NUMERIC -> APLDouble(v.numberValue)
+        CellType.BOOLEAN -> (if (v.booleanValue) 1 else 0).makeAPLNumber()
+        CellType.BLANK -> 0.makeAPLNumber()
+        CellType.NUMERIC -> v.numberValue.makeAPLNumber()
         CellType.STRING -> makeAPLString(v.stringValue)
         else -> throw IllegalStateException("Unknown cell type: ${v.cellType}")
     }

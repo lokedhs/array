@@ -123,9 +123,9 @@ private val PATTERN_FLOAT2 = "^-?[0-9]*\\.[0-9]+$".toRegex()
 
 private fun stringToAplValue(string: String): APLValue {
     return when {
-        PATTERN_INTEGER.matches(string) -> APLLong(string.toLong())
-        PATTERN_FLOAT1.matches(string) -> APLDouble(string.toDouble())
-        PATTERN_FLOAT2.matches(string) -> APLDouble(string.toDouble())
+        PATTERN_INTEGER.matches(string) -> string.toLong().makeAPLNumber()
+        PATTERN_FLOAT1.matches(string) -> string.toDouble().makeAPLNumber()
+        PATTERN_FLOAT2.matches(string) -> string.toDouble().makeAPLNumber()
         else -> makeAPLString(string)
     }
 }

@@ -23,7 +23,7 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
         if (p < 0 || p >= size) {
             throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}")
         }
-        return APLLong((p + start).toLong())
+        return (p + start).makeAPLNumber()
     }
 }
 
@@ -83,7 +83,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
     class RhoAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val argDimensions = a.dimensions()
-            return APLArrayImpl.make(dimensionsOfSize(argDimensions.size)) { APLLong(argDimensions[it].toLong()) }
+            return APLArrayImpl.make(dimensionsOfSize(argDimensions.size)) { argDimensions[it].makeAPLNumber() }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -376,7 +376,7 @@ class RandomAPLFunction : APLFunctionDescriptor {
 
         private fun makeRandom(limit: APLNumber): APLNumber {
             val limitLong = limit.asLong()
-            return APLLong((0 until limitLong).random())
+            return ((0 until limitLong).random()).makeAPLNumber()
         }
     }
 
@@ -535,7 +535,7 @@ class TransposeFunction : APLFunctionDescriptor {
 class CompareFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return (if (a.compare(b)) 1 else 0).makeAPLNumber()
+            return makeBoolean(a.compare(b))
         }
     }
 
@@ -545,7 +545,7 @@ class CompareFunction : APLFunctionDescriptor {
 class CompareNotEqualFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return (if (a.compare(b)) 0 else 1).makeAPLNumber()
+            return makeBoolean(a.compare(b))
         }
     }
 

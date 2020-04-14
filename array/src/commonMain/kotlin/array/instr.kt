@@ -110,12 +110,12 @@ class LiteralScalarValue(val value: Instruction) : Instruction(value.pos) {
 }
 
 class LiteralInteger(val value: Long, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = APLLong(value)
+    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
     override fun toString() = "LiteralInteger[value=$value]"
 }
 
 class LiteralDouble(val value: Double, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = APLDouble(value)
+    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
     override fun toString() = "LiteralDouble[value=$value]"
 }
 

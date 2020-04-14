@@ -126,7 +126,7 @@ class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
 }
 
 fun makeBoolean(value: Boolean): APLValue {
-    return APLLong(if (value) 1 else 0)
+    return (if (value) 1 else 0).makeAPLNumber()
 }
 
 fun numericRelationOperation(
