@@ -145,7 +145,7 @@ class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
 class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val res = instr.evalWithContext(context)
-        context.setVar(name, res)
+        context.setVar(name, res.collapse())
         return res
     }
 }
@@ -160,7 +160,7 @@ class UserFunction(
     ) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             if (leftFnArgs.isNotEmpty()) {
-                throw APLIllegalArgumentException("Left argument is empty", pos)
+                throw APLIllegalArgumentException("Left argument is not empty", pos)
             }
             val inner = context.link().apply {
                 assignArgs(rightFnArgs, a)
