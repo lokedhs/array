@@ -20,7 +20,7 @@ class EqualsAPLFunction : APLFunctionDescriptor {
             }
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = EqualsAPLFunctionImpl(pos)
@@ -43,7 +43,7 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
             }
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = NotEqualsAPLFunctionImpl(pos)
@@ -62,7 +62,7 @@ class LessThanAPLFunction : APLFunctionDescriptor {
                 { x, y -> makeBoolean(x < y) })
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = LessThanAPLFunctionImpl(pos)
@@ -81,7 +81,7 @@ class GreaterThanAPLFunction : APLFunctionDescriptor {
                 { x, y -> makeBoolean(x > y) })
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = GreaterThanAPLFunctionImpl(pos)
@@ -100,7 +100,7 @@ class LessThanEqualAPLFunction : APLFunctionDescriptor {
                 { x, y -> makeBoolean(x <= y) })
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = LessThanEqualAPLFunctionImpl(pos)
@@ -119,7 +119,7 @@ class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
                 { x, y -> makeBoolean(x >= y) })
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = GreaterThanEqualAPLFunctionImpl(pos)

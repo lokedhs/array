@@ -16,6 +16,9 @@ abstract class APLFunction(val pos: Position) {
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        if (axis != null) {
+            throw AxisNotSupported(pos)
+        }
         return eval1Arg(context, a)
     }
 
@@ -23,6 +26,9 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
 
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        if (axis != null) {
+            throw AxisNotSupported(pos)
+        }
         return eval2Arg(context, a, b)
     }
 
@@ -109,6 +115,7 @@ class Engine {
         registerFunction(internSymbol("∘"), NullFunction())
         registerFunction(internSymbol("≡"), CompareFunction())
         registerFunction(internSymbol("≢"), CompareNotEqualFunction())
+        registerFunction(internSymbol("∊"), MemberFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

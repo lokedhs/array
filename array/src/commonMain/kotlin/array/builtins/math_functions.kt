@@ -155,7 +155,7 @@ class AddAPLFunction : APLFunctionDescriptor {
             )
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = AddAPLFunctionImpl(pos)
@@ -184,7 +184,7 @@ class SubAPLFunction : APLFunctionDescriptor {
             )
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = SubAPLFunctionImpl(pos)
@@ -213,7 +213,7 @@ class MulAPLFunction : APLFunctionDescriptor {
             )
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = MulAPLFunctionImpl(pos)
@@ -225,9 +225,9 @@ class DivAPLFunction : APLFunctionDescriptor {
             return singleArgNumericRelationOperation(
                 pos,
                 a,
-                { x -> if (x == 0L) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
-                { x -> if (x == 0.0) 0.makeAPLNumber() else (1.0 / x).makeAPLNumber() },
-                { x -> if (x == Complex.ZERO) 0.makeAPLNumber() else x.reciprocal().makeAPLNumber() }
+                { x -> if (x == 0L) APLLONG_0 else (1.0 / x).makeAPLNumber() },
+                { x -> if (x == 0.0) APLLONG_0 else (1.0 / x).makeAPLNumber() },
+                { x -> if (x == Complex.ZERO) APLLONG_0 else x.reciprocal().makeAPLNumber() }
             )
         }
 
@@ -238,7 +238,7 @@ class DivAPLFunction : APLFunctionDescriptor {
                 b,
                 { x, y ->
                     when {
-                        y == 0L -> 0.makeAPLNumber()
+                        y == 0L -> APLLONG_0
                         x % y == 0L -> (x / y).makeAPLNumber()
                         else -> (x.toDouble() / y.toDouble()).makeAPLNumber()
                     }
@@ -248,7 +248,7 @@ class DivAPLFunction : APLFunctionDescriptor {
             )
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = DivAPLFunctionImpl(pos)
@@ -304,7 +304,7 @@ class PowerAPLFunction : APLFunctionDescriptor {
             )
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = PowerAPLFunctionImpl(pos)
@@ -459,7 +459,7 @@ class AndAPLFunction : APLFunctionDescriptor {
             }
         }
 
-        override fun identityValue() = APLLong(1)
+        override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = AndAPLFunctionImpl(pos)
@@ -477,7 +477,7 @@ class OrAPLFunction : APLFunctionDescriptor {
             }
         }
 
-        override fun identityValue() = APLLong(0)
+        override fun identityValue() = APLLONG_0
     }
 
     override fun make(pos: Position) = OrAPLFunctionImpl(pos)

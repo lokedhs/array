@@ -551,3 +551,40 @@ class CompareNotEqualFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = CompareFunctionImpl(pos)
 }
+
+class MemberResultValue(val context: RuntimeContext, val a: APLValue, val b: APLValue) : APLArray() {
+    private val dimensions = a.dimensions()
+
+    override fun dimensions() = dimensions
+
+    override fun valueAt(p: Int): APLValue {
+        return findInArray(a.valueAt(p).unwrapDeferredValue())
+    }
+
+    override fun unwrapDeferredValue(): APLValue {
+        return if (dimensions.isEmpty()) {
+            findInArray(a)
+        } else {
+            this
+        }
+    }
+
+    private fun findInArray(target: APLValue): APLValue {
+        b.iterateMembers { value ->
+            if (target.compare(value)) {
+                return APLLONG_1
+            }
+        }
+        return APLLONG_0
+    }
+}
+
+class MemberFunction : APLFunctionDescriptor {
+    class MemberFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return MemberResultValue(context, a, b)
+        }
+    }
+
+    override fun make(pos: Position) = MemberFunctionImpl(pos)
+}

@@ -103,6 +103,9 @@ class APLComplex(val value: Complex) : APLNumber() {
     private fun formatToAPL() = "${value.real}J${value.imaginary}"
 }
 
+val APLLONG_0 = APLLong(0)
+val APLLONG_1 = APLLong(1)
+
 fun Int.makeAPLNumber() = APLLong(this.toLong())
 fun Long.makeAPLNumber() = APLLong(this)
 fun Double.makeAPLNumber() = APLDouble(this)

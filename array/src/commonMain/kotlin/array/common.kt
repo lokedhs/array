@@ -25,6 +25,8 @@ class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigne
 class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
     APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
 
+class AxisNotSupported(pos: Position) : APLEvalException("Function does not support axis specifier", pos)
+
 class APLIllegalArgumentException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIncompatibleDomainsException(message: String) : APLEvalException(message)
 class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")

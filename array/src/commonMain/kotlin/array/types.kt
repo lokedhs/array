@@ -29,7 +29,7 @@ interface APLValue {
     fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
     fun collapse(): APLValue
     fun isScalar(): Boolean = rank() == 0
-    fun defaultValue(): APLValue = APLLong(0)
+    fun defaultValue(): APLValue = APLLONG_0
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
     fun compare(reference: APLValue): Boolean
@@ -68,6 +68,16 @@ interface APLValue {
             throw IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos)
         } else {
             return v.ensureList(pos)
+        }
+    }
+}
+
+inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
+    if (rank() == 0) {
+        fn(this)
+    } else {
+        for (i in 0 until size()) {
+            fn(valueAt(i))
         }
     }
 }
