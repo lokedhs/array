@@ -12,6 +12,35 @@ class CompareTest : APLTest() {
         testFunction(arrayOf(0, 0, 1, 0, 0, 1), "=")
     }
 
+    @Test
+    fun testIdenticalSimple() {
+        assertSimpleNumber(1, parseAPLExpression("10≡10"))
+        assertSimpleNumber(0, parseAPLExpression("10≡100"))
+        assertSimpleNumber(1, parseAPLExpression("10 11≡10 11"))
+        assertSimpleNumber(1, parseAPLExpression("11 12 13 14 15 16 17≡10+1 2 3 4 5 6 7"))
+        assertSimpleNumber(0, parseAPLExpression("1 2 3≡1 2"))
+        assertSimpleNumber(1, parseAPLExpression("(1 2) (3 4 (5 6)) ≡ (1 2) (3 4 (5 6))"))
+        assertSimpleNumber(0, parseAPLExpression("(1 2) (3 4 (5 6)) ≡ (1 2) (3 4 (@a 6))"))
+        assertSimpleNumber(1, parseAPLExpression("@a ≡ @a"))
+        assertSimpleNumber(1, parseAPLExpression("1.2 ≡ 1.2"))
+        assertSimpleNumber(0, parseAPLExpression("2J4 ≡ 2J3"))
+    }
+
+    @Test
+    fun testNotIdentical() {
+        assertSimpleNumber(0, parseAPLExpression("10≢10"))
+        assertSimpleNumber(1, parseAPLExpression("10≢100"))
+        assertSimpleNumber(0, parseAPLExpression("10 11≢4+6 7"))
+        assertSimpleNumber(0, parseAPLExpression("11 12 13 14 15 16 17≢10+1 2 3 4 5 6 7"))
+        assertSimpleNumber(1, parseAPLExpression("1 2 3≢1 2"))
+        assertSimpleNumber(0, parseAPLExpression("\"foo\"≢\"foo\""))
+        assertSimpleNumber(1, parseAPLExpression("(2 4 ⍴ 1 2 3 4 5 6 7 8) ≢ (4 2 ⍴ 1 2 3 4 5 6 7 8)"))
+        assertSimpleNumber(1, parseAPLExpression("2 ≢ 1⍴2"))
+        assertSimpleNumber(0, parseAPLExpression("'foo ≢ 'foo"))
+        assertSimpleNumber(1, parseAPLExpression("@a ≢ @b"))
+        assertSimpleNumber(0, parseAPLExpression("(1;2;3) ≢ (1;2;3)"))
+    }
+
     private fun testFunction(expected: Array<Long>, name: String) {
         assertSimpleNumber(expected[0], parseAPLExpression("1${name}2"))
         assertSimpleNumber(expected[1], parseAPLExpression("2${name}1"))

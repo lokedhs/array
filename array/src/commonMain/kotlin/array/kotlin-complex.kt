@@ -40,6 +40,8 @@ data class Complex(val real: Double, val imaginary: Double) {
         return fromPolarCoord(resultAbsolute, resultArg)
     }
 
+    override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
+
     companion object {
         fun fromPolarCoord(absolute: Double, arg: Double): Complex {
             return Complex(cos(arg) * absolute, sin(arg) * absolute)

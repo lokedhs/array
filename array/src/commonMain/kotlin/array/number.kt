@@ -34,6 +34,9 @@ class APLLong(val value: Long) : APLNumber() {
             APLValue.FormatStyle.READABLE -> value.toString()
             APLValue.FormatStyle.PRETTY -> value.toString()
         }
+
+    override fun compare(reference: APLValue) = reference is APLLong && value == reference.value
+
     override fun toString() = "APLLong(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
 
@@ -58,8 +61,10 @@ class APLDouble(val value: Double) : APLNumber() {
                     value.toString()
                 }
             }
-            APLValue.FormatStyle.READABLE -> if(value < 0) "¯" + (-value).toString() else value.toString()
-    }
+            APLValue.FormatStyle.READABLE -> if (value < 0) "¯" + (-value).toString() else value.toString()
+        }
+
+    override fun compare(reference: APLValue) = reference is APLDouble && value == reference.value
 
     override fun toString() = "APLDouble(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
@@ -82,6 +87,8 @@ class APLComplex(val value: Complex) : APLNumber() {
         }
         return value.real.toLong()
     }
+
+    override fun compare(reference: APLValue) = reference is APLComplex && value == reference.value
 
     override fun asComplex() = value
     override fun isComplex() = value.imaginary != 0.0

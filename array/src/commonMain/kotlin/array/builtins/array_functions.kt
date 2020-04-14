@@ -27,10 +27,47 @@ class IotaArray(private val size: Int, private val start: Int = 0) : APLArray() 
     }
 }
 
+class FindIndexArray(val a: APLValue, val b: APLValue, val context: RuntimeContext) : APLArray() {
+    private val dimensions = b.dimensions()
+
+    override fun dimensions() = dimensions
+
+    override fun valueAt(p: Int): APLValue {
+        val reference = b.valueAt(p).unwrapDeferredValue()
+        return findFromRef(reference)
+    }
+
+    private fun findFromRef(reference: APLValue): APLLong {
+        val elementCount = a.size()
+        for (i in 0 until elementCount) {
+            val v = a.valueAt(i)
+            if (v.compare(reference)) {
+                return i.makeAPLNumber()
+            }
+        }
+        return elementCount.makeAPLNumber()
+    }
+
+    override fun unwrapDeferredValue(): APLValue {
+        return if (dimensions.isEmpty()) {
+            findFromRef(b)
+        } else {
+            this
+        }
+    }
+}
+
 class IotaAPLFunction : APLFunctionDescriptor {
     class IotaAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             return IotaArray(a.unwrapDeferredValue().ensureNumber().asInt())
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            if (a.rank() > 1) {
+                throw InvalidDimensionsException("Left argument must be rank 0 or 1", pos)
+            }
+            return FindIndexArray(a.arrayify(), b, context)
         }
     }
 
@@ -493,4 +530,24 @@ class TransposeFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = TransposeFunctionImpl(pos)
+}
+
+class CompareFunction : APLFunctionDescriptor {
+    class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return (if (a.compare(b)) 1 else 0).makeAPLNumber()
+        }
+    }
+
+    override fun make(pos: Position) = CompareFunctionImpl(pos)
+}
+
+class CompareNotEqualFunction : APLFunctionDescriptor {
+    class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return (if (a.compare(b)) 0 else 1).makeAPLNumber()
+        }
+    }
+
+    override fun make(pos: Position) = CompareFunctionImpl(pos)
 }

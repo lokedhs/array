@@ -107,6 +107,8 @@ class Engine {
         registerFunction(internSymbol("⌈"), MaxAPLFunction())
         registerFunction(internSymbol("|"), ModAPLFunction())
         registerFunction(internSymbol("∘"), NullFunction())
+        registerFunction(internSymbol("≡"), CompareFunction())
+        registerFunction(internSymbol("≢"), CompareNotEqualFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

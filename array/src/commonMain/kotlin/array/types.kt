@@ -32,6 +32,7 @@ interface APLValue {
     fun defaultValue(): APLValue = APLLong(0)
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
+    fun compare(reference: APLValue): Boolean
 
     fun singleValueOrError(): APLValue {
         return when {
@@ -100,6 +101,20 @@ abstract class APLArray : APLValue {
         }
 
     override fun arrayify() = if (rank() == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
+
+    override fun compare(reference: APLValue): Boolean {
+        if (!dimensions().compare(reference.dimensions())) {
+            return false
+        }
+        for (i in 0 until size()) {
+            val o1 = valueAt(i)
+            val o2 = reference.valueAt(i)
+            if (!o1.compare(o2)) {
+                return false
+            }
+        }
+        return true
+    }
 }
 
 class APLList(val elements: List<APLValue>) : APLValue {
@@ -132,6 +147,21 @@ class APLList(val elements: List<APLValue>) : APLValue {
     }
 
     override fun ensureList(pos: Position?) = this
+
+    override fun compare(reference: APLValue): Boolean {
+        if (reference !is APLList) {
+            return false
+        }
+        if (elements.size != reference.elements.size) {
+            return false
+        }
+        elements.indices.forEach { i ->
+            if (!listElement(i).compare(reference.listElement(i))) {
+                return false
+            }
+        }
+        return true
+    }
 
     fun listSize() = elements.size
     fun listElement(index: Int) = elements[index]
@@ -268,6 +298,8 @@ class APLChar(val value: Int) : APLSingleValue() {
         APLValue.FormatStyle.READABLE -> "@${charToString(value)}"
     }
 
+    override fun compare(reference: APLValue) = reference is APLChar && value == reference.value
+
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 }
 
@@ -298,6 +330,8 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
             APLValue.FormatStyle.READABLE -> "'" + value.symbolName
         }
 
+    override fun compare(reference: APLValue) = reference is APLSymbol && value == reference.value
+
     override fun ensureSymbol(pos: Position?) = this
 }
 
@@ -309,4 +343,6 @@ class LambdaValue(val fn: APLFunction) : APLSingleValue() {
             APLValue.FormatStyle.READABLE -> throw IllegalArgumentException("Functions can't be printed in readable form")
             APLValue.FormatStyle.PRETTY -> "function"
         }
+
+    override fun compare(reference: APLValue) = this === reference
 }
