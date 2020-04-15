@@ -16,8 +16,8 @@ class ArraySum1Arg(
     private val fn: CellSumFunction1Arg,
     private val a: APLValue
 ) : DeferredResultArray() {
-    override fun dimensions() = a.dimensions()
-    override fun size() = a.size()
+    override val dimensions get() = a.dimensions
+    override val size get() = a.size
     override fun valueAt(p: Int): APLValue {
         if (a is APLSingleValue) {
             return fn.combine(a)
@@ -37,20 +37,18 @@ class ArraySum2Args(
     private val b: APLValue,
     private val pos: Position
 ) : DeferredResultArray() {
-    private val aRank = a.rank()
-    private val bRank = b.rank()
+    private val aRank = a.rank
+    private val bRank = b.rank
 
     init {
-        unless(aRank == 0 || bRank == 0 || a.dimensions().compare(b.dimensions())) {
+        unless(aRank == 0 || bRank == 0 || a.dimensions.compare(b.dimensions)) {
             throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos)
         }
     }
 
-    private val dimensions = if (aRank == 0) b.dimensions() else a.dimensions()
-    override fun dimensions() = dimensions
+    override val dimensions = if (aRank == 0) b.dimensions else a.dimensions
 
-    private val rank = dimensions.size
-    override fun rank() = rank
+    override val rank = dimensions.size
 
     override fun valueAt(p: Int): APLValue {
         val v1 = if (a is APLSingleValue) a else a.valueAt(p)
@@ -81,8 +79,8 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
         }
 
         if (axis != null) {
-            val aDimensions = a.dimensions()
-            val bDimensions = b.dimensions()
+            val aDimensions = a.dimensions
+            val bDimensions = b.dimensions
 
             val axisInt = axis.ensureNumber().asInt()
 

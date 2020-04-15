@@ -9,20 +9,18 @@ class OuterJoinResult(
     val fn: APLFunction,
     val pos: Position
 ) : APLArray() {
-    private val dimensions: Dimensions
+    override val dimensions: Dimensions
     private val divisor: Int
 
     init {
-        val aDimensions = a.dimensions()
-        val bDimensions = b.dimensions()
+        val aDimensions = a.dimensions
+        val bDimensions = b.dimensions
         dimensions = Dimensions(IntArray(aDimensions.size + bDimensions.size) { index ->
             if (index < aDimensions.size) aDimensions[index] else bDimensions[index - aDimensions.size]
         })
 
-        divisor = b.size()
+        divisor = b.size
     }
-
-    override fun dimensions() = dimensions
 
     override fun valueAt(p: Int): APLValue {
         val aPosition = p / divisor
@@ -40,7 +38,7 @@ class InnerJoinResult(
     val pos: Position
 ) : APLArray() {
 
-    private val dimensions: Dimensions
+    override val dimensions: Dimensions
     private val aDimensions: Dimensions
     private val bDimensions: Dimensions
     private val highFactor: Int
@@ -49,8 +47,8 @@ class InnerJoinResult(
     private val bStepSize: Int
 
     init {
-        aDimensions = a.dimensions()
-        bDimensions = b.dimensions()
+        aDimensions = a.dimensions
+        bDimensions = b.dimensions
         val leftSize = aDimensions.size - 1
         val rightSize = bDimensions.size - 1
         dimensions = Dimensions(IntArray(leftSize + rightSize) { index ->
@@ -64,8 +62,6 @@ class InnerJoinResult(
         val m = dimensions.multipliers()
         highFactor = (if (leftSize == 0) dimensions.contentSize() else m[leftSize - 1])
     }
-
-    override fun dimensions() = dimensions
 
     override fun valueAt(p: Int): APLValue {
         val posInA = (p / highFactor) * axisSize
@@ -130,21 +126,21 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     if (axis != null) {
                         throw APLIllegalArgumentException("inner join does not support axis arguments")
                     }
-                    val aDimensions = a.dimensions()
-                    val bDimensions = b.dimensions()
+                    val aDimensions = a.dimensions
+                    val bDimensions = b.dimensions
                     val a1 = when {
-                        a.size() == 1 && b.size() == 1 -> a.arrayify()
-                        a.size() == 1 -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
+                        a.size == 1 && b.size == 1 -> a.arrayify()
+                        a.size == 1 -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
                         else -> a
                     }
                     val b1 = when {
-                        a.size() == 1 && b.size() == 1 -> b.arrayify()
-                        b.size() == 1 -> ConstantArray(dimensionsOfSize(aDimensions[aDimensions.size - 1]),
+                        a.size == 1 && b.size == 1 -> b.arrayify()
+                        b.size == 1 -> ConstantArray(dimensionsOfSize(aDimensions[aDimensions.size - 1]),
                             b.singleValueOrError())
                         else -> b
                     }
-                    val a1Dimensions = a1.dimensions()
-                    val b1Dimensions = b1.dimensions()
+                    val a1Dimensions = a1.dimensions
+                    val b1Dimensions = b1.dimensions
                     if (a1Dimensions[a1Dimensions.size - 1] != b1Dimensions[0]) {
                         throw InvalidDimensionsException("a and b dimensions are incompatible", pos)
                     }

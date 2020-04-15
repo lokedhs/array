@@ -9,10 +9,11 @@ class ForEachResult1Arg(
     val axis: APLValue?,
     val pos: Position
 ) : APLArray() {
-    override fun dimensions(): Dimensions = value.dimensions()
-    override fun rank() = value.rank()
+    override val dimensions: Dimensions
+        get() = value.dimensions
+    override val rank get() = value.rank
     override fun valueAt(p: Int) = fn.eval1Arg(context, value.valueAt(p), axis)
-    override fun size() = value.size()
+    override val size get() = value.size
 }
 
 class ForEachResult2Arg(
@@ -24,15 +25,16 @@ class ForEachResult2Arg(
     val pos: Position
 ) : APLArray() {
     init {
-        unless(arg1.dimensions().compare(arg2.dimensions())) {
+        unless(arg1.dimensions.compare(arg2.dimensions)) {
             throw IncompatibleTypeException("Arguments to foreach does not have the same dimensions", pos)
         }
     }
 
-    override fun dimensions(): Dimensions = arg1.dimensions()
-    override fun rank() = arg1.rank()
+    override val dimensions: Dimensions
+        get() = arg1.dimensions
+    override val rank get() = arg1.rank
     override fun valueAt(p: Int) = fn.eval2Arg(context, arg1.valueAt(p), arg2.valueAt(p), axis)
-    override fun size() = arg1.size()
+    override val size get() = arg1.size
 }
 
 class ForEachOp : APLOperatorOneArg {

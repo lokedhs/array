@@ -10,16 +10,14 @@ class ReduceResult1Arg(
     val pos: Position
 ) : APLArray() {
     private val argDimensions: Dimensions
-    private val dimensions: Dimensions
+    override val dimensions: Dimensions
     private val stepLength: Int
     private val reduceDepth: Int
     private val fromSourceMul: Int
     private val toDestMul: Int
 
-    override fun dimensions() = dimensions
-
     init {
-        argDimensions = arg.dimensions()
+        argDimensions = arg.dimensions
 
         ensureValidAxis(axis, argDimensions)
 
@@ -30,7 +28,7 @@ class ReduceResult1Arg(
         stepLength = sl
 
         reduceDepth = argDimensions[axis]
-        dimensions = arg.dimensions().remove(axis)
+        dimensions = arg.dimensions.remove(axis)
 
         var currMult = 1
         for (i in dimensions.indices) {
@@ -97,14 +95,14 @@ class ReduceOp : APLOperatorOneArg {
 
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
-                    return if (a.rank() == 0) {
+                    return if (a.rank == 0) {
                         if (axisParam != null && axisParam != 0) {
-                            throw IllegalAxisException(axisParam, a.dimensions())
+                            throw IllegalAxisException(axisParam, a.dimensions)
                         }
                         a
                     } else {
-                        val v = axisParam ?: (a.dimensions().size - 1)
-                        ensureValidAxis(v, a.dimensions())
+                        val v = axisParam ?: (a.dimensions.size - 1)
+                        ensureValidAxis(v, a.dimensions)
                         ReduceResult1Arg(context, fn, a, v, pos)
                     }
                 }

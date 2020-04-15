@@ -11,7 +11,7 @@ import javafx.util.Callback
 
 class TableResult(content: APLValue) : TableView<APLRowWrapper>() {
     init {
-        val dimensions = content.dimensions()
+        val dimensions = content.dimensions
         val rows: Int
         val cols: Int
         if (dimensions.size == 1) {

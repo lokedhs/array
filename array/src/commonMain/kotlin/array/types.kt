@@ -22,13 +22,17 @@ interface APLValue {
         PRETTY
     }
 
-    fun dimensions(): Dimensions
-    fun rank(): Int = dimensions().size
+    val dimensions: Dimensions
+    val rank: Int
+        get() = dimensions.size
+
     fun valueAt(p: Int): APLValue
-    fun size(): Int = dimensions().contentSize()
+    val size: Int
+        get() = dimensions.contentSize()
+
     fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
     fun collapse(): APLValue
-    fun isScalar(): Boolean = rank() == 0
+    fun isScalar(): Boolean = rank == 0
     fun defaultValue(): APLValue = APLLONG_0
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
@@ -36,9 +40,9 @@ interface APLValue {
 
     fun singleValueOrError(): APLValue {
         return when {
-            rank() == 0 -> this
-            size() == 1 -> valueAt(0)
-            else -> throw IllegalStateException("Expected a single element in array, found ${size()} elements")
+            rank == 0 -> this
+            size == 1 -> valueAt(0)
+            else -> throw IllegalStateException("Expected a single element in array, found ${size} elements")
         }
     }
 
@@ -73,20 +77,20 @@ interface APLValue {
 }
 
 inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
-    if (rank() == 0) {
+    if (rank == 0) {
         fn(this)
     } else {
-        for (i in 0 until size()) {
+        for (i in 0 until size) {
             fn(valueAt(i))
         }
     }
 }
 
 abstract class APLSingleValue : APLValue {
-    override fun dimensions() = emptyDimensions()
+    override val dimensions get() = emptyDimensions()
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index $p from scalar")
-    override fun size() = 1
-    override fun rank() = 0
+    override val size get() = 1
+    override val rank get() = 0
     override fun collapse() = this
     override fun arrayify() = APLArrayImpl.make(dimensionsOfSize(1)) { this }
 }
@@ -98,8 +102,8 @@ abstract class APLArray : APLValue {
         val v = unwrapDeferredValue()
         return when {
             v is APLSingleValue -> v
-            v.rank() == 0 -> EnclosedAPLValue(v.valueAt(0).collapse())
-            else -> APLArrayImpl.make(v.dimensions()) { v.valueAt(it).collapse() }
+            v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapse())
+            else -> APLArrayImpl.make(v.dimensions) { v.valueAt(it).collapse() }
         }
     }
 
@@ -110,13 +114,13 @@ abstract class APLArray : APLValue {
             APLValue.FormatStyle.READABLE -> arrayToAPLFormat(this)
         }
 
-    override fun arrayify() = if (rank() == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
+    override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 
     override fun compare(reference: APLValue): Boolean {
-        if (!dimensions().compare(reference.dimensions())) {
+        if (!dimensions.compare(reference.dimensions)) {
             return false
         }
-        for (i in 0 until size()) {
+        for (i in 0 until size) {
             val o1 = valueAt(i)
             val o2 = reference.valueAt(i)
             if (!o1.compare(o2)) {
@@ -130,7 +134,7 @@ abstract class APLArray : APLValue {
 class APLList(val elements: List<APLValue>) : APLValue {
     override val aplValueType: APLValueType = APLValueType.LIST
 
-    override fun dimensions() = emptyDimensions()
+    override val dimensions get() = emptyDimensions()
 
     override fun valueAt(p: Int): APLValue {
         TODO("not implemented")
@@ -188,7 +192,7 @@ private fun arrayToAPLFormat(value: APLArray): String {
 
 private fun arrayToAPLFormatStandard(value: APLArray): String {
     val buf = StringBuilder()
-    val dimensions = value.dimensions()
+    val dimensions = value.dimensions
     if (dimensions.size == 0) {
         buf.append("⊂")
         buf.append(value.valueAt(0).formatted(APLValue.FormatStyle.READABLE))
@@ -200,10 +204,10 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
             buf.append(dimensions[i])
         }
         buf.append("⍴")
-        if (value.size() == 0) {
+        if (value.size == 0) {
             buf.append("1")
         } else {
-            for (i in 0 until value.size()) {
+            for (i in 0 until value.size) {
                 val a = value.valueAt(i)
                 if (i > 0) {
                     buf.append(" ")
@@ -216,14 +220,14 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
 }
 
 fun isNullValue(value: APLValue): Boolean {
-    val dimensions = value.dimensions()
+    val dimensions = value.dimensions
     return dimensions.size == 1 && dimensions[0] == 0
 }
 
 fun isStringValue(value: APLValue): Boolean {
-    val dimensions = value.dimensions()
+    val dimensions = value.dimensions
     if (dimensions.size == 1) {
-        for (i in 0 until value.size()) {
+        for (i in 0 until value.size) {
             val v = value.valueAt(i)
             if (v !is APLChar) {
                 return false
@@ -236,13 +240,13 @@ fun isStringValue(value: APLValue): Boolean {
 }
 
 fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
-    val dimensions = array.dimensions()
+    val dimensions = array.dimensions
     if (dimensions.size != 1) {
         throw IncompatibleTypeException("Argument is not a string", pos)
     }
 
     val buf = StringBuilder()
-    for (i in 0 until array.size()) {
+    for (i in 0 until array.size) {
         val v = array.valueAt(i)
         if (v !is APLChar) {
             throw IncompatibleTypeException("Argument is not a string", pos)
@@ -263,20 +267,18 @@ fun arrayAsString(array: APLValue, style: APLValue.FormatStyle): String {
 }
 
 class ConstantArray(
-    private val dimensions: Dimensions,
+    override val dimensions: Dimensions,
     private val value: APLValue
 ) : APLArray() {
 
-    override fun dimensions() = dimensions
     override fun valueAt(p: Int) = value
 }
 
 class APLArrayImpl(
-    private val dimensions: Dimensions,
+    override val dimensions: Dimensions,
     private val values: Array<APLValue>
 ) : APLArray() {
 
-    override fun dimensions() = dimensions
     override fun valueAt(p: Int) = values[p]
     override fun toString() = Arrays.toString(values)
 
@@ -289,7 +291,8 @@ class APLArrayImpl(
 }
 
 class EnclosedAPLValue(val value: APLValue) : APLArray() {
-    override fun dimensions(): Dimensions = emptyDimensions()
+    override val dimensions: Dimensions
+        get() = emptyDimensions()
 
     override fun valueAt(p: Int): APLValue {
         if (p != 0) {
@@ -321,13 +324,13 @@ fun makeAPLString(s: String): APLValue {
 private val NULL_DIMENSIONS = dimensionsOfSize(0)
 
 class APLNullValue : APLArray() {
-    override fun dimensions() = NULL_DIMENSIONS
+    override val dimensions get() = NULL_DIMENSIONS
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
 }
 
 abstract class DeferredResultArray : APLArray() {
     override fun unwrapDeferredValue(): APLValue {
-        return if (dimensions().isEmpty()) valueAt(0).unwrapDeferredValue() else this
+        return if (dimensions.isEmpty()) valueAt(0).unwrapDeferredValue() else this
     }
 }
 

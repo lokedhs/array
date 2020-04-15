@@ -23,7 +23,7 @@ class TakeTest : APLTest() {
     fun testDropFromArray1() {
         val result = parseAPLExpression("↓,1")
         assertDimension(dimensionsOfSize(0), result)
-        assertEquals(0, result.size())
+        assertEquals(0, result.size)
     }
 
     @Test

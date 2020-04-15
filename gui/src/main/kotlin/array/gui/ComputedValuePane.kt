@@ -6,8 +6,8 @@ import javafx.scene.layout.BorderPane
 
 class ComputedValuePane(context: ClientRenderContext, value: APLValue) : BorderPane() {
     init {
-        val dimensions = value.dimensions()
-        val contentNode = when (value.rank()) {
+        val dimensions = value.dimensions
+        val contentNode = when (value.rank) {
             0 -> SingleValueNode(context, value)
 //            1 -> TableResult(value)
 //            2 -> TableResult(value)

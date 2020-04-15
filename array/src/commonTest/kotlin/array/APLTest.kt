@@ -13,15 +13,15 @@ open class APLTest {
     }
 
     fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {
-        assertEquals(expectedValue.size, value.size())
+        assertEquals(expectedValue.size, value.size)
         for (i in expectedValue.indices) {
             assertSimpleNumber(expectedValue[i].toLong(), value.valueAt(i))
         }
     }
 
     fun assertDimension(expectDimensions: Dimensions, result: APLValue) {
-        val dimensions = result.dimensions()
-        assertTrue(result.dimensions().compare(expectDimensions), "expected dimension: $expectDimensions, actual $dimensions")
+        val dimensions = result.dimensions
+        assertTrue(result.dimensions.compare(expectDimensions), "expected dimension: $expectDimensions, actual $dimensions")
     }
 
     fun assertPairs(v: APLValue, vararg values: Array<Int>) {
@@ -75,13 +75,13 @@ open class APLTest {
     }
 
     fun assertString(expected: String, value: APLValue) {
-        assertEquals(1, value.dimensions().size)
+        assertEquals(1, value.dimensions.size)
         assertEquals(expected, arrayAsStringValue(value))
     }
 
     fun assertAPLNull(value: APLValue) {
         assertDimension(dimensionsOfSize(0), value)
-        assertEquals(0, value.dimensions()[0])
+        assertEquals(0, value.dimensions[0])
     }
 
     fun assertAPLValue(expected: Any, result: APLValue) {

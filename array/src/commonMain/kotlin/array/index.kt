@@ -1,12 +1,12 @@
 package array
 
 private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Either<Int, IntArray>>) : APLArray() {
-    private val dimensions: Dimensions
+    override val dimensions: Dimensions
     private val destToSourceAxis: IntArray
     private val constantOffset: Int
 
     init {
-        val contentMult = content.dimensions().multipliers()
+        val contentMult = content.dimensions.multipliers()
 
         var offset = 0
         val a = ArrayList<Int>()
@@ -26,8 +26,6 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Eit
         destToSourceAxis = destAxis.toIntArray()
         constantOffset = offset
     }
-
-    override fun dimensions() = dimensions
 
     override fun valueAt(p: Int): APLValue {
         val positionArray = dimensions.positionFromIndex(p)
@@ -60,16 +58,16 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
         val contentValue = content.evalWithContext(context)
         val indexValue = indexInstr.evalWithContext(context)
 
-        val aDimensions = contentValue.dimensions()
+        val aDimensions = contentValue.dimensions
 
         val indexAsList = convertToList(indexValue)
-        if (indexAsList.listSize() != contentValue.dimensions().size) {
+        if (indexAsList.listSize() != contentValue.dimensions.size) {
             throw InvalidDimensionsException("Rank of argument does not match index. Argument=${aDimensions.size}, index=${indexAsList.listSize()}",
                 pos)
         }
         val axis = Array(indexAsList.listSize()) { i ->
             val v = indexAsList.listElement(i).unwrapDeferredValue()
-            val d = v.dimensions()
+            val d = v.dimensions
             when (d.size) {
                 0 -> {
                     Either.Left(v.ensureNumber(pos).asInt()
