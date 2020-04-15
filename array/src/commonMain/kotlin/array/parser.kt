@@ -1,38 +1,40 @@
 package array
 
+data class InstrTokenHolder(val instruction: Instruction, val lastToken: Token, val pos: Position)
+
 fun parseValueToplevel(tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val (instr, lastToken) = parseList(tokeniser)
-        statementList.add(instr)
-        if (lastToken == endToken) {
+        val holder = parseList(tokeniser)
+        statementList.add(holder.instruction)
+        if (holder.lastToken == endToken) {
             assertx(!statementList.isEmpty())
-            return if (statementList.size == 1) instr else InstructionList(statementList)
-        } else if (lastToken != StatementSeparator) {
-            throw UnexpectedToken(lastToken)
+            return if (statementList.size == 1) holder.instruction else InstructionList(statementList)
+        } else if (holder.lastToken != StatementSeparator) {
+            throw UnexpectedToken(holder.lastToken, holder.pos)
         }
     }
 }
 
-fun parseList(tokeniser: TokenGenerator): Pair<Instruction, Token> {
+fun parseList(tokeniser: TokenGenerator): InstrTokenHolder {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val (instr, lastToken) = parseValue(tokeniser)
-        if (lastToken == ListSeparator) {
-            statementList.add(instr)
+        val holder = parseValue(tokeniser)
+        if (holder.lastToken == ListSeparator) {
+            statementList.add(holder.instruction)
         } else {
             val list = if (statementList.isEmpty()) {
-                instr
+                holder.instruction
             } else {
-                statementList.add(instr)
+                statementList.add(holder.instruction)
                 ParsedAPLList(statementList)
             }
-            return Pair(list, lastToken)
+            return InstrTokenHolder(list, holder.lastToken, holder.pos)
         }
     }
 }
 
-fun parseValue(tokeniser: TokenGenerator): Pair<Instruction, Token> {
+fun parseValue(tokeniser: TokenGenerator): InstrTokenHolder {
     val engine = tokeniser.engine
     val leftArgs = ArrayList<Instruction>()
 
@@ -47,28 +49,28 @@ fun parseValue(tokeniser: TokenGenerator): Pair<Instruction, Token> {
         }
     }
 
-    fun processFn(fn: APLFunctionDescriptor, pos: Position): Pair<Instruction, Token> {
+    fun processFn(fn: APLFunctionDescriptor, pos: Position): InstrTokenHolder {
         val axis = parseAxis(tokeniser)
         val parsedFn = parseOperator(fn, tokeniser)
         val (rightValue, lastToken) = parseValue(tokeniser)
         return if (leftArgs.isEmpty()) {
-            Pair(FunctionCall1Arg(parsedFn.make(pos), rightValue, axis, pos), lastToken)
+            InstrTokenHolder(FunctionCall1Arg(parsedFn.make(pos), rightValue, axis, pos), lastToken, pos)
         } else {
-            Pair(FunctionCall2Arg(parsedFn.make(pos), makeResultList(), rightValue, axis, pos), lastToken)
+            InstrTokenHolder(FunctionCall2Arg(parsedFn.make(pos), makeResultList(), rightValue, axis, pos), lastToken, pos)
         }
     }
 
-    fun processAssignment(tokeniser: TokenGenerator, pos: Position): Pair<Instruction, Token> {
+    fun processAssignment(tokeniser: TokenGenerator, pos: Position): InstrTokenHolder {
         // Ensure that the left argument to leftarrow is a single symbol
         unless(leftArgs.size == 1) {
-            throw IncompatibleTypeParseException("Can only assign to a single variable")
+            throw IncompatibleTypeParseException("Can only assign to a single variable", pos)
         }
         val dest = leftArgs[0]
         if (dest !is VariableRef) {
-            throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable")
+            throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable", pos)
         }
         val (rightValue, lastToken) = parseValue(tokeniser)
-        return Pair(AssignmentInstruction(dest.name, rightValue, pos), lastToken)
+        return InstrTokenHolder(AssignmentInstruction(dest.name, rightValue, pos), lastToken, pos)
     }
 
     fun parseFnArgs(): List<Symbol> {
@@ -147,7 +149,7 @@ fun parseValue(tokeniser: TokenGenerator): Pair<Instruction, Token> {
     while (true) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         if (listOf(CloseParen, EndOfFile, StatementSeparator, CloseFnDef, CloseBracket, ListSeparator).contains(token)) {
-            return Pair(makeResultList(), token)
+            return InstrTokenHolder(makeResultList(), token, pos)
         }
 
         when (token) {
@@ -182,7 +184,7 @@ fun parseApplyDefinition(tokeniser: TokenGenerator): APLFunctionDescriptor {
     val ref = when (token) {
         is Symbol -> VariableRef(token, firstPos)
         is OpenParen -> parseValueToplevel(tokeniser, CloseParen)
-        else -> throw UnexpectedToken(token)
+        else -> throw UnexpectedToken(token, firstPos)
     }
     return DynamicFunctionDescriptor(ref)
 }
@@ -194,13 +196,13 @@ class EvalLambdaFnx(val fn: APLFunction, pos: Position) : Instruction(pos) {
 }
 
 fun processLambda(tokeniser: TokenGenerator, pos: Position): EvalLambdaFnx {
-    val token = tokeniser.nextToken()
+    val (token, pos2) = tokeniser.nextTokenWithPosition()
     return when (token) {
         is OpenFnDef -> {
             val fnDefinition = parseFnDefinition(tokeniser, pos)
             EvalLambdaFnx(fnDefinition.make(pos), pos)
         }
-        else -> throw UnexpectedToken(token)
+        else -> throw UnexpectedToken(token, pos2)
     }
 }
 
@@ -236,7 +238,8 @@ fun parseOperator(fn: APLFunctionDescriptor, tokeniser: TokenGenerator): APLFunc
     var currentFn = fn
     var token: Token
     loop@ while (true) {
-        token = tokeniser.nextToken()
+        val (readToken, pos) = tokeniser.nextTokenWithPosition()
+        token = readToken
         if (token is Symbol) {
             val op = tokeniser.engine.getOperator(token) ?: break
             val axis = parseAxis(tokeniser)

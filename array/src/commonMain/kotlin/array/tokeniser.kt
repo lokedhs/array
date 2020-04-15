@@ -102,7 +102,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
                 isQuotePrefixChar(ch) -> QuotePrefix
-                else -> throw UnexpectedSymbol(ch)
+                else -> throw UnexpectedSymbol(ch, posBeforeParse)
             }
         )
     }
@@ -143,16 +143,18 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
     private fun collectNumber(): Token {
         val buf = StringBuilder()
         var foundComplex = false
+        val posStart = content.pos()
         loop@ while (true) {
+            val posBeforeParse = content.pos()
             val ch = content.nextCodepoint() ?: break
             when {
                 ch == 'j'.toInt() || ch == 'J'.toInt() -> {
                     if (foundComplex) {
-                        throw IllegalNumberFormat("Garbage after number")
+                        throw IllegalNumberFormat("Garbage after number", posBeforeParse)
                     }
                     foundComplex = true
                 }
-                isLetter(ch) -> throw IllegalNumberFormat("Garbage after number")
+                isLetter(ch) -> throw IllegalNumberFormat("Garbage after number", posBeforeParse)
                 !isNumericConstituent(ch) -> {
                     content.pushBack()
                     break@loop
@@ -168,7 +170,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                 return result
             }
         }
-        throw IllegalNumberFormat("Content cannot be parsed as a number")
+        throw IllegalNumberFormat("Content cannot be parsed as a number", posStart)
     }
 
     private fun collectSymbol(firstChar: Int): Symbol {

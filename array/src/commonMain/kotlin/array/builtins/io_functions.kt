@@ -20,7 +20,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
                 plainSym -> APLValue.FormatStyle.PLAIN
                 prettySym -> APLValue.FormatStyle.PRETTY
                 readSym -> APLValue.FormatStyle.READABLE
-                else -> throw APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}")
+                else -> throw APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}", pos)
             }
             printValue(context, b, style)
             return b

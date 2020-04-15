@@ -7,11 +7,11 @@ interface APLFunctionDescriptor {
 }
 
 abstract class APLFunction(val pos: Position) {
-    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException()
+    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException(pos)
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue =
-        throw Unimplemented2ArgException()
+        throw Unimplemented2ArgException(pos)
 
-    open fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value")
+    open fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value", pos)
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
@@ -22,7 +22,7 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
         return eval1Arg(context, a)
     }
 
-    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException()
+    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException(pos)
 
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {

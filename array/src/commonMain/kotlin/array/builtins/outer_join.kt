@@ -108,7 +108,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     axis: APLValue?
                 ): APLValue {
                     if (axis != null) {
-                        throw APLIllegalArgumentException("outer join does not support axis arguments")
+                        throw APLIllegalArgumentException("outer join does not support axis arguments", pos)
                     }
                     return OuterJoinResult(context, a, b, fn, pos)
                 }
@@ -124,7 +124,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
             return object : APLFunction(fn1.pos) {
                 override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                     if (axis != null) {
-                        throw APLIllegalArgumentException("inner join does not support axis arguments")
+                        throw APLIllegalArgumentException("inner join does not support axis arguments", pos)
                     }
                     val aDimensions = a.dimensions
                     val bDimensions = b.dimensions
@@ -159,15 +159,16 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
 class NullFunction : APLFunctionDescriptor {
     class NullFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            throw APLEvalException("null function cannot be called")
+            throw APLEvalException("null function cannot be called", pos)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            throw APLEvalException("null function cannot be called")
+            throw APLEvalException("null function cannot be called", pos)
         }
     }
 
     override fun make(pos: Position): APLFunction {
+        // TODO: Should an error be thrown here?
         return NullFunctionImpl(pos)
     }
 

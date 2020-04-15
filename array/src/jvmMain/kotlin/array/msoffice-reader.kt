@@ -84,7 +84,7 @@ class LoadExcelFileFunction : APLFunctionDescriptor {
 
         private fun arrayToString(a: APLValue): String {
             if (a.rank != 1) {
-                throw InvalidDimensionsException("String must be rank 1")
+                throw InvalidDimensionsException("String must be rank 1", pos)
             }
             val buf = StringBuilder()
             for (i in 0 until a.size) {

@@ -85,7 +85,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
 
 class VariableRef(val name: Symbol, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        return context.lookupVar(name) ?: throw VariableNotAssigned(name)
+        return context.lookupVar(name) ?: throw VariableNotAssigned(name, pos)
     }
 
     override fun toString() = "Var(${name})"

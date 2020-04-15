@@ -94,10 +94,10 @@ class ReduceOp : APLOperatorOneArg {
                 val fn = fnDescriptor.make(pos)
 
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                    val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber().asInt() else null
+                    val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber(pos).asInt() else null
                     return if (a.rank == 0) {
                         if (axisParam != null && axisParam != 0) {
-                            throw IllegalAxisException(axisParam, a.dimensions)
+                            throw IllegalAxisException(axisParam, a.dimensions, pos)
                         }
                         a
                     } else {

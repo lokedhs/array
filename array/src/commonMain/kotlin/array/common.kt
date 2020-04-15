@@ -19,18 +19,18 @@ open class APLEvalException(message: String, pos: Position? = null) : APLGeneric
 open class IncompatibleTypeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIndexOutOfBoundsException(message: String, pos: Position? = null) : APLEvalException("Index out of bounds: ${message}", pos)
-class IllegalNumberFormat(message: String) : APLEvalException(message)
-class UnexpectedSymbol(ch: Int) : APLEvalException("Unexpected symbol: '${charToString(ch)}' (${ch})")
-class VariableNotAssigned(name: Symbol) : APLEvalException("Variable not assigned: $name")
+class IllegalNumberFormat(message: String, pos: Position? = null) : APLEvalException(message, pos)
+class UnexpectedSymbol(ch: Int, pos: Position? = null) : APLEvalException("Unexpected symbol: '${charToString(ch)}' (${ch})", pos)
+class VariableNotAssigned(name: Symbol, pos: Position? = null) : APLEvalException("Variable not assigned: $name", pos)
 class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
     APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
 
 class AxisNotSupported(pos: Position) : APLEvalException("Function does not support axis specifier", pos)
 
 class APLIllegalArgumentException(message: String, pos: Position? = null) : APLEvalException(message, pos)
-class APLIncompatibleDomainsException(message: String) : APLEvalException(message)
-class Unimplemented1ArgException : APLEvalException("Function cannot be called with one argument")
-class Unimplemented2ArgException : APLEvalException("Function cannot be called with two arguments")
+class APLIncompatibleDomainsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
+class Unimplemented1ArgException(pos: Position? = null) : APLEvalException("Function cannot be called with one argument", pos)
+class Unimplemented2ArgException(pos: Position? = null) : APLEvalException("Function cannot be called with two arguments", pos)
 
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: $token", pos)

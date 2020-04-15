@@ -82,7 +82,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             val aDimensions = a.dimensions
             val bDimensions = b.dimensions
 
-            val axisInt = axis.ensureNumber().asInt()
+            val axisInt = axis.ensureNumber(pos).asInt()
 
             fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
                 ensureValidAxis(axisInt, d2)
@@ -122,8 +122,8 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
 }
 
 abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
-    override fun combine1Arg(a: APLSingleValue): APLValue = numberCombine1Arg(a.ensureNumber())
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(), b.ensureNumber())
+    override fun combine1Arg(a: APLSingleValue): APLValue = numberCombine1Arg(a.ensureNumber(pos))
+    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(pos), b.ensureNumber())
 
     open fun numberCombine1Arg(a: APLNumber): APLValue = TODO("not implemented")
     open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = TODO("not implemented")

@@ -35,16 +35,16 @@ inline class Dimensions(val dimensions: IntArray) {
 
     fun indexFromPosition(p: IntArray, multipliers: IntArray? = null): Int {
         val sizes = multipliers ?: multipliers()
-        var pos = 0
+        var curr = 0
         for (i in p.indices) {
             val pi = p[i]
             val di = dimensions[i]
             if (pi >= di) {
                 throw APLIndexOutOfBoundsException("Index out of range: pi=$pi, di=$di")
             }
-            pos += pi * sizes[i]
+            curr += pi * sizes[i]
         }
-        return pos
+        return curr
     }
 
     fun multipliers(): IntArray {
