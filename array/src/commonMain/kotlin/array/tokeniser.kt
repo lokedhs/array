@@ -19,6 +19,7 @@ object QuotePrefix : Token()
 object LambdaToken : Token()
 object ApplyToken : Token()
 object ListSeparator : Token()
+object Newline : Token()
 
 class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${symbolName}]"
@@ -76,7 +77,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
         }
     }
 
-    fun nextTokenOrSpace(): Pair<Token, Position> {
+    fun nextTokenOrSpace(newlineIsSpace: Boolean = true): Pair<Token, Position> {
         val posBeforeParse = content.pos()
         fun mkpos(token: Token) = Pair(token, posBeforeParse)
 
@@ -96,6 +97,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
                     content.pushBack()
                     collectNumber()
                 }
+                isNewline(ch) -> Newline
                 isWhitespace(ch) -> Whitespace
                 isCharQuote(ch) -> collectChar()
                 isLetter(ch) -> collectSymbol(ch)
@@ -121,6 +123,7 @@ class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
 
     private fun isCharQuote(ch: Int) = ch == '@'.toInt()
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
+    private fun isNewline(ch: Int) = ch == '\n'.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {

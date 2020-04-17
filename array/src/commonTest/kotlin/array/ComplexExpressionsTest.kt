@@ -1,6 +1,8 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ComplexExpressionsTest : APLTest() {
@@ -123,5 +125,42 @@ class ComplexExpressionsTest : APLTest() {
     fun nestedTwoArgFunctions() {
         val result = parseAPLExpression("200 {⍺+⍵+10 {1+⍺+⍵} 4} 5 ")
         assertSimpleNumber(220, result)
+    }
+
+    @Test
+    fun multilineExpression() {
+        parseAPLExpressionWithOutput("""
+            |print 3
+            |2
+        """.trimMargin()).let { (result, output) ->
+            assertSimpleNumber(2, result)
+            assertEquals("3", output)
+        }
+    }
+
+    @Test
+    fun multilineExpressionWithBlankLines() {
+        parseAPLExpressionWithOutput("""
+            |print 3
+            |
+            |2
+            |
+        """.trimMargin()).let { (result, output) ->
+            assertSimpleNumber(2, result)
+            assertEquals("3", output)
+        }
+    }
+
+    // Test ignored since it's not clear how the parser is supposed to handle this case at the moment
+    @Test
+    @Ignore
+    fun multilineExpressionsShouldFail() {
+        assertFailsWith<ParseException> {
+            val v = parseAPLExpression("1 2 (\n4\n)").collapse()
+            println("v = ${v}")
+        }
+        assertFailsWith<ParseException> {
+            parseAPLExpression("1 2 (4\n)").collapse()
+        }
     }
 }

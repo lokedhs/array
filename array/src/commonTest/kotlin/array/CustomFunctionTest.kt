@@ -65,6 +65,19 @@ class CustomFunctionTest : APLTest() {
     }
 
     @Test
+    fun multilineFunction() {
+        val result = parseAPLExpression("""
+            |∇ foo (x) {
+            |  a ← 10
+            |  b ← 2
+            |  a+b+x
+            |}
+            |foo(100)
+        """.trimMargin())
+        assertSimpleNumber(112, result)
+    }
+
+    @Test
     fun tooFewArgumentsLeft() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("∇ (E;F) foo (A;B;C;D) { A+B+C+D+E+F+1 } ◊ (1) foo (2;3;4;5)")

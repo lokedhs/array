@@ -34,15 +34,25 @@ class TokenGeneratorTest {
         assertSame(EndOfFile, gen.nextToken())
     }
 
+//    @Test
+//    fun testNewline() {
+//        val gen = makeGenerator("foo\nbar test")
+//        val expectedTokens = arrayOf("foo", "bar", "test")
+//        expectedTokens.forEach { name ->
+//            val token = gen.nextToken()
+//            assertTokenIsSymbol(gen, token, name)
+//        }
+//        assertSame(EndOfFile, gen.nextToken())
+//    }
+
     @Test
-    fun testNewline() {
-        val gen = makeGenerator("foo\nbar test")
-        val expectedTokens = arrayOf("foo", "bar", "test")
-        expectedTokens.forEach { name ->
-            val token = gen.nextToken()
-            assertTokenIsSymbol(gen, token, name)
-        }
-        assertSame(EndOfFile, gen.nextToken())
+    fun newlinePara() {
+        val gen = makeGenerator("foo\nbar\nabc")
+        assertTokenIsSymbol(gen, gen.nextToken(), "foo")
+        assertSame(Newline, gen.nextToken())
+        assertTokenIsSymbol(gen, gen.nextToken(), "bar")
+        assertSame(Newline, gen.nextToken())
+        assertTokenIsSymbol(gen, gen.nextToken(), "abc")
     }
 
     @Test
@@ -243,6 +253,11 @@ class TokenGeneratorTest {
             assertTrue(2.00001 >= value)
             assertEquals(0, pos.line)
             assertEquals(11, pos.col)
+        }
+        gen.nextTokenWithPosition().let { (token, pos) ->
+            assertSame(Newline, token)
+            assertEquals(0, pos.line)
+            assertEquals(14, pos.col)
         }
         gen.nextTokenWithPosition().let { (token, pos) ->
             assertTokenIsSymbol(gen, token, "x")

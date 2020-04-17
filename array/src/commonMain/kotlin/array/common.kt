@@ -157,3 +157,30 @@ sealed class Either<out A, out B> {
     class Left<A>(val value: A) : Either<A, Nothing>()
     class Right<B>(val value: B) : Either<Nothing, B>()
 }
+
+class Optional<out T> private constructor(val content: T?) {
+    fun hasValue() = content != null
+
+    fun valueOrThrow() = content ?: throw IllegalStateException("Value not assigned")
+
+    fun <R> withValueIfExists(fn: (T) -> R): R? {
+        return if (content != null) fn(content) else null
+    }
+
+    fun <R> withValueOrThrow(fn: (T) -> R): R {
+        return fn(valueOrThrow())
+    }
+
+    fun <R> withValue(fnValue: (T) -> R, fnNoValue: () -> R): R {
+        return if (content != null) {
+            fnValue(content)
+        } else {
+            fnNoValue()
+        }
+    }
+
+    companion object {
+        fun <T> make(value: T) = Optional(value)
+        fun empty() = Optional(null)
+    }
+}

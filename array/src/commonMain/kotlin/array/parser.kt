@@ -1,51 +1,76 @@
 package array
 
-data class InstrTokenHolder(val instruction: Instruction, val lastToken: Token, val pos: Position)
+data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
+
+class NullInstruction(pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        throw IllegalStateException("Null instruction should not be called")
+    }
+}
 
 fun parseValueToplevel(tokeniser: TokenGenerator, endToken: Token): Instruction {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val holder = parseList(tokeniser)
-        statementList.add(holder.instruction)
+        val holder = parseList(tokeniser, true)
+        holder.instruction.withValueIfExists { instr ->
+            statementList.add(instr)
+        }
         if (holder.lastToken == endToken) {
             assertx(!statementList.isEmpty())
-            return if (statementList.size == 1) holder.instruction else InstructionList(statementList)
-        } else if (holder.lastToken != StatementSeparator) {
+            return when (statementList.size) {
+                0 -> throw ParseException("Empty statement list")
+                1 -> statementList[0]
+                else -> InstructionList(statementList)
+            }
+        } else if (holder.lastToken != StatementSeparator && holder.lastToken != Newline) {
             throw UnexpectedToken(holder.lastToken, holder.pos)
         }
     }
 }
 
-fun parseList(tokeniser: TokenGenerator): InstrTokenHolder {
+fun parseList(tokeniser: TokenGenerator, isToplevel: Boolean = false): InstrTokenHolder {
     val statementList = ArrayList<Instruction>()
     while (true) {
-        val holder = parseValue(tokeniser)
+        val holder = parseValue(tokeniser, isToplevel)
         if (holder.lastToken == ListSeparator) {
-            statementList.add(holder.instruction)
+            statementList.add(holder.instruction.withValue({ it }, { LiteralAPLNullValue(holder.pos) }))
         } else {
-            val list = if (statementList.isEmpty()) {
-                holder.instruction
-            } else {
-                statementList.add(holder.instruction)
-                ParsedAPLList(statementList)
+            holder.instruction.withValueIfExists { instr ->
+                statementList.add(instr)
+            }
+            val list = when {
+                statementList.isEmpty() -> Optional.empty()
+                statementList.size == 1 -> Optional.make(statementList[0])
+                else -> Optional.make(ParsedAPLList(statementList))
             }
             return InstrTokenHolder(list, holder.lastToken, holder.pos)
         }
     }
 }
 
-fun parseValue(tokeniser: TokenGenerator): InstrTokenHolder {
+fun parseValue(tokeniser: TokenGenerator, isToplevel: Boolean = false): InstrTokenHolder {
+//    // First skip all newlines. If we reach a statement separator we return NullInstruction
+//    if (isToplevel) {
+//        while (true) {
+//            val (token, pos) = tokeniser.nextTokenWithPosition()
+//            when {
+//                token == StatementSeparator -> NullInstruction(pos)
+//                token != Newline -> {
+//                    tokeniser.pushBackToken(token)
+//                    break
+//                }
+//            }
+//        }
+//    }
+
     val engine = tokeniser.engine
     val leftArgs = ArrayList<Instruction>()
 
-    fun makeResultList(): Instruction {
-        if (leftArgs.isEmpty()) {
-            throw ParseException("Argument list should not be empty")
-        }
-        return if (leftArgs.size == 1) {
-            LiteralScalarValue(leftArgs[0])
-        } else {
-            Literal1DArray(leftArgs)
+    fun makeResultList(pos: Position): Optional<Instruction> {
+        return when {
+            leftArgs.isEmpty() -> Optional.empty()
+            leftArgs.size == 1 -> Optional.make(LiteralScalarValue(leftArgs[0]))
+            else -> Optional.make(Literal1DArray(leftArgs))
         }
     }
 
@@ -53,11 +78,18 @@ fun parseValue(tokeniser: TokenGenerator): InstrTokenHolder {
         val axis = parseAxis(tokeniser)
         val parsedFn = parseOperator(fn, tokeniser)
         val (rightValue, lastToken) = parseValue(tokeniser)
-        return if (leftArgs.isEmpty()) {
-            InstrTokenHolder(FunctionCall1Arg(parsedFn.make(pos), rightValue, axis, pos), lastToken, pos)
-        } else {
-            InstrTokenHolder(FunctionCall2Arg(parsedFn.make(pos), makeResultList(), rightValue, axis, pos), lastToken, pos)
-        }
+//        if(leftArgs.isEmpty()) {
+//            throw ParseException("Missing right-side argument to function", pos)
+//        }
+        return rightValue.withValue({ instr ->
+            if (leftArgs.isEmpty()) {
+                InstrTokenHolder(Optional.make(FunctionCall1Arg(parsedFn.make(pos), instr, axis, pos)), lastToken, pos)
+            } else {
+                makeResultList(pos).withValue({ leftArgs ->
+                    InstrTokenHolder(Optional.make(FunctionCall2Arg(parsedFn.make(pos), leftArgs, instr, axis, pos)), lastToken, pos)
+                }, { throw ParseException("No left-side argument", pos) })
+            }
+        }, { throw ParseException("Missing right-side argument to function", pos) })
     }
 
     fun processAssignment(tokeniser: TokenGenerator, pos: Position): InstrTokenHolder {
@@ -69,8 +101,10 @@ fun parseValue(tokeniser: TokenGenerator): InstrTokenHolder {
         if (dest !is VariableRef) {
             throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable", pos)
         }
-        val (rightValue, lastToken) = parseValue(tokeniser)
-        return InstrTokenHolder(AssignmentInstruction(dest.name, rightValue, pos), lastToken, pos)
+        val (rightValue, lastToken, assignmentPos) = parseValue(tokeniser)
+        return rightValue.withValue({ instr ->
+            InstrTokenHolder(Optional.make(AssignmentInstruction(dest.name, instr, pos)), lastToken, pos)
+        }, { throw ParseException("No right-side value in assignment instruction", assignmentPos) })
     }
 
     fun parseFnArgs(): List<Symbol> {
@@ -148,8 +182,8 @@ fun parseValue(tokeniser: TokenGenerator): InstrTokenHolder {
 
     while (true) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
-        if (listOf(CloseParen, EndOfFile, StatementSeparator, CloseFnDef, CloseBracket, ListSeparator).contains(token)) {
-            return InstrTokenHolder(makeResultList(), token, pos)
+        if (listOf(CloseParen, EndOfFile, StatementSeparator, CloseFnDef, CloseBracket, ListSeparator, Newline).contains(token)) {
+            return InstrTokenHolder(makeResultList(pos), token, pos)
         }
 
         when (token) {

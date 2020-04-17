@@ -12,6 +12,14 @@ open class APLTest {
         return instr.evalWithContext(context)
     }
 
+    fun parseAPLExpressionWithOutput(expr: String): Pair<APLValue, String> {
+        val engine = Engine()
+        val output = StringBuilderOutput()
+        engine.standardOutput = output
+        val result = engine.parseString(expr).evalWithContext(RuntimeContext(engine))
+        return Pair(result, output.buf.toString())
+    }
+
     fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {
         assertEquals(expectedValue.size, value.size)
         for (i in expectedValue.indices) {

@@ -151,7 +151,7 @@ class CsvTest : APLTest() {
     fun incompleteString() {
         val content = """
             |a,"foo
-        """.trimIndent()
+        """.trimMargin()
         val input = StringCharacterProvider(content)
         assertFailsWith<CsvParseException> {
             readCsv(input)
