@@ -288,7 +288,7 @@ class TokenGeneratorTest {
 
     private fun makeGenerator(content: String): TokenGenerator {
         val engine = Engine()
-        return TokenGenerator(engine, StringCharacterProvider(content))
+        return TokenGenerator(engine, StringSourceLocation(content))
     }
 
     private fun assertTokenIsSymbol(gen: TokenGenerator, token: Token, name: String) {

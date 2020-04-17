@@ -174,8 +174,8 @@ class Engine {
 
     fun getFunction(name: Symbol) = functions[resolveAlias(name)]
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
-    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = parseValueToplevel(tokeniser, EndOfFile)
-    fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringCharacterProvider(input)))
+    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = APLParser(tokeniser).parseValueToplevel(EndOfFile)
+    fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
     fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)

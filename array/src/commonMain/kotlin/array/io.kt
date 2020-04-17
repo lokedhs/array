@@ -40,8 +40,10 @@ interface CharacterProvider {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-class PushBackCharacterProvider(val source: CharacterProvider) : CharacterProvider {
+class PushBackCharacterProvider(val sourceLocation: SourceLocation) : CharacterProvider {
     private class CharWithPosition(val character: Int, val line: Int, val col: Int)
+
+    private val source = sourceLocation.open()
 
     private val pushBackList = ArrayList<CharWithPosition>()
     private val pushBackHistory = ArrayDeque<CharWithPosition>()
@@ -80,7 +82,7 @@ class PushBackCharacterProvider(val source: CharacterProvider) : CharacterProvid
         col = ch.col
     }
 
-    fun pos() = Position(sourceName() ?: "no source", line, col)
+    fun pos() = Position(sourceLocation, line, col)
 
     override fun close() {
         source.close()

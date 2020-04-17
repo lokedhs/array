@@ -34,9 +34,19 @@ class ParsedDouble(val value: Double) : Token()
 class ParsedComplex(val value: Complex) : Token()
 class ParsedCharacter(val value: Int) : Token()
 
-class Position(val sourceText: String, val line: Int, val col: Int)
+interface SourceLocation {
+    fun sourceText(): String
+    fun open(): CharacterProvider
+}
 
-class TokenGenerator(val engine: Engine, contentArg: CharacterProvider) {
+class StringSourceLocation(val sourceText: String) : SourceLocation {
+    override fun sourceText() = sourceText
+    override fun open() = StringCharacterProvider(sourceText)
+}
+
+class Position(val source: SourceLocation, val line: Int, val col: Int)
+
+class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private val content = PushBackCharacterProvider(contentArg)
     private val singleCharFunctions: Set<String>
     private val pushBackQueue = ArrayList<Token>()
