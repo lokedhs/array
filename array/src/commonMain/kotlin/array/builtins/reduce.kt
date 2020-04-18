@@ -6,46 +6,41 @@ class ReduceResult1Arg(
     val context: RuntimeContext,
     val fn: APLFunction,
     val arg: APLValue,
-    axis: Int,
+    val axis: Int,
     val pos: Position
 ) : APLArray() {
-    private val argDimensions: Dimensions
     override val dimensions: Dimensions
     private val stepLength: Int
-    private val reduceDepth: Int
+    private val sizeAlongAxis: Int
     private val fromSourceMul: Int
     private val toDestMul: Int
 
     init {
-        argDimensions = arg.dimensions
+        val argDimensions = arg.dimensions
+        val argMultipliers = argDimensions.multipliers()
 
         ensureValidAxis(axis, argDimensions)
 
-        var sl = 1
-        for (i in axis + 1 until argDimensions.size) {
-            sl *= argDimensions[i]
-        }
-        stepLength = sl
-
-        reduceDepth = argDimensions[axis]
+        stepLength = argMultipliers[axis]
+        sizeAlongAxis = argDimensions[axis]
         dimensions = arg.dimensions.remove(axis)
 
-        var currMult = 1
-        for (i in dimensions.indices) {
-            val d = dimensions[i]
-            currMult *= d
-        }
-        fromSourceMul = currMult / stepLength
+        val multipliers = dimensions.multipliers()
+
+        fromSourceMul = if (axis == 0) dimensions.contentSize() else multipliers[axis - 1]
         toDestMul = fromSourceMul * argDimensions[axis]
     }
 
     override fun valueAt(p: Int): APLValue {
-        val posInSrc = ((p / fromSourceMul) * toDestMul) + p % fromSourceMul
-        return if (reduceDepth == 0) {
+        return if (sizeAlongAxis == 0) {
             fn.identityValue()
         } else {
+            val highPosition = p / fromSourceMul
+            val lowPosition = p % fromSourceMul
+            val posInSrc = highPosition * toDestMul + lowPosition
+
             var curr = arg.valueAt(posInSrc)
-            for (i in 1 until reduceDepth) {
+            for (i in 1 until sizeAlongAxis) {
                 curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), null).collapse()
             }
             curr
