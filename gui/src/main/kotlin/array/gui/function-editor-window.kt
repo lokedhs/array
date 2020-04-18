@@ -8,8 +8,10 @@ import javafx.event.EventHandler
 import javafx.scene.Node
 import javafx.scene.Scene
 import javafx.scene.control.Button
-import javafx.scene.layout.BorderPane
+import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
+import javafx.scene.layout.Priority
+import javafx.scene.layout.VBox
 import javafx.scene.text.TextFlow
 import javafx.stage.Stage
 import org.fxmisc.richtext.StyledTextArea
@@ -18,17 +20,15 @@ import org.fxmisc.richtext.model.*
 import java.util.function.BiConsumer
 import java.util.function.Function
 
-class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: Engine, name: Symbol? = null) {
+class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: Engine) {
     private val styledTextOps = SegmentOps.styledTextOps<TextStyle>()
     private val stage = Stage()
     private val textArea: FunctionEditorArea
+    private val messageArea: TextField
 
     init {
+        val vbox = VBox()
 
-//        textArea = TextArea().apply {
-//            font = renderContext.font()
-//            renderContext.extendedInput().addEventHandlerToNode(this)
-//        }
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
             //println("accept: t=${t}, u=${u}")
         }
@@ -40,18 +40,24 @@ class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: E
         }
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
         textArea = FunctionEditorArea(applyParagraphStyle, document, styledTextOps, nodeFactory)
+        vbox.children.add(textArea)
+
+        messageArea = TextField().apply {
+            isEditable = false
+        }
+        vbox.children.add(messageArea)
+
         val buttonPanel = HBox().apply {
             val saveButton = Button("Save").apply {
                 onAction = EventHandler { saveAndClose() }
             }
             children.add(saveButton)
         }
-        val border = BorderPane().apply {
-            center = textArea
-            bottom = buttonPanel
-        }
+        vbox.children.add(buttonPanel)
 
-        stage.scene = Scene(border, 600.0, 700.0)
+        VBox.setVgrow(textArea, Priority.ALWAYS)
+
+        stage.scene = Scene(vbox, 600.0, 700.0)
     }
 
     fun show() {
@@ -81,10 +87,18 @@ class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: E
     }
 
     fun highlightError(message: String, pos: Position?) {
-        println("Message: ${message}")
+        messageArea.text = message
+        val line: Int
+        val col: Int
         if (pos != null) {
-//            textArea.positionCaret(positionToIndex(textArea.text, pos.line, pos.col))
+            line = pos.line
+            col = pos.col
+        } else {
+            line = 0
+            col = 0
         }
+        textArea.caretSelectionBind.moveTo(positionToIndex(textArea.text, line, col))
+        textArea.requestFocus()
     }
 
     fun saveAndClose() {

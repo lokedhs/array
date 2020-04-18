@@ -30,11 +30,10 @@ open class KAPEditorStyledArea(
     segmentOps,
     nodeFactory
 ) {
-    private var defaultKeymap: InputMap<*>
+    private var defaultKeymap: InputMap<*> = Nodes.getInputMap(this)
     private var prefixActive = false
 
     init {
-        defaultKeymap = Nodes.getInputMap(this)
         updateKeymap()
     }
 
