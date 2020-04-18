@@ -9,7 +9,7 @@ open class APLTest {
         val engine = Engine()
         val instr = engine.parseString(expr)
         val context = RuntimeContext(engine)
-        return instr.evalWithContext(context)
+        return instr.evalWithContext(context).collapse()
     }
 
     fun parseAPLExpressionWithOutput(expr: String): Pair<APLValue, String> {

@@ -14,7 +14,6 @@ import org.fxmisc.richtext.TextExt
 import org.fxmisc.richtext.model.GenericEditableStyledDocument
 import org.fxmisc.richtext.model.SegmentOps
 import org.fxmisc.richtext.model.StyledSegment
-import org.fxmisc.richtext.model.TextOps
 import java.util.function.BiConsumer
 import java.util.function.Function
 
@@ -23,9 +22,9 @@ class ResultList3(val client: Client) {
     private val styledArea: ROStyledArea
     private val scrollArea: VirtualizedScrollPane<ROStyledArea>
 
-    val history = ArrayList<String>()
-    var historyPos = 0
-    var pendingInput: String? = null
+    private val history = ArrayList<String>()
+    private var historyPos = 0
+    private var pendingInput: String? = null
 
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
@@ -38,18 +37,8 @@ class ResultList3(val client: Client) {
             StyledTextArea.createStyledTextNode(seg.segment, seg.style, applyStyle)
         }
 
-        val segmentOps: TextOps<String, TextStyle> = styledTextOps
-
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
-        styledArea = ROStyledArea(
-            client.renderContext,
-            ParStyle(),
-            applyParagraphStyle,
-            TextStyle(),
-            document,
-            segmentOps,
-            nodeFactory
-        )
+        styledArea = ROStyledArea(applyParagraphStyle, document, styledTextOps, nodeFactory)
 
         styledArea.addCommandListener(::processCommand)
 

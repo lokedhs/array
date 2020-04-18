@@ -1,5 +1,6 @@
 package array.gui
 
+import array.APLGenericException
 import array.CharacterOutput
 import array.Engine
 import array.RuntimeContext
@@ -85,20 +86,21 @@ class Client(val application: ClientApplication, val stage: Stage) {
         }
     }
 
-    fun openSettings() {
+    private fun openSettings() {
         println("Settings panel not implemented")
     }
 
     fun sendInput(text: String) {
-//        try {
-        val instr = engine.parseString(text)
-        val v = instr.evalWithContext(context).collapse()
-        resultList.addResult(v)
-//        } catch (e: APLGenericException) {
-//            resultList.addResult(e)
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
+        try {
+            val instr = engine.parseString(text)
+            val v = instr.evalWithContext(context).collapse()
+            resultList.addResult(v)
+        } catch (e: APLGenericException) {
+            resultList.addResult(e)
+            e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private inner class ClientRenderContextImpl : ClientRenderContext {

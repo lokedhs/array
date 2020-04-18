@@ -48,7 +48,7 @@ class FunctionListWindow private constructor(val renderContext: ClientRenderCont
     }
 
     private fun addFunction() {
-        val editor = FunctionEditor(renderContext, engine)
+        val editor = FunctionEditorWindow(renderContext, engine)
         editor.show()
     }
 

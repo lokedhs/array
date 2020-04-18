@@ -13,10 +13,9 @@ import javafx.scene.text.Font
 import javafx.stage.Stage
 
 class KeyboardHelpWindow(val renderContext: ClientRenderContext) {
-    private val stage: Stage
+    private val stage = Stage()
 
     init {
-        stage = Stage()
         val loader = FXMLLoader(javaClass.getResource("keyboard.fxml"))
         val root: Parent = loader.load()
         val controller: KeyboardHelp = loader.getController()

@@ -1,51 +1,50 @@
 package array.gui.styledarea
 
 import array.assertx
-import array.gui.ClientRenderContext
-import javafx.event.Event
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCombination
 import javafx.scene.text.TextFlow
-import org.fxmisc.richtext.GenericStyledArea
 import org.fxmisc.richtext.model.*
 import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
-import org.fxmisc.wellbehaved.event.Nodes
 import java.util.function.BiConsumer
 import java.util.function.Function
 
 class ROStyledArea(
-    val renderContext: ClientRenderContext,
-    parStyle: ParStyle,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
-    textStyle: TextStyle,
     document: EditableStyledDocument<ParStyle, String, TextStyle>,
-    segmentOps: TextOps<String, TextStyle>,
+    styledTextOps: TextOps<String, TextStyle>,
     nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
-) : GenericStyledArea<ParStyle, String, TextStyle>(
-    parStyle,
+) : KAPEditorStyledArea(
+    ParStyle(),
     applyParagraphStyle,
-    textStyle,
+    TextStyle(),
     document,
-    segmentOps,
+    styledTextOps,
     nodeFactory
 ) {
-
     private var updatesEnabled = false
-    private var defaultKeymap: InputMap<*>
     private val commandListeners = ArrayList<(String) -> Unit>()
     private val historyListeners = ArrayList<HistoryListener>()
 
     init {
-        defaultKeymap = Nodes.getInputMap(this)
-        updateKeymap()
         displayPrompt()
+    }
+
+    override fun addInputMappings(entries: MutableList<InputMap<*>>) {
+        entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), { sendCurrentContent() }))
+
+        // History navigation
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.DOWN), { atEditboxEnd() }, { nextHistory() }))
+
+        // Cursor movement
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.HOME), { atEditbox() }, { moveToBeginningOfInput() }))
     }
 
     fun displayPrompt() {
         withUpdateEnabled {
-            val inputDocument = ReadOnlyStyledDocumentBuilder<ParStyle, String, TextStyle>(segOps, ParStyle())
+            val inputDocument = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
                 .addParagraph(listOf(
                     StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
                     StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
@@ -56,62 +55,6 @@ class ROStyledArea(
 
     fun addCommandListener(fn: (String) -> Unit) {
         commandListeners.add(fn)
-    }
-
-    private var prefixActive = false
-
-    private fun updateKeymap() {
-        val entries = ArrayList<InputMap<out Event>>()
-
-        // Keymap
-        renderContext.extendedInput().keymap.forEach { e ->
-            val modifiers =
-                if (e.key.shift) arrayOf(KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN) else arrayOf(KeyCombination.ALT_DOWN)
-            val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers), { replaceSelection(e.value) })
-            entries.add(v)
-        }
-        entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), { sendCurrentContent() }))
-
-        // History navigation
-        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
-        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.DOWN), { atEditboxEnd() }, { nextHistory() }))
-
-        // Cursor movement
-        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.HOME), { atEditbox() }, { moveToBeginningOfInput() }))
-
-        // Prefix input
-        val prefixChar = "." // this should be read from config
-        entries.add(makePrefixInputKeymap(prefixChar))
-
-        entries.add(defaultKeymap)
-        Nodes.pushInputMap(this, InputMap.sequence(*entries.toTypedArray()))
-    }
-
-    private fun makePrefixInputKeymap(prefixChar: String): InputMap<out Event> {
-        fun verifyPrefixActive(): Boolean {
-            return prefixActive
-        }
-
-        fun disableAndAdd(s: String) {
-            prefixActive = false
-            replaceSelection(s)
-        }
-
-        val entries = ArrayList<InputMap<out Event>>()
-        entries.add(InputMap.consume(EventPattern.keyTyped(prefixChar), {
-            if (!prefixActive) {
-                prefixActive = true
-            } else {
-                disableAndAdd(prefixChar)
-            }
-        }))
-        renderContext.extendedInput().keymap.forEach { e ->
-            val modifiers = if (e.key.shift) arrayOf(KeyCombination.SHIFT_DOWN) else emptyArray()
-            entries.add(InputMap.consumeWhen(EventPattern.keyTyped(e.key.character, *modifiers),
-                ::verifyPrefixActive,
-                { disableAndAdd(e.value) }))
-        }
-        return InputMap.sequence(*entries.toTypedArray())
     }
 
     private fun atEditboxStart(): Boolean {
