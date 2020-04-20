@@ -22,7 +22,7 @@ kotlin {
             jvmTarget = "11"
         }
     }
-// Javascript support is not enabled as not all featutures used by the engine is supported yet
+// Javascript support is not enabled as not all features used by the engine is supported yet
 // Specifically, reflection does not work
 //    js {
 //        browser {
