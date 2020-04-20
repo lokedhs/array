@@ -10,12 +10,14 @@ import org.fxmisc.richtext.model.EditableStyledDocument
 import org.fxmisc.richtext.model.StyledSegment
 import org.fxmisc.richtext.model.TextOps
 import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.InputHandler
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
 import java.util.function.BiConsumer
 import java.util.function.Function
 
 open class KAPEditorStyledArea(
+    val keyboardInput: ExtendedCharsKeyboardInput,
     parStyle: ParStyle,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
     textStyle: TextStyle,
@@ -37,11 +39,11 @@ open class KAPEditorStyledArea(
         updateKeymap()
     }
 
-    protected fun updateKeymap() {
+    private fun updateKeymap() {
         val entries = ArrayList<InputMap<out Event>>()
 
         // Keymap
-        ExtendedCharsKeyboardInput().keymap.forEach { e ->
+        keyboardInput.keymap.forEach { e ->
             val modifiers =
                 if (e.key.shift) arrayOf(KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN) else arrayOf(KeyCombination.ALT_DOWN)
             val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers), { replaceSelection(e.value) })
@@ -78,12 +80,21 @@ open class KAPEditorStyledArea(
                 disableAndAdd(prefixChar)
             }
         }))
-        ExtendedCharsKeyboardInput().keymap.forEach { e ->
-            val modifiers = if (e.key.shift) arrayOf(KeyCombination.SHIFT_DOWN) else emptyArray()
-            entries.add(InputMap.consumeWhen(EventPattern.keyTyped(e.key.character, *modifiers),
-                ::verifyPrefixActive,
-                { disableAndAdd(e.value) }))
-        }
+        entries.add(InputMap.process(EventPattern.keyTyped(),
+            { event ->
+                if (!prefixActive) {
+                    InputHandler.Result.PROCEED
+                } else {
+                    prefixActive = false
+                    val charMapping = keyboardInput.keymap[ExtendedCharsKeyboardInput.KeyDescriptor(event.character, event.isShiftDown)]
+                    if (charMapping == null) {
+                        InputHandler.Result.PROCEED
+                    } else {
+                        replaceSelection(charMapping)
+                        InputHandler.Result.CONSUME
+                    }
+                }
+            }))
         return InputMap.sequence(*entries.toTypedArray())
     }
 }

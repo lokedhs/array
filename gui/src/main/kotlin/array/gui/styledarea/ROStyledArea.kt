@@ -1,6 +1,7 @@
 package array.gui.styledarea
 
 import array.assertx
+import array.gui.ExtendedCharsKeyboardInput
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
 import javafx.scene.text.TextFlow
@@ -11,11 +12,13 @@ import java.util.function.BiConsumer
 import java.util.function.Function
 
 class ROStyledArea(
+    keyboardInput: ExtendedCharsKeyboardInput,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
     document: EditableStyledDocument<ParStyle, String, TextStyle>,
     styledTextOps: TextOps<String, TextStyle>,
     nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
 ) : KAPEditorStyledArea(
+    keyboardInput,
     ParStyle(),
     applyParagraphStyle,
     TextStyle(),

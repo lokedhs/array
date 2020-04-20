@@ -39,7 +39,7 @@ class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: E
             StyledTextArea.createStyledTextNode(seg.segment, seg.style, applyStyle)
         }
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
-        textArea = FunctionEditorArea(applyParagraphStyle, document, styledTextOps, nodeFactory)
+        textArea = FunctionEditorArea(renderContext.extendedInput(), applyParagraphStyle, document, styledTextOps, nodeFactory)
         vbox.children.add(textArea)
 
         messageArea = TextField().apply {
@@ -133,11 +133,13 @@ class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: E
 }
 
 class FunctionEditorArea(
+    keyboardInput: ExtendedCharsKeyboardInput,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
     document: EditableStyledDocument<ParStyle, String, TextStyle>,
     styledTextOps: TextOps<String, TextStyle>,
     nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
 ) : KAPEditorStyledArea(
+    keyboardInput,
     ParStyle(),
     applyParagraphStyle,
     TextStyle(),
