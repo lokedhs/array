@@ -22,6 +22,14 @@ kotlin {
             jvmTarget = "11"
         }
     }
+// Javascript support is not enabled as not all featutures used by the engine is supported yet
+// Specifically, reflection does not work
+//    js {
+//        browser {
+//        }
+//        nodejs {
+//        }
+//    }
     linuxX64("linux") {
 //        compilations.main.cinterops {
 //            libedit
@@ -62,6 +70,16 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
+//        jsMain {
+//            dependencies {
+//                implementation kotlin('stdlib-js')
+//            }
+//        }
+//        jsTest {
+//            dependencies {
+//                implementation kotlin('test-js')
+//            }
+//        }
         linuxMain {
         }
         linuxTest {
