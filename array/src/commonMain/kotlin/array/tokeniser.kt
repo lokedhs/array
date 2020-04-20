@@ -87,7 +87,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         }
     }
 
-    fun nextTokenOrSpace(newlineIsSpace: Boolean = true): Pair<Token, Position> {
+    fun nextTokenOrSpace(): Pair<Token, Position> {
         val posBeforeParse = content.pos()
         fun mkpos(token: Token) = Pair(token, posBeforeParse)
 
