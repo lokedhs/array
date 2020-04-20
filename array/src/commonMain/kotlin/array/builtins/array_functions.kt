@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlin.math.absoluteValue
 import kotlin.math.max
 
 class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
@@ -315,9 +316,28 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos)
 }
 
+class TakeArrayValue(val selection: IntArray, val source: APLValue) : APLArray() {
+    override val dimensions = Dimensions(selection.map { v -> v.absoluteValue }.toIntArray())
+    private val sourceDimensions = source.dimensions
+
+    override fun valueAt(p: Int): APLValue {
+        val coords = dimensions.positionFromIndex(p)
+        val adjusted = IntArray(coords.size) { i ->
+            val d = selection[i]
+            val v = coords[i]
+            if (d >= 0) {
+                v
+            } else {
+                sourceDimensions[i] + d + v
+            }
+        }
+        return source.valueAt(sourceDimensions.indexFromPosition(adjusted))
+    }
+}
+
 class TakeAPLFunction : APLFunctionDescriptor {
-    class TakeAPLFunctionImpl(pos: Position) : APLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+    class TakeAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val v = a.unwrapDeferredValue()
             return when {
                 v is APLSingleValue -> v
@@ -326,18 +346,52 @@ class TakeAPLFunction : APLFunctionDescriptor {
                 else -> v.valueAt(0)
             }
         }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val aDimensions = a.dimensions
+            if (!((aDimensions.size == 0 && b.rank == 1) ||
+                        (aDimensions.size == 1 && aDimensions[0] == b.rank))
+            ) {
+                throw InvalidDimensionsException("Size of A must match the rank of B", pos)
+            }
+            return TakeArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b)
+        }
     }
 
     override fun make(pos: Position) = TakeAPLFunctionImpl(pos)
 }
 
-class DropResultValue(val a: APLValue) : APLArray() {
+class DropArrayValue(val selection: IntArray, val source: APLValue) : APLArray() {
+    override val dimensions: Dimensions
+    private val sourceDimensions: Dimensions
+
+    init {
+        sourceDimensions = source.dimensions
+        dimensions = Dimensions(selection.mapIndexed { index, v -> sourceDimensions[index] - v.absoluteValue }.toIntArray())
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        val coords = dimensions.positionFromIndex(p)
+        val adjusted = IntArray(coords.size) { i ->
+            val d = selection[i]
+            val v = coords[i]
+            if (d >= 0) {
+                d + v
+            } else {
+                v
+            }
+        }
+        return source.valueAt(sourceDimensions.indexFromPosition(adjusted))
+    }
+}
+
+class DropResultValueOneArg(val a: APLValue) : APLArray() {
     override val dimensions: Dimensions
 
     init {
         val d = a.dimensions
         if (d.size != 1) {
-            TODO("Drop is only supported for 1-dimensional arrays")
+            TODO("One-argument drop is only supported for 1-dimensional arrays")
         }
         dimensions = dimensionsOfSize(d[0] - 1)
     }
@@ -346,9 +400,19 @@ class DropResultValue(val a: APLValue) : APLArray() {
 }
 
 class DropAPLFunction : APLFunctionDescriptor {
-    class DropAPLFunctionImpl(pos: Position) : APLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            return DropResultValue(a)
+    class DropAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return DropResultValueOneArg(a)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val aDimensions = a.dimensions
+            if (!((aDimensions.size == 0 && b.rank == 1) ||
+                        (aDimensions.size == 1 && aDimensions[0] == b.rank))
+            ) {
+                throw InvalidDimensionsException("Size of A must match the rank of B", pos)
+            }
+            return DropArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b)
         }
     }
 

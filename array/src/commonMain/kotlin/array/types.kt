@@ -74,6 +74,12 @@ interface APLValue {
             return v.ensureList(pos)
         }
     }
+
+    fun toIntArray(pos: Position): IntArray {
+        return IntArray(size) { i ->
+            valueAt(i).ensureNumber(pos).asInt()
+        }
+    }
 }
 
 inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
