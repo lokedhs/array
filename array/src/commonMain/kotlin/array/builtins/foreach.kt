@@ -25,7 +25,7 @@ class ForEachResult2Arg(
     val pos: Position
 ) : APLArray() {
     init {
-        unless(arg1.dimensions.compare(arg2.dimensions)) {
+        unless(arg1.dimensions.compareEquals(arg2.dimensions)) {
             throw IncompatibleTypeException("Arguments to foreach does not have the same dimensions", pos)
         }
     }

@@ -126,7 +126,7 @@ abstract class APLArray : APLValue {
     override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 
     override fun compareEquals(reference: APLValue): Boolean {
-        if (!dimensions.compare(reference.dimensions)) {
+        if (!dimensions.compareEquals(reference.dimensions)) {
             return false
         }
         for (i in 0 until size) {

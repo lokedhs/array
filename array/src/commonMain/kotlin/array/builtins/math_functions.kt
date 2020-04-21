@@ -41,7 +41,7 @@ class ArraySum2Args(
     private val bRank = b.rank
 
     init {
-        unless(aRank == 0 || bRank == 0 || a.dimensions.compare(b.dimensions)) {
+        unless(aRank == 0 || bRank == 0 || a.dimensions.compareEquals(b.dimensions)) {
             throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos)
         }
     }

@@ -96,7 +96,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
                 Dimensions(IntArray(v.size) { v.valueAt(it).ensureNumber(pos).asInt() })
             }
             val d2 = b.dimensions
-            return if (d1.compare(d2)) {
+            return if (d1.compareEquals(d2)) {
                 // The array already has the correct dimensions, simply return the old one
                 b
             } else {
