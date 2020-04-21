@@ -59,4 +59,35 @@ class FlowControlTest : APLTest() {
             assertEquals("1043", s)
         }
     }
+
+    @Test
+    fun testMultilineIf() {
+        val result = parseAPLExpression("""
+            |if (1) {
+            |    10
+            |}
+        """.trimMargin())
+        assertSimpleNumber(10, result)
+    }
+
+    @Test
+    fun testMultilineIfWithElse() {
+        val result0 = parseAPLExpression("""
+            |if (1) {
+            |    10
+            |} else {
+            |    20
+            |}
+        """.trimMargin())
+        assertSimpleNumber(10, result0)
+
+        val result1 = parseAPLExpression("""
+            |if (0) {
+            |    10
+            |} else {
+            |    20
+            |}
+        """.trimMargin())
+        assertSimpleNumber(20, result1)
+    }
 }
