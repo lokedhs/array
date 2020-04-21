@@ -78,14 +78,38 @@ class SortTest : APLTest() {
     }
 
     @Test
-    fun compareSymbolsShouldFail() {
-        // Perhaps symbols should compare lexicographically?
+    fun mixStringsAndSymbolsShouldFail() {
         assertFailsWith<APLEvalException> {
-            parseAPLExpression("⍋ 'foo 'bar").collapse()
+            parseAPLExpression("⍋ \"foo\" \"bar\" 'somename").collapse()
         }
         assertFailsWith<APLEvalException> {
-            parseAPLExpression("⍒ 'foo 'bar").collapse()
+            parseAPLExpression("⍒ \"foo\" \"bar\" 'somename").collapse()
         }
+    }
+
+    @Test
+    fun symbolsAndNumberShouldFail() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍋ 1 2 3 'somename").collapse()
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍒ 1 2 3 'somename").collapse()
+        }
+    }
+
+    @Test
+    fun numbersAndComplexShouldFail() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍋ 1 2 3 1J2").collapse()
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍒ 1 2 3 1J2").collapse()
+        }
+    }
+
+    @Test
+    fun sortSymbols() {
+        sortTest("'foo 'bar 'a 'test 'abclongerstring", arrayOf(2, 4, 1, 0, 3))
     }
 
     private fun sortTest(content: String, expected: Array<Int>) {

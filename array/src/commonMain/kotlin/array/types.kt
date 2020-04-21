@@ -39,7 +39,7 @@ interface APLValue {
     fun unwrapDeferredValue(): APLValue = this
     fun compareEquals(reference: APLValue): Boolean
     fun compare(reference: APLValue): Int =
-        throw APLEvalException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
+        throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
 
     fun singleValueOrError(): APLValue {
         return when {
@@ -341,7 +341,7 @@ class APLChar(val value: Int) : APLSingleValue() {
         if (reference is APLChar) {
             return value.compareTo(reference.value)
         } else {
-            throw APLEvalException("Chars must be compared to chars")
+            throw IncompatibleTypeException("Chars must be compared to chars")
         }
     }
 
@@ -376,6 +376,14 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLSymbol && value == reference.value
+
+    override fun compare(reference: APLValue): Int {
+        if (reference is APLSymbol) {
+            return value.compareTo(reference.value)
+        } else {
+            throw IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}")
+        }
+    }
 
     override fun ensureSymbol(pos: Position?) = this
 }
