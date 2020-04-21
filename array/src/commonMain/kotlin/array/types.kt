@@ -38,7 +38,7 @@ interface APLValue {
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
     fun compareEquals(reference: APLValue): Boolean
-    fun compare(reference: APLValue): Int =
+    fun compare(reference: APLValue, pos: Position? = null): Int =
         throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
 
     fun singleValueOrError(): APLValue {
@@ -139,17 +139,22 @@ abstract class APLArray : APLValue {
         return true
     }
 
-    override fun compare(reference: APLValue): Int {
+    override fun compare(reference: APLValue, pos: Position?): Int {
         return when {
             isScalar() && reference.isScalar() -> {
                 return if (reference is APLSingleValue) {
                     -1
                 } else {
-                    valueAt(0).compare(reference.valueAt(0))
+                    valueAt(0).compare(reference.valueAt(0), pos)
                 }
             }
-            isScalar() && !reference.isScalar() -> -1
-            !isScalar() && reference.isScalar() -> 1
+            // Until we have a proper ordering of all types, we have to prevent comparing scalars to anything which is not a scalar
+            isScalar() && !reference.isScalar() -> {
+                throw IncompatibleTypeException("Comparison is not supported using these types", pos)
+            }
+            !isScalar() && reference.isScalar() -> {
+                throw IncompatibleTypeException("Comparison is not supported using these types", pos)
+            }
             else -> compareAPLArrays(this, reference)
         }
     }
@@ -337,7 +342,7 @@ class APLChar(val value: Int) : APLSingleValue() {
 
     override fun compareEquals(reference: APLValue) = reference is APLChar && value == reference.value
 
-    override fun compare(reference: APLValue): Int {
+    override fun compare(reference: APLValue, pos: Position?): Int {
         if (reference is APLChar) {
             return value.compareTo(reference.value)
         } else {
@@ -377,7 +382,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
 
     override fun compareEquals(reference: APLValue) = reference is APLSymbol && value == reference.value
 
-    override fun compare(reference: APLValue): Int {
+    override fun compare(reference: APLValue, pos: Position?): Int {
         if (reference is APLSymbol) {
             return value.compareTo(reference.value)
         } else {

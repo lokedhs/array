@@ -1,5 +1,6 @@
 package array
 
+import array.complex.Complex
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -110,6 +111,81 @@ class SortTest : APLTest() {
     @Test
     fun sortSymbols() {
         sortTest("'foo 'bar 'a 'test 'abclongerstring", arrayOf(2, 4, 1, 0, 3))
+    }
+
+    @Test
+    fun tokenSymbolComparison() {
+        val engine = Engine()
+        val sym = APLSymbol(engine.internSymbol("foo"))
+        val str = makeAPLString("bar")
+        assertFailsWith<APLEvalException> {
+            sym.compare(str, )
+        }
+        assertFailsWith<APLEvalException> {
+            str.compare(sym, )
+        }
+    }
+
+    @Test
+    fun numberSymbolComparison() {
+        val engine = Engine()
+        val num = 1.makeAPLNumber()
+        val sym = APLSymbol(engine.internSymbol("foo"))
+        assertFailsWith<APLEvalException> {
+            num.compare(sym, )
+        }
+        assertFailsWith<APLEvalException> {
+            sym.compare(num, )
+        }
+    }
+
+    @Test
+    fun numberComplexComparison() {
+        val num = 1.makeAPLNumber()
+        val complex = Complex(2.0, 3.0).makeAPLNumber()
+        assertFailsWith<APLEvalException> {
+            num.compare(complex, )
+        }
+        assertFailsWith<APLEvalException> {
+            complex.compare(num, )
+        }
+    }
+
+    @Test
+    fun listComparison() {
+        val list1 = APLList(listOf(1.makeAPLNumber(), 2.makeAPLNumber()))
+        val list2 = APLList(listOf(2.makeAPLNumber(), 4.makeAPLNumber()))
+        assertFailsWith<APLEvalException> {
+            list1.compare(list2)
+        }
+        assertFailsWith<APLEvalException> {
+            list2.compare(list1)
+        }
+    }
+
+    @Test
+    fun numberCharComparison() {
+        val char1 = APLChar('a'.toInt())
+        val num1 = 1.makeAPLNumber()
+        assertFailsWith<APLEvalException> {
+            char1.compare(num1)
+        }
+        assertFailsWith<APLEvalException> {
+            num1.compare(char1)
+        }
+    }
+
+    @Test
+    fun symbolCharComparison() {
+        val engine = Engine()
+        val sym = APLSymbol(engine.internSymbol("foo"))
+        val ch = APLChar('a'.toInt())
+        assertFailsWith<APLEvalException> {
+            sym.compare(ch)
+        }
+        assertFailsWith<APLEvalException> {
+            ch.compare(sym)
+        }
     }
 
     private fun sortTest(content: String, expected: Array<Int>) {

@@ -150,6 +150,23 @@ class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Posit
     }
 }
 
+class IfInstruction(
+    val conditionToCheck: Instruction,
+    val thenStatement: Instruction,
+    val elseStatement: Instruction,
+    pos: Position
+) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        val result = conditionToCheck.evalWithContext(context)
+        val resultStatement = if (result.ensureNumber(pos).asLong() == 0L) {
+            elseStatement
+        } else {
+            thenStatement
+        }
+        return resultStatement.evalWithContext(context)
+    }
+}
+
 class UserFunction(
     private val leftFnArgs: List<Symbol>,
     private val rightFnArgs: List<Symbol>,

@@ -37,12 +37,12 @@ class APLLong(val value: Long) : APLNumber() {
 
     override fun compareEquals(reference: APLValue) = reference is APLLong && value == reference.value
 
-    override fun compare(reference: APLValue): Int {
+    override fun compare(reference: APLValue, pos: Position?): Int {
         return when (reference) {
             is APLLong -> value.compareTo(reference.value)
             is APLDouble -> value.compareTo(reference.value)
             is APLComplex -> throwComplexComparisonException()
-            else -> super.compare(reference)
+            else -> super.compare(reference, pos)
         }
     }
 
@@ -79,12 +79,12 @@ class APLDouble(val value: Double) : APLNumber() {
 
     override fun compareEquals(reference: APLValue) = reference is APLDouble && value == reference.value
 
-    override fun compare(reference: APLValue): Int {
+    override fun compare(reference: APLValue, pos: Position?): Int {
         return when (reference) {
             is APLLong -> value.compareTo(reference.value)
             is APLDouble -> value.compareTo(reference.value)
             is APLComplex -> throwComplexComparisonException()
-            else -> super.compare(reference)
+            else -> super.compare(reference, pos)
         }
     }
 

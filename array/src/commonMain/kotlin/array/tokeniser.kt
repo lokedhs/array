@@ -20,6 +20,8 @@ object LambdaToken : Token()
 object ApplyToken : Token()
 object ListSeparator : Token()
 object Newline : Token()
+object IfToken : Token()
+object ElseToken : Token()
 
 class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
     override fun toString() = "Symbol[name=${symbolName}]"
@@ -67,6 +69,11 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         ";" to ListSeparator
     )
 
+    private val stringToKeywordMap = hashMapOf(
+        "if" to IfToken,
+        "else" to ElseToken
+    )
+
     init {
         singleCharFunctions = hashSetOf(
             "!", "#", "%", "&", "*", "+", ",", "-", "/", "<", "=", ">", "?", "^", "|",
@@ -110,7 +117,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 isNewline(ch) -> Newline
                 isWhitespace(ch) -> Whitespace
                 isCharQuote(ch) -> collectChar()
-                isLetter(ch) -> collectSymbol(ch)
+                isLetter(ch) -> collectSymbolOrKeyword(ch)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
                 isQuotePrefixChar(ch) -> QuotePrefix
@@ -186,7 +193,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         throw IllegalNumberFormat("Content cannot be parsed as a number", posStart)
     }
 
-    private fun collectSymbol(firstChar: Int): Symbol {
+    private fun collectSymbolOrKeyword(firstChar: Int): Token {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
         while (true) {
@@ -197,7 +204,8 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             }
             buf.addCodepoint(ch)
         }
-        return engine.internSymbol(buf.toString())
+        val name = buf.toString()
+        return stringToKeywordMap[name] ?: engine.internSymbol(name)
     }
 
     private fun collectString(): Token {

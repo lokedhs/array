@@ -2,7 +2,7 @@ package array.builtins
 
 import array.*
 
-fun compareAPLArrays(a: APLValue, b: APLValue): Int {
+fun compareAPLArrays(a: APLValue, b: APLValue, pos: Position? = null): Int {
     val aDimensions = a.dimensions
     val bDimensions = b.dimensions
 
@@ -26,7 +26,7 @@ fun compareAPLArrays(a: APLValue, b: APLValue): Int {
         while (i < aLength && i < bLength) {
             val aVal = a.valueAt(i)
             val bVal = b.valueAt(i)
-            val result = aVal.compare(bVal)
+            val result = aVal.compare(bVal, pos)
             if (result != 0) {
                 return result
             }
@@ -50,7 +50,7 @@ fun compareAPLArrays(a: APLValue, b: APLValue): Int {
     for (i in 0 until a.size) {
         val aVal = a.valueAt(i)
         val bVal = b.valueAt(i)
-        aVal.compare(bVal).let { result ->
+        aVal.compare(bVal, ).let { result ->
             if (result != 0) {
                 return result
             }
@@ -85,7 +85,7 @@ abstract class GradeFunction(pos: Position) : NoAxisAPLFunction(pos) {
             for (i in 0 until firstAxisMultiplier) {
                 val objA = source.valueAt(ap)
                 val objB = source.valueAt(bp)
-                val result = objA.compare(objB)
+                val result = objA.compare(objB, pos)
                 if (result != 0) {
                     res = result
                     break

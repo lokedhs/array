@@ -7,7 +7,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     fun parseValueToplevel(endToken: Token): Instruction {
         val statementList = ArrayList<Instruction>()
         while (true) {
-            val holder = parseList(tokeniser)
+            val holder = parseList()
             holder.instruction.withValueIfExists { instr ->
                 statementList.add(instr)
             }
@@ -24,7 +24,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun parseList(tokeniser: TokenGenerator): InstrTokenHolder {
+    private fun parseList(): InstrTokenHolder {
         val statementList = ArrayList<Instruction>()
         while (true) {
             val holder = parseValue()
@@ -113,7 +113,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     data class DefinedUserFunction(val fn: UserFunction, val name: Symbol, val pos: Position)
 
     private fun processFunctionDefinition(pos: Position, leftArgs: List<Instruction>): Instruction {
-        if (!leftArgs.isEmpty()) {
+        if (leftArgs.isNotEmpty()) {
             throw ParseException("Function definition with non-null left argument", pos)
         }
         val definedUserFunction = parseUserDefinedFn(pos)
@@ -195,9 +195,27 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
                 is LambdaToken -> leftArgs.add(processLambda(pos))
                 is ApplyToken -> return processFn(parseApplyDefinition(), pos, leftArgs)
+                is IfToken -> addLeftArg(parseIfStatement(pos))
                 else -> throw UnexpectedToken(token, pos)
             }
         }
+    }
+
+    private fun parseIfStatement(pos: Position): Instruction {
+        tokeniser.nextTokenWithType<OpenParen>()
+        val condition = parseValueToplevel(CloseParen)
+        tokeniser.nextTokenWithType<OpenFnDef>()
+        val thenStatement = parseValueToplevel(CloseFnDef)
+
+        val token = tokeniser.nextToken()
+        val elseStatement = if (token is ElseToken) {
+            tokeniser.nextTokenWithType<OpenFnDef>()
+            parseValueToplevel(CloseFnDef)
+        } else {
+            tokeniser.pushBackToken(token)
+            LiteralAPLNullValue(pos)
+        }
+        return IfInstruction(condition, thenStatement, elseStatement, pos)
     }
 
     private fun parseApplyDefinition(): APLFunctionDescriptor {
@@ -241,8 +259,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         return when (token) {
             is Symbol -> {
-                val fn = tokeniser.engine.getFunction(token)
-                if (fn == null) throw ParseException("Symbol is not a function", pos)
+                val fn = tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
                 parseOperator(fn)
             }
             is OpenFnDef -> {
@@ -256,7 +273,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         var currentFn = fn
         var token: Token
         loop@ while (true) {
-            val (readToken, pos) = tokeniser.nextTokenWithPosition()
+            val readToken = tokeniser.nextToken()
             token = readToken
             if (token is Symbol) {
                 val op = tokeniser.engine.getOperator(token) ?: break
