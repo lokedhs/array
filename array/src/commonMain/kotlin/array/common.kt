@@ -87,6 +87,24 @@ class Arrays {
             return true
         }
 
+        fun compare(a: IntArray, b: IntArray): Int {
+            var i = 0
+            while (i < a.size && i < b.size) {
+                val aVal = a[i]
+                val bVal = b[i]
+                when {
+                    aVal < bVal -> return -1
+                    aVal > bVal -> return 1
+                }
+                i++
+            }
+            return when {
+                i < a.size -> 1
+                i < b.size -> -1
+                else -> 0
+            }
+        }
+
         fun toString(values: Array<*>): String {
             val buf = StringBuilder()
             buf.append("[")

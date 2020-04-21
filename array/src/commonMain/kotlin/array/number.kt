@@ -35,9 +35,22 @@ class APLLong(val value: Long) : APLNumber() {
             APLValue.FormatStyle.PRETTY -> value.toString()
         }
 
-    override fun compare(reference: APLValue) = reference is APLLong && value == reference.value
+    override fun compareEquals(reference: APLValue) = reference is APLLong && value == reference.value
+
+    override fun compare(reference: APLValue): Int {
+        return when (reference) {
+            is APLLong -> value.compareTo(reference.value)
+            is APLDouble -> value.compareTo(reference.value)
+            is APLComplex -> throwComplexComparisonException()
+            else -> super.compare(reference)
+        }
+    }
 
     override fun toString() = "APLLong(${formatted(APLValue.FormatStyle.PRETTY)})"
+}
+
+private fun throwComplexComparisonException(): Nothing {
+    throw APLEvalException("Complex numbers does not have a total order")
 }
 
 class APLDouble(val value: Double) : APLNumber() {
@@ -64,7 +77,16 @@ class APLDouble(val value: Double) : APLNumber() {
             APLValue.FormatStyle.READABLE -> if (value < 0) "¯" + (-value).toString() else value.toString()
         }
 
-    override fun compare(reference: APLValue) = reference is APLDouble && value == reference.value
+    override fun compareEquals(reference: APLValue) = reference is APLDouble && value == reference.value
+
+    override fun compare(reference: APLValue): Int {
+        return when (reference) {
+            is APLLong -> value.compareTo(reference.value)
+            is APLDouble -> value.compareTo(reference.value)
+            is APLComplex -> throwComplexComparisonException()
+            else -> super.compare(reference)
+        }
+    }
 
     override fun toString() = "APLDouble(${formatted(APLValue.FormatStyle.PRETTY)})"
 }
@@ -88,7 +110,7 @@ class APLComplex(val value: Complex) : APLNumber() {
         return value.real.toLong()
     }
 
-    override fun compare(reference: APLValue) = reference is APLComplex && value == reference.value
+    override fun compareEquals(reference: APLValue) = reference is APLComplex && value == reference.value
 
     override fun asComplex() = value
     override fun isComplex() = value.imaginary != 0.0

@@ -40,7 +40,7 @@ class FindIndexArray(val a: APLValue, val b: APLValue, val context: RuntimeConte
         val elementCount = a.size
         for (i in 0 until elementCount) {
             val v = a.valueAt(i)
-            if (v.compare(reference)) {
+            if (v.compareEquals(reference)) {
                 return i.makeAPLNumber()
             }
         }
@@ -589,7 +589,7 @@ class TransposeFunction : APLFunctionDescriptor {
 class CompareFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return makeBoolean(a.compare(b))
+            return makeBoolean(a.compareEquals(b))
         }
     }
 
@@ -599,7 +599,7 @@ class CompareFunction : APLFunctionDescriptor {
 class CompareNotEqualFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return makeBoolean(!a.compare(b))
+            return makeBoolean(!a.compareEquals(b))
         }
     }
 
@@ -623,7 +623,7 @@ class MemberResultValue(val context: RuntimeContext, val a: APLValue, val b: APL
 
     private fun findInArray(target: APLValue): APLValue {
         b.iterateMembers { value ->
-            if (target.compare(value)) {
+            if (target.compareEquals(value)) {
                 return APLLONG_1
             }
         }

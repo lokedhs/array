@@ -116,6 +116,8 @@ class Engine {
         registerFunction(internSymbol("≡"), CompareFunction())
         registerFunction(internSymbol("≢"), CompareNotEqualFunction())
         registerFunction(internSymbol("∊"), MemberFunction())
+        registerFunction(internSymbol("⍋"), GradeUpFunction())
+        registerFunction(internSymbol("⍒"), GradeDownFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

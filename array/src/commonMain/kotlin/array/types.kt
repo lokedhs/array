@@ -1,5 +1,6 @@
 package array
 
+import array.builtins.compareAPLArrays
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
@@ -36,7 +37,9 @@ interface APLValue {
     fun defaultValue(): APLValue = APLLONG_0
     fun arrayify(): APLValue
     fun unwrapDeferredValue(): APLValue = this
-    fun compare(reference: APLValue): Boolean
+    fun compareEquals(reference: APLValue): Boolean
+    fun compare(reference: APLValue): Int =
+        throw APLEvalException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
 
     fun singleValueOrError(): APLValue {
         return when {
@@ -122,18 +125,33 @@ abstract class APLArray : APLValue {
 
     override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 
-    override fun compare(reference: APLValue): Boolean {
+    override fun compareEquals(reference: APLValue): Boolean {
         if (!dimensions.compare(reference.dimensions)) {
             return false
         }
         for (i in 0 until size) {
             val o1 = valueAt(i)
             val o2 = reference.valueAt(i)
-            if (!o1.compare(o2)) {
+            if (!o1.compareEquals(o2)) {
                 return false
             }
         }
         return true
+    }
+
+    override fun compare(reference: APLValue): Int {
+        return when {
+            isScalar() && reference.isScalar() -> {
+                return if (reference is APLSingleValue) {
+                    -1
+                } else {
+                    valueAt(0).compare(reference.valueAt(0))
+                }
+            }
+            isScalar() && !reference.isScalar() -> -1
+            !isScalar() && reference.isScalar() -> 1
+            else -> compareAPLArrays(this, reference)
+        }
     }
 }
 
@@ -168,7 +186,7 @@ class APLList(val elements: List<APLValue>) : APLValue {
 
     override fun ensureList(pos: Position?) = this
 
-    override fun compare(reference: APLValue): Boolean {
+    override fun compareEquals(reference: APLValue): Boolean {
         if (reference !is APLList) {
             return false
         }
@@ -176,7 +194,7 @@ class APLList(val elements: List<APLValue>) : APLValue {
             return false
         }
         elements.indices.forEach { i ->
-            if (!listElement(i).compare(reference.listElement(i))) {
+            if (!listElement(i).compareEquals(reference.listElement(i))) {
                 return false
             }
         }
@@ -317,7 +335,15 @@ class APLChar(val value: Int) : APLSingleValue() {
         APLValue.FormatStyle.READABLE -> "@${charToString(value)}"
     }
 
-    override fun compare(reference: APLValue) = reference is APLChar && value == reference.value
+    override fun compareEquals(reference: APLValue) = reference is APLChar && value == reference.value
+
+    override fun compare(reference: APLValue): Int {
+        if (reference is APLChar) {
+            return value.compareTo(reference.value)
+        } else {
+            throw APLEvalException("Chars must be compared to chars")
+        }
+    }
 
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 }
@@ -349,7 +375,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
             APLValue.FormatStyle.READABLE -> "'" + value.symbolName
         }
 
-    override fun compare(reference: APLValue) = reference is APLSymbol && value == reference.value
+    override fun compareEquals(reference: APLValue) = reference is APLSymbol && value == reference.value
 
     override fun ensureSymbol(pos: Position?) = this
 }
@@ -363,5 +389,5 @@ class LambdaValue(val fn: APLFunction) : APLSingleValue() {
             APLValue.FormatStyle.PRETTY -> "function"
         }
 
-    override fun compare(reference: APLValue) = this === reference
+    override fun compareEquals(reference: APLValue) = this === reference
 }
