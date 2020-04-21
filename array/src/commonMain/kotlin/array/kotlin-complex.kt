@@ -41,6 +41,7 @@ data class Complex(val real: Double, val imaginary: Double) {
     }
 
     override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
+    override fun hashCode() = real.hashCode() xor imaginary.hashCode()
 
     companion object {
         fun fromPolarCoord(absolute: Double, arg: Double): Complex {
