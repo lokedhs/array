@@ -39,8 +39,7 @@ class FunctionListWindow private constructor(val renderContext: ClientRenderCont
         }
         val editButton = Button("Edit")
         val removeButton = Button("Remove")
-        val hbox = HBox(addButton, editButton, removeButton)
-        return hbox
+        return HBox(addButton, editButton, removeButton)
     }
 
     fun show() {

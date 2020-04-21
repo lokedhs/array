@@ -191,7 +191,7 @@ private fun renderStringValueOptionalQuotes(value: APLValue, showQuotes: Boolean
             throw IllegalStateException("String contain non-chars")
         }
     }
-    if(showQuotes) {
+    if (showQuotes) {
         buf.append("\"")
     }
     return buf.toString()

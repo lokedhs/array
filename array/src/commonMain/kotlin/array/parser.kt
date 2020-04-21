@@ -252,7 +252,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     ): DeclaredFunction {
         val engine = tokeniser.engine
         val instruction = parseValueToplevel(CloseFnDef)
-        return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"), pos)
+        return DeclaredFunction(instruction, leftArgName ?: engine.internSymbol("⍺"), rightArgName ?: engine.internSymbol("⍵"))
     }
 
     private fun parseTwoArgOperatorArgument(): APLFunctionDescriptor {

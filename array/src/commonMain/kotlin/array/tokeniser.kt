@@ -108,8 +108,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
 
         return mkpos(
             when {
-                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(
-                    ch))
+                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
                 isNegationSign(ch) || isDigit(ch) -> {
                     content.pushBack()
                     collectNumber()

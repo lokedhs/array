@@ -1,6 +1,5 @@
 package array.gui
 
-import array.APLValue
 import array.Engine
 import javafx.scene.text.Font
 

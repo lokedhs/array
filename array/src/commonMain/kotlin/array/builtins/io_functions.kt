@@ -15,8 +15,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
             val prettySym = context.engine.internSymbol("pretty")
             val readSym = context.engine.internSymbol("read")
 
-            val styleName = a.ensureSymbol().value
-            val style = when (styleName) {
+            val style = when (val styleName = a.ensureSymbol().value) {
                 plainSym -> APLValue.FormatStyle.PLAIN
                 prettySym -> APLValue.FormatStyle.PRETTY
                 readSym -> APLValue.FormatStyle.READABLE

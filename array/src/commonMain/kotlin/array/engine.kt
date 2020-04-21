@@ -38,8 +38,7 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
 class DeclaredFunction(
     val instruction: Instruction,
     val leftArgName: Symbol,
-    val rightArgName: Symbol,
-    val declaredPos: Position
+    val rightArgName: Symbol
 ) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {

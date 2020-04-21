@@ -63,10 +63,6 @@ open class KAPEditorStyledArea(
     open fun addInputMappings(entries: MutableList<InputMap<out Event>>) {}
 
     private fun makePrefixInputKeymap(prefixChar: String): InputMap<out Event> {
-        fun verifyPrefixActive(): Boolean {
-            return prefixActive
-        }
-
         fun disableAndAdd(s: String) {
             prefixActive = false
             replaceSelection(s)

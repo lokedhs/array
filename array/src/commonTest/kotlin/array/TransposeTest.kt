@@ -137,7 +137,7 @@ class TransposeTest : APLTest() {
     }
 
     @Test
-    fun errorWithincorrectAxisCount() {
+    fun errorWithIncorrectAxisCount() {
         assertFailsWith<InvalidDimensionsException> {
             parseAPLExpression("0 1 ⍉ 3 4 5 ⍴ ⍳60")
         }

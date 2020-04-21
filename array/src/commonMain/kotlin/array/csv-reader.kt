@@ -95,8 +95,7 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
     while (true) {
         skipWhitespace()
         if (atEol()) break
-        val ch = line[pos++]
-        val field = when (ch) {
+        val field = when (val ch = line[pos++]) {
             '"' -> makeAPLString(readQuotedField())
             ',' -> {
                 pos--

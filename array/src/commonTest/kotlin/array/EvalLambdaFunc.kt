@@ -81,7 +81,7 @@ class EvalLambdaFunc : APLTest() {
     fun applyWithOperator() {
         val result = parseAPLExpression("x←λ { 1 + ⍵ } ◊ ⍞x¨ 1 2 3 4")
         assertDimension(dimensionsOfSize(4), result)
-        assertArrayContent(arrayOf(2,3,4,5), result)
+        assertArrayContent(arrayOf(2, 3, 4, 5), result)
     }
 
     private fun evalWithEngine(engine: Engine, expr: String): APLValue {
@@ -89,7 +89,7 @@ class EvalLambdaFunc : APLTest() {
         return instr.evalWithContext(RuntimeContext(engine))
     }
 
-    private fun assertSymbolName(enigne: Engine, name: String, value: APLValue) {
-        assertSame(enigne.internSymbol(name), value.ensureSymbol().value)
+    private fun assertSymbolName(engine: Engine, name: String, value: APLValue) {
+        assertSame(engine.internSymbol(name), value.ensureSymbol().value)
     }
 }
