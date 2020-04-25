@@ -95,6 +95,22 @@ inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
     }
 }
 
+fun APLValue.membersSequence(): Sequence<APLValue> {
+    val v = unwrapDeferredValue()
+    return if (v is APLSingleValue) {
+        sequenceOf(v)
+    } else {
+        Sequence {
+            val length = v.size
+            var index = 0
+            object : Iterator<APLValue> {
+                override fun hasNext() = index < length
+                override fun next() = v.valueAt(index++)
+            }
+        }
+    }
+}
+
 abstract class APLSingleValue : APLValue {
     override val dimensions get() = emptyDimensions()
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index $p from scalar")
@@ -105,7 +121,7 @@ abstract class APLSingleValue : APLValue {
 }
 
 abstract class APLArray : APLValue {
-    override val aplValueType: APLValueType = APLValueType.ARRAY
+    override val aplValueType: APLValueType get() = APLValueType.ARRAY
 
     override fun collapse(): APLValue {
         val v = unwrapDeferredValue()
@@ -161,7 +177,7 @@ abstract class APLArray : APLValue {
 }
 
 class APLList(val elements: List<APLValue>) : APLValue {
-    override val aplValueType: APLValueType = APLValueType.LIST
+    override val aplValueType: APLValueType get() = APLValueType.LIST
 
     override val dimensions get() = emptyDimensions()
 
@@ -332,7 +348,7 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 }
 
 class APLChar(val value: Int) : APLSingleValue() {
-    override val aplValueType: APLValueType = APLValueType.CHAR
+    override val aplValueType: APLValueType get() = APLValueType.CHAR
     fun asString() = charToString(value)
     override fun formatted(style: APLValue.FormatStyle) = when (style) {
         APLValue.FormatStyle.PLAIN -> charToString(value)
@@ -372,7 +388,7 @@ abstract class DeferredResultArray : APLArray() {
 }
 
 class APLSymbol(val value: Symbol) : APLSingleValue() {
-    override val aplValueType: APLValueType = APLValueType.SYMBOL
+    override val aplValueType: APLValueType get() = APLValueType.SYMBOL
     override fun formatted(style: APLValue.FormatStyle) =
         when (style) {
             APLValue.FormatStyle.PLAIN -> value.symbolName
@@ -394,7 +410,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
 }
 
 class LambdaValue(val fn: APLFunction) : APLSingleValue() {
-    override val aplValueType: APLValueType = APLValueType.LAMBDA_FN
+    override val aplValueType: APLValueType get() = APLValueType.LAMBDA_FN
     override fun formatted(style: APLValue.FormatStyle) =
         when (style) {
             APLValue.FormatStyle.PLAIN -> "function"

@@ -147,6 +147,32 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
                 else -> v
             }
         }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            if (a.dimensions.size !in 0..1) {
+                throw InvalidDimensionsException("Left argument to pick should be rank 0 or 1", pos)
+            }
+            var curr = b
+            a.arrayify().iterateMembers { v ->
+                val d = v.dimensions
+                if (d.size !in 0..1) {
+                    throw InvalidDimensionsException("Selection should be rank 0 or 1", pos)
+                }
+                val index = if (d.size == 0) {
+                    if (curr.dimensions.size != 1) {
+                        throw InvalidDimensionsException("Mismatched dimensions for selection")
+                    }
+                    v.ensureNumber(pos).asInt()
+                } else {
+                    curr.dimensions.indexFromPosition(v.toIntArray(pos), pos = pos)
+                }
+                if (index !in (0 until curr.size)) {
+                    throw APLIndexOutOfBoundsException("Selection index out of bounds", pos)
+                }
+                curr = curr.valueAt(index)
+            }
+            return curr
+        }
     }
 
     override fun make(pos: Position) = DiscloseAPLFunctionImpl(pos)

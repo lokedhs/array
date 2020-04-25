@@ -33,14 +33,17 @@ inline class Dimensions(val dimensions: IntArray) {
         return Dimensions(v)
     }
 
-    fun indexFromPosition(p: IntArray, multipliers: IntArray? = null): Int {
+    fun indexFromPosition(p: IntArray, multipliers: IntArray? = null, pos: Position? = null): Int {
+        if (p.size != dimensions.size) {
+            throw InvalidDimensionsException("Dimensions does not match", pos)
+        }
         val sizes = multipliers ?: multipliers()
         var curr = 0
         for (i in p.indices) {
             val pi = p[i]
             val di = dimensions[i]
-            if (pi >= di) {
-                throw APLIndexOutOfBoundsException("Index out of range: pi=$pi, di=$di")
+            if (pi < 0 || pi >= di) {
+                throw APLIndexOutOfBoundsException("Index out of range: pi=$pi, di=$di", pos)
             }
             curr += pi * sizes[i]
         }

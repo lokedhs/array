@@ -23,7 +23,7 @@ abstract class APLNumber : APLSingleValue() {
 }
 
 class APLLong(val value: Long) : APLNumber() {
-    override val aplValueType: APLValueType = APLValueType.INTEGER
+    override val aplValueType: APLValueType get() = APLValueType.INTEGER
     override fun asDouble() = value.toDouble()
     override fun asLong() = value
     override fun asComplex() = Complex(value.toDouble())
@@ -54,7 +54,7 @@ private fun throwComplexComparisonException(): Nothing {
 }
 
 class APLDouble(val value: Double) : APLNumber() {
-    override val aplValueType: APLValueType = APLValueType.FLOAT
+    override val aplValueType: APLValueType get() = APLValueType.FLOAT
     override fun asDouble() = value
     override fun asLong() = value.toLong()
     override fun asComplex() = Complex(value)
@@ -94,7 +94,7 @@ class APLDouble(val value: Double) : APLNumber() {
 class NumberComplexException(value: Complex, pos: Position? = null) : IncompatibleTypeException("Number is complex: ${value}", pos)
 
 class APLComplex(val value: Complex) : APLNumber() {
-    override val aplValueType: APLValueType = APLValueType.COMPLEX
+    override val aplValueType: APLValueType get() = APLValueType.COMPLEX
 
     override fun asDouble(): Double {
         if (value.imaginary != 0.0) {
