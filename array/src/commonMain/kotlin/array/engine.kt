@@ -71,12 +71,13 @@ interface APLOperatorTwoArg : APLOperator {
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
-    private val symbols = HashMap<String, Symbol>()
     private val variables = HashMap<Symbol, APLValue>()
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
     private val functionAliases = HashMap<Symbol, Symbol>()
+    private val namespaces = HashMap<String, Namespace>()
 
     var standardOutput: CharacterOutput = NullCharacterOutput()
+    var currentNamespace = makeNamespace("kap")
 
     init {
         // core functions
@@ -177,9 +178,11 @@ class Engine {
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
     fun parseWithTokenGenerator(tokeniser: TokenGenerator) = APLParser(tokeniser).parseValueToplevel(EndOfFile)
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
-    fun internSymbol(name: String): Symbol = symbols.getOrPut(name, { Symbol(name) })
+    fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
+
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
+    fun makeNamespace(name: String) = namespaces.getOrPut(name) { Namespace(name) }
 
     private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
 }

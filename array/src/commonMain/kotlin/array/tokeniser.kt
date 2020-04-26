@@ -23,11 +23,19 @@ object Newline : Token()
 object IfToken : Token()
 object ElseToken : Token()
 
-class Symbol(val symbolName: String) : Token(), Comparable<Symbol> {
-    override fun toString() = "Symbol[name=${symbolName}]"
+class Namespace(val name: String) {
+    private val symbols = HashMap<String, Symbol>()
+
+    override fun toString() = "Namespace[name=${name}]"
+
+    fun internSymbol(name: String) = symbols.getOrPut(name) { Symbol(name, this) }
+}
+
+class Symbol(val symbolName: String, val namespace: Namespace) : Token(), Comparable<Symbol> {
+    override fun toString() = "Symbol[name=${symbolName}, namespace=${namespace}]"
     override fun compareTo(other: Symbol) = symbolName.compareTo(other.symbolName)
     override fun hashCode() = symbolName.hashCode()
-    override fun equals(other: Any?) = other != null && other is Symbol && symbolName == other.symbolName
+    override fun equals(other: Any?) = other != null && other is Symbol && symbolName == other.symbolName && namespace === other.namespace
 }
 
 class StringToken(val value: String) : Token()
@@ -116,7 +124,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 isNewline(ch) -> Newline
                 isWhitespace(ch) -> Whitespace
                 isCharQuote(ch) -> collectChar()
-                isLetter(ch) -> collectSymbolOrKeyword(ch)
+                isSymbolStartChar(ch) -> collectSymbolOrKeyword(ch)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
                 isQuotePrefixChar(ch) -> QuotePrefix
@@ -195,16 +203,36 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private fun collectSymbolOrKeyword(firstChar: Int): Token {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
+        var foundColon = false
         while (true) {
             val ch = content.nextCodepoint() ?: break
-            if (!isSymbolContinuation(ch)) {
+            if (ch == ':'.toInt()) {
+                if (foundColon) {
+                    throw ParseException("Multiple : characters in symbol")
+                }
+                foundColon = true
+            } else if (!isSymbolContinuation(ch)) {
                 content.pushBack()
                 break
             }
             buf.addCodepoint(ch)
         }
         val name = buf.toString()
-        return stringToKeywordMap[name] ?: engine.internSymbol(name)
+        val result = "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name)
+        if (result == null) {
+            throw ParseException("Malformed symbol: '${name}'")
+        }
+        val nsName = result.groups.get(1)
+        val namespace = if (nsName == null) {
+            val keyword = stringToKeywordMap[name]
+            if (keyword != null) {
+                return keyword
+            }
+            engine.currentNamespace
+        } else {
+            engine.makeNamespace(nsName.value)
+        }
+        return engine.internSymbol(result.groups.get(2)!!.value, namespace)
     }
 
     private fun collectString(): Token {
