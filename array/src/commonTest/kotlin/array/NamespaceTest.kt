@@ -1,9 +1,6 @@
 package array
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertSame
+import kotlin.test.*
 
 class NamespaceTest : APLTest() {
     @Test
@@ -83,8 +80,71 @@ class NamespaceTest : APLTest() {
         }
     }
 
+    @Test
+    fun changeNamespace() {
+        parseAPLExpression("namespace(\"foo\") 'bar").let { result ->
+            assertSym("bar", "foo", result)
+        }
+    }
+
+    @Test
+    fun changeNamespace2() {
+        val result = parseAPLExpression("""
+            |namespace("foo")
+            |a ← 'aa:bb
+            |b ← 'cc
+            |namespace("bar")
+            |c ← 'foo:dd
+            |d ← 'ee
+            |e ← 'aa:ff
+            |namespace("xyz")
+            |foo:a foo:b bar:c bar:d bar:e
+        """.trimMargin())
+        assertDimension(dimensionsOfSize(5), result)
+        assertSym("bb", "aa", result.valueAt(0))
+        assertSym("cc", "foo", result.valueAt(1))
+        assertSym("dd", "foo", result.valueAt(2))
+        assertSym("ee", "bar", result.valueAt(3))
+        assertSym("ff", "aa", result.valueAt(4))
+    }
+
+    @Test
+    fun defaultNamespaceFallback() {
+        val result = parseAPLExpression("""
+            |namespace("foo")
+            |a ← 'cc
+            |namespace("bar")
+            |import("foo")
+            |x ← 'a 'b 'foo:a
+            |namespace("foo")
+            |'a 'b , bar:x
+        """.trimMargin())
+        assertDimension(dimensionsOfSize(5), result)
+        assertSym("a", "foo", result.valueAt(0))
+        assertSym("b", "foo", result.valueAt(1))
+        assertSym("a", "foo", result.valueAt(2))
+        assertSym("b", "bar", result.valueAt(3))
+        assertSym("a", "foo", result.valueAt(4))
+    }
+
+    @Test
+    fun kapNamespaceIsAlwaysImported() {
+        val result = parseAPLExpression("""
+            |kap:foo ← 3
+            |namespace("bar")
+            |foo + 100
+        """.trimMargin())
+        assertSimpleNumber(103, result)
+    }
+
     private fun makeTokeniser(content: String): TokenGenerator {
         val engine = Engine()
         return TokenGenerator(engine, StringSourceLocation(content))
+    }
+
+    private fun assertSym(expectedName: String, expectedPkg: String, result: APLValue) {
+        assertTrue(result is APLSymbol)
+        assertEquals(expectedName, result.value.symbolName)
+        assertEquals(expectedPkg, result.value.namespace.name)
     }
 }

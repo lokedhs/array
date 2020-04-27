@@ -77,7 +77,8 @@ class Engine {
     private val namespaces = HashMap<String, Namespace>()
 
     var standardOutput: CharacterOutput = NullCharacterOutput()
-    var currentNamespace = makeNamespace("kap")
+    val coreNamespace = makeNamespace("kap", overrideDefaultImport = true)
+    var currentNamespace = coreNamespace
 
     init {
         // core functions
@@ -182,7 +183,15 @@ class Engine {
 
     fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
-    fun makeNamespace(name: String) = namespaces.getOrPut(name) { Namespace(name) }
+    fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
+        return namespaces.getOrPut(name) {
+            val namespace = Namespace(name)
+            if (!overrideDefaultImport) {
+                namespace.addImport(coreNamespace)
+            }
+            namespace
+        }
+    }
 
     private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
 }

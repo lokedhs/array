@@ -22,13 +22,26 @@ object ListSeparator : Token()
 object Newline : Token()
 object IfToken : Token()
 object ElseToken : Token()
+object NamespaceToken : Token()
+object ImportToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, Symbol>()
+    private val imports = ArrayList<Namespace>()
 
     override fun toString() = "Namespace[name=${name}]"
 
-    fun internSymbol(name: String) = symbols.getOrPut(name) { Symbol(name, this) }
+    fun findSymbol(name: String) = symbols[name]
+
+    fun internSymbol(name: String) = findSymbol(name) ?: Symbol(name, this).also { sym -> symbols[name] = sym }
+
+    fun addImport(namespace: Namespace) {
+        if (namespace !== this) {
+            imports.add(namespace)
+        }
+    }
+
+    fun imports(): List<Namespace> = imports
 }
 
 class Symbol(val symbolName: String, val namespace: Namespace) : Token(), Comparable<Symbol> {
@@ -79,7 +92,9 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
 
     private val stringToKeywordMap = hashMapOf(
         "if" to IfToken,
-        "else" to ElseToken
+        "else" to ElseToken,
+        "namespace" to NamespaceToken,
+        "import" to ImportToken
     )
 
     init {
@@ -116,7 +131,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
 
         return mkpos(
             when {
-                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch))
+                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch), engine.coreNamespace)
                 isNegationSign(ch) || isDigit(ch) -> {
                     content.pushBack()
                     collectNumber()
@@ -124,7 +139,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 isNewline(ch) -> Newline
                 isWhitespace(ch) -> Whitespace
                 isCharQuote(ch) -> collectChar()
-                isSymbolStartChar(ch) -> collectSymbolOrKeyword(ch)
+                isSymbolStartChar(ch) -> collectSymbolOrKeyword(ch, posBeforeParse)
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
                 isQuotePrefixChar(ch) -> QuotePrefix
@@ -200,7 +215,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         throw IllegalNumberFormat("Content cannot be parsed as a number", posStart)
     }
 
-    private fun collectSymbolOrKeyword(firstChar: Int): Token {
+    private fun collectSymbolOrKeyword(firstChar: Int, posBeforeParse: Position): Token {
         val buf = StringBuilder()
         buf.addCodepoint(firstChar)
         var foundColon = false
@@ -218,21 +233,27 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             buf.addCodepoint(ch)
         }
         val name = buf.toString()
-        val result = "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name)
-        if (result == null) {
-            throw ParseException("Malformed symbol: '${name}'")
-        }
+        val result =
+            "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name) ?: throw ParseException("Malformed symbol: '${name}'", posBeforeParse)
+        val symbolString = result.groups.get(2)!!.value
         val nsName = result.groups.get(1)
+
         val namespace = if (nsName == null) {
             val keyword = stringToKeywordMap[name]
             if (keyword != null) {
                 return keyword
             }
-            engine.currentNamespace
+
+            engine.currentNamespace.findSymbol(symbolString)?.also { sym -> return sym }
+            engine.currentNamespace.imports().forEach { namespace ->
+                namespace.findSymbol(symbolString)?.also { sym -> return sym }
+            }
+            null
         } else {
             engine.makeNamespace(nsName.value)
         }
-        return engine.internSymbol(result.groups.get(2)!!.value, namespace)
+
+        return engine.internSymbol(symbolString, namespace)
     }
 
     private fun collectString(): Token {

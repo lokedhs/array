@@ -6,10 +6,14 @@ import kotlin.test.assertTrue
 
 open class APLTest {
     fun parseAPLExpression(expr: String): APLValue {
+        return parseAPLExpression2(expr).first
+    }
+
+    fun parseAPLExpression2(expr: String): Pair<APLValue, Engine> {
         val engine = Engine()
         val instr = engine.parseString(expr)
         val context = RuntimeContext(engine)
-        return instr.evalWithContext(context).collapse()
+        return Pair(instr.evalWithContext(context).collapse(), engine)
     }
 
     fun parseAPLExpressionWithOutput(expr: String): Pair<APLValue, String> {

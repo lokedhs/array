@@ -196,9 +196,27 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is LambdaToken -> leftArgs.add(processLambda(pos))
                 is ApplyToken -> return processFn(parseApplyDefinition(), pos, leftArgs)
                 is IfToken -> addLeftArg(parseIfStatement(pos))
+                is NamespaceToken -> processNamespace()
+                is ImportToken -> processImport()
                 else -> throw UnexpectedToken(token, pos)
             }
         }
+    }
+
+    private fun processNamespace() {
+        tokeniser.nextTokenWithType<OpenParen>()
+        val namespaceName = tokeniser.nextTokenWithType<StringToken>()
+        tokeniser.nextTokenWithType<CloseParen>()
+        val namespace = tokeniser.engine.makeNamespace(namespaceName.value)
+        tokeniser.engine.currentNamespace = namespace
+    }
+
+    private fun processImport() {
+        tokeniser.nextTokenWithType<OpenParen>()
+        val namespaceName = tokeniser.nextTokenWithType<StringToken>()
+        tokeniser.nextTokenWithType<CloseParen>()
+        val namespace = tokeniser.engine.makeNamespace(namespaceName.value)
+        tokeniser.engine.currentNamespace.addImport(namespace)
     }
 
     private fun parseIfStatement(pos: Position): Instruction {

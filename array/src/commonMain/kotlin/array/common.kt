@@ -13,6 +13,8 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
             "Error: ${exceptionText}"
         }
     }
+
+    override fun toString() = formattedError()
 }
 
 open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos)
