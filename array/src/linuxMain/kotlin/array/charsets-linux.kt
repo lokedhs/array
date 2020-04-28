@@ -25,7 +25,12 @@ actual fun isWhitespace(codepoint: Int): Boolean {
 }
 
 actual fun charToString(codepoint: Int): String {
-    return String(Char.toChars(codepoint))
+    try {
+        return String(Char.toChars(codepoint))
+    } catch (e: IllegalArgumentException) {
+        println("Failed to convert ${codepoint} to string")
+        throw e
+    }
 }
 
 actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {

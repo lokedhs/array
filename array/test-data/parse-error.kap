@@ -1,0 +1,8 @@
+namespace("foo")
+
+∇ bar (x) {
+    a +
+    x + 100
+}
+
+10

@@ -62,9 +62,17 @@ interface SourceLocation {
     fun open(): CharacterProvider
 }
 
-class StringSourceLocation(val sourceText: String) : SourceLocation {
+class StringSourceLocation(private val sourceText: String) : SourceLocation {
     override fun sourceText() = sourceText
     override fun open() = StringCharacterProvider(sourceText)
+}
+
+class FileSourceLocation(private val file: String) : SourceLocation {
+    override fun sourceText(): String {
+        TODO("not implemented")
+    }
+
+    override fun open() = openCharFile(file)
 }
 
 class Position(val source: SourceLocation, val line: Int, val col: Int)
@@ -117,6 +125,10 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         }
     }
 
+    fun close() {
+        content.close()
+    }
+
     fun nextTokenOrSpace(): Pair<Token, Position> {
         val posBeforeParse = content.pos()
         fun mkpos(token: Token) = Pair(token, posBeforeParse)
@@ -125,7 +137,11 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             return mkpos(pushBackQueue.removeAt(pushBackQueue.size - 1))
         }
 
-        val ch = content.nextCodepoint() ?: return mkpos(EndOfFile)
+        val ch = content.nextCodepoint()
+        if (ch == null) {
+            close()
+            return mkpos(EndOfFile)
+        }
 
         charToTokenMap[charToString(ch)]?.also { return mkpos(it) }
 

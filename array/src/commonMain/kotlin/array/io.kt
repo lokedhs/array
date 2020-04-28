@@ -19,10 +19,9 @@ interface ByteProvider : NativeCloseable {
     fun readBlock(buffer: ByteArray, start: Int? = null, length: Int? = null): Int?
 }
 
-interface CharacterProvider {
+interface CharacterProvider : NativeCloseable {
     fun sourceName(): String?
     fun nextCodepoint(): Int?
-    fun close()
 
     fun nextLine(): String? {
         val buf = StringBuilder()

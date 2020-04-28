@@ -47,3 +47,21 @@ class ReadCSVFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = ReadCSVFunctionImpl(pos)
 }
+
+class LoadFunction : APLFunctionDescriptor {
+    class LoadFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val file = arrayAsStringValue(a, pos)
+            val engine = context.engine
+            val oldNamespace = engine.currentNamespace
+            try {
+                val instr = engine.parseWithTokenGenerator(TokenGenerator(engine, FileSourceLocation(file)))
+                return instr.evalWithContext(context.link())
+            } finally {
+                engine.currentNamespace = oldNamespace
+            }
+        }
+    }
+
+    override fun make(pos: Position) = LoadFunctionImpl(pos)
+}

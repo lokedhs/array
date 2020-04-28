@@ -2,6 +2,7 @@ package array
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @ExperimentalStdlibApi
 class IoTest {
@@ -45,6 +46,20 @@ class IoTest {
             val result2 = input.readBlock(buf, 0, 3)
             assertEquals(3, result2)
             assertByteArrayContent("bar".encodeToByteArray(), buf)
+        }
+    }
+
+    @Test
+    fun testCharacterContent() {
+        openCharFile("test-data/char-tests.txt").use { input ->
+            assertEquals(0x61, input.nextCodepoint())
+            assertEquals(0x62, input.nextCodepoint())
+            assertEquals(0x2283, input.nextCodepoint())
+            assertEquals(0x22C6, input.nextCodepoint())
+            assertEquals(0x1D49F, input.nextCodepoint())
+            assertEquals(0xE01, input.nextCodepoint())
+            assertEquals(0xA, input.nextCodepoint())
+            assertNull(input.nextCodepoint())
         }
     }
 

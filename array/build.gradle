@@ -33,6 +33,7 @@ kotlin {
     linuxX64("linux") {
 //        compilations.main.cinterops {
 //            libedit
+//            icu
 //        }
         binaries {
             executable {
