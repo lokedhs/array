@@ -172,23 +172,21 @@ class UserFunction(
     private val rightFnArgs: List<Symbol>,
     private val instr: Instruction
 ) : APLFunctionDescriptor {
-    inner class UserFunctionImpl(
-        pos: Position
-    ) : APLFunction(pos) {
+    inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             if (leftFnArgs.isNotEmpty()) {
                 throw APLIllegalArgumentException("Left argument is not empty", pos)
             }
             val inner = context.link().apply {
-                assignArgs(rightFnArgs, a)
+                assignArgs(rightFnArgs, a, pos)
             }
             return instr.evalWithContext(inner)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
             val inner = context.link().apply {
-                assignArgs(leftFnArgs, a)
-                assignArgs(rightFnArgs, b)
+                assignArgs(leftFnArgs, a, pos)
+                assignArgs(rightFnArgs, b, pos)
             }
             return instr.evalWithContext(inner)
         }

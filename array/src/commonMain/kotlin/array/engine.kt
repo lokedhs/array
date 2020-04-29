@@ -32,7 +32,7 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
         return eval2Arg(context, a, b)
     }
 
-    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException()
+    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException(pos)
 }
 
 class DeclaredFunction(

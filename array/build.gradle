@@ -31,10 +31,10 @@ kotlin {
 //        }
 //    }
     linuxX64("linux") {
-//        compilations.main.cinterops {
+        compilations.main.cinterops {
 //            libedit
-//            icu
-//        }
+            icu
+        }
         binaries {
             executable {
                 // Change to specify fully qualified name of your application's entry point:

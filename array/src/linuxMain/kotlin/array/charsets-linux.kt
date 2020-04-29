@@ -1,36 +1,22 @@
 package array
 
+import icu.UCharVar
+import kotlinx.cinterop.*
+
 actual fun isLetter(codepoint: Int): Boolean {
-    return if (codepoint < 0x10000) {
-        codepoint.toChar().isLetter()
-    } else {
-        false
-    }
+    return icu.u_isUAlphabetic!!(codepoint).toBoolean()
 }
 
 actual fun isDigit(codepoint: Int): Boolean {
-    return if (codepoint < 0x10000) {
-        codepoint.toChar().isDigit()
-    } else {
-        false
-    }
+    return icu.u_isdigit!!(codepoint).toBoolean()
 }
 
 actual fun isWhitespace(codepoint: Int): Boolean {
-    return if (codepoint < 0x10000) {
-        codepoint.toChar().isWhitespace()
-    } else {
-        false
-    }
+    return icu.u_isUWhiteSpace!!(codepoint).toBoolean()
 }
 
 actual fun charToString(codepoint: Int): String {
-    try {
-        return String(Char.toChars(codepoint))
-    } catch (e: IllegalArgumentException) {
-        println("Failed to convert ${codepoint} to string")
-        throw e
-    }
+    return String(Char.toChars(codepoint))
 }
 
 actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {
@@ -63,7 +49,34 @@ actual fun String.asCodepointList(): List<Int> {
     return result
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 actual fun String.asGraphemeList(): List<String> {
-    // TODO: Need ICU for this
-    return this.asCodepointList().map(::charToString)
+    val text = this
+    memScoped {
+        val length = text.length + 1
+        val nativeBuf = allocArray<UCharVar>(length)
+        for (i in text.indices) {
+            nativeBuf[i] = text[i].toInt().toUShort()
+        }
+        nativeBuf[text.length] = 0.toUShort()
+
+        val retCode = allocArray<IntVar>(1)
+        val brkIterator = icu.ubrk_open!!(icu.UBRK_CHARACTER, null, nativeBuf, -1, retCode)
+        var pos = icu.ubrk_first!!(brkIterator)
+        val buf = ArrayList<String>()
+        while (true) {
+            val newPos = icu.ubrk_next!!(brkIterator)
+            if (newPos == icu.UBRK_DONE) {
+                break
+            }
+            val b = StringBuilder()
+            for (i in pos until newPos) {
+                b.append(nativeBuf[i].toInt().toChar())
+            }
+            buf.add(b.toString())
+            pos = newPos
+        }
+        icu.ubrk_close!!(brkIterator)
+        return buf
+    }
 }
