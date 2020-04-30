@@ -51,6 +51,7 @@ kotlin {
                 implementation kotlin('stdlib-common')
                 implementation kotlin('stdlib')
                 implementation kotlin('reflect')
+                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.2")
             }
         }
         commonTest {

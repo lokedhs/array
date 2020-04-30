@@ -50,7 +50,7 @@ fun compareAPLArrays(a: APLValue, b: APLValue, pos: Position? = null): Int {
     for (i in 0 until a.size) {
         val aVal = a.valueAt(i)
         val bVal = b.valueAt(i)
-        aVal.compare(bVal, ).let { result ->
+        aVal.compare(bVal).let { result ->
             if (result != 0) {
                 return result
             }

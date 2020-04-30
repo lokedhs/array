@@ -5,7 +5,7 @@ pluginManagement {
         maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
     }
 }
-
+                     
 rootProject.name = 'array_test'
 
 include ":array"

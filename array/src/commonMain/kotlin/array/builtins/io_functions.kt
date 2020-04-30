@@ -6,7 +6,7 @@ import array.csv.readCsv
 class PrintAPLFunction : APLFunctionDescriptor {
     class PrintAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            printValue(context, a, APLValue.FormatStyle.PLAIN)
+            printValue(context, a, FormatStyle.PLAIN)
             return a
         }
 
@@ -16,16 +16,16 @@ class PrintAPLFunction : APLFunctionDescriptor {
             val readSym = context.engine.internSymbol("read")
 
             val style = when (val styleName = a.ensureSymbol().value) {
-                plainSym -> APLValue.FormatStyle.PLAIN
-                prettySym -> APLValue.FormatStyle.PRETTY
-                readSym -> APLValue.FormatStyle.READABLE
+                plainSym -> FormatStyle.PLAIN
+                prettySym -> FormatStyle.PRETTY
+                readSym -> FormatStyle.READABLE
                 else -> throw APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}", pos)
             }
             printValue(context, b, style)
             return b
         }
 
-        private fun printValue(context: RuntimeContext, a: APLValue, style: APLValue.FormatStyle) {
+        private fun printValue(context: RuntimeContext, a: APLValue, style: FormatStyle) {
             context.engine.standardOutput.writeString(a.formatted(style))
         }
     }

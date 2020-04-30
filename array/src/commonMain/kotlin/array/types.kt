@@ -4,6 +4,8 @@ import array.builtins.compareAPLArrays
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
 
 enum class APLValueType(val typeName: String) {
     INTEGER("integer"),
@@ -13,15 +15,18 @@ enum class APLValueType(val typeName: String) {
     ARRAY("array"),
     SYMBOL("symbol"),
     LAMBDA_FN("function"),
-    LIST("list")
+    LIST("list"),
+    MAP("map")
+}
+
+enum class FormatStyle {
+    PLAIN,
+    READABLE,
+    PRETTY
 }
 
 interface APLValue {
-    enum class FormatStyle {
-        PLAIN,
-        READABLE,
-        PRETTY
-    }
+    val aplValueType: APLValueType
 
     val dimensions: Dimensions
     val rank: Int
@@ -41,6 +46,16 @@ interface APLValue {
     fun compare(reference: APLValue, pos: Position? = null): Int =
         throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
 
+    /**
+     * Return a value which can be used as a hash key when storing references to this object in Kotlin maps.
+     * The key must follow the standard equals/hashCode conventions with respect to the object which it
+     * represents.
+     *
+     * In other words, if two instances of [APLValue] are to be considered equivalent, then the objects returned
+     * by this method should be the same when compared using [equals] and return the same value from [hashCode].
+     */
+    fun makeKey(): Any
+
     fun singleValueOrError(): APLValue {
         return when {
             rank == 0 -> this
@@ -48,8 +63,6 @@ interface APLValue {
             else -> throw IllegalStateException("Expected a single element in array, found ${size} elements")
         }
     }
-
-    val aplValueType: APLValueType
 
     fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
@@ -132,11 +145,11 @@ abstract class APLArray : APLValue {
         }
     }
 
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> arrayAsString(this, APLValue.FormatStyle.PLAIN)
-            APLValue.FormatStyle.PRETTY -> arrayAsString(this, APLValue.FormatStyle.PRETTY)
-            APLValue.FormatStyle.READABLE -> arrayToAPLFormat(this)
+            FormatStyle.PLAIN -> arrayAsString(this, FormatStyle.PLAIN)
+            FormatStyle.PRETTY -> arrayAsString(this, FormatStyle.PRETTY)
+            FormatStyle.READABLE -> arrayToAPLFormat(this)
         }
 
     override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
@@ -174,6 +187,64 @@ abstract class APLArray : APLValue {
             else -> compareAPLArrays(this, reference)
         }
     }
+
+    override fun makeKey() = object {
+        override fun equals(other: Any?): Boolean {
+            return other is APLArray && compare(other) == 0
+        }
+
+        override fun hashCode(): Int {
+            var curr = 0
+            dimensions.dimensions.forEach { dim ->
+                curr = (curr * 63) xor dim
+            }
+            membersSequence().forEach { v ->
+                curr = (curr * 63) xor v.makeKey().hashCode()
+            }
+            return curr
+        }
+    }
+}
+
+class APLMap(private val content: PersistentMap<Any, APLValue>) : APLSingleValue() {
+    override val aplValueType get() = APLValueType.MAP
+    override val dimensions = emptyDimensions()
+
+    override fun formatted(style: FormatStyle): String {
+        return "map"
+    }
+
+    override fun compareEquals(reference: APLValue): Boolean {
+        if (reference !is APLMap) {
+            return false
+        }
+        if (content.size != reference.content.size) {
+            return false
+        }
+        content.forEach { (key, value) ->
+            val v = reference.content[key] ?: return false
+            if (!value.compareEquals(v)) {
+                return false
+            }
+        }
+        return true
+    }
+
+    override fun makeKey(): Any {
+        return content
+    }
+
+    fun lookupValue(key: APLValue): APLValue {
+        return content[key.makeKey()] ?: APLNullValue()
+    }
+
+    fun updateValue(key: APLValue, value: APLValue): APLMap {
+        return APLMap(content.put(key.makeKey(), value))
+    }
+
+    companion object {
+        fun makeEmptyMap() = APLMap(persistentMapOf())
+    }
 }
 
 class APLList(val elements: List<APLValue>) : APLValue {
@@ -185,7 +256,7 @@ class APLList(val elements: List<APLValue>) : APLValue {
         TODO("not implemented")
     }
 
-    override fun formatted(style: APLValue.FormatStyle): String {
+    override fun formatted(style: FormatStyle): String {
         val buf = StringBuilder()
         var first = true
         for (v in elements) {
@@ -222,14 +293,38 @@ class APLList(val elements: List<APLValue>) : APLValue {
         return true
     }
 
+    override fun makeKey(): Any {
+        return ComparableList<Any>().apply { addAll(elements.map(APLValue::makeKey)) }
+    }
+
     fun listSize() = elements.size
     fun listElement(index: Int) = elements[index]
+}
+
+class ComparableList<T>() : MutableList<T> by ArrayList<T>() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ComparableList<*>) return false
+        if (size != other.size) return false
+        for (i in 0 until size) {
+            if (this[i] != other[i]) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var curr = 0
+        for (i in 0 until size) {
+            curr = (curr * 63) xor this[i].hashCode()
+        }
+        return curr
+    }
 }
 
 private fun arrayToAPLFormat(value: APLArray): String {
     val v = value.collapse()
     return if (isStringValue(v)) {
-        renderStringValue(v, APLValue.FormatStyle.READABLE)
+        renderStringValue(v, FormatStyle.READABLE)
     } else {
         arrayToAPLFormatStandard(v as APLArray)
     }
@@ -240,7 +335,7 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
     val dimensions = value.dimensions
     if (dimensions.size == 0) {
         buf.append("⊂")
-        buf.append(value.valueAt(0).formatted(APLValue.FormatStyle.READABLE))
+        buf.append(value.valueAt(0).formatted(FormatStyle.READABLE))
     } else {
         for (i in dimensions.indices) {
             if (i > 0) {
@@ -257,7 +352,7 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
                 if (i > 0) {
                     buf.append(" ")
                 }
-                buf.append(a.formatted(APLValue.FormatStyle.READABLE))
+                buf.append(a.formatted(FormatStyle.READABLE))
             }
         }
     }
@@ -302,7 +397,7 @@ fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
     return buf.toString()
 }
 
-fun arrayAsString(array: APLValue, style: APLValue.FormatStyle): String {
+fun arrayAsString(array: APLValue, style: FormatStyle): String {
     val v = array.collapse() // This is to prevent multiple evaluations during printing
     return when {
         isNullValue(v) -> renderNullValue()
@@ -350,10 +445,10 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 class APLChar(val value: Int) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.CHAR
     fun asString() = charToString(value)
-    override fun formatted(style: APLValue.FormatStyle) = when (style) {
-        APLValue.FormatStyle.PLAIN -> charToString(value)
-        APLValue.FormatStyle.PRETTY -> "@${charToString(value)}"
-        APLValue.FormatStyle.READABLE -> "@${charToString(value)}"
+    override fun formatted(style: FormatStyle) = when (style) {
+        FormatStyle.PLAIN -> charToString(value)
+        FormatStyle.PRETTY -> "@${charToString(value)}"
+        FormatStyle.READABLE -> "@${charToString(value)}"
     }
 
     override fun compareEquals(reference: APLValue) = reference is APLChar && value == reference.value
@@ -367,6 +462,8 @@ class APLChar(val value: Int) : APLSingleValue() {
     }
 
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
+
+    override fun makeKey() = value
 }
 
 fun makeAPLString(s: String): APLValue {
@@ -389,11 +486,11 @@ abstract class DeferredResultArray : APLArray() {
 
 class APLSymbol(val value: Symbol) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.SYMBOL
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> value.symbolName
-            APLValue.FormatStyle.PRETTY -> value.symbolName
-            APLValue.FormatStyle.READABLE -> "'" + value.symbolName
+            FormatStyle.PLAIN -> value.symbolName
+            FormatStyle.PRETTY -> value.symbolName
+            FormatStyle.READABLE -> "'" + value.symbolName
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLSymbol && value == reference.value
@@ -407,16 +504,20 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
     }
 
     override fun ensureSymbol(pos: Position?) = this
+
+    override fun makeKey() = value
 }
 
 class LambdaValue(val fn: APLFunction) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.LAMBDA_FN
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> "function"
-            APLValue.FormatStyle.READABLE -> throw IllegalArgumentException("Functions can't be printed in readable form")
-            APLValue.FormatStyle.PRETTY -> "function"
+            FormatStyle.PLAIN -> "function"
+            FormatStyle.READABLE -> throw IllegalArgumentException("Functions can't be printed in readable form")
+            FormatStyle.PRETTY -> "function"
         }
 
     override fun compareEquals(reference: APLValue) = this === reference
+
+    override fun makeKey() = fn
 }

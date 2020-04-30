@@ -3,7 +3,7 @@ package array
 import array.complex.Complex
 
 abstract class APLNumber : APLSingleValue() {
-    override fun toString() = "APLNumber(${formatted(APLValue.FormatStyle.PRETTY)})"
+    override fun toString() = "APLNumber(${formatted(FormatStyle.PRETTY)})"
     override fun ensureNumber(pos: Position?) = this
 
     abstract fun asDouble(): Double
@@ -28,11 +28,11 @@ class APLLong(val value: Long) : APLNumber() {
     override fun asLong() = value
     override fun asComplex() = Complex(value.toDouble())
     override fun isComplex() = false
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> value.toString()
-            APLValue.FormatStyle.READABLE -> value.toString()
-            APLValue.FormatStyle.PRETTY -> value.toString()
+            FormatStyle.PLAIN -> value.toString()
+            FormatStyle.READABLE -> value.toString()
+            FormatStyle.PRETTY -> value.toString()
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLLong && value == reference.value
@@ -46,7 +46,9 @@ class APLLong(val value: Long) : APLNumber() {
         }
     }
 
-    override fun toString() = "APLLong(${formatted(APLValue.FormatStyle.PRETTY)})"
+    override fun toString() = "APLLong(${formatted(FormatStyle.PRETTY)})"
+
+    override fun makeKey() = value
 }
 
 private fun throwComplexComparisonException(): Nothing {
@@ -60,10 +62,10 @@ class APLDouble(val value: Double) : APLNumber() {
     override fun asComplex() = Complex(value)
     override fun isComplex() = false
 
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> value.toString()
-            APLValue.FormatStyle.PRETTY -> {
+            FormatStyle.PLAIN -> value.toString()
+            FormatStyle.PRETTY -> {
                 // Kotlin native doesn't have a decent formatter, so we'll take the easy way out:
                 // We'll check if the value fits in a Long and if it does, use it for rendering.
                 // This is the easiest way to avoid displaying a decimal point for integers.
@@ -74,7 +76,7 @@ class APLDouble(val value: Double) : APLNumber() {
                     value.toString()
                 }
             }
-            APLValue.FormatStyle.READABLE -> if (value < 0) "¯" + (-value).toString() else value.toString()
+            FormatStyle.READABLE -> if (value < 0) "¯" + (-value).toString() else value.toString()
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLDouble && value == reference.value
@@ -88,7 +90,9 @@ class APLDouble(val value: Double) : APLNumber() {
         }
     }
 
-    override fun toString() = "APLDouble(${formatted(APLValue.FormatStyle.PRETTY)})"
+    override fun toString() = "APLDouble(${formatted(FormatStyle.PRETTY)})"
+
+    override fun makeKey() = value
 }
 
 class NumberComplexException(value: Complex, pos: Position? = null) : IncompatibleTypeException("Number is complex: ${value}", pos)
@@ -115,14 +119,16 @@ class APLComplex(val value: Complex) : APLNumber() {
     override fun asComplex() = value
     override fun isComplex() = value.imaginary != 0.0
 
-    override fun formatted(style: APLValue.FormatStyle) =
+    override fun formatted(style: FormatStyle) =
         when (style) {
-            APLValue.FormatStyle.PLAIN -> formatToAPL()
-            APLValue.FormatStyle.PRETTY -> formatToAPL()
-            APLValue.FormatStyle.READABLE -> formatToAPL()
+            FormatStyle.PLAIN -> formatToAPL()
+            FormatStyle.PRETTY -> formatToAPL()
+            FormatStyle.READABLE -> formatToAPL()
         }
 
     private fun formatToAPL() = "${value.real}J${value.imaginary}"
+
+    override fun makeKey() = value
 }
 
 val APLLONG_0 = APLLong(0)

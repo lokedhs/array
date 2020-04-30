@@ -119,10 +119,10 @@ class SortTest : APLTest() {
         val sym = APLSymbol(engine.internSymbol("foo"))
         val str = makeAPLString("bar")
         assertFailsWith<APLEvalException> {
-            sym.compare(str, )
+            sym.compare(str)
         }
         assertFailsWith<APLEvalException> {
-            str.compare(sym, )
+            str.compare(sym)
         }
     }
 
@@ -132,10 +132,10 @@ class SortTest : APLTest() {
         val num = 1.makeAPLNumber()
         val sym = APLSymbol(engine.internSymbol("foo"))
         assertFailsWith<APLEvalException> {
-            num.compare(sym, )
+            num.compare(sym)
         }
         assertFailsWith<APLEvalException> {
-            sym.compare(num, )
+            sym.compare(num)
         }
     }
 
@@ -144,10 +144,10 @@ class SortTest : APLTest() {
         val num = 1.makeAPLNumber()
         val complex = Complex(2.0, 3.0).makeAPLNumber()
         assertFailsWith<APLEvalException> {
-            num.compare(complex, )
+            num.compare(complex)
         }
         assertFailsWith<APLEvalException> {
-            complex.compare(num, )
+            complex.compare(num)
         }
     }
 

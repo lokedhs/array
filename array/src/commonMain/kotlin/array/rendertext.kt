@@ -66,7 +66,7 @@ private fun encloseString(s: String2D): String {
 private fun encloseNDim(value: APLValue): String {
     val dimensions = value.dimensions
     val multipliers = dimensions.multipliers()
-    val renderedValues = (0 until value.size).map { index -> String2D(value.valueAt(index).formatted(APLValue.FormatStyle.PRETTY)) }
+    val renderedValues = (0 until value.size).map { index -> String2D(value.valueAt(index).formatted(FormatStyle.PRETTY)) }
 
     // 4-dimensional rendering may seem a bit backwards, where each 2D block is rendered in row-major style,
     // while the grid of blocks are rendered column-major. This is because for 3D rendering, we want each
@@ -170,11 +170,11 @@ private fun topBottomRow(left: String, middle: String, right: String, width: Int
     return row
 }
 
-fun renderStringValue(value: APLValue, style: APLValue.FormatStyle): String {
+fun renderStringValue(value: APLValue, style: FormatStyle): String {
     return when (style) {
-        APLValue.FormatStyle.PLAIN -> renderStringValueOptionalQuotes(value, false)
-        APLValue.FormatStyle.PRETTY -> renderStringValueOptionalQuotes(value, true)
-        APLValue.FormatStyle.READABLE -> renderStringValueOptionalQuotes(value, true)
+        FormatStyle.PLAIN -> renderStringValueOptionalQuotes(value, false)
+        FormatStyle.PRETTY -> renderStringValueOptionalQuotes(value, true)
+        FormatStyle.READABLE -> renderStringValueOptionalQuotes(value, true)
     }
 }
 
@@ -203,8 +203,8 @@ fun renderNullValue(): String {
 
 fun encloseInBox(value: APLValue): String {
     return when {
-        value is APLSingleValue -> value.formatted(APLValue.FormatStyle.PRETTY)
-        value.rank == 0 -> encloseString(String2D(value.valueAt(0).formatted(APLValue.FormatStyle.PRETTY)))
+        value is APLSingleValue -> value.formatted(FormatStyle.PRETTY)
+        value.rank == 0 -> encloseString(String2D(value.valueAt(0).formatted(FormatStyle.PRETTY)))
         else -> encloseNDim(value)
     }
 }

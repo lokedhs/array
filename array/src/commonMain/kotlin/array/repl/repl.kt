@@ -1,7 +1,7 @@
 package array.repl
 
-import array.APLValue
 import array.Engine
+import array.FormatStyle
 import array.RuntimeContext
 import array.makeKeyboardInput
 
@@ -16,7 +16,7 @@ fun runRepl() {
         if (stringTrimmed != "") {
             val parsed = engine.parseString(line)
             val result = parsed.evalWithContext(context)
-            println(result.formatted(APLValue.FormatStyle.PRETTY))
+            println(result.formatted(FormatStyle.PRETTY))
         }
     }
 }
