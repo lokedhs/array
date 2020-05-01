@@ -1,3 +1,69 @@
+import java.nio.charset.StandardCharsets
+
+static def executeAndGetOutput(String... command) {
+    Process p = new ProcessBuilder().command(command).start()
+    def input = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))
+    def buf = new StringBuilder()
+    String s
+    while ((s = input.readLine()) != null) {
+        buf.append(s)
+        buf.append("\n")
+    }
+    int result = p.waitFor()
+    if (result == 0) {
+        return buf.toString()
+    } else {
+        return null
+    }
+}
+
+static def executeAndCleanup(String... args) {
+    def output = executeAndGetOutput(args)
+    if (output == null) {
+        return null
+    }
+    return output.trim()
+}
+
+static def findIcuIncludes() {
+    def args = new ArrayList<String>()
+    def includeOutput = executeAndCleanup("pkg-config", "icu-i18n", "--variable=includedir")
+    if(includeOutput == null) {
+        args.add("-I/usr/include")
+    }
+    else {
+        includeOutput.split(" ").each { v ->
+            args.add("-I" + v)
+        }
+    }
+    def argsString = args.join(" ")
+    def result = executeAndCleanup("pkg-config", "icu-i18n", "--cflags")
+    if (result != null) {
+        return argsString
+    } else {
+        return argsString + " " + result
+    }
+}
+
+static def findIcuLibs() {
+    def args = new ArrayList<String>()
+    def libdirOutput = executeAndCleanup("pkg-config", "icu-i18n", "--variable=libdir")
+    if (libdirOutput == null) {
+        args.add("-L/usr/lib")
+    } else {
+        libdirOutput.split(" ").each { v ->
+            args.add("-L" + v)
+        }
+    }
+    def argsString = args.join(" ")
+    def result = executeAndCleanup("pkg-config", "icu-i18n", "--libs")
+    if (result == "") {
+        return argsString
+    } else {
+        return argsString + " " + result
+    }
+}
+
 plugins {
     id 'org.jetbrains.kotlin.multiplatform'
 }
@@ -32,8 +98,10 @@ kotlin {
 //    }
     linuxX64("linux") {
         compilations.main.cinterops {
-//            libedit
             icu
+        }
+        compilations.test.kotlinOptions {
+            freeCompilerArgs = ["-linker-options", findIcuLibs()]
         }
         binaries {
             executable {
@@ -41,6 +109,7 @@ kotlin {
                 entryPoint = 'array.main'
                 // Specify command-line arguments, if necessary:
                 runTask?.args('')
+//                linkerOpts = ["-licui18n", "-licuuc", "-licudata"]
             }
         }
     }
