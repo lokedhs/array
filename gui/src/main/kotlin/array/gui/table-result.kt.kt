@@ -1,6 +1,7 @@
 package array.gui.tableresult
 
 import array.APLValue
+import array.FormatStyle
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.ObservableValue
 import javafx.collections.FXCollections
@@ -50,7 +51,7 @@ class SimpleAPLCell : TableCell<APLRowWrapper, APLValueWrapper>() {
             text = null
             graphic = null
         } else {
-            text = item.value.formatted(APLValue.FormatStyle.PRETTY)
+            text = item.value.formatted(FormatStyle.PRETTY)
         }
     }
 }

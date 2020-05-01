@@ -2,6 +2,7 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
+import array.FormatStyle
 import array.gui.styledarea.HistoryListener
 import array.gui.styledarea.ParStyle
 import array.gui.styledarea.ROStyledArea
@@ -67,7 +68,7 @@ class ResultList3(val client: Client) {
 
     fun addResult(v: APLValue) {
         styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(v.formatted(APLValue.FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
+            styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
         }
     }
 
