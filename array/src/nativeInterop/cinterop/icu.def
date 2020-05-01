@@ -1,4 +1,4 @@
 headers = unicode/ustring.h unicode/utf8.h unicode/uchar.h unicode/ucnv.h unicode/ubrk.h
 headerFilter = unicode/*
 
-compilerOpts.linux = -I/usr/include
+compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
