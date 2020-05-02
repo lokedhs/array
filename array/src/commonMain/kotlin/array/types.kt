@@ -209,7 +209,7 @@ class APLMap(private val content: ImmutableMap<Any, APLValue>) : APLSingleValue(
     override val dimensions = emptyDimensions()
 
     override fun formatted(style: FormatStyle): String {
-        return "map"
+        return "map[size=${content.size}]"
     }
 
     override fun compareEquals(reference: APLValue): Boolean {
