@@ -101,9 +101,9 @@ kotlin {
             icu
             libcurl
         }
-        compilations.test.kotlinOptions {
-            freeCompilerArgs = ["-linker-options", findIcuLibs()]
-        }
+//        compilations.test.kotlinOptions {
+//            freeCompilerArgs = ["-linker-options", findIcuLibs()]
+//        }
         binaries {
             executable {
                 // Change to specify fully qualified name of your application's entry point:

@@ -22,8 +22,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 11
-    - name: Install icu
-      run: sudo apt-get install -y libicu-dev
+    - name: Install libs
+      run: sudo apt-get install -y libicu-dev libcurl4-openssl-dev
     - name: allTests
       run: ./gradlew array:allTests
     - name: tests for gui

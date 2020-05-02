@@ -3,4 +3,4 @@ headerFilter = unicode/*
 
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 linkerOpts.osx = -licui18n -licuuc -licudata
-linkerOpts.linux = -L/usr/lib64 -licui18n -licuuc -licudata
+linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -licui18n -licuuc -licudata
