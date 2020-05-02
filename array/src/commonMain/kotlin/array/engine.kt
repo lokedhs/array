@@ -124,6 +124,7 @@ class Engine {
         registerFunction(internSymbol("print"), PrintAPLFunction())
         registerFunction(internSymbol("readCsvFile"), ReadCSVFunction())
         registerFunction(internSymbol("load"), LoadFunction())
+        registerFunction(internSymbol("httpRequest"), HttpRequestFunction())
 
         // maths
         registerFunction(internSymbol("sin"), SinAPLFunction())
@@ -145,6 +146,8 @@ class Engine {
 
         // function aliases
         functionAliases[internSymbol("*")] = internSymbol("⋆")
+
+        platformInit(this)
     }
 
     fun addFunctionDefinitionListener(listener: FunctionDefinitionListener) {
@@ -196,6 +199,8 @@ class Engine {
 
     private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
 }
+
+expect fun platformInit(engine: Engine)
 
 class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<Symbol, APLValue>()

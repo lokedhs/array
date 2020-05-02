@@ -99,6 +99,7 @@ kotlin {
     linuxX64("linux") {
         compilations.main.cinterops {
             icu
+            libcurl
         }
         compilations.test.kotlinOptions {
             freeCompilerArgs = ["-linker-options", findIcuLibs()]

@@ -30,7 +30,6 @@ class Client(val application: ClientApplication, val stage: Stage) {
         engine = Engine()
         context = engine.makeRuntimeContext()
 
-        engine.registerFunction(engine.internSymbol("loadExcelFile"), LoadExcelFileFunction())
         engine.standardOutput = SendToMainCharacterOutput()
 
         val fontIn = javaClass.getResourceAsStream("fonts/FreeMono.otf")

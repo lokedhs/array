@@ -65,3 +65,15 @@ class LoadFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = LoadFunctionImpl(pos)
 }
+
+class HttpRequestFunction : APLFunctionDescriptor {
+    class HttpRequestFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val url = arrayAsStringValue(a, pos)
+            val result = httpRequest(url)
+            return makeAPLString(result.content)
+        }
+    }
+
+    override fun make(pos: Position) = HttpRequestFunctionImpl(pos)
+}
