@@ -4,8 +4,6 @@ import array.builtins.compareAPLArrays
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentMapOf
 
 enum class APLValueType(val typeName: String) {
     INTEGER("integer"),
@@ -206,7 +204,7 @@ abstract class APLArray : APLValue {
     }
 }
 
-class APLMap(private val content: PersistentMap<Any, APLValue>) : APLSingleValue() {
+class APLMap(private val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 
@@ -239,11 +237,11 @@ class APLMap(private val content: PersistentMap<Any, APLValue>) : APLSingleValue
     }
 
     fun updateValue(key: APLValue, value: APLValue): APLMap {
-        return APLMap(content.put(key.makeKey(), value))
+        return APLMap(content.copyAndPut(key.makeKey(), value))
     }
 
     companion object {
-        fun makeEmptyMap() = APLMap(persistentMapOf())
+        fun makeEmptyMap() = APLMap(ImmutableMap())
     }
 }
 
