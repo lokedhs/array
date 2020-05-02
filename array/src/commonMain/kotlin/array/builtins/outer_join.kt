@@ -137,8 +137,10 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     }
                     val b1 = when {
                         a.size == 1 && b.size == 1 -> b.arrayify()
-                        b.size == 1 -> ConstantArray(dimensionsOfSize(aDimensions[aDimensions.size - 1]),
-                            b.singleValueOrError())
+                        b.size == 1 -> ConstantArray(
+                            dimensionsOfSize(aDimensions[aDimensions.size - 1]),
+                            b.singleValueOrError()
+                        )
                         else -> b
                     }
                     val a1Dimensions = a1.dimensions

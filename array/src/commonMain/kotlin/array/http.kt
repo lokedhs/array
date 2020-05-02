@@ -12,4 +12,4 @@ interface HttpResult {
     val content: String
 }
 
-expect fun httpRequest(url: String, method: HttpMethod = HttpMethod.GET, headers: Map<String,String>? = null): HttpResult
+expect fun httpRequest(url: String, method: HttpMethod = HttpMethod.GET, headers: Map<String, String>? = null): HttpResult

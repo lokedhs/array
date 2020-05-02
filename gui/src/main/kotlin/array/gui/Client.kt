@@ -4,7 +4,6 @@ import array.APLGenericException
 import array.CharacterOutput
 import array.Engine
 import array.RuntimeContext
-import array.msofficereader.LoadExcelFileFunction
 import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.control.Menu

@@ -8,7 +8,7 @@ class ImmutableMap<K, V> private constructor(content: HashMap<K, V>) : Map<K, V>
 
     fun copyAndPut(key: K, value: V): ImmutableMap<K, V> {
         val new = copyMap()
-        new.put(key, value)
+        new[key] = value
         return ImmutableMap(new)
     }
 
@@ -32,7 +32,7 @@ class ImmutableMap<K, V> private constructor(content: HashMap<K, V>) : Map<K, V>
         val new = HashMap<K, V>()
         this.forEach { (key, value) ->
             if (ignoreKey == null || key != ignoreKey) {
-                new.put(key, value)
+                new[key] = value
             }
         }
         return new

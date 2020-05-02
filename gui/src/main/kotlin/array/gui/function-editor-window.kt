@@ -146,6 +146,4 @@ class FunctionEditorArea(
     document,
     styledTextOps,
     nodeFactory
-) {
-
-}
+)

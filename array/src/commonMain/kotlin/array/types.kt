@@ -299,7 +299,7 @@ class APLList(val elements: List<APLValue>) : APLValue {
     fun listElement(index: Int) = elements[index]
 }
 
-class ComparableList<T>() : MutableList<T> by ArrayList<T>() {
+class ComparableList<T> : MutableList<T> by ArrayList<T>() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ComparableList<*>) return false
