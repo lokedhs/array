@@ -171,7 +171,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
     private fun isQuoteChar(ch: Int) = ch == '"'.toInt()
     private fun isCommentChar(ch: Int) = ch == '⍝'.toInt()
-    private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.toInt()
+    private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.toInt() || ch == ':'.toInt()
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
         isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
@@ -249,27 +249,32 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             buf.addCodepoint(ch)
         }
         val name = buf.toString()
-        val result =
-            "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name) ?: throw ParseException("Malformed symbol: '${name}'", posBeforeParse)
-        val symbolString = result.groups.get(2)!!.value
-        val nsName = result.groups.get(1)
-
-        val namespace = if (nsName == null) {
-            val keyword = stringToKeywordMap[name]
-            if (keyword != null) {
-                return keyword
-            }
-
-            engine.currentNamespace.findSymbol(symbolString)?.also { sym -> return sym }
-            engine.currentNamespace.imports().forEach { namespace ->
-                namespace.findSymbol(symbolString)?.also { sym -> return sym }
-            }
-            null
+        val coreResult = "^:([^:]+)$".toRegex().matchEntire(name)
+        if (coreResult != null) {
+            return engine.makeNamespace("core").internSymbol(coreResult.groups.get(1)!!.value)
         } else {
-            engine.makeNamespace(nsName.value)
-        }
+            val result =
+                "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name) ?: throw ParseException("Malformed symbol: '${name}'", posBeforeParse)
+            val symbolString = result.groups.get(2)!!.value
+            val nsName = result.groups.get(1)
 
-        return engine.internSymbol(symbolString, namespace)
+            val namespace = if (nsName == null) {
+                val keyword = stringToKeywordMap[name]
+                if (keyword != null) {
+                    return keyword
+                }
+
+                engine.currentNamespace.findSymbol(symbolString)?.also { sym -> return sym }
+                engine.currentNamespace.imports().forEach { namespace ->
+                    namespace.findSymbol(symbolString)?.also { sym -> return sym }
+                }
+                null
+            } else {
+                engine.makeNamespace(nsName.value)
+            }
+
+            return engine.internSymbol(symbolString, namespace)
+        }
     }
 
     private fun collectString(): Token {

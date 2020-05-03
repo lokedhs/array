@@ -133,7 +133,8 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation kotlin('stdlib-jdk8')
-                api "org.apache.poi:poi-ooxml:4.1.2"
+                implementation "org.apache.poi:poi-ooxml:4.1.2"
+                implementation 'com.google.code.gson:gson:2.8.6'
             }
         }
         jvmTest {

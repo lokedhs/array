@@ -83,12 +83,22 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
     }
 }
 
-class VariableRef(val name: Symbol, pos: Position) : Instruction(pos) {
+class VariableRef private constructor(val name: Symbol, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return context.lookupVar(name) ?: throw VariableNotAssigned(name, pos)
     }
 
     override fun toString() = "Var(${name})"
+
+    companion object {
+        fun makeFromSymbol(engine: Engine, name: Symbol, pos: Position): Instruction {
+            if (engine.isSelfEvaluatingSymbol(name)) {
+                return LiteralSymbol(name, pos)
+            } else {
+                return VariableRef(name, pos)
+            }
+        }
+    }
 }
 
 class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos) {

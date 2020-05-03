@@ -71,7 +71,7 @@ class NamespaceTest : APLTest() {
             tokeniser.nextToken()
         }
         assertFailsWith<ParseException> {
-            val tokeniser = makeTokeniser(":bar")
+            val tokeniser = makeTokeniser("10bar")
             tokeniser.nextToken()
         }
         assertFailsWith<ParseException> {

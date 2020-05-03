@@ -179,7 +179,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                     if (fn != null) {
                         return processFn(fn, pos, leftArgs)
                     } else {
-                        addLeftArg(VariableRef(token, pos))
+                        addLeftArg(VariableRef.makeFromSymbol(engine, token, pos))
                     }
                 }
                 is OpenParen -> addLeftArg(parseValueToplevel(CloseParen))
@@ -239,7 +239,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     private fun parseApplyDefinition(): APLFunctionDescriptor {
         val (token, firstPos) = tokeniser.nextTokenWithPosition()
         val ref = when (token) {
-            is Symbol -> VariableRef(token, firstPos)
+            is Symbol -> VariableRef.makeFromSymbol(tokeniser.engine, token, firstPos)
             is OpenParen -> parseValueToplevel(CloseParen)
             else -> throw UnexpectedToken(token, firstPos)
         }

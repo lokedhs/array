@@ -14,9 +14,7 @@ class ImmutableMap<K, V> private constructor(content: HashMap<K, V>) : Map<K, V>
 
     fun copyAndPutMultiple(vararg content: Pair<K, V>): ImmutableMap<K, V> {
         val new = copyMap()
-        content.forEach { (key, value) ->
-            new[key] = value
-        }
+        fillContent(new, content)
         return ImmutableMap(new)
     }
 
@@ -36,5 +34,21 @@ class ImmutableMap<K, V> private constructor(content: HashMap<K, V>) : Map<K, V>
             }
         }
         return new
+    }
+
+    companion object {
+        fun <K, V> makeFromContent(content: List<Pair<K, V>>): ImmutableMap<K, V> {
+            val map = HashMap<K, V>()
+            content.forEach { (key, value) ->
+                map[key] = value
+            }
+            return ImmutableMap(map)
+        }
+
+        private fun <K, V> fillContent(map: HashMap<K, V>, content: Array<out Pair<K, V>>) {
+            content.forEach { (key, value) ->
+                map[key] = value
+            }
+        }
     }
 }

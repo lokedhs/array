@@ -23,4 +23,12 @@ class SymbolTest : APLTest() {
         val result = instr.evalWithContext(RuntimeContext(engine))
         assertSame(engine.internSymbol("foo"), result.ensureSymbol().value)
     }
+
+    @Test
+    fun coreSymbol() {
+        val engine = Engine()
+        val instr = engine.parseString(":foo")
+        val result = instr.evalWithContext(RuntimeContext(engine))
+        assertSame(engine.makeNamespace("core").internSymbol("foo"), result.ensureSymbol().value)
+    }
 }

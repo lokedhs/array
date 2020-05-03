@@ -68,6 +68,9 @@ interface APLOperatorTwoArg : APLOperator {
     fun combineFunction(fn1: APLFunctionDescriptor, fn2: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
 }
 
+private const val CORE_NAMESPACE_NAME = "kap"
+private const val KEYWORD_NAMESPACE_NAME = "core"
+
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
@@ -77,7 +80,8 @@ class Engine {
     private val namespaces = HashMap<String, Namespace>()
 
     var standardOutput: CharacterOutput = NullCharacterOutput()
-    val coreNamespace = makeNamespace("kap", overrideDefaultImport = true)
+    val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
+    val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
     var currentNamespace = coreNamespace
 
     init {
@@ -198,6 +202,8 @@ class Engine {
     }
 
     private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
+
+    fun isSelfEvaluatingSymbol(name: Symbol) = name.namespace === keywordNamespace
 }
 
 expect fun platformInit(engine: Engine)

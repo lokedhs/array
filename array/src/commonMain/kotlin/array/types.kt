@@ -204,7 +204,7 @@ abstract class APLArray : APLValue {
     }
 }
 
-class APLMap(private val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
+class APLMap(val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 
@@ -464,9 +464,13 @@ class APLChar(val value: Int) : APLSingleValue() {
     override fun makeKey() = value
 }
 
-fun makeAPLString(s: String): APLValue {
-    val codepointList = s.asCodepointList()
-    return APLArrayImpl.make(dimensionsOfSize(codepointList.size)) { i -> APLChar(codepointList[i]) }
+fun makeAPLString(s: String) = APLString(s)
+
+class APLString(val content: IntArray) : APLArray() {
+    constructor(string: String) : this(string.asCodepointList().toIntArray())
+
+    override val dimensions = dimensionsOfSize(content.size)
+    override fun valueAt(p: Int) = APLChar(content[p])
 }
 
 private val NULL_DIMENSIONS = dimensionsOfSize(0)
@@ -486,8 +490,8 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.SYMBOL
     override fun formatted(style: FormatStyle) =
         when (style) {
-            FormatStyle.PLAIN -> value.symbolName
-            FormatStyle.PRETTY -> value.symbolName
+            FormatStyle.PLAIN -> value.namespace.name + ":" + value.symbolName
+            FormatStyle.PRETTY -> value.namespace.name + ":" + value.symbolName
             FormatStyle.READABLE -> "'" + value.symbolName
         }
 

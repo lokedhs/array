@@ -90,6 +90,21 @@ class InputStreamByteProvider(private val input: InputStream) : ByteProvider {
     }
 }
 
+class ByteProviderInputStream(private val input: ByteProvider) : InputStream() {
+    override fun read(): Int {
+        val result = input.readByte()
+        return if (result == null) {
+            -1
+        } else {
+            result.toInt() and 0xFF
+        }
+    }
+
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+        return input.readBlock(b, off, len) ?: -1
+    }
+}
+
 actual fun openFile(name: String): ByteProvider {
     return transformIOException {
         InputStreamByteProvider(FileInputStream(name))
