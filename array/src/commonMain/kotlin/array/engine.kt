@@ -123,6 +123,7 @@ class Engine {
         registerFunction(internSymbol("∊"), MemberFunction())
         registerFunction(internSymbol("⍋"), GradeUpFunction())
         registerFunction(internSymbol("⍒"), GradeDownFunction())
+        registerFunction(internSymbol("⍷"), FindFunction())
 
         // io functions
         registerFunction(internSymbol("print"), PrintAPLFunction())

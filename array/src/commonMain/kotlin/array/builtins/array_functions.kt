@@ -666,3 +666,61 @@ class MemberFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = MemberFunctionImpl(pos)
 }
+
+
+class FindResultValue(val context: RuntimeContext, val a: APLValue, val b: APLValue) : APLArray() {
+    override val dimensions = b.dimensions
+    private val aDimensions = a.dimensions
+    private val aMultipliers = aDimensions.multipliers()
+    private val bMultipliers = dimensions.multipliers()
+
+    override fun valueAt(p: Int): APLValue {
+        val dimensionsDiff = dimensions.size - aDimensions.size
+        val coord = dimensions.positionFromIndex(p)
+
+        if (aDimensions.size > dimensions.size) {
+            return makeBoolean(false)
+        }
+
+        aDimensions.dimensions.forEachIndexed { i, v ->
+            if (coord[dimensionsDiff + i] > dimensions[dimensionsDiff + i] - v) {
+                return makeBoolean(false)
+            }
+        }
+
+        fun processOneLevel(level: Int, aCurr: Int, bCurr: Int): Boolean {
+            if (level == aDimensions.size) {
+                return a.valueAtWithScalarCheck(aCurr).compareEquals(b.valueAt(bCurr))
+            } else {
+                val axis = dimensionsDiff + level
+                val aStride = aMultipliers[level]
+                val bStride = bMultipliers[axis]
+                val length = aDimensions[level]
+                for (i in 0 until length) {
+                    val ap = aCurr + i * aStride
+                    val bp = bCurr + i * bStride
+                    if (!processOneLevel(level + 1, ap, bp)) {
+                        return false
+                    }
+                }
+                return true
+            }
+        }
+
+        return makeBoolean(processOneLevel(0, 0, p))
+    }
+}
+
+class FindFunction : APLFunctionDescriptor {
+    class FindFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return if (b.dimensions.size == 0) {
+                if (a.compareEquals(b)) APLLONG_1 else APLLONG_0
+            } else {
+                FindResultValue(context, a, b)
+            }
+        }
+    }
+
+    override fun make(pos: Position) = FindFunctionImpl(pos)
+}

@@ -3,7 +3,6 @@ package array
 import java.io.*
 
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
-
     private var pos = 0
 
     override fun sourceName() = "[inline code]"

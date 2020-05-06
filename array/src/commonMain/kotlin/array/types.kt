@@ -31,6 +31,7 @@ interface APLValue {
         get() = dimensions.size
 
     fun valueAt(p: Int): APLValue
+    fun valueAtWithScalarCheck(p: Int): APLValue = valueAt(p)
     val size: Int
         get() = dimensions.contentSize()
 
@@ -106,6 +107,16 @@ inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
     }
 }
 
+inline fun APLValue.iterateMembersWithPosition(fn: (APLValue, Int) -> Unit) {
+    if (rank == 0) {
+        fn(this, 0)
+    } else {
+        for (i in 0 until size) {
+            fn(valueAt(i), i)
+        }
+    }
+}
+
 fun APLValue.membersSequence(): Sequence<APLValue> {
     val v = unwrapDeferredValue()
     return if (v is APLSingleValue) {
@@ -124,7 +135,10 @@ fun APLValue.membersSequence(): Sequence<APLValue> {
 
 abstract class APLSingleValue : APLValue {
     override val dimensions get() = emptyDimensions()
-    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index $p from scalar")
+    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index ${p} from scalar")
+    override fun valueAtWithScalarCheck(p: Int) =
+        if (p == 0) this else throw APLIndexOutOfBoundsException("Reading at non-zero index ${p} from scalar")
+
     override val size get() = 1
     override val rank get() = 0
     override fun collapse() = this
@@ -490,9 +504,9 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.SYMBOL
     override fun formatted(style: FormatStyle) =
         when (style) {
-            FormatStyle.PLAIN -> value.namespace.name + ":" + value.symbolName
-            FormatStyle.PRETTY -> value.namespace.name + ":" + value.symbolName
-            FormatStyle.READABLE -> "'" + value.symbolName
+            FormatStyle.PLAIN -> "${value.namespace.name}:${value.symbolName}"
+            FormatStyle.PRETTY -> "${value.namespace.name}:${value.symbolName}"
+            FormatStyle.READABLE -> "'${value.namespace.name}:${value.symbolName}"
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLSymbol && value == reference.value
