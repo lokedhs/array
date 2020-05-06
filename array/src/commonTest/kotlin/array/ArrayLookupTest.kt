@@ -22,4 +22,11 @@ class ArrayLookupTest : APLTest() {
             parseAPLExpression("3 ⌷ 1 2 3").collapse()
         }
     }
+
+    @Test
+    fun illegalDimension() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("2 3 ⌷ 1 2 3 4").collapse()
+        }
+    }
 }
