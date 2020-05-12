@@ -1,9 +1,6 @@
 package array.gui
 
-import array.APLGenericException
-import array.CharacterOutput
-import array.Engine
-import array.RuntimeContext
+import array.*
 import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.control.Menu
@@ -11,7 +8,9 @@ import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
 import javafx.scene.layout.BorderPane
 import javafx.scene.text.Font
+import javafx.stage.FileChooser
 import javafx.stage.Stage
+import java.io.File
 
 class Client(val application: ClientApplication, val stage: Stage) {
     val renderContext: ClientRenderContext = ClientRenderContextImpl()
@@ -47,21 +46,25 @@ class Client(val application: ClientApplication, val stage: Stage) {
         keyboardHelpWindow = KeyboardHelpWindow(renderContext)
         aboutWindow = AboutWindow()
 
-        stage.scene = Scene(border, 600.0, 800.0)
+        stage.scene = Scene(border, 1000.0, 800.0)
         stage.show()
     }
 
     private fun makeMenuBar(): MenuBar {
         return MenuBar().apply {
             val fileMenu = Menu("File").apply {
-                val settingsItem = MenuItem("Settings").apply {
+                items.add(MenuItem("New").apply {
+                    onAction = EventHandler { openNewFile() }
+                })
+                items.add(MenuItem("Open").apply {
+                    onAction = EventHandler { selectAndEditFile() }
+                })
+                items.add(MenuItem("Settings").apply {
                     onAction = EventHandler { openSettings() }
-                }
-                items.add(settingsItem)
-                val closeItem = MenuItem("Close").apply {
+                })
+                items.add(MenuItem("Close").apply {
                     onAction = EventHandler { stage.close() }
-                }
-                items.add(closeItem)
+                })
             }
             menus.add(fileMenu)
 
@@ -84,15 +87,35 @@ class Client(val application: ClientApplication, val stage: Stage) {
         }
     }
 
+    private fun openNewFile() {
+        val editor = SourceEditor(this)
+        editor.show()
+    }
+
+    fun selectFile(): File? {
+        val fileSelector = FileChooser().apply {
+            title = "Open KAP file"
+            selectedExtensionFilter = FileChooser.ExtensionFilter("KAP files", ".kap")
+        }
+        return fileSelector.showOpenDialog(stage)
+    }
+
+    private fun selectAndEditFile() {
+        val file = selectFile()
+        if (file != null) {
+            val editor = SourceEditor(this)
+            editor.setFile(file)
+            editor.show()
+        }
+    }
+
     private fun openSettings() {
         println("Settings panel not implemented")
     }
 
     fun sendInput(text: String) {
         try {
-            val instr = engine.parseString(text)
-            val v = instr.evalWithContext(context).collapse()
-            resultList.addResult(v)
+            evalSource(StringSourceLocation(text))
         } catch (e: APLGenericException) {
             resultList.addResult(e)
             e.printStackTrace()
@@ -101,10 +124,17 @@ class Client(val application: ClientApplication, val stage: Stage) {
         }
     }
 
+    fun evalSource(source: SourceLocation, linkNewContext: Boolean = false) {
+        val instr = engine.parseWithTokenGenerator(TokenGenerator(engine, source))
+        val v = instr.evalWithContext(if (linkNewContext) context.link() else context)
+        resultList.addResult(v)
+    }
+
     private inner class ClientRenderContextImpl : ClientRenderContext {
         private val extendedInput = ExtendedCharsKeyboardInput()
 
         override fun engine() = engine
+        override fun runtimeContext() = context
         override fun font() = inputFont
         override fun extendedInput() = extendedInput
     }

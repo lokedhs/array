@@ -1,6 +1,5 @@
 package array.gui.styledarea
 
-import array.assertx
 import array.gui.ExtendedCharsKeyboardInput
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
@@ -10,7 +9,11 @@ import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
 import java.util.function.BiConsumer
 import java.util.function.Function
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
+@OptIn(ExperimentalContracts::class)
 class ROStyledArea(
     keyboardInput: ExtendedCharsKeyboardInput,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
@@ -48,9 +51,10 @@ class ROStyledArea(
     fun displayPrompt() {
         withUpdateEnabled {
             val inputDocument = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
-                .addParagraph(listOf(
-                    StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
-                    StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
+                .addParagraph(
+                    listOf(
+                        StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
+                        StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
                 .build()
             insert(document.length(), inputDocument)
         }
@@ -107,7 +111,7 @@ class ROStyledArea(
             }
             pos--
         }
-        assertx(pos >= 0)
+        assert(pos >= 0)
 
         val inputStartPos = pos + 1
         while (pos >= 0) {
@@ -137,6 +141,7 @@ class ROStyledArea(
     }
 
     fun withUpdateEnabled(fn: () -> Unit) {
+        contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         val oldEnabled = updatesEnabled
         updatesEnabled = true
         try {
@@ -146,9 +151,9 @@ class ROStyledArea(
         }
     }
 
-    fun appendTextEnd(text: String, style: TextStyle) {
+    fun appendTextEnd(text: String, style: TextStyle, parStyle: ParStyle? = null) {
         withUpdateEnabled {
-            val builder = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
+            val builder = ReadOnlyStyledDocumentBuilder(segOps, parStyle ?: ParStyle())
             text.split("\n").forEach { part -> builder.addParagraph(part, style) }
             insert(document.length(), builder.build())
         }

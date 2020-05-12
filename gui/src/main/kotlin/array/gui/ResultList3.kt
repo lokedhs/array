@@ -8,6 +8,8 @@ import array.gui.styledarea.ParStyle
 import array.gui.styledarea.ROStyledArea
 import array.gui.styledarea.TextStyle
 import javafx.scene.Node
+import javafx.scene.layout.*
+import javafx.scene.paint.Color
 import javafx.scene.text.TextFlow
 import org.fxmisc.flowless.VirtualizedScrollPane
 import org.fxmisc.richtext.StyledTextArea
@@ -29,7 +31,10 @@ class ResultList3(val client: Client) {
 
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
-            //println("accept: t=${t}, u=${u}")
+            if (u.indent) {
+                t.border =
+                    Border(BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths(5.0, 5.0, 5.0, 30.0)))
+            }
         }
         val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
             val applyStyle = { a: TextExt, b: TextStyle ->
@@ -46,7 +51,6 @@ class ResultList3(val client: Client) {
         val historyListener = ResultHistoryListener()
         styledArea.addHistoryListener(historyListener)
 
-        //styledArea.isEditable = false
         styledArea.isWrapText = false
 
         scrollArea = VirtualizedScrollPane(styledArea)
@@ -86,7 +90,7 @@ class ResultList3(val client: Client) {
 
     private fun addInput(text: String) {
         styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT))
+            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT), ParStyle(indent = true))
         }
     }
 
