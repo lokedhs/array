@@ -92,12 +92,16 @@ class Client(val application: ClientApplication, val stage: Stage) {
         editor.show()
     }
 
-    fun selectFile(): File? {
+    fun selectFile(forSave: Boolean = false): File? {
         val fileSelector = FileChooser().apply {
             title = "Open KAP file"
             selectedExtensionFilter = FileChooser.ExtensionFilter("KAP files", ".kap")
         }
-        return fileSelector.showOpenDialog(stage)
+        return if (forSave) {
+            fileSelector.showSaveDialog(stage)
+        } else {
+            fileSelector.showOpenDialog(stage)
+        }
     }
 
     private fun selectAndEditFile() {

@@ -76,10 +76,7 @@ class SourceEditor(val client: Client) {
 
     private fun saveClicked() {
         if (loaded == null) {
-            val selectedFile = client.selectFile()
-            if (selectedFile == null) {
-                return
-            }
+            val selectedFile = client.selectFile(true) ?: return
             loaded = selectedFile
         }
         FileWriter(loaded, StandardCharsets.UTF_8).use { out ->

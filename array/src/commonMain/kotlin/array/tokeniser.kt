@@ -26,14 +26,29 @@ object NamespaceToken : Token()
 object ImportToken : Token()
 
 class Namespace(val name: String) {
-    private val symbols = HashMap<String, Symbol>()
+    private val symbols = HashMap<String, NamespaceEntry>()
     private val imports = ArrayList<Namespace>()
 
     override fun toString() = "Namespace[name=${name}]"
 
-    fun findSymbol(name: String) = symbols[name]
+    fun findSymbol(name: String, includePrivate: Boolean = false): Symbol? {
+        val e = symbols[name]
+        return when {
+            e == null -> null
+            includePrivate -> e.symbol
+            e.exported -> e.symbol
+            else -> null
+        }
+    }
 
-    fun internSymbol(name: String) = findSymbol(name) ?: Symbol(name, this).also { sym -> symbols[name] = sym }
+    fun internSymbol(name: String): Symbol {
+        val e = symbols[name]
+        return if (e == null) {
+            Symbol(name, this).also { sym -> symbols[name] = NamespaceEntry(sym, false) }
+        } else {
+            e.symbol
+        }
+    }
 
     fun addImport(namespace: Namespace) {
         if (namespace !== this) {
@@ -41,7 +56,20 @@ class Namespace(val name: String) {
         }
     }
 
+    fun internAndExport(name: String): Symbol {
+        val e = symbols[name]
+        val e2 = if (e == null) {
+            NamespaceEntry(Symbol(name, this), true).also { symbols[name] = it }
+        } else {
+            e.exported = true
+            e
+        }
+        return e2.symbol
+    }
+
     fun imports(): List<Namespace> = imports
+
+    private class NamespaceEntry(val symbol: Symbol, var exported: Boolean)
 }
 
 class Symbol(val symbolName: String, val namespace: Namespace) : Token(), Comparable<Symbol> {
@@ -49,6 +77,8 @@ class Symbol(val symbolName: String, val namespace: Namespace) : Token(), Compar
     override fun compareTo(other: Symbol) = symbolName.compareTo(other.symbolName)
     override fun hashCode() = symbolName.hashCode()
     override fun equals(other: Any?) = other != null && other is Symbol && symbolName == other.symbolName && namespace === other.namespace
+
+    fun nameWithNamespace() = namespace.name + ":" + symbolName
 }
 
 class StringToken(val value: String) : Token()
@@ -147,7 +177,10 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
 
         return mkpos(
             when {
-                singleCharFunctions.contains(charToString(ch)) -> engine.internSymbol(charToString(ch), engine.coreNamespace)
+                singleCharFunctions.contains(charToString(ch)) -> {
+                    val name = charToString(ch)
+                    findSymbolInImports(name) ?: engine.internSymbol(name, engine.currentNamespace)
+                }
                 isNegationSign(ch) || isDigit(ch) -> {
                     content.pushBack()
                     collectNumber()
@@ -263,10 +296,9 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 if (keyword != null) {
                     return keyword
                 }
-
-                engine.currentNamespace.findSymbol(symbolString)?.also { sym -> return sym }
-                engine.currentNamespace.imports().forEach { namespace ->
-                    namespace.findSymbol(symbolString)?.also { sym -> return sym }
+                val sym = findSymbolInImports(symbolString)
+                if (sym != null) {
+                    return sym
                 }
                 null
             } else {
@@ -275,6 +307,14 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
 
             return engine.internSymbol(symbolString, namespace)
         }
+    }
+
+    private fun findSymbolInImports(name: String): Symbol? {
+        engine.currentNamespace.findSymbol(name, true)?.also { sym -> return sym }
+        engine.currentNamespace.imports().forEach { namespace ->
+            namespace.findSymbol(name, false)?.also { sym -> return sym }
+        }
+        return null
     }
 
     private fun collectString(): Token {

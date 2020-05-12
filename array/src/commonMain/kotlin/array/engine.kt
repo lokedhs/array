@@ -70,6 +70,7 @@ interface APLOperatorTwoArg : APLOperator {
 
 private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "core"
+private const val DEFAULT_NAMESPACE_NAME = "default"
 
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
@@ -82,75 +83,76 @@ class Engine {
     var standardOutput: CharacterOutput = NullCharacterOutput()
     val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
     val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
-    var currentNamespace = coreNamespace
+    val initialNamespace = makeNamespace(DEFAULT_NAMESPACE_NAME)
+    var currentNamespace = initialNamespace
 
     init {
         // core functions
-        registerFunction(internSymbol("+"), AddAPLFunction())
-        registerFunction(internSymbol("-"), SubAPLFunction())
-        registerFunction(internSymbol("×"), MulAPLFunction())
-        registerFunction(internSymbol("÷"), DivAPLFunction())
-        registerFunction(internSymbol("⋆"), PowerAPLFunction())
-        registerFunction(internSymbol("⍟"), LogAPLFunction())
-        registerFunction(internSymbol("⍳"), IotaAPLFunction())
-        registerFunction(internSymbol("⍴"), RhoAPLFunction())
-        registerFunction(internSymbol("⊢"), IdentityAPLFunction())
-        registerFunction(internSymbol("⊣"), HideAPLFunction())
-        registerFunction(internSymbol("="), EqualsAPLFunction())
-        registerFunction(internSymbol("≠"), NotEqualsAPLFunction())
-        registerFunction(internSymbol("<"), LessThanAPLFunction())
-        registerFunction(internSymbol(">"), GreaterThanAPLFunction())
-        registerFunction(internSymbol("≤"), LessThanEqualAPLFunction())
-        registerFunction(internSymbol("≥"), GreaterThanEqualAPLFunction())
-        registerFunction(internSymbol("⌷"), AccessFromIndexAPLFunction())
-        registerFunction(internSymbol("⊂"), EncloseAPLFunction())
-        registerFunction(internSymbol("⊃"), DiscloseAPLFunction())
-        registerFunction(internSymbol("∧"), AndAPLFunction())
-        registerFunction(internSymbol("∨"), OrAPLFunction())
-        registerFunction(internSymbol(","), ConcatenateAPLFunction())
-        registerFunction(internSymbol("↑"), TakeAPLFunction())
-        registerFunction(internSymbol("?"), RandomAPLFunction())
-        registerFunction(internSymbol("⌽"), RotateHorizFunction())
-        registerFunction(internSymbol("⊖"), RotateVertFunction())
-        registerFunction(internSymbol("↓"), DropAPLFunction())
-        registerFunction(internSymbol("⍉"), TransposeFunction())
-        registerFunction(internSymbol("⌊"), MinAPLFunction())
-        registerFunction(internSymbol("⌈"), MaxAPLFunction())
-        registerFunction(internSymbol("|"), ModAPLFunction())
-        registerFunction(internSymbol("∘"), NullFunction())
-        registerFunction(internSymbol("≡"), CompareFunction())
-        registerFunction(internSymbol("≢"), CompareNotEqualFunction())
-        registerFunction(internSymbol("∊"), MemberFunction())
-        registerFunction(internSymbol("⍋"), GradeUpFunction())
-        registerFunction(internSymbol("⍒"), GradeDownFunction())
-        registerFunction(internSymbol("⍷"), FindFunction())
+        registerNativeFunction("+", AddAPLFunction())
+        registerNativeFunction("-", SubAPLFunction())
+        registerNativeFunction("×", MulAPLFunction())
+        registerNativeFunction("÷", DivAPLFunction())
+        registerNativeFunction("⋆", PowerAPLFunction())
+        registerNativeFunction("⍟", LogAPLFunction())
+        registerNativeFunction("⍳", IotaAPLFunction())
+        registerNativeFunction("⍴", RhoAPLFunction())
+        registerNativeFunction("⊢", IdentityAPLFunction())
+        registerNativeFunction("⊣", HideAPLFunction())
+        registerNativeFunction("=", EqualsAPLFunction())
+        registerNativeFunction("≠", NotEqualsAPLFunction())
+        registerNativeFunction("<", LessThanAPLFunction())
+        registerNativeFunction(">", GreaterThanAPLFunction())
+        registerNativeFunction("≤", LessThanEqualAPLFunction())
+        registerNativeFunction("≥", GreaterThanEqualAPLFunction())
+        registerNativeFunction("⌷", AccessFromIndexAPLFunction())
+        registerNativeFunction("⊂", EncloseAPLFunction())
+        registerNativeFunction("⊃", DiscloseAPLFunction())
+        registerNativeFunction("∧", AndAPLFunction())
+        registerNativeFunction("∨", OrAPLFunction())
+        registerNativeFunction(",", ConcatenateAPLFunction())
+        registerNativeFunction("↑", TakeAPLFunction())
+        registerNativeFunction("?", RandomAPLFunction())
+        registerNativeFunction("⌽", RotateHorizFunction())
+        registerNativeFunction("⊖", RotateVertFunction())
+        registerNativeFunction("↓", DropAPLFunction())
+        registerNativeFunction("⍉", TransposeFunction())
+        registerNativeFunction("⌊", MinAPLFunction())
+        registerNativeFunction("⌈", MaxAPLFunction())
+        registerNativeFunction("|", ModAPLFunction())
+        registerNativeFunction("∘", NullFunction())
+        registerNativeFunction("≡", CompareFunction())
+        registerNativeFunction("≢", CompareNotEqualFunction())
+        registerNativeFunction("∊", MemberFunction())
+        registerNativeFunction("⍋", GradeUpFunction())
+        registerNativeFunction("⍒", GradeDownFunction())
+        registerNativeFunction("⍷", FindFunction())
 
         // io functions
-        registerFunction(internSymbol("print"), PrintAPLFunction())
-        registerFunction(internSymbol("readCsvFile"), ReadCSVFunction())
-        registerFunction(internSymbol("load"), LoadFunction())
-        registerFunction(internSymbol("httpRequest"), HttpRequestFunction())
+        registerNativeFunction("print", PrintAPLFunction())
+        registerNativeFunction("readCsvFile", ReadCSVFunction())
+        registerNativeFunction("load", LoadFunction())
+        registerNativeFunction("httpRequest", HttpRequestFunction())
 
         // maths
-        registerFunction(internSymbol("sin"), SinAPLFunction())
-        registerFunction(internSymbol("cos"), CosAPLFunction())
-        registerFunction(internSymbol("tan"), TanAPLFunction())
-        registerFunction(internSymbol("asin"), AsinAPLFunction())
-        registerFunction(internSymbol("acos"), AcosAPLFunction())
-        registerFunction(internSymbol("atan"), AtanAPLFunction())
+        registerNativeFunction("sin", SinAPLFunction())
+        registerNativeFunction("cos", CosAPLFunction())
+        registerNativeFunction("tan", TanAPLFunction())
+        registerNativeFunction("asin", AsinAPLFunction())
+        registerNativeFunction("acos", AcosAPLFunction())
+        registerNativeFunction("atan", AtanAPLFunction())
 
         // metafunctions
-        registerFunction(internSymbol("typeof"), TypeofFunction())
+        registerNativeFunction("typeof", TypeofFunction())
 
         // operators
-        registerOperator(internSymbol("¨"), ForEachOp())
-        registerOperator(internSymbol("/"), ReduceOp())
-        registerOperator(internSymbol("⌺"), OuterJoinOp())
-        registerOperator(internSymbol("."), OuterInnerJoinOp())
-        registerOperator(internSymbol("⍨"), CommuteOp())
+        registerNativeOperator("¨", ForEachOp())
+        registerNativeOperator("/", ReduceOp())
+        registerNativeOperator("⌺", OuterJoinOp())
+        registerNativeOperator(".", OuterInnerJoinOp())
+        registerNativeOperator("⍨", CommuteOp())
 
         // function aliases
-        functionAliases[internSymbol("*")] = internSymbol("⋆")
+        functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
 
         platformInit(this)
     }
@@ -168,9 +170,19 @@ class Engine {
         functionDefinitionListeners.forEach { it.functionDefined(name, fn) }
     }
 
+    private fun registerNativeFunction(name: String, fn: APLFunctionDescriptor) {
+        val sym = coreNamespace.internAndExport(name)
+        registerFunction(sym, fn)
+    }
+
     fun registerOperator(name: Symbol, fn: APLOperator) {
         operators[name] = fn
         functionDefinitionListeners.forEach { it.operatorDefined(name, fn) }
+    }
+
+    private fun registerNativeOperator(name: String, fn: APLOperator) {
+        val sym = coreNamespace.internAndExport(name)
+        registerOperator(sym, fn)
     }
 
     fun getUserDefinedFunctions(): Map<Symbol, UserFunction> {

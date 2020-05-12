@@ -21,7 +21,7 @@ open class APLEvalException(message: String, pos: Position? = null) : APLGeneric
 open class IncompatibleTypeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class APLIndexOutOfBoundsException(message: String, pos: Position? = null) : APLEvalException("Index out of bounds: ${message}", pos)
-class VariableNotAssigned(name: Symbol, pos: Position? = null) : APLEvalException("Variable not assigned: $name", pos)
+class VariableNotAssigned(name: Symbol, pos: Position? = null) : APLEvalException("Variable not assigned: ${name.nameWithNamespace()}", pos)
 class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
     APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
 

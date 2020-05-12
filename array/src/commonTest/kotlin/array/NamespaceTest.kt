@@ -108,9 +108,12 @@ class NamespaceTest : APLTest() {
         assertSym("ff", "aa", result.valueAt(4))
     }
 
+    // Ignored since we don't have a way to export symbols at the moment
+    @Ignore
     @Test
     fun defaultNamespaceFallback() {
-        val result = parseAPLExpression("""
+        val result = parseAPLExpression(
+            """
             |namespace("foo")
             |a ← 'cc
             |namespace("bar")
@@ -127,9 +130,12 @@ class NamespaceTest : APLTest() {
         assertSym("a", "foo", result.valueAt(4))
     }
 
+    // Ignored since we don't have a way to export symbols at the moment
+    @Ignore
     @Test
     fun kapNamespaceIsAlwaysImported() {
-        val result = parseAPLExpression("""
+        val result = parseAPLExpression(
+            """
             |kap:foo ← 3
             |namespace("bar")
             |foo + 100

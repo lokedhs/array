@@ -58,7 +58,6 @@ class ResultList3(val client: Client) {
 
     private fun processCommand(text: String) {
         if (text.trim().isNotBlank()) {
-            println("adding command: $text, size = ${history.size}")
             history.add(text)
             historyPos = history.size
             pendingInput = null
