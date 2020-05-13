@@ -24,6 +24,7 @@ object IfToken : Token()
 object ElseToken : Token()
 object NamespaceToken : Token()
 object ImportToken : Token()
+object ExportToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, NamespaceEntry>()
@@ -68,6 +69,18 @@ class Namespace(val name: String) {
     }
 
     fun imports(): List<Namespace> = imports
+
+    /**
+     * If [symbol] is interned in this namespace, mark it as exported. Otherwise throw
+     * an exception.
+     */
+    fun exportIfInterned(symbol: Symbol) {
+        val v = symbols[symbol.symbolName]
+        if (v == null || v.symbol !== symbol) {
+            throw IllegalArgumentException("Symbol is not interned in namespace")
+        }
+        v.exported = true
+    }
 
     private class NamespaceEntry(val symbol: Symbol, var exported: Boolean)
 }
@@ -132,7 +145,8 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "if" to IfToken,
         "else" to ElseToken,
         "namespace" to NamespaceToken,
-        "import" to ImportToken
+        "import" to ImportToken,
+        "export" to ExportToken
     )
 
     init {

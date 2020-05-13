@@ -198,6 +198,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is IfToken -> addLeftArg(parseIfStatement(pos))
                 is NamespaceToken -> processNamespace()
                 is ImportToken -> processImport()
+                is ExportToken -> processExport()
                 else -> throw UnexpectedToken(token, pos)
             }
         }
@@ -217,6 +218,22 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.nextTokenWithType<CloseParen>()
         val namespace = tokeniser.engine.makeNamespace(namespaceName.value)
         tokeniser.engine.currentNamespace.addImport(namespace)
+    }
+
+    private fun processExport() {
+        tokeniser.nextTokenWithType<OpenParen>()
+        while (true) {
+            val (token, pos) = tokeniser.nextTokenWithPosition()
+            when (token) {
+                is Symbol -> exportSymbolIfInterned(token)
+                is CloseParen -> break
+                else -> throw UnexpectedToken(token, pos)
+            }
+        }
+    }
+
+    private fun exportSymbolIfInterned(symbol: Symbol) {
+        symbol.namespace.exportIfInterned(symbol)
     }
 
     private fun parseIfStatement(pos: Position): Instruction {

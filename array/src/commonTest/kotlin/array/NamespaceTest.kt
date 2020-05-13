@@ -89,7 +89,8 @@ class NamespaceTest : APLTest() {
 
     @Test
     fun changeNamespace2() {
-        val result = parseAPLExpression("""
+        val result = parseAPLExpression(
+            """
             |namespace("foo")
             |a ← 'aa:bb
             |b ← 'cc
@@ -108,13 +109,12 @@ class NamespaceTest : APLTest() {
         assertSym("ff", "aa", result.valueAt(4))
     }
 
-    // Ignored since we don't have a way to export symbols at the moment
-    @Ignore
     @Test
     fun defaultNamespaceFallback() {
         val result = parseAPLExpression(
             """
             |namespace("foo")
+            |export(a)
             |a ← 'cc
             |namespace("bar")
             |import("foo")
@@ -130,17 +130,44 @@ class NamespaceTest : APLTest() {
         assertSym("a", "foo", result.valueAt(4))
     }
 
-    // Ignored since we don't have a way to export symbols at the moment
-    @Ignore
     @Test
     fun kapNamespaceIsAlwaysImported() {
         val result = parseAPLExpression(
             """
+            |export(kap:foo)
             |kap:foo ← 3
             |namespace("bar")
             |foo + 100
         """.trimMargin())
         assertSimpleNumber(103, result)
+    }
+
+    @Test
+    fun exportMultipleSymbols() {
+        val result = parseAPLExpression(
+            """
+            |namespace("foo")
+            |export(x y)
+            |x ← 1
+            |y ← 100
+            |namespace("bar")
+            |foo:x+foo:y
+        """.trimMargin())
+        assertSimpleNumber(101, result)
+    }
+
+    @Test
+    fun exportNothing() {
+        val result = parseAPLExpression(
+            """
+            |namespace("foo")
+            |export()
+            |x ← 1
+            |y ← 100
+            |namespace("bar")
+            |2+4
+        """.trimMargin())
+        assertSimpleNumber(6, result)
     }
 
     private fun makeTokeniser(content: String): TokenGenerator {
