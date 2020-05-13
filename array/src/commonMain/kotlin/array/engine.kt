@@ -126,6 +126,7 @@ class Engine {
         registerNativeFunction("⍋", GradeUpFunction())
         registerNativeFunction("⍒", GradeDownFunction())
         registerNativeFunction("⍷", FindFunction())
+        registerNativeFunction("/", SelectElementsFunction())
 
         // io functions
         registerNativeFunction("print", PrintAPLFunction())

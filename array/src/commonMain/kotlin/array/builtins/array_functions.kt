@@ -724,3 +724,32 @@ class FindFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = FindFunctionImpl(pos)
 }
+
+class SelectElementsFunction : APLFunctionDescriptor {
+    class SelectElementsFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val aa = a.arrayify()
+            if (aa.dimensions.size != 1) {
+                throw InvalidDimensionsException("Left argument must have a single dimension", pos)
+            }
+            val ba = b.arrayify()
+            if (ba.dimensions.size != 1) {
+                throw InvalidDimensionsException("Right argument must have a single dimension", pos)
+            }
+
+            val result = ArrayList<APLValue>()
+            aa.iterateMembersWithPosition { v, i ->
+                val n = v.ensureNumber(pos).asInt()
+                if (n > 0) {
+                    val toBeAdded = ba.valueAt(i)
+                    (0 until n).forEach { _ ->
+                        result.add(toBeAdded)
+                    }
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
+    }
+
+    override fun make(pos: Position) = SelectElementsFunctionImpl(pos)
+}
