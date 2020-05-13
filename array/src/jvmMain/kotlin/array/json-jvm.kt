@@ -75,7 +75,7 @@ private fun parseNull(reader: JsonReader): APLNullValue {
 fun main() {
     val result = parseJsonToAPL(openFile("array/test-data/json-test.json"))
     if (result is APLMap) {
-        result.content.forEach { key, value ->
+        result.content.forEach { (key, value) ->
             println("key: ${key}\nValue:\n${value.formatted(FormatStyle.PRETTY)}\n\n")
         }
     } else {

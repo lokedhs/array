@@ -92,10 +92,10 @@ class VariableRef private constructor(val name: Symbol, pos: Position) : Instruc
 
     companion object {
         fun makeFromSymbol(engine: Engine, name: Symbol, pos: Position): Instruction {
-            if (engine.isSelfEvaluatingSymbol(name)) {
-                return LiteralSymbol(name, pos)
+            return if (engine.isSelfEvaluatingSymbol(name)) {
+                LiteralSymbol(name, pos)
             } else {
-                return VariableRef(name, pos)
+                VariableRef(name, pos)
             }
         }
     }
