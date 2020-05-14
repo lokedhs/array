@@ -3,7 +3,6 @@ package array
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class SyntaxText : APLTest() {
     @Test
@@ -61,8 +60,8 @@ class SyntaxText : APLTest() {
     fun ifTestWithOptionalElse() {
         val result = parseAPLExpression(
             """
-            |defsyntax xif (:value cond :function thenStatement :constant :optional (:constant xelse :function elseStatement)) {
-            |  ⍞((cond ≡ 1) ⌷ elseStatement thenStatement) cond
+            |defsyntax xif (:value cond :function thenStatement :optional (:constant xelse :function elseStatement)) {
+            |  ⍞((cond ≡ 1) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
             |}
             |(xif (1) { 10 }) (xif (0) { 10 })
             """.trimMargin())
@@ -70,6 +69,19 @@ class SyntaxText : APLTest() {
         assertSimpleNumber(10, result.valueAt(0))
         val secondRes = result.valueAt(1)
         assertDimension(dimensionsOfSize(0), secondRes)
+    }
+
+    @Test
+    fun ifTestWithElse() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax xif (:value cond :function thenStatement :optional (:constant xelse :function elseStatement)) {
+            |  ⍞((cond ≡ 1) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
+            |}
+            |(xif (1) { 10 } xelse { 20 }) (xif (0) { 11 } xelse { 22 })
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(10, 22), result)
     }
 
     @Test

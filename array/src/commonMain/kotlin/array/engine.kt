@@ -145,6 +145,7 @@ class Engine {
 
         // metafunctions
         registerNativeFunction("typeof", TypeofFunction())
+        registerNativeFunction("isLocallyBound", IsLocallyBoundFunction())
 
         // operators
         registerNativeOperator("¨", ForEachOp())
@@ -234,13 +235,19 @@ expect fun platformInit(engine: Engine)
 class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<Symbol, APLValue>()
 
-    fun lookupVar(name: Symbol): APLValue? {
+    fun lookupVar(name: Symbol, localOnly: Boolean = false): APLValue? {
         val result = localVariables[name]
-        return when {
-            result != null -> result
-            parent != null -> parent.lookupVar(name)
-            else -> engine.lookupVar(name)
+        if (result != null) {
+            return result
         }
+        if (!localOnly) {
+            return if (parent != null) {
+                parent.lookupVar(name)
+            } else {
+                engine.lookupVar(name)
+            }
+        }
+        return null
     }
 
     fun setVar(name: Symbol, value: APLValue) {

@@ -162,6 +162,12 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         )
     }
 
+    fun peekToken(): Token {
+        return nextToken().also { token ->
+            pushBackToken(token)
+        }
+    }
+
     inline fun <reified T : Token> nextTokenWithType(): T {
         val (token, pos) = nextTokenWithPosition()
         if (token is T) {
@@ -374,6 +380,16 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             if (tokenAndPos.first != Whitespace) {
                 return tokenAndPos
             }
+        }
+    }
+
+    inline fun iterateUntilToken(endToken: CloseParen, fn: (Token, Position) -> Unit) {
+        while (true) {
+            val (token, pos) = nextTokenWithPosition()
+            if (token == endToken) {
+                break
+            }
+            fn(token, pos)
         }
     }
 

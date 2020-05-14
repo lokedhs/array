@@ -156,7 +156,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         return DefinedUserFunction(UserFunction(leftFnArgs, rightFnArgs, instr), name, pos)
     }
 
-    fun parseValue(): InstrTokenHolder {
+    private fun parseValue(): InstrTokenHolder {
         val engine = tokeniser.engine
         val leftArgs = ArrayList<Instruction>()
 
