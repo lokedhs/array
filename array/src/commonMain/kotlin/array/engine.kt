@@ -79,6 +79,7 @@ class Engine {
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
     private val functionAliases = HashMap<Symbol, Symbol>()
     private val namespaces = HashMap<String, Namespace>()
+    private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
 
     var standardOutput: CharacterOutput = NullCharacterOutput()
     val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
@@ -218,6 +219,14 @@ class Engine {
     private fun resolveAlias(name: Symbol) = functionAliases[name] ?: name
 
     fun isSelfEvaluatingSymbol(name: Symbol) = name.namespace === keywordNamespace
+
+    fun registerCustomSyntax(customSyntax: CustomSyntax) {
+        customSyntaxEntries[customSyntax.triggerSymbol] = customSyntax
+    }
+
+    fun syntaxRulesForSymbol(name: Symbol): CustomSyntax? {
+        return customSyntaxEntries[name]
+    }
 }
 
 expect fun platformInit(engine: Engine)

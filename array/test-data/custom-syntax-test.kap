@@ -1,0 +1,3 @@
+defsyntax xif (:value cond :function thenStatement :constant xelse :function elseStatement) {
+  ⍞((cond ≡ 1) ⌷ thenStatement elseStatement) cond
+}

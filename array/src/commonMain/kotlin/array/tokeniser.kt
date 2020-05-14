@@ -25,6 +25,7 @@ object ElseToken : Token()
 object NamespaceToken : Token()
 object ImportToken : Token()
 object ExportToken : Token()
+object DefsyntaxToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, NamespaceEntry>()
@@ -146,7 +147,8 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "else" to ElseToken,
         "namespace" to NamespaceToken,
         "import" to ImportToken,
-        "export" to ExportToken
+        "export" to ExportToken,
+        "defsyntax" to DefsyntaxToken
     )
 
     init {
@@ -164,6 +166,15 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         val (token, pos) = nextTokenWithPosition()
         if (token is T) {
             return token
+        } else {
+            throw UnexpectedToken(token, pos)
+        }
+    }
+
+    inline fun <reified T : Token> nextTokenAndPosWithType(): Pair<T, Position> {
+        val (token, pos) = nextTokenWithPosition()
+        if (token is T) {
+            return Pair(token, pos)
         } else {
             throw UnexpectedToken(token, pos)
         }

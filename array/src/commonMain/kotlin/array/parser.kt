@@ -2,6 +2,11 @@ package array
 
 data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 
+interface ParserState {
+    val tokeniser: TokenGenerator
+    fun parseNextValue(): Instruction
+}
+
 class APLParser(val tokeniser: TokenGenerator) {
 
     fun parseValueToplevel(endToken: Token): Instruction {
@@ -151,7 +156,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         return DefinedUserFunction(UserFunction(leftFnArgs, rightFnArgs, instr), name, pos)
     }
 
-    private fun parseValue(): InstrTokenHolder {
+    fun parseValue(): InstrTokenHolder {
         val engine = tokeniser.engine
         val leftArgs = ArrayList<Instruction>()
 
@@ -175,15 +180,20 @@ class APLParser(val tokeniser: TokenGenerator) {
 
             when (token) {
                 is Symbol -> {
-                    val fn = engine.getFunction(token)
-                    if (fn != null) {
-                        return processFn(fn, pos, leftArgs)
+                    val customSyntax = tokeniser.engine.syntaxRulesForSymbol(token)
+                    if (customSyntax != null) {
+                        addLeftArg(processCustomSyntax(this, customSyntax))
                     } else {
-                        addLeftArg(VariableRef.makeFromSymbol(engine, token, pos))
+                        val fn = engine.getFunction(token)
+                        if (fn != null) {
+                            return processFn(fn, pos, leftArgs)
+                        } else {
+                            addLeftArg(VariableRef.makeFromSymbol(engine, token, pos))
+                        }
                     }
                 }
                 is OpenParen -> addLeftArg(parseValueToplevel(CloseParen))
-                is OpenFnDef -> return processFn(parseFnDefinition(pos), pos, leftArgs)
+                is OpenFnDef -> return processFn(parseFnDefinition(), pos, leftArgs)
                 is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
                 is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
                 is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
@@ -199,6 +209,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is NamespaceToken -> processNamespace()
                 is ImportToken -> processImport()
                 is ExportToken -> processExport()
+                is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
                 else -> throw UnexpectedToken(token, pos)
             }
         }
@@ -273,15 +284,14 @@ class APLParser(val tokeniser: TokenGenerator) {
         val (token, pos2) = tokeniser.nextTokenWithPosition()
         return when (token) {
             is OpenFnDef -> {
-                val fnDefinition = parseFnDefinition(pos)
+                val fnDefinition = parseFnDefinition()
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             else -> throw UnexpectedToken(token, pos2)
         }
     }
 
-    private fun parseFnDefinition(
-        pos: Position,
+    fun parseFnDefinition(
         leftArgName: Symbol? = null,
         rightArgName: Symbol? = null
     ): DeclaredFunction {
@@ -301,7 +311,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 parseOperator(fn)
             }
             is OpenFnDef -> {
-                parseFnDefinition(pos)
+                parseFnDefinition()
             }
             else -> throw ParseException("Expected function, got: ${token}", pos)
         }
