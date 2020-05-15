@@ -80,6 +80,7 @@ class Engine {
     private val functionAliases = HashMap<Symbol, Symbol>()
     private val namespaces = HashMap<String, Namespace>()
     private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
+    private val librarySearchPaths = ArrayList<String>()
 
     var standardOutput: CharacterOutput = NullCharacterOutput()
     val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
@@ -160,6 +161,29 @@ class Engine {
         platformInit(this)
     }
 
+    fun addLibrarySearchPath(path: String) {
+        val fixedPath = PathUtils.cleanupPathName(path)
+        if (!librarySearchPaths.contains(fixedPath)) {
+            librarySearchPaths.add(fixedPath)
+        }
+    }
+
+    fun resolveLibraryFile(requestedFile: String): String? {
+        if (requestedFile.isEmpty()) {
+            return null
+        }
+        if (PathUtils.isAbsolutePath(requestedFile)) {
+            return null
+        }
+        librarySearchPaths.forEach { path ->
+            val name = "${path}/${requestedFile}"
+            if (fileExists(name)) {
+                return name
+            }
+        }
+        return null
+    }
+
     fun addFunctionDefinitionListener(listener: FunctionDefinitionListener) {
         functionDefinitionListeners.add(listener)
     }
@@ -227,6 +251,15 @@ class Engine {
 
     fun syntaxRulesForSymbol(name: Symbol): CustomSyntax? {
         return customSyntaxEntries[name]
+    }
+
+    inline fun <T> withSavedState(fn: () -> T): T {
+        val oldNamespace = currentNamespace
+        try {
+            return fn()
+        } finally {
+            currentNamespace = oldNamespace
+        }
     }
 }
 

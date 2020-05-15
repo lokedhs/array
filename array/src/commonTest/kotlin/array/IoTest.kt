@@ -17,16 +17,6 @@ class IoTest {
     }
 
     @Test
-    fun testEndOfFile() {
-        openFile("test-data/plain.txt").use { input ->
-            val buf = ByteArray(10)
-            val result = input.readBlock(buf)
-            assertEquals(7, result)
-            assertByteArrayContent("abcbar\n".encodeToByteArray(), buf)
-        }
-    }
-
-    @Test
     fun testPartialBlock() {
         openFile("test-data/plain.txt").use { input ->
             val buf = ByteArray(10) { 0 }
@@ -59,6 +49,14 @@ class IoTest {
             assertEquals(0x1D49F, input.nextCodepoint())
             assertEquals(0xE01, input.nextCodepoint())
             assertEquals(0xA, input.nextCodepoint())
+            assertNull(input.nextCodepoint())
+        }
+    }
+
+    @Test
+    fun testReadline() {
+        openCharFile("test-data/plain.txt").use { input ->
+            assertEquals("abcbar", input.nextLine())
             assertNull(input.nextCodepoint())
         }
     }

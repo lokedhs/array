@@ -3,8 +3,6 @@ package array
 import kotlinx.cinterop.*
 import platform.posix.*
 
-class NativeFileException(message: String) : Exception(message)
-
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
     private var pos = 0
 
@@ -67,7 +65,7 @@ actual fun makeKeyboardInput(): KeyboardInput {
 actual fun openCharFile(name: String): CharacterProvider {
     val fd = open(name, O_RDONLY)
     if (fd == -1) {
-        throw NativeFileException(nativeErrorString())
+        throw MPFileException(nativeErrorString())
     }
     return FileCharacterProvider(LinuxByteProvider(fd), name)
 }
@@ -92,7 +90,7 @@ class FileCharacterProvider(val backend: LinuxByteProvider, val sourceName: Stri
             val nextByte = readNextByte()
             if (nextByte == null) {
                 if (utfBytesNeeded != 0) {
-                    throw NativeFileException("Truncated UTF-8 stream")
+                    throw MPFileException("Truncated UTF-8 stream")
                 } else {
                     return null
                 }
@@ -119,12 +117,12 @@ class FileCharacterProvider(val backend: LinuxByteProvider, val sourceName: Stri
                         utfBytesNeeded = 3
                         utfCodepoint = (a and 0x7)
                     }
-                    else -> throw NativeFileException("Unexpected value in UTF-8 stream")
+                    else -> throw MPFileException("Unexpected value in UTF-8 stream")
                 }
             } else {
                 if (a < utfLowerBoundary || a > utfUpperBoundary) {
                     pushbackChar = nextByte
-                    throw NativeFileException("Invalid UTF-8 bytes")
+                    throw MPFileException("Invalid UTF-8 bytes")
                 }
                 utfLowerBoundary = 0x80
                 utfUpperBoundary = 0xBF
@@ -180,7 +178,7 @@ class LinuxByteProvider(val fd: Int) : ByteProvider {
             val buf = allocArray<ByteVar>(lengthInt)
             val result = read(fd, buf, lengthInt.toULong())
             if (result == -1L) {
-                throw NativeFileException(nativeErrorString())
+                throw MPFileException(nativeErrorString())
             }
             val resultLen = result.toInt()
             for (i in 0 until resultLen) {
@@ -192,7 +190,7 @@ class LinuxByteProvider(val fd: Int) : ByteProvider {
 
     override fun close() {
         if (close(fd) == -1) {
-            throw NativeFileException(nativeErrorString())
+            throw MPFileException(nativeErrorString())
         }
     }
 }
@@ -200,11 +198,19 @@ class LinuxByteProvider(val fd: Int) : ByteProvider {
 actual fun openFile(name: String): ByteProvider {
     val fd = open(name, O_RDONLY)
     if (fd == -1) {
-        throw NativeFileException(nativeErrorString())
+        throw MPFileException(nativeErrorString())
     }
     return LinuxByteProvider(fd)
 }
 
 private fun nativeErrorString(): String {
     return strerror(errno)?.toKString() ?: "unknown error"
+}
+
+actual fun fileExists(path: String): Boolean {
+    memScoped {
+        val statInfo = alloc<stat>()
+        val result = stat(path, statInfo.ptr)
+        return result == 0
+    }
 }

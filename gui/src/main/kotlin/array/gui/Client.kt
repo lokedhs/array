@@ -26,6 +26,8 @@ class Client(val application: ClientApplication, val stage: Stage) {
 
     init {
         engine = Engine()
+        engine.addLibrarySearchPath("../array/standard-lib")
+        engine.parseString("use(\"standard-lib.kap\")")
         context = engine.makeRuntimeContext()
 
         engine.standardOutput = SendToMainCharacterOutput()

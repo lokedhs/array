@@ -205,13 +205,29 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
                 is LambdaToken -> leftArgs.add(processLambda(pos))
                 is ApplyToken -> return processFn(parseApplyDefinition(), pos, leftArgs)
-                is IfToken -> addLeftArg(parseIfStatement(pos))
                 is NamespaceToken -> processNamespace()
                 is ImportToken -> processImport()
                 is ExportToken -> processExport()
                 is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
+                is IncludeToken -> leftArgs.add(processInclude(pos))
                 else -> throw UnexpectedToken(token, pos)
             }
+        }
+    }
+
+    private fun processInclude(pos: Position): Instruction {
+        val engine = tokeniser.engine
+        tokeniser.nextTokenWithType<OpenParen>()
+        val filename = tokeniser.nextTokenWithType<StringToken>()
+        tokeniser.nextTokenWithType<CloseParen>()
+        val resolved = engine.resolveLibraryFile(filename.value) ?: filename.value
+        try {
+            val innerParser = APLParser(TokenGenerator(engine, FileSourceLocation(resolved)))
+            engine.withSavedState {
+                return innerParser.parseValueToplevel(EndOfFile)
+            }
+        } catch (e: MPFileException) {
+            throw ParseException("Error loading file: ${e.message}", pos)
         }
     }
 
@@ -245,23 +261,6 @@ class APLParser(val tokeniser: TokenGenerator) {
 
     private fun exportSymbolIfInterned(symbol: Symbol) {
         symbol.namespace.exportIfInterned(symbol)
-    }
-
-    private fun parseIfStatement(pos: Position): Instruction {
-        tokeniser.nextTokenWithType<OpenParen>()
-        val condition = parseValueToplevel(CloseParen)
-        tokeniser.nextTokenWithType<OpenFnDef>()
-        val thenStatement = parseValueToplevel(CloseFnDef)
-
-        val token = tokeniser.nextToken()
-        val elseStatement = if (token is ElseToken) {
-            tokeniser.nextTokenWithType<OpenFnDef>()
-            parseValueToplevel(CloseFnDef)
-        } else {
-            tokeniser.pushBackToken(token)
-            LiteralAPLNullValue(pos)
-        }
-        return IfInstruction(condition, thenStatement, elseStatement, pos)
     }
 
     private fun parseApplyDefinition(): APLFunctionDescriptor {

@@ -5,19 +5,27 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 open class APLTest {
-    fun parseAPLExpression(expr: String): APLValue {
-        return parseAPLExpression2(expr).first
+    fun parseAPLExpression(expr: String, withStandardLib: Boolean = false): APLValue {
+        return parseAPLExpression2(expr, withStandardLib).first
     }
 
-    fun parseAPLExpression2(expr: String): Pair<APLValue, Engine> {
+    fun parseAPLExpression2(expr: String, withStandardLib: Boolean = false): Pair<APLValue, Engine> {
         val engine = Engine()
+        engine.addLibrarySearchPath("standard-lib")
+        if (withStandardLib) {
+            engine.parseString("use(\"standard-lib.kap\")")
+        }
         val instr = engine.parseString(expr)
         val context = RuntimeContext(engine)
         return Pair(instr.evalWithContext(context).collapse(), engine)
     }
 
-    fun parseAPLExpressionWithOutput(expr: String): Pair<APLValue, String> {
+    fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false): Pair<APLValue, String> {
         val engine = Engine()
+        engine.addLibrarySearchPath("standard-lib")
+        if (withStandardLib) {
+            engine.parseString("use(\"standard-lib.kap\")")
+        }
         val output = StringBuilderOutput()
         engine.standardOutput = output
         val result = engine.parseString(expr).evalWithContext(RuntimeContext(engine))

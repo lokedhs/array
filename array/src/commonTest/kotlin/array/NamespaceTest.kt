@@ -170,6 +170,64 @@ class NamespaceTest : APLTest() {
         assertSimpleNumber(6, result)
     }
 
+    @Test
+    fun unexportedSymbolsShouldNotBeVisible() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |namespace("foo")
+                |a ← 10
+                |namespace("bar")
+                |a
+                """.trimMargin()
+            )
+        }
+    }
+
+    @Test
+    fun unexportedNamesInCustomSyntaxShouldFail() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |namespace("foo")
+                |defsyntax a (:value b) { b + 10 }
+                |namespace("bar")
+                |import("foo")
+                |a (100)
+                """.trimMargin()
+            ).collapse()
+        }
+    }
+
+    @Test
+    fun includingLibraryShouldNotChangeNamespace() {
+        val result = parseAPLExpression(
+            """
+            |namespace("bar")
+            |z ← 10
+            |use("test-data/use-test.kap")
+            |z
+        """.trimMargin())
+        assertSimpleNumber(10, result)
+    }
+
+    @Test
+    fun simpleInclude() {
+        val result = parseAPLExpression(
+            """
+            |use("test-data/use-test.kap")
+            |foo:a 100
+        """.trimMargin())
+        assertSimpleNumber(101, result)
+    }
+
+    @Test
+    fun includeFailsWithIllegalFile() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("use(\"nonexistent.kap\")")
+        }
+    }
+
     private fun makeTokeniser(content: String): TokenGenerator {
         val engine = Engine()
         return TokenGenerator(engine, StringSourceLocation(content))

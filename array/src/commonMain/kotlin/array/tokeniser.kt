@@ -20,12 +20,11 @@ object LambdaToken : Token()
 object ApplyToken : Token()
 object ListSeparator : Token()
 object Newline : Token()
-object IfToken : Token()
-object ElseToken : Token()
 object NamespaceToken : Token()
 object ImportToken : Token()
 object ExportToken : Token()
 object DefsyntaxToken : Token()
+object IncludeToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, NamespaceEntry>()
@@ -143,12 +142,11 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     )
 
     private val stringToKeywordMap = hashMapOf(
-        "if" to IfToken,
-        "else" to ElseToken,
         "namespace" to NamespaceToken,
         "import" to ImportToken,
         "export" to ExportToken,
-        "defsyntax" to DefsyntaxToken
+        "defsyntax" to DefsyntaxToken,
+        "use" to IncludeToken
     )
 
     init {

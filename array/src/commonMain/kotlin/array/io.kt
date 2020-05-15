@@ -108,3 +108,19 @@ interface CharacterOutput {
 class NullCharacterOutput : CharacterOutput {
     override fun writeString(s: String) = Unit
 }
+
+expect fun fileExists(path: String): Boolean
+
+class PathUtils {
+    companion object {
+        fun cleanupPathName(path: String): String {
+            var i = path.length
+            while (i > 0 && path[i - 1] == '/') {
+                i--
+            }
+            return path.substring(0, i)
+        }
+
+        fun isAbsolutePath(path: String) = path.length > 0 && path[0] == '/'
+    }
+}

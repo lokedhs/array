@@ -41,24 +41,26 @@ class ReaderCharacterProvider(private val reader: Reader, val sourceName: String
     override fun sourceName() = sourceName
 
     override fun nextCodepoint(): Int? {
-        if (endOfFile) {
-            return null
-        }
+        transformIOException {
+            if (endOfFile) {
+                return null
+            }
 
-        val v = reader.read()
-        return when {
-            v == -1 -> {
-                endOfFile = true
-                null
-            }
-            Character.isHighSurrogate(v.toChar()) -> {
-                val v2 = reader.read()
-                if (!Character.isLowSurrogate(v2.toChar())) {
-                    throw InvalidCharacter()
+            val v = reader.read()
+            return when {
+                v == -1 -> {
+                    endOfFile = true
+                    null
                 }
-                Character.toCodePoint(v.toChar(), v2.toChar())
+                Character.isHighSurrogate(v.toChar()) -> {
+                    val v2 = reader.read()
+                    if (!Character.isLowSurrogate(v2.toChar())) {
+                        throw InvalidCharacter()
+                    }
+                    Character.toCodePoint(v.toChar(), v2.toChar())
+                }
+                else -> v
             }
-            else -> v
         }
     }
 
@@ -69,19 +71,25 @@ class ReaderCharacterProvider(private val reader: Reader, val sourceName: String
 }
 
 actual fun openCharFile(name: String): CharacterProvider {
-    return ReaderCharacterProvider(BufferedReader(FileReader(name, Charsets.UTF_8)))
+    transformIOException {
+        return ReaderCharacterProvider(BufferedReader(FileReader(name, Charsets.UTF_8)))
+    }
 }
 
 class InputStreamByteProvider(private val input: InputStream) : ByteProvider {
     override fun readByte(): Byte? {
-        val result = input.read()
-        return if (result == -1) null else result.toByte()
+        transformIOException {
+            val result = input.read()
+            return if (result == -1) null else result.toByte()
+        }
     }
 
     override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
-        val startPos = start ?: 0
-        val result = input.read(buffer, startPos, length ?: buffer.size - startPos)
-        return if (result == -1) null else result
+        transformIOException {
+            val startPos = start ?: 0
+            val result = input.read(buffer, startPos, length ?: buffer.size - startPos)
+            return if (result == -1) null else result
+        }
     }
 
     override fun close() {
@@ -91,29 +99,37 @@ class InputStreamByteProvider(private val input: InputStream) : ByteProvider {
 
 class ByteProviderInputStream(private val input: ByteProvider) : InputStream() {
     override fun read(): Int {
-        val result = input.readByte()
-        return if (result == null) {
-            -1
-        } else {
-            result.toInt() and 0xFF
+        transformIOException {
+            val result = input.readByte()
+            return if (result == null) {
+                -1
+            } else {
+                result.toInt() and 0xFF
+            }
         }
     }
 
     override fun read(b: ByteArray, off: Int, len: Int): Int {
-        return input.readBlock(b, off, len) ?: -1
+        transformIOException {
+            return input.readBlock(b, off, len) ?: -1
+        }
     }
 }
 
 actual fun openFile(name: String): ByteProvider {
-    return transformIOException {
-        InputStreamByteProvider(FileInputStream(name))
+    transformIOException {
+        return InputStreamByteProvider(FileInputStream(name))
     }
 }
 
-private fun <T> transformIOException(fn: () -> T): T {
+private inline fun <T> transformIOException(fn: () -> T): T {
     try {
         return fn()
     } catch (e: IOException) {
         throw MPFileException(e.toString(), e)
     }
+}
+
+actual fun fileExists(path: String): Boolean {
+    return File(path).exists()
 }

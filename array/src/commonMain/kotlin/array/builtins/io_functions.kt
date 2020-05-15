@@ -51,7 +51,8 @@ class ReadCSVFunction : APLFunctionDescriptor {
 class LoadFunction : APLFunctionDescriptor {
     class LoadFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val file = arrayAsStringValue(a, pos)
+            val requestedFile = arrayAsStringValue(a, pos)
+            val file = context.engine.resolveLibraryFile(requestedFile) ?: requestedFile
             val engine = context.engine
             val oldNamespace = engine.currentNamespace
             try {

@@ -1,0 +1,7 @@
+namespace("foo")
+
+∇ a (x) {
+    x + 1
+}
+
+export(a)
