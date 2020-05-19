@@ -33,7 +33,7 @@ open class APLTest {
     }
 
     fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {
-        assertEquals(expectedValue.size, value.size)
+        assertEquals(expectedValue.size, value.size, "Array dimensions mismatch")
         for (i in expectedValue.indices) {
             assertSimpleNumber(expectedValue[i].toLong(), value.valueAt(i), "index: ${i}")
         }

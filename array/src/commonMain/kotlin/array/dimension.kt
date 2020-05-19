@@ -72,6 +72,22 @@ inline class Dimensions(val dimensions: IntArray) {
         return a
     }
 
+    fun lastDimension(pos: Position? = null): Int {
+        return if (dimensions.isEmpty()) {
+            throw InvalidDimensionsException("Can't take dimension from scalar", pos)
+        } else {
+            dimensions[dimensions.size - 1]
+        }
+    }
+
+    fun lastAxis(pos: Position? = null): Int {
+        if (dimensions.isEmpty()) {
+            throw InvalidDimensionsException("No axis available", pos)
+        } else {
+            return dimensions.size - 1
+        }
+    }
+
     override fun toString(): String {
         val buf = StringBuilder()
         buf.append("Dimensions[")

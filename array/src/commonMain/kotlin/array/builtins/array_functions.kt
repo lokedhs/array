@@ -725,29 +725,75 @@ class FindFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = FindFunctionImpl(pos)
 }
 
-class SelectElementsFunction : APLFunctionDescriptor {
-    class SelectElementsFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val aa = a.arrayify()
-            if (aa.dimensions.size != 1) {
-                throw InvalidDimensionsException("Left argument must have a single dimension", pos)
-            }
-            val ba = b.arrayify()
-            if (ba.dimensions.size != 1) {
-                throw InvalidDimensionsException("Right argument must have a single dimension", pos)
-            }
+class SelectElementsValue(selectIndexes: IntArray, val b: APLValue, val axis: Int) : APLArray() {
+    private val bDimensions = b.dimensions
 
-            val result = ArrayList<APLValue>()
-            aa.iterateMembersWithPosition { v, i ->
-                val n = v.ensureNumber(pos).asInt()
-                if (n > 0) {
-                    val toBeAdded = ba.valueAt(i)
-                    (0 until n).forEach { _ ->
-                        result.add(toBeAdded)
-                    }
-                }
+    override val dimensions: Dimensions
+
+    private val axisActionFactors: AxisActionFactors
+    private val highMultiplier: Int
+    private val bStride: Int
+    private val aIndex: IntArray
+
+    init {
+        val sizeAlongAxis = selectIndexes.reduce { a, b -> a + b }
+        dimensions = Dimensions(IntArray(bDimensions.size) { i ->
+            if (i == axis) {
+                sizeAlongAxis
+            } else {
+                bDimensions[i]
             }
-            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        })
+
+        val m = bDimensions.multipliers()
+        highMultiplier = if (axis == 0) bDimensions.size else m[axis - 1]
+        bStride = m[axis]
+
+        aIndex = IntArray(sizeAlongAxis)
+        var aIndexPos = 0
+        var bIndexPos = 0
+        for (dimensionsIndex in selectIndexes) {
+            for (i2 in 0 until dimensionsIndex) {
+                aIndex[aIndexPos++] = bIndexPos
+            }
+            bIndexPos++
+        }
+
+        axisActionFactors = AxisActionFactors(dimensions, axis)
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        axisActionFactors.withFactors(p) { high, low, axisCoord ->
+            val bIndexPos = aIndex[axisCoord]
+            val resultPos = high * highMultiplier + bIndexPos * bStride + low
+            return b.valueAt(resultPos)
+        }
+    }
+}
+
+class SelectElementsFunction : APLFunctionDescriptor {
+    class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            val bFixed = b.arrayify()
+            val aDimensions = a.dimensions
+            val bDimensions = bFixed.dimensions
+            val axisInt = if (axis == null) bDimensions.lastAxis(pos) else axis.ensureNumber(pos).asInt()
+            ensureValidAxis(axisInt, bDimensions)
+            if (!((aDimensions.size == 0 && bDimensions.size == 1)
+                        || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
+            ) {
+                throw InvalidDimensionsException(
+                    "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.",
+                    pos)
+            }
+            val selectIndexes = if (a.isScalar()) {
+                a.ensureNumber(pos).asInt().let { v ->
+                    IntArray(bDimensions[0]) { v }
+                }
+            } else {
+                a.toIntArray(pos)
+            }
+            return SelectElementsValue(selectIndexes, bFixed, axisInt)
         }
     }
 
