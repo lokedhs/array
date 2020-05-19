@@ -79,7 +79,7 @@ class InnerJoinResult(
 }
 
 class OuterJoinOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         return OuterInnerJoinOp.OuterJoinFunctionDescriptor(fn)
     }
 }
@@ -88,8 +88,13 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
     override fun combineFunction(
         fn1: APLFunctionDescriptor,
         fn2: APLFunctionDescriptor,
-        operatorAxis: Instruction?
-    ): APLFunctionDescriptor {
+        operatorAxis: Instruction?,
+        opPos: Position,
+        fn1Pos: Position,
+        fn2Pos: Position): APLFunctionDescriptor {
+        if (operatorAxis != null) {
+            throw AxisNotSupported(opPos)
+        }
         return if (fn1 is NullFunction) {
             OuterJoinFunctionDescriptor(fn2)
         } else {
@@ -102,7 +107,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
         override fun make(pos: Position): APLFunction {
             val fn = fnDescriptor.make(pos)
 
-            return object : APLFunction(fn.pos) {
+            return object : APLFunction(pos) {
                 override fun eval2Arg(
                     context: RuntimeContext,
                     a: APLValue,
@@ -110,7 +115,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     axis: APLValue?
                 ): APLValue {
                     if (axis != null) {
-                        throw APLIllegalArgumentException("outer join does not support axis arguments", pos)
+                        throw AxisNotSupported(pos)
                     }
                     return OuterJoinResult(context, a, b, fn, pos)
                 }

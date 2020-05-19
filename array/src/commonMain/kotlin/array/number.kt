@@ -20,6 +20,8 @@ abstract class APLNumber : APLSingleValue() {
             throw IncompatibleTypeException("Value does not fit in an int: $l")
         }
     }
+
+    override fun asBoolean() = asInt() != 0
 }
 
 class APLLong(val value: Long) : APLNumber() {
@@ -49,6 +51,8 @@ class APLLong(val value: Long) : APLNumber() {
     override fun toString() = "APLLong(${formatted(FormatStyle.PRETTY)})"
 
     override fun makeKey() = value
+
+    override fun asBoolean() = value != 0L
 }
 
 private fun throwComplexComparisonException(): Nothing {
@@ -93,6 +97,8 @@ class APLDouble(val value: Double) : APLNumber() {
     override fun toString() = "APLDouble(${formatted(FormatStyle.PRETTY)})"
 
     override fun makeKey() = value
+
+    override fun asBoolean() = value != 0.0
 }
 
 class NumberComplexException(value: Complex, pos: Position? = null) : IncompatibleTypeException("Number is complex: ${value}", pos)
@@ -129,6 +135,8 @@ class APLComplex(val value: Complex) : APLNumber() {
     private fun formatToAPL() = "${value.real}J${value.imaginary}"
 
     override fun makeKey() = value
+
+    override fun asBoolean() = value != Complex.ZERO
 }
 
 val APLLONG_0 = APLLong(0)

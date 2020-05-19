@@ -2,11 +2,6 @@ package array
 
 data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 
-interface ParserState {
-    val tokeniser: TokenGenerator
-    fun parseNextValue(): Instruction
-}
-
 class APLParser(val tokeniser: TokenGenerator) {
 
     fun parseValueToplevel(endToken: Token): Instruction {
@@ -59,7 +54,7 @@ class APLParser(val tokeniser: TokenGenerator) {
 
     private fun processFn(fn: APLFunctionDescriptor, pos: Position, leftArgs: List<Instruction>): InstrTokenHolder {
         val axis = parseAxis()
-        val parsedFn = parseOperator(fn)
+        val parsedFn = parseOperator(fn, pos)
         val (rightValue, lastToken) = parseValue()
         return rightValue.withValue({ instr ->
             if (leftArgs.isEmpty()) {
@@ -302,32 +297,38 @@ class APLParser(val tokeniser: TokenGenerator) {
             rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
     }
 
-    private fun parseTwoArgOperatorArgument(): APLFunctionDescriptor {
+    private fun parseTwoArgOperatorArgument(): Pair<APLFunctionDescriptor, Position> {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         return when (token) {
             is Symbol -> {
                 val fn = tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
-                parseOperator(fn)
+                Pair(parseOperator(fn, pos), pos)
             }
             is OpenFnDef -> {
-                parseFnDefinition()
+                Pair(parseFnDefinition(), pos)
             }
             else -> throw ParseException("Expected function, got: ${token}", pos)
         }
     }
 
-    private fun parseOperator(fn: APLFunctionDescriptor): APLFunctionDescriptor {
+    private fun parseOperator(fn: APLFunctionDescriptor, fnPos: Position): APLFunctionDescriptor {
         var currentFn = fn
         var token: Token
         loop@ while (true) {
-            val readToken = tokeniser.nextToken()
+            val (readToken, opPos) = tokeniser.nextTokenWithPosition()
             token = readToken
             if (token is Symbol) {
                 val op = tokeniser.engine.getOperator(token) ?: break
                 val axis = parseAxis()
                 when (op) {
-                    is APLOperatorOneArg -> currentFn = op.combineFunction(currentFn, axis)
-                    is APLOperatorTwoArg -> currentFn = op.combineFunction(fn, parseTwoArgOperatorArgument(), axis)
+                    is APLOperatorOneArg -> {
+                        currentFn = op.combineFunction(currentFn, axis, fnPos)
+                    }
+                    is APLOperatorTwoArg -> {
+                        parseTwoArgOperatorArgument().let { (fn2, fn2Pos) ->
+                            currentFn = op.combineFunction(fn, fn2, axis, opPos, fnPos, fn2Pos)
+                        }
+                    }
                     else -> throw IllegalStateException("Operators must be either one or two arg")
                 }
 

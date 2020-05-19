@@ -61,11 +61,17 @@ class DeclaredFunction(
 interface APLOperator
 
 interface APLOperatorOneArg : APLOperator {
-    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
+    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor
 }
 
 interface APLOperatorTwoArg : APLOperator {
-    fun combineFunction(fn1: APLFunctionDescriptor, fn2: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor
+    fun combineFunction(
+        fn1: APLFunctionDescriptor,
+        fn2: APLFunctionDescriptor,
+        operatorAxis: Instruction?,
+        opPos: Position,
+        fn1Pos: Position,
+        fn2Pos: Position): APLFunctionDescriptor
 }
 
 private const val CORE_NAMESPACE_NAME = "kap"
@@ -154,6 +160,7 @@ class Engine {
         registerNativeOperator("⌺", OuterJoinOp())
         registerNativeOperator(".", OuterInnerJoinOp())
         registerNativeOperator("⍨", CommuteOp())
+        registerNativeOperator("⍣", PowerAPLOperator())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")

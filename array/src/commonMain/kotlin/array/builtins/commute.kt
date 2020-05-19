@@ -3,9 +3,9 @@ package array.builtins
 import array.*
 
 class CommuteOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
-            throw APLIllegalArgumentException("Axis argument passed to commute")
+            throw AxisNotSupported(pos)
         }
         return CommuteFunctionDescriptor(fn)
     }

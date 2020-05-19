@@ -79,7 +79,7 @@ class ReduceResult1Arg(
 }
 
 class ReduceOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         return ReduceOpFunctionDescriptor(fn, operatorAxis)
     }
 

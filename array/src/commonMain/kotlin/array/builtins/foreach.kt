@@ -38,7 +38,10 @@ class ForEachResult2Arg(
 }
 
 class ForEachOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+        if (operatorAxis != null) {
+            throw AxisNotSupported(pos)
+        }
         return ForEachFunctionDescriptor(fn)
     }
 

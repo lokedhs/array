@@ -95,6 +95,15 @@ interface APLValue {
             valueAt(i).ensureNumber(pos).asInt()
         }
     }
+
+    fun asBoolean(): Boolean {
+        val v = unwrapDeferredValue()
+        return if (v == this) {
+            true
+        } else {
+            v.asBoolean()
+        }
+    }
 }
 
 inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
