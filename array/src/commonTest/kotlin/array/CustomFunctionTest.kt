@@ -115,4 +115,18 @@ class CustomFunctionTest : APLTest() {
             parseAPLExpression("∇ (E;F) foo (A;B;C;D;1) { A+B+C+D+E+F+1 }")
         }
     }
+
+    @Test
+    fun duplicatedArgumentsTest() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (A;A) { A }")
+        }
+    }
+
+    @Test
+    fun duplicatedArgumentsTest2() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (A;B;C;D;E;F;G;H;J;D;K;L;M) { A }")
+        }
+    }
 }
