@@ -176,17 +176,23 @@ abstract class APLArray : APLValue {
     override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 
     override fun compareEquals(reference: APLValue): Boolean {
-        if (!dimensions.compareEquals(reference.dimensions)) {
-            return false
-        }
-        for (i in 0 until size) {
-            val o1 = valueAt(i)
-            val o2 = reference.valueAt(i)
-            if (!o1.compareEquals(o2)) {
+        val u = this.unwrapDeferredValue()
+        if (u is APLSingleValue) {
+            return u.compareEquals(reference)
+        } else {
+            val uRef = reference.unwrapDeferredValue()
+            if (!u.dimensions.compareEquals(uRef.dimensions)) {
                 return false
             }
+            for (i in 0 until u.size) {
+                val o1 = u.valueAt(i)
+                val o2 = uRef.valueAt(i)
+                if (!o1.compareEquals(o2)) {
+                    return false
+                }
+            }
+            return true
         }
-        return true
     }
 
     override fun compare(reference: APLValue, pos: Position?): Int {

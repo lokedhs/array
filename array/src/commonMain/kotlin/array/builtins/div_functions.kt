@@ -23,3 +23,15 @@ class IsLocallyBoundFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = IsLocallyBoundFunctionImpl(pos)
 }
+
+class CompFunction : APLFunctionDescriptor {
+    class CompFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            return a.collapse()
+        }
+    }
+
+    override fun make(pos: Position): APLFunction {
+        return CompFunctionImpl(pos)
+    }
+}

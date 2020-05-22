@@ -1,5 +1,6 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -92,5 +93,28 @@ class FlowControlTest : APLTest() {
             |}
         """.trimMargin(), true)
         assertSimpleNumber(20, result1)
+    }
+
+    @Ignore
+    @Test
+    fun recursionTest() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |∇ foo (x) { if (x>0) { print x ◊ foo x-1 } else { 123 } }
+            |foo 10
+            """.trimMargin(), true)
+        assertSimpleNumber(123, result)
+        assertEquals("10987654321", out)
+    }
+
+    @Test
+    fun lambdaRecursionTest() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |foo ← λ{ x←⍵ ◊ if(x>0) { print x ◊ ⍞foo x-1 } else { 123 } }
+            |⍞foo 10
+            """.trimMargin(), true)
+        assertSimpleNumber(123, result)
+        assertEquals("10987654321", out)
     }
 }

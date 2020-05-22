@@ -153,6 +153,7 @@ class Engine {
         // metafunctions
         registerNativeFunction("typeof", TypeofFunction())
         registerNativeFunction("isLocallyBound", IsLocallyBoundFunction())
+        registerNativeFunction("comp", CompFunction())
 
         // operators
         registerNativeOperator("¨", ForEachOp())
