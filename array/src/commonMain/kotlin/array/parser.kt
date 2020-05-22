@@ -131,13 +131,10 @@ class APLParser(val tokeniser: TokenGenerator) {
         val rightFnArgs = parseFnArgs()
 
         // Ensure that no arguments are duplicated
-        val argNames = HashSet<Symbol>()
         fun checkArgs(list: List<Symbol>) {
-            list.forEach { element ->
-                if (argNames.contains(element)) {
-                    throw ParseException("Symbol ${element.symbolName} in multiple positions", pos)
-                }
-                argNames.add(element)
+            val duplicated = list.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
+            if (duplicated.isNotEmpty()) {
+                throw ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos)
             }
         }
         checkArgs(leftFnArgs)
