@@ -49,7 +49,7 @@ class DeclaredFunction(
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            val localContext = context.link()
+            val localContext = context.link(env)
             localContext.setVar(leftArgName, a)
             localContext.setVar(rightArgName, b)
             return instruction.evalWithContext(localContext)
@@ -237,7 +237,7 @@ class Engine {
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
-    fun makeRuntimeContext() = RuntimeContext(this, null)
+    fun makeRuntimeContext() = RuntimeContext(this, Environment.nullEnvironment(), null)
     fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
         return namespaces.getOrPut(name) {
             val namespace = Namespace(name)
@@ -276,8 +276,30 @@ class VariableHolder {
     var value: APLValue? = null
 }
 
-class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
+class RuntimeContext(val engine: Engine, environment: Environment? = null, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<EnvironmentBinding, VariableHolder>()
+    private val env = environment ?: Environment.nullEnvironment()
+
+    init {
+        initBindings(env.localBindings())
+    }
+
+    private fun initBindings(bindings: Collection<EnvironmentBinding>) {
+        bindings.forEach { b ->
+            val holder = if (b.environment === env) {
+                VariableHolder()
+            } else {
+                fun recurse(c: RuntimeContext?): VariableHolder {
+                    if (c == null) {
+                        throw IllegalStateException("Can't find binding in parents")
+                    }
+                    return c.localVariables[b] ?: recurse(c.parent)
+                }
+                recurse(parent)
+            }
+            localVariables[b] = holder
+        }
+    }
 
 //    fun lookupVar(name: Symbol, localOnly: Boolean = false): APLValue? {
 //        val result = localVariables[name]
@@ -307,7 +329,10 @@ class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
         return findOrThrow(binding).value
     }
 
-    fun link() = RuntimeContext(engine, this)
+    fun link(env: Environment): RuntimeContext {
+        val newContext = RuntimeContext(engine, env, this)
+        return newContext
+    }
 
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {

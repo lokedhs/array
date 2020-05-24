@@ -2,22 +2,37 @@ package array
 
 data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 
-class EnvironmentBinding(val name: Symbol)
+class EnvironmentBinding(val environment: Environment, val name: Symbol)
 
-class Environment {
+open class Environment {
     private val bindings = HashMap<Symbol, EnvironmentBinding>()
 
     fun findBinding(sym: Symbol) = bindings[sym]
 
-    fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
+    open fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
         bindings[sym] = binding
+    }
+
+    fun localBindings(): Collection<EnvironmentBinding> {
+        return bindings.values
+    }
+
+    private class NullEnvironment : Environment() {
+        override fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
+            throw IllegalStateException("Null environment must always be blank")
+        }
+    }
+
+    companion object {
+        fun nullEnvironment(): Environment = NullEnvironment()
     }
 }
 
 class APLParser(val tokeniser: TokenGenerator) {
 
-    private val environments = ArrayList(listOf(Environment()))
-    private fun currentEnvironment() = environments.last()
+    private val environments = ArrayList(listOf(Environment.nullEnvironment()))
+
+    fun currentEnvironment() = environments.last()
 
     fun pushEnvironment(): Environment {
         val env = Environment()
@@ -49,8 +64,9 @@ class APLParser(val tokeniser: TokenGenerator) {
                 return binding
             }
         }
-        val binding = EnvironmentBinding(sym)
-        currentEnvironment().bindLocal(sym, binding)
+        val env = currentEnvironment()
+        val binding = EnvironmentBinding(env, sym)
+        env.bindLocal(sym, binding)
         return binding
     }
 
@@ -199,7 +215,8 @@ class APLParser(val tokeniser: TokenGenerator) {
                 UserFunction(
                     leftFnArgs.map { findEnvironmentBinding(it) },
                     rightFnArgs.map { findEnvironmentBinding(it) },
-                    instr), name, pos)
+                    instr,
+                    currentEnvironment()), name, pos)
         }
     }
 

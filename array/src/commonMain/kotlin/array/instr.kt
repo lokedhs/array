@@ -154,21 +154,22 @@ class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruct
 class UserFunction(
     private val leftFnArgs: List<EnvironmentBinding>,
     private val rightFnArgs: List<EnvironmentBinding>,
-    private val instr: Instruction
+    private val instr: Instruction,
+    private val env: Environment
 ) : APLFunctionDescriptor {
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             if (leftFnArgs.isNotEmpty()) {
                 throw APLIllegalArgumentException("Left argument is not empty", pos)
             }
-            val inner = context.link().apply {
+            val inner = context.link(env).apply {
                 assignArgs(rightFnArgs, a, pos)
             }
             return instr.evalWithContext(inner)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            val inner = context.link().apply {
+            val inner = context.link(env).apply {
                 assignArgs(leftFnArgs, a, pos)
                 assignArgs(rightFnArgs, b, pos)
             }

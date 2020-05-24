@@ -1,15 +1,12 @@
 package array.repl
 
-import array.Engine
-import array.FormatStyle
-import array.RuntimeContext
-import array.makeKeyboardInput
+import array.*
 
 fun runRepl() {
     val keyboardInput = makeKeyboardInput()
     val engine = Engine()
     val prompt = "> "
-    val context = RuntimeContext(engine, null)
+    val context = RuntimeContext(engine, Environment.nullEnvironment(), null)
     while (true) {
         val line = keyboardInput.readString(prompt) ?: break
         val stringTrimmed = line.trim()
