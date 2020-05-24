@@ -77,7 +77,7 @@ class StringsTest : APLTest() {
             standardOutput = output
         }
         val instr = engine.parseString(expr)
-        val result = instr.evalWithContext(RuntimeContext(engine))
+        val result = instr.evalWithNewContext(engine)
         return OutputResult(engine, output.buf.toString(), result)
     }
 }

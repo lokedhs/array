@@ -20,7 +20,7 @@ class SymbolTest : APLTest() {
     fun testParseSymbol() {
         val engine = Engine()
         val instr = engine.parseString("'foo")
-        val result = instr.evalWithContext(RuntimeContext(engine))
+        val result = instr.evalWithNewContext(engine)
         assertSame(engine.internSymbol("foo"), result.ensureSymbol().value)
     }
 
@@ -28,7 +28,7 @@ class SymbolTest : APLTest() {
     fun coreSymbol() {
         val engine = Engine()
         val instr = engine.parseString(":foo")
-        val result = instr.evalWithContext(RuntimeContext(engine))
+        val result = instr.evalWithNewContext(engine)
         assertSame(engine.makeNamespace("core").internSymbol("foo"), result.ensureSymbol().value)
     }
 }

@@ -68,7 +68,7 @@ class FlowControlTest : APLTest() {
             |if (1) {
             |    10
             |}
-        """.trimMargin(), true)
+            """.trimMargin(), true)
         assertSimpleNumber(10, result)
     }
 
@@ -81,7 +81,7 @@ class FlowControlTest : APLTest() {
             |} else {
             |    20
             |}
-        """.trimMargin(), true)
+            """.trimMargin(), true)
         assertSimpleNumber(10, result0)
 
         val result1 = parseAPLExpression(
@@ -91,7 +91,7 @@ class FlowControlTest : APLTest() {
             |} else {
             |    20
             |}
-        """.trimMargin(), true)
+            """.trimMargin(), true)
         assertSimpleNumber(20, result1)
     }
 

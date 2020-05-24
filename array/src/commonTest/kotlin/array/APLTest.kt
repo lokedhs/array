@@ -16,8 +16,7 @@ open class APLTest {
             engine.parseString("use(\"standard-lib.kap\")")
         }
         val instr = engine.parseString(expr)
-        val context = RuntimeContext(engine)
-        return Pair(instr.evalWithContext(context).collapse(), engine)
+        return Pair(instr.evalWithNewContext(engine).collapse(), engine)
     }
 
     fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false): Pair<APLValue, String> {
@@ -28,7 +27,8 @@ open class APLTest {
         }
         val output = StringBuilderOutput()
         engine.standardOutput = output
-        val result = engine.parseString(expr).evalWithContext(RuntimeContext(engine))
+        val instr = engine.parseString(expr)
+        val result = instr.evalWithNewContext(engine)
         return Pair(result, output.buf.toString())
     }
 

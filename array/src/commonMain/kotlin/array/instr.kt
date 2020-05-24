@@ -6,6 +6,16 @@ abstract class Instruction(val pos: Position) {
     abstract fun evalWithContext(context: RuntimeContext): APLValue
 }
 
+class RootEnvironmentInstruction(val env: Environment, val instr: Instruction, pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        return evalWithNewContext(context.engine)
+    }
+
+    fun evalWithNewContext(engine: Engine): APLValue {
+        return instr.evalWithContext(RuntimeContext(engine, env))
+    }
+}
+
 class InstructionList(val instructions: List<Instruction>) : Instruction(instructions[0].pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         var result: APLValue? = null
@@ -85,7 +95,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
 
 class VariableRef(val name: Symbol, val binding: EnvironmentBinding, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        return context.getVar(binding) ?: throw APLEvalException("Variable ${binding.name} is undefined", pos)
+        return context.getVar(binding) ?: throw VariableNotAssigned(binding.name, pos)
     }
 
     override fun toString() = "Var(${name})"

@@ -25,6 +25,7 @@ object ImportToken : Token()
 object ExportToken : Token()
 object DefsyntaxToken : Token()
 object IncludeToken : Token()
+object LocalToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, NamespaceEntry>()
@@ -146,7 +147,8 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "import" to ImportToken,
         "export" to ExportToken,
         "defsyntax" to DefsyntaxToken,
-        "use" to IncludeToken
+        "use" to IncludeToken,
+        "local" to LocalToken
     )
 
     init {

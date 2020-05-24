@@ -233,7 +233,13 @@ class Engine {
 
     fun getFunction(name: Symbol) = functions[resolveAlias(name)]
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
-    fun parseWithTokenGenerator(tokeniser: TokenGenerator) = APLParser(tokeniser).parseValueToplevel(EndOfFile)
+
+    fun parseWithTokenGenerator(tokeniser: TokenGenerator): RootEnvironmentInstruction {
+        val parser = APLParser(tokeniser)
+        val instr = parser.parseValueToplevel(EndOfFile)
+        return RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
+    }
+
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
@@ -276,9 +282,8 @@ class VariableHolder {
     var value: APLValue? = null
 }
 
-class RuntimeContext(val engine: Engine, environment: Environment? = null, val parent: RuntimeContext? = null) {
+class RuntimeContext(val engine: Engine, val env: Environment, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<EnvironmentBinding, VariableHolder>()
-    private val env = environment ?: Environment.nullEnvironment()
 
     init {
         initBindings(env.localBindings())
@@ -314,25 +319,21 @@ class RuntimeContext(val engine: Engine, environment: Environment? = null, val p
 
     fun isLocallyBound(sym: Symbol): Boolean {
         // TODO: This hack is needed for the KAP function isLocallyBound to work. A better strategy is needed.
-        return localVariables.keys.find { it.name === sym } != null
+        val holder = localVariables.entries.find { it.key.name === sym } ?: return false
+        return holder.value.value != null
     }
 
     private fun findOrThrow(name: EnvironmentBinding): VariableHolder {
-        return localVariables[name] ?: throw IllegalStateException("Attempt to set the value of a nonexistent binding")
+        return localVariables[name] ?: throw IllegalStateException("Attempt to set the value of a nonexistent binding: ${name}")
     }
 
     fun setVar(name: EnvironmentBinding, value: APLValue) {
-        findOrThrow(name).value = value
+        this.findOrThrow(name).value = value
     }
 
-    fun getVar(binding: EnvironmentBinding): APLValue? {
-        return findOrThrow(binding).value
-    }
+    fun getVar(binding: EnvironmentBinding): APLValue? = findOrThrow(binding).value
 
-    fun link(env: Environment): RuntimeContext {
-        val newContext = RuntimeContext(engine, env, this)
-        return newContext
-    }
+    fun link(env: Environment): RuntimeContext = RuntimeContext(engine, env, this)
 
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {

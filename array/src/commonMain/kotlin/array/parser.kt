@@ -2,35 +2,35 @@ package array
 
 data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 
-class EnvironmentBinding(val environment: Environment, val name: Symbol)
+class EnvironmentBinding(val environment: Environment, val name: Symbol) {
+    override fun toString(): String {
+        return "EnvironmentBinding[environment=${environment}, name=${name}, key=${hashCode().toString(16)}]"
+    }
+}
 
-open class Environment {
+class Environment {
     private val bindings = HashMap<Symbol, EnvironmentBinding>()
 
     fun findBinding(sym: Symbol) = bindings[sym]
 
-    open fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
-        bindings[sym] = binding
+    fun bindLocal(sym: Symbol, binding: EnvironmentBinding? = null): EnvironmentBinding {
+        val newBinding = binding ?: EnvironmentBinding(this, sym)
+        bindings[sym] = newBinding
+        return newBinding
     }
 
     fun localBindings(): Collection<EnvironmentBinding> {
         return bindings.values
     }
 
-    private class NullEnvironment : Environment() {
-        override fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
-            throw IllegalStateException("Null environment must always be blank")
-        }
-    }
-
     companion object {
-        fun nullEnvironment(): Environment = NullEnvironment()
+        fun nullEnvironment() = Environment()
     }
 }
 
 class APLParser(val tokeniser: TokenGenerator) {
 
-    private val environments = ArrayList(listOf(Environment.nullEnvironment()))
+    private var environments: MutableList<Environment> = ArrayList(listOf(Environment.nullEnvironment()))
 
     fun currentEnvironment() = environments.last()
 
@@ -47,6 +47,12 @@ class APLParser(val tokeniser: TokenGenerator) {
         return env
     }
 
+    fun reinitialiseEnvironments(newEnvironments: MutableList<Environment>? = null): MutableList<Environment> {
+        return environments.also {
+            environments = newEnvironments ?: ArrayList(listOf(Environment.nullEnvironment()))
+        }
+    }
+
     inline fun <T> withEnvironment(fn: (Environment) -> T): T {
         val env = pushEnvironment()
         try {
@@ -56,18 +62,24 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
+    inline fun <T> withNullEnvironment(fn: (Environment) -> T): T {
+        val oldEnvironment = reinitialiseEnvironments()
+        try {
+            return fn(currentEnvironment())
+        } finally {
+            reinitialiseEnvironments(oldEnvironment)
+        }
+    }
+
     fun findEnvironmentBinding(sym: Symbol): EnvironmentBinding {
         environments.asReversed().forEach { env ->
             val binding = env.findBinding(sym)
             if (binding != null) {
-                env.bindLocal(sym, binding)
+                currentEnvironment().bindLocal(sym, binding)
                 return binding
             }
         }
-        val env = currentEnvironment()
-        val binding = EnvironmentBinding(env, sym)
-        env.bindLocal(sym, binding)
-        return binding
+        return currentEnvironment().bindLocal(sym)
     }
 
     fun parseValueToplevel(endToken: Token): Instruction {
@@ -274,6 +286,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is ExportToken -> processExport()
                 is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
                 is IncludeToken -> leftArgs.add(processInclude(pos))
+                is LocalToken -> processLocal()
                 else -> throw UnexpectedToken(token, pos)
             }
         }
@@ -320,15 +333,28 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.engine.currentNamespace.addImport(namespace)
     }
 
-    private fun processExport() {
+    private fun parseSymbolList(fn: (Symbol) -> Unit) {
         tokeniser.nextTokenWithType<OpenParen>()
         while (true) {
             val (token, pos) = tokeniser.nextTokenWithPosition()
             when (token) {
-                is Symbol -> exportSymbolIfInterned(token)
+                is Symbol -> fn(token)
                 is CloseParen -> break
                 else -> throw UnexpectedToken(token, pos)
             }
+        }
+    }
+
+    private fun processExport() {
+        parseSymbolList { sym ->
+            exportSymbolIfInterned(sym)
+        }
+    }
+
+
+    private fun processLocal() {
+        parseSymbolList { sym ->
+            currentEnvironment().bindLocal(sym)
         }
     }
 
@@ -369,8 +395,8 @@ class APLParser(val tokeniser: TokenGenerator) {
     ): DeclaredFunction {
         val engine = tokeniser.engine
         withEnvironment {
-            val leftBinding = findEnvironmentBinding(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
-            val rightBinding = findEnvironmentBinding(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+            val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
+            val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
             val instruction = parseValueToplevel(CloseFnDef)
             return DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
         }

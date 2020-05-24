@@ -172,7 +172,7 @@ class NamespaceTest : APLTest() {
 
     @Test
     fun unexportedSymbolsShouldNotBeVisible() {
-//        assertFailsWith<APLEvalException> {
+        assertFailsWith<VariableNotAssigned> {
             parseAPLExpression(
                 """
                 |namespace("foo")
@@ -181,7 +181,7 @@ class NamespaceTest : APLTest() {
                 |a
                 """.trimMargin()
             )
-//        }
+        }
     }
 
     @Test

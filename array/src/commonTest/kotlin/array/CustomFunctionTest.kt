@@ -41,7 +41,7 @@ class CustomFunctionTest : APLTest() {
         val instr = engine.parseString("∇ foo (A) { print A ◊ A+10 } ◊ foo(1000) ")
         val output = StringBuilderOutput()
         engine.standardOutput = output
-        val result = instr.evalWithContext(RuntimeContext(engine))
+        val result = instr.evalWithNewContext(engine)
         assertSimpleNumber(1010, result)
         assertEquals("1000", output.buf.toString())
     }

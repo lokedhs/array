@@ -18,7 +18,7 @@ class AssignmentTest : APLTest() {
 
     @Test
     fun testScope() {
-        val result = parseAPLExpression("a←4 ◊ {a←3 ◊ ⍵+a} 2 ◊ a+5")
+        val result = parseAPLExpression("a←4 ◊ { local(a) a←3 ◊ ⍵+a } 2 ◊ a+5")
         assertSimpleNumber(9, result)
     }
 
