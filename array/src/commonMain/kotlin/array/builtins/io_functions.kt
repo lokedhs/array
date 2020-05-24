@@ -54,12 +54,9 @@ class LoadFunction : APLFunctionDescriptor {
             val requestedFile = arrayAsStringValue(a, pos)
             val file = context.engine.resolveLibraryFile(requestedFile) ?: requestedFile
             val engine = context.engine
-            val oldNamespace = engine.currentNamespace
-            try {
+            engine.withSavedNamespace {
                 val instr = engine.parseWithTokenGenerator(TokenGenerator(engine, FileSourceLocation(file)))
                 return instr.evalWithContext(context.link())
-            } finally {
-                engine.currentNamespace = oldNamespace
             }
         }
     }

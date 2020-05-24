@@ -17,7 +17,7 @@ class IsLocallyBoundFunction : APLFunctionDescriptor {
     class IsLocallyBoundFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val v = a.unwrapDeferredValue()
-            return makeBoolean(context.lookupVar(v.ensureSymbol(pos).value, true) != null)
+            return makeBoolean(context.isLocallyBound(v.ensureSymbol(pos).value))
         }
     }
 

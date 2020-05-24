@@ -37,12 +37,13 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
 
 class DeclaredFunction(
     val instruction: Instruction,
-    val leftArgName: Symbol,
-    val rightArgName: Symbol
+    val leftArgName: EnvironmentBinding,
+    val rightArgName: EnvironmentBinding,
+    val env: Environment
 ) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            val localContext = context.link()
+            val localContext = context.link(env)
             localContext.setVar(rightArgName, a)
             return instruction.evalWithContext(localContext)
         }
@@ -81,7 +82,6 @@ private const val DEFAULT_NAMESPACE_NAME = "default"
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
-    private val variables = HashMap<Symbol, APLValue>()
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
     private val functionAliases = HashMap<Symbol, Symbol>()
     private val namespaces = HashMap<String, Namespace>()
@@ -237,7 +237,6 @@ class Engine {
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
-    fun lookupVar(name: Symbol): APLValue? = variables[name]
     fun makeRuntimeContext() = RuntimeContext(this, null)
     fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
         return namespaces.getOrPut(name) {
@@ -261,7 +260,7 @@ class Engine {
         return customSyntaxEntries[name]
     }
 
-    inline fun <T> withSavedState(fn: () -> T): T {
+    inline fun <T> withSavedNamespace(fn: () -> T): T {
         val oldNamespace = currentNamespace
         try {
             return fn()
@@ -273,31 +272,44 @@ class Engine {
 
 expect fun platformInit(engine: Engine)
 
-class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
-    private val localVariables = HashMap<Symbol, APLValue>()
+class VariableHolder {
+    var value: APLValue? = null
+}
 
-    fun lookupVar(name: Symbol, localOnly: Boolean = false): APLValue? {
-        val result = localVariables[name]
-        if (result != null) {
-            return result
-        }
-        if (!localOnly) {
-            return if (parent != null) {
-                parent.lookupVar(name)
-            } else {
-                engine.lookupVar(name)
-            }
-        }
-        return null
+class RuntimeContext(val engine: Engine, val parent: RuntimeContext? = null) {
+    private val localVariables = HashMap<EnvironmentBinding, VariableHolder>()
+
+//    fun lookupVar(name: Symbol, localOnly: Boolean = false): APLValue? {
+//        val result = localVariables[name]
+//        if (result != null) {
+//            return result.value
+//        }
+//        if (!localOnly && parent != null) {
+//            return parent.lookupVar(name)
+//        }
+//        return null
+//    }
+
+    fun isLocallyBound(sym: Symbol): Boolean {
+        // TODO: This hack is needed for the KAP function isLocallyBound to work. A better strategy is needed.
+        return localVariables.keys.find { it.name === sym } != null
     }
 
-    fun setVar(name: Symbol, value: APLValue) {
-        localVariables[name] = value
+    private fun findOrThrow(name: EnvironmentBinding): VariableHolder {
+        return localVariables[name] ?: throw IllegalStateException("Attempt to set the value of a nonexistent binding")
+    }
+
+    fun setVar(name: EnvironmentBinding, value: APLValue) {
+        findOrThrow(name).value = value
+    }
+
+    fun getVar(binding: EnvironmentBinding): APLValue? {
+        return findOrThrow(binding).value
     }
 
     fun link() = RuntimeContext(engine, this)
 
-    fun assignArgs(args: List<Symbol>, a: APLValue, pos: Position? = null) {
+    fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {
             if (expectedLength != actualLength) {
                 throw APLIllegalArgumentException("Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}", pos)

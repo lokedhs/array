@@ -2,7 +2,57 @@ package array
 
 data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 
+class EnvironmentBinding(val name: Symbol)
+
+class Environment {
+    private val bindings = HashMap<Symbol, EnvironmentBinding>()
+
+    fun findBinding(sym: Symbol) = bindings[sym]
+
+    fun bindLocal(sym: Symbol, binding: EnvironmentBinding) {
+        bindings[sym] = binding
+    }
+}
+
 class APLParser(val tokeniser: TokenGenerator) {
+
+    private val environments = ArrayList(listOf(Environment()))
+    private fun currentEnvironment() = environments.last()
+
+    fun pushEnvironment(): Environment {
+        val env = Environment()
+        environments.add(env)
+        return env
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun popEnvironment(): Environment {
+        val env = environments.removeLast()
+        assertx(environments.size > 0)
+        return env
+    }
+
+    inline fun <T> withEnvironment(fn: (Environment) -> T): T {
+        val env = pushEnvironment()
+        try {
+            return fn(env)
+        } finally {
+            popEnvironment()
+        }
+    }
+
+    fun findEnvironmentBinding(sym: Symbol): EnvironmentBinding {
+        environments.asReversed().forEach { env ->
+            val binding = env.findBinding(sym)
+            if (binding != null) {
+                env.bindLocal(sym, binding)
+                return binding
+            }
+        }
+        val binding = EnvironmentBinding(sym)
+        currentEnvironment().bindLocal(sym, binding)
+        return binding
+    }
 
     fun parseValueToplevel(endToken: Token): Instruction {
         val statementList = ArrayList<Instruction>()
@@ -78,7 +128,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
         val (rightValue, lastToken, assignmentPos) = parseValue()
         return rightValue.withValue({ instr ->
-            InstrTokenHolder(Optional.make(AssignmentInstruction(dest.name, instr, pos)), lastToken, pos)
+            InstrTokenHolder(Optional.make(AssignmentInstruction(dest.binding, instr, pos)), lastToken, pos)
         }, { throw ParseException("No right-side value in assignment instruction", assignmentPos) })
     }
 
@@ -143,9 +193,14 @@ class APLParser(val tokeniser: TokenGenerator) {
         // Read the opening brace
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
-        val instr = parseValueToplevel(CloseFnDef)
-
-        return DefinedUserFunction(UserFunction(leftFnArgs, rightFnArgs, instr), name, pos)
+        withEnvironment {
+            val instr = parseValueToplevel(CloseFnDef)
+            return DefinedUserFunction(
+                UserFunction(
+                    leftFnArgs.map { findEnvironmentBinding(it) },
+                    rightFnArgs.map { findEnvironmentBinding(it) },
+                    instr), name, pos)
+        }
     }
 
     private fun parseValue(): InstrTokenHolder {
@@ -180,7 +235,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                         if (fn != null) {
                             return processFn(fn, pos, leftArgs)
                         } else {
-                            addLeftArg(VariableRef.makeFromSymbol(engine, token, pos))
+                            addLeftArg(makeVariableRef(token, pos))
                         }
                     }
                 }
@@ -207,6 +262,13 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
+    private fun makeVariableRef(symbol: Symbol, pos: Position): Instruction {
+        if (tokeniser.engine.isSelfEvaluatingSymbol(symbol)) {
+            return LiteralSymbol(symbol, pos)
+        }
+        return VariableRef(symbol, findEnvironmentBinding(symbol), pos)
+    }
+
     private fun processInclude(pos: Position): Instruction {
         val engine = tokeniser.engine
         tokeniser.nextTokenWithType<OpenParen>()
@@ -215,8 +277,10 @@ class APLParser(val tokeniser: TokenGenerator) {
         val resolved = engine.resolveLibraryFile(filename.value) ?: filename.value
         try {
             val innerParser = APLParser(TokenGenerator(engine, FileSourceLocation(resolved)))
-            engine.withSavedState {
-                return innerParser.parseValueToplevel(EndOfFile)
+            engine.withSavedNamespace {
+                withEnvironment {
+                    return innerParser.parseValueToplevel(EndOfFile)
+                }
             }
         } catch (e: MPFileException) {
             throw ParseException("Error loading file: ${e.message}", pos)
@@ -258,7 +322,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     private fun parseApplyDefinition(): APLFunctionDescriptor {
         val (token, firstPos) = tokeniser.nextTokenWithPosition()
         val ref = when (token) {
-            is Symbol -> VariableRef.makeFromSymbol(tokeniser.engine, token, firstPos)
+            is Symbol -> makeVariableRef(token, firstPos)
             is OpenParen -> parseValueToplevel(CloseParen)
             else -> throw UnexpectedToken(token, firstPos)
         }
@@ -287,11 +351,12 @@ class APLParser(val tokeniser: TokenGenerator) {
         rightArgName: Symbol? = null
     ): DeclaredFunction {
         val engine = tokeniser.engine
-        val instruction = parseValueToplevel(CloseFnDef)
-        return DeclaredFunction(
-            instruction,
-            leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace),
-            rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+        withEnvironment {
+            val leftBinding = findEnvironmentBinding(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
+            val rightBinding = findEnvironmentBinding(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+            val instruction = parseValueToplevel(CloseFnDef)
+            return DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
+        }
     }
 
     private fun parseTwoArgOperatorArgument(): Pair<APLFunctionDescriptor, Position> {

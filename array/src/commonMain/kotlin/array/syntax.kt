@@ -56,11 +56,12 @@ class OptionalSyntaxRule(val initialRule: SyntaxRule, val rest: List<SyntaxRule>
     }
 }
 
-class CallWithVarInstruction(val instr: Instruction, val bindings: List<SyntaxRuleVariableBinding>, pos: Position) : Instruction(pos) {
+class CallWithVarInstruction(val instr: Instruction, val bindings: List<Pair<EnvironmentBinding, Instruction>>, pos: Position) :
+    Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val newContext = context.link()
-        bindings.forEach { b ->
-            newContext.setVar(b.name, b.value.evalWithContext(context))
+        bindings.forEach { (envBinding, instr) ->
+            newContext.setVar(envBinding, instr.evalWithContext(context))
         }
         return instr.evalWithContext(newContext)
     }
@@ -115,9 +116,12 @@ fun processDefsyntax(parser: APLParser, pos: Position): Instruction {
 }
 
 fun processCustomSyntax(parser: APLParser, customSyntax: CustomSyntax): Instruction {
-    val bindings = ArrayList<SyntaxRuleVariableBinding>()
-    customSyntax.rulesList.forEach { rule ->
-        rule.processRule(parser, bindings)
+    parser.withEnvironment {
+        val bindings = ArrayList<SyntaxRuleVariableBinding>()
+        customSyntax.rulesList.forEach { rule ->
+            rule.processRule(parser, bindings)
+        }
+        val envBindings = bindings.map { b -> Pair(parser.findEnvironmentBinding(b.name), b.value) }
+        return CallWithVarInstruction(customSyntax.instr, envBindings, customSyntax.pos)
     }
-    return CallWithVarInstruction(customSyntax.instr, bindings, customSyntax.pos)
 }

@@ -83,22 +83,12 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
     }
 }
 
-class VariableRef private constructor(val name: Symbol, pos: Position) : Instruction(pos) {
+class VariableRef(val name: Symbol, val binding: EnvironmentBinding, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        return context.lookupVar(name) ?: throw VariableNotAssigned(name, pos)
+        return context.getVar(binding) ?: throw APLEvalException("Variable ${binding.name} is undefined", pos)
     }
 
     override fun toString() = "Var(${name})"
-
-    companion object {
-        fun makeFromSymbol(engine: Engine, name: Symbol, pos: Position): Instruction {
-            return if (engine.isSelfEvaluatingSymbol(name)) {
-                LiteralSymbol(name, pos)
-            } else {
-                VariableRef(name, pos)
-            }
-        }
-    }
 }
 
 class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos) {
@@ -152,17 +142,18 @@ class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = makeAPLString(s)
 }
 
-class AssignmentInstruction(val name: Symbol, val instr: Instruction, pos: Position) : Instruction(pos) {
+class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val res = instr.evalWithContext(context)
-        context.setVar(name, res.collapse())
-        return res
+        val v = res.collapse()
+        context.setVar(binding, v)
+        return v
     }
 }
 
 class UserFunction(
-    private val leftFnArgs: List<Symbol>,
-    private val rightFnArgs: List<Symbol>,
+    private val leftFnArgs: List<EnvironmentBinding>,
+    private val rightFnArgs: List<EnvironmentBinding>,
     private val instr: Instruction
 ) : APLFunctionDescriptor {
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
