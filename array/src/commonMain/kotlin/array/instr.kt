@@ -6,13 +6,13 @@ abstract class Instruction(val pos: Position) {
     abstract fun evalWithContext(context: RuntimeContext): APLValue
 }
 
-class RootEnvironmentInstruction(val env: Environment, val instr: Instruction, pos: Position) : Instruction(pos) {
+class RootEnvironmentInstruction(val environment: Environment, val instr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return evalWithNewContext(context.engine)
     }
 
     fun evalWithNewContext(engine: Engine): APLValue {
-        return instr.evalWithContext(RuntimeContext(engine, env))
+        return instr.evalWithContext(RuntimeContext(engine, environment, engine.rootContext))
     }
 }
 
@@ -59,10 +59,10 @@ class FunctionCall2Arg(
     pos: Position
 ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        val leftValue = rightArgs.evalWithContext(context)
-        val rightValue = leftArgs.evalWithContext(context)
+        val rightValue = rightArgs.evalWithContext(context)
+        val leftValue = leftArgs.evalWithContext(context)
         val axisValue = axis?.evalWithContext(context)
-        return fn.eval2Arg(context, rightValue, leftValue, axisValue)
+        return fn.eval2Arg(context, leftValue, rightValue, axisValue)
     }
 
     override fun toString() = "FunctionCall2Arg(fn=${fn}, leftArgs=${leftArgs}, rightArgs=${rightArgs})"

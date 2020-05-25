@@ -117,4 +117,15 @@ class FlowControlTest : APLTest() {
         assertSimpleNumber(123, result)
         assertEquals("10987654321", out)
     }
+
+    @Test
+    fun scopeTest0() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo (x) { λ{⍵+x} }
+            |x ← foo 2
+            |⍞x 100
+        """.trimMargin())
+        assertSimpleNumber(102, result)
+    }
 }

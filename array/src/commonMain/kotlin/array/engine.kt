@@ -88,6 +88,7 @@ class Engine {
     private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
     private val librarySearchPaths = ArrayList<String>()
 
+    val rootContext = RuntimeContext(this, Environment())
     var standardOutput: CharacterOutput = NullCharacterOutput()
     val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
     val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
@@ -241,6 +242,14 @@ class Engine {
     }
 
     fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
+
+    fun parseStringInRootEnvironment(input: String): Instruction {
+        val parser = APLParser(TokenGenerator(this, StringSourceLocation(input)))
+        val instr = parser.parseValueToplevel(EndOfFile)
+        rootContext.reinitRootBindings()
+        return instr
+    }
+
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
     fun makeRuntimeContext() = RuntimeContext(this, Environment.nullEnvironment(), null)
@@ -282,16 +291,16 @@ class VariableHolder {
     var value: APLValue? = null
 }
 
-class RuntimeContext(val engine: Engine, val env: Environment, val parent: RuntimeContext? = null) {
+class RuntimeContext(val engine: Engine, val environment: Environment, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<EnvironmentBinding, VariableHolder>()
 
     init {
-        initBindings(env.localBindings())
+        initBindings()
     }
 
-    private fun initBindings(bindings: Collection<EnvironmentBinding>) {
-        bindings.forEach { b ->
-            val holder = if (b.environment === env) {
+    private fun initBindings() {
+        environment.localBindings().forEach { b ->
+            val holder = if (b.environment === environment) {
                 VariableHolder()
             } else {
                 fun recurse(c: RuntimeContext?): VariableHolder {
@@ -303,6 +312,14 @@ class RuntimeContext(val engine: Engine, val env: Environment, val parent: Runti
                 recurse(parent)
             }
             localVariables[b] = holder
+        }
+    }
+
+    fun reinitRootBindings() {
+        environment.localBindings().forEach { b ->
+            if (localVariables[b] == null) {
+                localVariables[b] = VariableHolder()
+            }
         }
     }
 
