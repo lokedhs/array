@@ -85,8 +85,7 @@ class EvalLambdaFunc : APLTest() {
     }
 
     private fun evalWithEngine(engine: Engine, expr: String): APLValue {
-        val instr = engine.parseString(expr)
-        return instr.evalWithContext(RuntimeContext(engine, Environment.nullEnvironment()))
+        return engine.parseAndEval(StringSourceLocation(expr), false)
     }
 
     private fun assertSymbolName(engine: Engine, name: String, value: APLValue) {

@@ -6,39 +6,32 @@ class LoadTest : APLTest() {
     @Test
     fun loadSimpleSource() {
         val engine = Engine()
-        val instr0 = engine.parseStringInRootEnvironment("load \"test-data/test-source.kap\"")
-        val res0 = instr0.evalWithContext(engine.rootContext)
+        val res0 = engine.parseAndEval(StringSourceLocation("load \"test-data/test-source.kap\""), false)
         assertSimpleNumber(10, res0)
-        val instr1 = engine.parseStringInRootEnvironment("foo:bar 1")
-        val res1 = instr1.evalWithContext(engine.rootContext)
+        val res1 = engine.parseAndEval(StringSourceLocation("foo:bar 1"), false)
         assertSimpleNumber(101, res1)
     }
 
     @Test
     fun ensureLoadPreservesOldNamespace() {
         val engine = Engine()
-        val instr0 = engine.parseStringInRootEnvironment("namespace(\"a\") x←1 ◊ load \"test-data/test-source.kap\"")
-        val res0 = instr0.evalWithContext(engine.rootContext)
+        val res0 = engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/test-source.kap\""), false)
         assertSimpleNumber(10, res0)
-        val instr1 = engine.parseStringInRootEnvironment("foo:bar 1")
-        val res1 = instr1.evalWithContext(engine.rootContext)
+        val res1 = engine.parseAndEval(StringSourceLocation("foo:bar 1"), false)
         assertSimpleNumber(101, res1)
-        val instr2 = engine.parseStringInRootEnvironment("x + 10")
-        val res2 = instr2.evalWithContext(engine.rootContext)
+        val res2 = engine.parseAndEval(StringSourceLocation("x + 10"), false)
         assertSimpleNumber(11, res2)
     }
 
     @Test
     fun ensureLoadPreservesOldNamespaceOnError() {
         val engine = Engine()
-        val instr0 = engine.parseStringInRootEnvironment("namespace(\"a\") x←1 ◊ load \"test-data/parse-error.kap\"")
         try {
-            val res0 = instr0.evalWithContext(engine.rootContext)
+            val res0 = engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/parse-error.kap\""), false)
         } catch (e: ParseException) {
             // expected
         }
-        val instr2 = engine.parseStringInRootEnvironment("x + 10")
-        val res2 = instr2.evalWithContext(engine.rootContext)
+        val res2 = engine.parseAndEval(StringSourceLocation("x + 10"), false)
         assertSimpleNumber(11, res2)
     }
 }

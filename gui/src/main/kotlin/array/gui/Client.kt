@@ -27,7 +27,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     init {
         engine = Engine()
         engine.addLibrarySearchPath("../array/standard-lib")
-        engine.parseString("use(\"standard-lib.kap\")")
+        engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), false)
         context = engine.makeRuntimeContext()
 
         engine.standardOutput = SendToMainCharacterOutput()
@@ -131,8 +131,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     fun evalSource(source: SourceLocation, linkNewContext: Boolean = false) {
-        val instr = engine.parseWithTokenGenerator(TokenGenerator(engine, source))
-        val v = instr.evalWithContext(if (linkNewContext) context.link() else context)
+        val v = engine.parseAndEval(source, linkNewContext)
         resultList.addResult(v)
     }
 

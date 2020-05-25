@@ -235,19 +235,16 @@ class Engine {
     fun getFunction(name: Symbol) = functions[resolveAlias(name)]
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
 
-    fun parseWithTokenGenerator(tokeniser: TokenGenerator): RootEnvironmentInstruction {
-        val parser = APLParser(tokeniser)
+    fun parseAndEval(source: SourceLocation, newContext: Boolean): APLValue {
+        val parser = APLParser(TokenGenerator(this, source))
         val instr = parser.parseValueToplevel(EndOfFile)
-        return RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
-    }
-
-    fun parseString(input: String) = parseWithTokenGenerator(TokenGenerator(this, StringSourceLocation(input)))
-
-    fun parseStringInRootEnvironment(input: String): Instruction {
-        val parser = APLParser(TokenGenerator(this, StringSourceLocation(input)))
-        val instr = parser.parseValueToplevel(EndOfFile)
-        rootContext.reinitRootBindings()
-        return instr
+        return if (newContext) {
+            val newInstr = RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
+            newInstr.evalWithNewContext(this)
+        } else {
+            rootContext.reinitRootBindings()
+            instr.evalWithContext(rootContext)
+        }
     }
 
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)

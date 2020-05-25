@@ -38,10 +38,9 @@ class CustomFunctionTest : APLTest() {
     @Test
     fun sideEffects() {
         val engine = Engine()
-        val instr = engine.parseString("∇ foo (A) { print A ◊ A+10 } ◊ foo(1000) ")
         val output = StringBuilderOutput()
         engine.standardOutput = output
-        val result = instr.evalWithNewContext(engine)
+        val result = engine.parseAndEval(StringSourceLocation("∇ foo (A) { print A ◊ A+10 } ◊ foo(1000) "), false)
         assertSimpleNumber(1010, result)
         assertEquals("1000", output.buf.toString())
     }

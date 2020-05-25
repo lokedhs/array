@@ -13,22 +13,21 @@ open class APLTest {
         val engine = Engine()
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
-            engine.parseString("use(\"standard-lib.kap\")")
+            engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
         }
-        val instr = engine.parseString(expr)
-        return Pair(instr.evalWithNewContext(engine).collapse(), engine)
+        val result = engine.parseAndEval(StringSourceLocation(expr), false)
+        return Pair(result.collapse(), engine)
     }
 
     fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false): Pair<APLValue, String> {
         val engine = Engine()
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
-            engine.parseString("use(\"standard-lib.kap\")")
+            engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
         }
         val output = StringBuilderOutput()
         engine.standardOutput = output
-        val instr = engine.parseString(expr)
-        val result = instr.evalWithNewContext(engine)
+        val result = engine.parseAndEval(StringSourceLocation(expr), false)
         return Pair(result, output.buf.toString())
     }
 

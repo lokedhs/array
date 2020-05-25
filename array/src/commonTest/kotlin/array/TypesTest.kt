@@ -64,8 +64,7 @@ class TypesTest : APLTest() {
 
     private fun testResultType(expression: String, expectedResultSym: APLValueType) {
         val engine = Engine()
-        val instr = engine.parseString(expression)
-        val result = instr.evalWithNewContext(engine)
+        val result = engine.parseAndEval(StringSourceLocation(expression), false)
         assertSymbol(engine, expectedResultSym.typeName, result)
     }
 
