@@ -29,6 +29,7 @@ class FunctionEditorWindow(val renderContext: ClientRenderContext, val engine: E
     init {
         val vbox = VBox()
 
+        @Suppress("UNUSED_ANONYMOUS_PARAMETER")
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
             //println("accept: t=${t}, u=${u}")
         }

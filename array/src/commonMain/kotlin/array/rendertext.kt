@@ -73,6 +73,7 @@ private fun encloseNDim(value: APLValue): String {
     // block to be rendered vertically, and we don't want to transpose this grid just because we add another
     // dimension.
 
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
     val lookupByCoords: (Int, Int, Int, Int) -> Int = when (dimensions.size) {
         1 -> { a, b, c, d -> d }
         2 -> { a, b, c, d -> c * multipliers[0] + d }

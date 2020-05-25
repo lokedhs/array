@@ -34,6 +34,7 @@ class SourceEditor(val client: Client) {
     init {
         val border = BorderPane()
 
+        @Suppress("UNUSED_ANONYMOUS_PARAMETER")
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
         }
         val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
