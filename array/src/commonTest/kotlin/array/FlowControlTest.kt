@@ -3,6 +3,7 @@ package array
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class FlowControlTest : APLTest() {
     @Test
@@ -127,5 +128,18 @@ class FlowControlTest : APLTest() {
             |⍞x 100
             """.trimMargin())
         assertSimpleNumber(102, result)
+    }
+
+    @Test
+    fun scopeTest1() {
+        assertFailsWith<VariableNotAssigned> {
+            parseAPLExpression(
+                """
+                |foo ← λ{ x + ⍵ }
+                |bar ← λ{ x ← 10 ◊ (⍞foo 1) - ⍵ }
+                |⍞bar 20 
+                """.trimMargin()
+            )
+        }
     }
 }
