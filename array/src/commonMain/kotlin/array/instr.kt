@@ -84,7 +84,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
             if (v !is LambdaValue) {
                 throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}", pos)
             }
-            return v.fn
+            return v.makeClosure()
         }
     }
 

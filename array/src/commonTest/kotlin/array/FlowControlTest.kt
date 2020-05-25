@@ -125,7 +125,7 @@ class FlowControlTest : APLTest() {
             |∇ foo (x) { λ{⍵+x} }
             |x ← foo 2
             |⍞x 100
-        """.trimMargin())
+            """.trimMargin())
         assertSimpleNumber(102, result)
     }
 }

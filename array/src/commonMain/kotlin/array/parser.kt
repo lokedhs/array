@@ -222,13 +222,10 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
         withEnvironment {
+            val leftFnArgs1 = leftFnArgs.map { findEnvironmentBinding(it) }
+            val rightFnArgs1 = rightFnArgs.map { findEnvironmentBinding(it) }
             val instr = parseValueToplevel(CloseFnDef)
-            return DefinedUserFunction(
-                UserFunction(
-                    leftFnArgs.map { findEnvironmentBinding(it) },
-                    rightFnArgs.map { findEnvironmentBinding(it) },
-                    instr,
-                    currentEnvironment()), name, pos)
+            return DefinedUserFunction(UserFunction(leftFnArgs1, rightFnArgs1, instr, currentEnvironment()), name, pos)
         }
     }
 
@@ -374,7 +371,7 @@ class APLParser(val tokeniser: TokenGenerator) {
 
     class EvalLambdaFnx(val fn: APLFunction, pos: Position) : Instruction(pos) {
         override fun evalWithContext(context: RuntimeContext): APLValue {
-            return LambdaValue(fn)
+            return LambdaValue(fn, context)
         }
     }
 
