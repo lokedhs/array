@@ -5,8 +5,8 @@ class InvalidOption(name: String) : Exception("Invalid arg: ${name}")
 class Option(val name: String, val requireArg: Boolean)
 class OptionResult(val option: Option, val arg: String?)
 
-private val LONG_OPTION_ARG_PATTERN = "^--([a-zA-Z0-9]+)=(.*)$".toRegex()
-private val LONG_OPTION_NO_ARG_PATTERN = "^--([a-zA-Z0-9]+)$".toRegex()
+private val LONG_OPTION_ARG_PATTERN = "^--([a-zA-Z0-9-]+)=(.*)$".toRegex()
+private val LONG_OPTION_NO_ARG_PATTERN = "^--([a-zA-Z0-9-]+)$".toRegex()
 private val SHORT_OPTION_PATTERN = "^-[a-zA-Z0-9]$".toRegex()
 
 class ArgParser(vararg options: Option) {
