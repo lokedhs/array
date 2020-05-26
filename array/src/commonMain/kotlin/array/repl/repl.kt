@@ -5,7 +5,7 @@ import array.FormatStyle
 import array.StringSourceLocation
 import array.makeKeyboardInput
 
-fun runRepl() {
+fun runRepl(args: Array<String>) {
     val keyboardInput = makeKeyboardInput()
     val engine = Engine()
     val prompt = "> "
