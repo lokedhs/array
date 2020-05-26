@@ -35,3 +35,15 @@ class CompFunction : APLFunctionDescriptor {
         return CompFunctionImpl(pos)
     }
 }
+
+class SleepFunction : APLFunctionDescriptor {
+    class SleepFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val sleepTimeSeconds = a.ensureNumber(pos).asDouble()
+            sleepMillis((sleepTimeSeconds * 1000).toLong())
+            return sleepTimeSeconds.makeAPLNumber()
+        }
+    }
+
+    override fun make(pos: Position) = SleepFunctionImpl(pos)
+}

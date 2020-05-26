@@ -1,6 +1,7 @@
 package array.gui
 
 import array.*
+import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.control.Menu
@@ -15,22 +16,23 @@ import java.io.File
 class Client(val application: ClientApplication, val stage: Stage) {
     val renderContext: ClientRenderContext = ClientRenderContextImpl()
 
-    private val resultList: ResultList3
+    val resultList: ResultList3
 
-    private val inputFont: Font
-    private val engine: Engine
-    private val context: RuntimeContext
-    private val functionListWindow: FunctionListWindow
-    private val keyboardHelpWindow: KeyboardHelpWindow
-    private val aboutWindow: AboutWindow
+    val inputFont: Font
+    val engine: Engine
+    val functionListWindow: FunctionListWindow
+    val keyboardHelpWindow: KeyboardHelpWindow
+    val aboutWindow: AboutWindow
+    val calculationQueue: CalculationQueue
 
     init {
         engine = Engine()
         engine.addLibrarySearchPath("../array/standard-lib")
+        initCustomFunctions()
         engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), false)
-        context = engine.makeRuntimeContext()
 
         engine.standardOutput = SendToMainCharacterOutput()
+        calculationQueue = CalculationQueue(engine)
 
         val fontIn = javaClass.getResourceAsStream("fonts/FreeMono.otf")
         inputFont = fontIn.use { Font.loadFont(it, 18.0) }
@@ -47,6 +49,9 @@ class Client(val application: ClientApplication, val stage: Stage) {
         functionListWindow = FunctionListWindow.create(renderContext, engine)
         keyboardHelpWindow = KeyboardHelpWindow(renderContext)
         aboutWindow = AboutWindow()
+
+        calculationQueue.start()
+        stage.onCloseRequest = EventHandler { calculationQueue.stop() }
 
         stage.scene = Scene(border, 1000.0, 800.0)
         stage.show()
@@ -120,13 +125,18 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     fun sendInput(text: String) {
-        try {
-            evalSource(StringSourceLocation(text))
-        } catch (e: APLGenericException) {
-            resultList.addResult(e)
-            e.printStackTrace()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        calculationQueue.pushRequest(StringSourceLocation(text), false) { result ->
+            if (result is Either.Right) {
+                result.value.printStackTrace()
+            }
+            Platform.runLater { displayResult(result) }
+        }
+    }
+
+    private fun displayResult(result: Either<APLValue, Exception>) {
+        when (result) {
+            is Either.Left -> resultList.addResult(result.value)
+            is Either.Right -> resultList.addExceptionResult(result.value)
         }
     }
 
@@ -135,11 +145,14 @@ class Client(val application: ClientApplication, val stage: Stage) {
         resultList.addResult(v)
     }
 
+    private fun initCustomFunctions() {
+        initGraphicCommands(this)
+    }
+
     private inner class ClientRenderContextImpl : ClientRenderContext {
         private val extendedInput = ExtendedCharsKeyboardInput()
 
         override fun engine() = engine
-        override fun runtimeContext() = context
         override fun font() = inputFont
         override fun extendedInput() = extendedInput
     }

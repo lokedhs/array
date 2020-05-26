@@ -144,6 +144,9 @@ class Engine {
         registerNativeFunction("load", LoadFunction())
         registerNativeFunction("httpRequest", HttpRequestFunction())
 
+        // misc functions
+        registerNativeFunction("sleep", SleepFunction())
+
         // maths
         registerNativeFunction("sin", SinAPLFunction())
         registerNativeFunction("cos", CosAPLFunction())

@@ -14,7 +14,8 @@ enum class APLValueType(val typeName: String) {
     SYMBOL("symbol"),
     LAMBDA_FN("function"),
     LIST("list"),
-    MAP("map")
+    MAP("map"),
+    INTERNAL("internal")
 }
 
 enum class FormatStyle {

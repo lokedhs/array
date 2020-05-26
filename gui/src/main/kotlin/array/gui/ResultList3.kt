@@ -64,7 +64,6 @@ class ResultList3(val client: Client) {
             addInput(text)
             client.sendInput(text)
         }
-        styledArea.displayPrompt()
     }
 
     fun getNode() = scrollArea
@@ -75,9 +74,14 @@ class ResultList3(val client: Client) {
         }
     }
 
-    fun addResult(e: APLGenericException) {
+    fun addExceptionResult(e: Exception) {
         styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(e.formattedError() + "\n", TextStyle(TextStyle.Type.ERROR))
+            val message = if (e is APLGenericException) {
+                e.formattedError()
+            } else {
+                "Exception from KAP engine: ${e.message}"
+            }
+            styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
         }
     }
 

@@ -130,7 +130,7 @@ class ROStyledArea(
         val inputPosition = findInputStartEnd()
         val text = document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
         withUpdateEnabled {
-            deleteText(inputPosition.promptStartPos, document.length())
+            deleteText(inputPosition.inputStart, inputPosition.inputEnd)
         }
         commandListeners.forEach { callback -> callback(text) }
     }
@@ -140,12 +140,14 @@ class ROStyledArea(
         return document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
     }
 
-    fun withUpdateEnabled(fn: () -> Unit) {
+    fun <T> withUpdateEnabled(fn: () -> T): T {
         contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         val oldEnabled = updatesEnabled
         updatesEnabled = true
         try {
-            fn()
+            return fn().also {
+                moveToEndOfInput()
+            }
         } finally {
             updatesEnabled = oldEnabled
         }
@@ -155,7 +157,8 @@ class ROStyledArea(
         withUpdateEnabled {
             val builder = ReadOnlyStyledDocumentBuilder(segOps, parStyle ?: ParStyle())
             text.split("\n").forEach { part -> builder.addParagraph(part, style) }
-            insert(document.length(), builder.build())
+            val inputPos = findInputStartEnd()
+            insert(inputPos.promptStartPos, builder.build())
         }
         showParagraphAtTop(document.paragraphs.size - 1)
     }
@@ -184,6 +187,11 @@ class ROStyledArea(
     private fun moveToBeginningOfInput() {
         val inputPosition = findInputStartEnd()
         caretSelectionBind.moveTo(inputPosition.inputStart)
+    }
+
+    private fun moveToEndOfInput() {
+        val inputPosition = findInputStartEnd()
+        caretSelectionBind.moveTo(inputPosition.inputEnd)
     }
 
     data class InputPositions(val promptStartPos: Int, val inputStart: Int, val inputEnd: Int)
