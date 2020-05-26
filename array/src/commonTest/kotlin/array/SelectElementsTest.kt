@@ -812,4 +812,24 @@ class SelectElementsTest : APLTest() {
                 ), result)
         }
     }
+
+    @Test
+    fun testLastAxis() {
+        parseAPLExpression("2 2 2 ⌿ 3 2 ⍴ ⍳6").let { result ->
+            assertDimension(dimensionsOfSize(6, 2), result)
+            assertArrayContent(arrayOf(0, 1, 0, 1, 2, 3, 2, 3, 4, 5, 4, 5), result)
+        }
+    }
+
+    @Test
+    fun lastAxisWithAxisSelection() {
+        parseAPLExpression("2 1 1 2 ⌿[2] 2 3 4 ⍴ ⍳24").let { result ->
+            assertDimension(dimensionsOfSize(2, 3, 6), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 0, 1, 2, 3, 3, 4, 4, 5, 6, 7, 7, 8, 8, 9, 10, 11, 11, 12, 12, 13, 14, 15, 15, 16, 16, 17,
+                    18, 19, 19, 20, 20, 21, 22, 23, 23
+                ), result)
+        }
+    }
 }

@@ -771,31 +771,49 @@ class SelectElementsValue(selectIndexes: IntArray, val b: APLValue, val axis: In
     }
 }
 
-class SelectElementsFunction : APLFunctionDescriptor {
-    class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            val bFixed = b.arrayify()
-            val aDimensions = a.dimensions
-            val bDimensions = bFixed.dimensions
-            val axisInt = if (axis == null) bDimensions.lastAxis(pos) else axis.ensureNumber(pos).asInt()
-            ensureValidAxis(axisInt, bDimensions)
-            if (!((aDimensions.size == 0 && bDimensions.size == 1)
-                        || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
-            ) {
-                throw InvalidDimensionsException(
-                    "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.",
-                    pos)
+abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        val bFixed = b.arrayify()
+        val aDimensions = a.dimensions
+        val bDimensions = bFixed.dimensions
+        val axisInt = if (axis == null) defaultAxis(bFixed) else axis.ensureNumber(pos).asInt()
+        ensureValidAxis(axisInt, bDimensions)
+        if (!((aDimensions.size == 0 && bDimensions.size == 1)
+                    || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
+        ) {
+            throw InvalidDimensionsException(
+                "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.",
+                pos)
+        }
+        val selectIndexes = if (a.isScalar()) {
+            a.ensureNumber(pos).asInt().let { v ->
+                IntArray(bDimensions[0]) { v }
             }
-            val selectIndexes = if (a.isScalar()) {
-                a.ensureNumber(pos).asInt().let { v ->
-                    IntArray(bDimensions[0]) { v }
-                }
-            } else {
-                a.toIntArray(pos)
-            }
-            return SelectElementsValue(selectIndexes, bFixed, axisInt)
+        } else {
+            a.toIntArray(pos)
+        }
+        return SelectElementsValue(selectIndexes, bFixed, axisInt)
+    }
+
+    abstract fun defaultAxis(value: APLValue): Int
+}
+
+class SelectElementsFirstAxisFunction : APLFunctionDescriptor {
+    class SelectElementsFirstAxisFunctionImpl(pos: Position) : SelectElementsFunctionImpl(pos) {
+        override fun defaultAxis(value: APLValue): Int {
+            return 0
         }
     }
 
-    override fun make(pos: Position) = SelectElementsFunctionImpl(pos)
+    override fun make(pos: Position) = SelectElementsFirstAxisFunctionImpl(pos)
+}
+
+class SelectElementsLastAxisFunction : APLFunctionDescriptor {
+    class SelectElementsLastAxisFunctionImpl(pos: Position) : SelectElementsFunctionImpl(pos) {
+        override fun defaultAxis(value: APLValue): Int {
+            return value.dimensions.lastAxis(pos)
+        }
+    }
+
+    override fun make(pos: Position) = SelectElementsLastAxisFunctionImpl(pos)
 }
