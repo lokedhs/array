@@ -55,8 +55,8 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Eit
 
 class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        val contentValue = content.evalWithContext(context)
         val indexValue = indexInstr.evalWithContext(context)
+        val contentValue = content.evalWithContext(context)
 
         val aDimensions = contentValue.dimensions
 
