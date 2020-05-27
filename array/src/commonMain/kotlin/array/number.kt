@@ -43,7 +43,7 @@ class APLLong(val value: Long) : APLNumber() {
         return when (reference) {
             is APLLong -> value.compareTo(reference.value)
             is APLDouble -> value.compareTo(reference.value)
-            is APLComplex -> throwComplexComparisonException()
+            is APLComplex -> throwComplexComparisonException(pos)
             else -> super.compare(reference, pos)
         }
     }
@@ -55,8 +55,8 @@ class APLLong(val value: Long) : APLNumber() {
     override fun asBoolean() = value != 0L
 }
 
-private fun throwComplexComparisonException(): Nothing {
-    throw APLEvalException("Complex numbers does not have a total order")
+private fun throwComplexComparisonException(pos: Position?): Nothing {
+    throw APLEvalException("Complex numbers does not have a total order", pos)
 }
 
 class APLDouble(val value: Double) : APLNumber() {
@@ -89,7 +89,7 @@ class APLDouble(val value: Double) : APLNumber() {
         return when (reference) {
             is APLLong -> value.compareTo(reference.value)
             is APLDouble -> value.compareTo(reference.value)
-            is APLComplex -> throwComplexComparisonException()
+            is APLComplex -> throwComplexComparisonException(pos)
             else -> super.compare(reference, pos)
         }
     }

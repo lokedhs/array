@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class LogicTest : APLTest() {
     @Test
@@ -32,6 +33,21 @@ class LogicTest : APLTest() {
         parseAPLExpression("1 1 0 0 ∨ 0 1 1 0").let { result ->
             assertDimension(dimensionsOfSize(4), result)
             assertArrayContent(arrayOf(1, 1, 1, 0), result)
+        }
+    }
+
+    @Test
+    fun testNotWorking() {
+        parseAPLExpression("~0 1").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 0), result)
+        }
+    }
+
+    @Test
+    fun testNotFailing() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("~10")
         }
     }
 }

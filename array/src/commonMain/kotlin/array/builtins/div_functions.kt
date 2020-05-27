@@ -47,3 +47,15 @@ class SleepFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = SleepFunctionImpl(pos)
 }
+
+class TagCatch(val tag: APLValue, val data: APLValue) : RuntimeException()
+
+class ThrowFunction : APLFunctionDescriptor {
+    class ThrowFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            throw TagCatch(b, a)
+        }
+    }
+
+    override fun make(pos: Position) = ThrowFunctionImpl(pos)
+}

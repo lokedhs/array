@@ -252,6 +252,39 @@ class DivAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = DivAPLFunctionImpl(pos)
 }
 
+class NotAPLFunction : APLFunctionDescriptor {
+    class NotAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun numberCombine1Arg(a: APLNumber): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> notOp(x, pos) },
+                { x -> notOp(x.toLong(), pos) },
+                { x ->
+                    if (x.imaginary == 0.0) {
+                        notOp(x.real.toLong(), pos)
+                    } else {
+                        throw APLIncompatibleDomainsException("Not operation not supported for complex", pos)
+                    }
+                }
+            )
+        }
+
+        private fun notOp(v: Long, pos: Position): APLValue {
+            val result = when (v) {
+                0L -> 1
+                1L -> 0
+                else -> throw APLIncompatibleDomainsException("Not operation not supported for value", pos)
+            }
+            return result.makeAPLNumber()
+        }
+    }
+
+    override fun make(pos: Position): APLFunction {
+        return NotAPLFunctionImpl(pos)
+    }
+}
+
 class ModAPLFunction : APLFunctionDescriptor {
     class ModAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {

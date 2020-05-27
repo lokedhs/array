@@ -137,6 +137,7 @@ class Engine {
         registerNativeFunction("⍷", FindFunction())
         registerNativeFunction("/", SelectElementsLastAxisFunction())
         registerNativeFunction("⌿", SelectElementsFirstAxisFunction())
+        registerNativeFunction("∼", NotAPLFunction())
 
         // io functions
         registerNativeFunction("print", PrintAPLFunction())
@@ -146,6 +147,7 @@ class Engine {
 
         // misc functions
         registerNativeFunction("sleep", SleepFunction())
+        registerNativeFunction("→", ThrowFunction())
 
         // maths
         registerNativeFunction("sin", SinAPLFunction())
@@ -170,6 +172,7 @@ class Engine {
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
+        functionAliases[coreNamespace.internAndExport("~")] = coreNamespace.internAndExport("∼")
 
         platformInit(this)
     }

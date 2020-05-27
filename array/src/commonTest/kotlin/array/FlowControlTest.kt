@@ -142,4 +142,12 @@ class FlowControlTest : APLTest() {
             )
         }
     }
+
+    @Ignore
+    @Test
+    fun nonLocalExitTest() {
+        parseAPLExpression("catch ('a) { { ⍵+10 ◊ 3→'a ◊ 10 } 1 } {⍵+1}").let { result ->
+            assertSimpleNumber(4, result)
+        }
+    }
 }
