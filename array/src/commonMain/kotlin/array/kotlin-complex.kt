@@ -40,6 +40,14 @@ data class Complex(val real: Double, val imaginary: Double) {
         return fromPolarCoord(resultAbsolute, resultArg)
     }
 
+    fun signum(): Complex {
+        return if (real == 0.0 && imaginary == 0.0) {
+            ZERO
+        } else {
+            this / this.abs()
+        }
+    }
+
     override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
     override fun hashCode() = real.hashCode() xor imaginary.hashCode()
 

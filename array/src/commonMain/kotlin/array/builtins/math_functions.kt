@@ -196,7 +196,7 @@ class MulAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> x.sign.toLong().makeAPLNumber() },
                 { x -> x.sign.makeAPLNumber() },
-                { x -> x.abs().makeAPLNumber() }
+                { x -> x.signum().makeAPLNumber() }
             )
         }
 
