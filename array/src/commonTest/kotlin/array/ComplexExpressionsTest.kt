@@ -129,7 +129,8 @@ class ComplexExpressionsTest : APLTest() {
 
     @Test
     fun multilineExpression() {
-        parseAPLExpressionWithOutput("""
+        parseAPLExpressionWithOutput(
+            """
             |print 3
             |2
         """.trimMargin()).let { (result, output) ->
@@ -140,7 +141,8 @@ class ComplexExpressionsTest : APLTest() {
 
     @Test
     fun multilineExpressionWithBlankLines() {
-        parseAPLExpressionWithOutput("""
+        parseAPLExpressionWithOutput(
+            """
             |print 3
             |
             |2
@@ -148,6 +150,20 @@ class ComplexExpressionsTest : APLTest() {
         """.trimMargin()).let { (result, output) ->
             assertSimpleNumber(2, result)
             assertEquals("3", output)
+        }
+    }
+
+    @Test
+    fun expressionEvaluationOrder() {
+        parseAPLExpression("a + 1 + a←2").let { result ->
+            assertSimpleNumber(5, result)
+        }
+    }
+
+    @Test
+    fun arrayRefEvaluationOrder() {
+        parseAPLExpression("a←1 2 3 ◊ a[b←0]").let { result ->
+            assertSimpleNumber(1, result)
         }
     }
 
