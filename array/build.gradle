@@ -28,10 +28,9 @@ static def executeAndCleanup(String... args) {
 static def findIcuIncludes() {
     def args = new ArrayList<String>()
     def includeOutput = executeAndCleanup("pkg-config", "icu-i18n", "--variable=includedir")
-    if(includeOutput == null) {
+    if (includeOutput == null) {
         args.add("-I/usr/include")
-    }
-    else {
+    } else {
         includeOutput.split(" ").each { v ->
             args.add("-I" + v)
         }

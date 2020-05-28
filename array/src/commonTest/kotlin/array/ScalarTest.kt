@@ -75,8 +75,9 @@ class ScalarTest : APLTest() {
     fun additionWithAxis0() {
         val result = parseAPLExpression("10 20 30 40 +[0] 4 3 2 ⍴ 100+⍳24")
         assertDimension(dimensionsOfSize(4, 3, 2), result)
-        assertArrayContent(arrayOf(
-            110, 111, 112, 113, 114, 115, 126, 127, 128, 129, 130, 131, 142, 143, 144, 145, 146, 147, 158, 159, 160, 161, 162, 163),
+        assertArrayContent(
+            arrayOf(
+                110, 111, 112, 113, 114, 115, 126, 127, 128, 129, 130, 131, 142, 143, 144, 145, 146, 147, 158, 159, 160, 161, 162, 163),
             result)
     }
 
@@ -84,8 +85,9 @@ class ScalarTest : APLTest() {
     fun additionWithAxis1() {
         val result = parseAPLExpression("10 20 30 +[1] 4 3 2 ⍴ 100+⍳24")
         assertDimension(dimensionsOfSize(4, 3, 2), result)
-        assertArrayContent(arrayOf(
-            110, 111, 122, 123, 134, 135, 116, 117, 128, 129, 140, 141, 122, 123, 134, 135, 146, 147, 128, 129, 140, 141, 152, 153),
+        assertArrayContent(
+            arrayOf(
+                110, 111, 122, 123, 134, 135, 116, 117, 128, 129, 140, 141, 122, 123, 134, 135, 146, 147, 128, 129, 140, 141, 152, 153),
             result)
     }
 
@@ -93,9 +95,10 @@ class ScalarTest : APLTest() {
     fun additionWithAxis2() {
         val result = parseAPLExpression("10 20 +[2] 4 3 2 ⍴ 100+⍳24")
         assertDimension(dimensionsOfSize(4, 3, 2), result)
-        assertArrayContent(arrayOf(
-            110, 121, 112, 123, 114, 125, 116, 127, 118, 129, 120, 131, 122, 133,
-            124, 135, 126, 137, 128, 139, 130, 141, 132, 143),
+        assertArrayContent(
+            arrayOf(
+                110, 121, 112, 123, 114, 125, 116, 127, 118, 129, 120, 131, 122, 133,
+                124, 135, 126, 137, 128, 139, 130, 141, 132, 143),
             result)
     }
 

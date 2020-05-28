@@ -12,13 +12,15 @@ class SortTest : APLTest() {
 
     @Test
     fun sortStrings() {
-        sortTest("\"foo\" \"bar\" \"test\" \"abc\" \"xyz\" \"some\" \"strings\" \"withlongtext\" \"b\"",
+        sortTest(
+            "\"foo\" \"bar\" \"test\" \"abc\" \"xyz\" \"some\" \"strings\" \"withlongtext\" \"b\"",
             arrayOf(3, 8, 1, 0, 5, 6, 2, 7, 4))
     }
 
     @Test
     fun sortMultiDimensional() {
-        sortTest("3 4 ⍴ 8 5 1 7 0 11 6 2 4 3 10 9",
+        sortTest(
+            "3 4 ⍴ 8 5 1 7 0 11 6 2 4 3 10 9",
             arrayOf(1, 2, 0))
     }
 
@@ -44,7 +46,8 @@ class SortTest : APLTest() {
 
     @Test
     fun sortingArraysOfDifferentDimensions() {
-        sortTest("(⊂4 3 ⍴ 1 2 3 4 5 6) (⊂3 4 ⍴ 1 2 3 4 5 6) (⊂3 2 ⍴ 1 2 3 4) (⊂2 5 ⍴ 1 2) (⊂2 5 3 ⍴ 1 2) (⊂4 3 ⍴ 1 2 2 4 5 6)",
+        sortTest(
+            "(⊂4 3 ⍴ 1 2 3 4 5 6) (⊂3 4 ⍴ 1 2 3 4 5 6) (⊂3 2 ⍴ 1 2 3 4) (⊂2 5 ⍴ 1 2) (⊂2 5 3 ⍴ 1 2) (⊂4 3 ⍴ 1 2 2 4 5 6)",
             arrayOf(3, 2, 1, 5, 0, 4))
     }
 

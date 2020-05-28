@@ -65,14 +65,15 @@ class CustomFunctionTest : APLTest() {
 
     @Test
     fun multilineFunction() {
-        val result = parseAPLExpression("""
+        val result = parseAPLExpression(
+            """
             |∇ foo (x) {
             |  a ← 10
             |  b ← 2
             |  a+b+x
             |}
             |foo(100)
-        """.trimMargin())
+            """.trimMargin())
         assertSimpleNumber(112, result)
     }
 

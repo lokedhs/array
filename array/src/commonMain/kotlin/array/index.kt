@@ -64,8 +64,7 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
         if (indexAsList.listSize() != contentValue.dimensions.size) {
             throw InvalidDimensionsException(
                 "Rank of argument does not match index. Argument=${aDimensions.size}, index=${indexAsList.listSize()}",
-                pos
-            )
+                pos)
         }
         val axis = Array(indexAsList.listSize()) { i ->
             val v = indexAsList.listElement(i).unwrapDeferredValue()
