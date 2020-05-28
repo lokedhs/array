@@ -160,13 +160,6 @@ class ComplexExpressionsTest : APLTest() {
         }
     }
 
-    @Test
-    fun arrayRefEvaluationOrder() {
-        parseAPLExpression("a←1 2 3 ◊ a[b←0]").let { result ->
-            assertSimpleNumber(1, result)
-        }
-    }
-
     // Test ignored since it's not clear how the parser is supposed to handle this case at the moment
     @Test
     @Ignore
