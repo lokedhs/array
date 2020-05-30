@@ -59,3 +59,45 @@ class ThrowFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = ThrowFunctionImpl(pos)
 }
+
+class LabelsFunction : APLFunctionDescriptor {
+    class LabelsFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            if (!b.isScalar()) {
+                val bDimensions = b.dimensions
+                val axisInt = if (axis == null) bDimensions.lastAxis(pos) else axis.ensureNumber(pos).asInt()
+                ensureValidAxis(axisInt, bDimensions, pos)
+
+                val aDimensions = a.dimensions
+                if (aDimensions.size != 1) {
+                    throw InvalidDimensionsException("Left argument must be an array of labels", pos)
+                }
+                if (aDimensions[0] != bDimensions[axisInt]) {
+                    throw InvalidDimensionsException("Label list has incorrect length", pos)
+                }
+                val extraLabels = ArrayList<List<AxisLabel?>?>(bDimensions.size)
+                repeat(bDimensions.size) { i ->
+                    val v = if (i == axisInt) {
+                        val labelsList = ArrayList<AxisLabel?>(bDimensions[axisInt])
+                        repeat(bDimensions[axisInt]) { i2 ->
+                            val value = a.valueAt(i2)
+                            if (value.dimensions.size != 1) {
+                                throw InvalidDimensionsException("Label should be a single-dimensional array", pos)
+                            }
+                            labelsList.add(if (value.dimensions[0] == 0) null else AxisLabel(arrayAsStringValue(value)))
+                        }
+                        labelsList
+                    } else {
+                        null
+                    }
+                    extraLabels.add(v)
+                }
+                return LabelledArray.make(b, extraLabels)
+            } else {
+                throw APLIncompatibleDomainsException("Unable to set labels on non-array instances", pos)
+            }
+        }
+    }
+
+    override fun make(pos: Position) = LabelsFunctionImpl(pos)
+}

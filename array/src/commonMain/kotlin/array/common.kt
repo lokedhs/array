@@ -127,9 +127,9 @@ fun assertx(condition: Boolean, message: String = "Assertion error") {
     }
 }
 
-fun ensureValidAxis(axis: Int, dimensions: Dimensions) {
+fun ensureValidAxis(axis: Int, dimensions: Dimensions, pos: Position? = null) {
     if (axis < 0 || axis >= dimensions.size) {
-        throw IllegalAxisException(axis, dimensions)
+        throw IllegalAxisException(axis, dimensions, pos)
     }
 }
 
@@ -169,9 +169,11 @@ fun stringIntersperse(list: Sequence<String>, separator: String): String {
     return buf.toString()
 }
 
-fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: Int) {
+fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: Int, pos: Position?) {
     if (posAlongAxis < 0 || posAlongAxis >= dimensions[axis]) {
-        throw APLIndexOutOfBoundsException("Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}")
+        throw APLIndexOutOfBoundsException(
+            "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
+            pos)
     }
 }
 

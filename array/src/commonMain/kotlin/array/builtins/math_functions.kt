@@ -85,7 +85,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             val axisInt = axis.ensureNumber(pos).asInt()
 
             fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
-                ensureValidAxis(axisInt, d2)
+                ensureValidAxis(axisInt, d2, pos)
                 if (d1[0] != d2[axisInt]) {
                     throw InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}", pos)
                 }

@@ -97,7 +97,7 @@ class ReduceOp : APLOperatorOneArg {
                         a
                     } else {
                         val v = axisParam ?: (a.dimensions.size - 1)
-                        ensureValidAxis(v, a.dimensions)
+                        ensureValidAxis(v, a.dimensions, pos)
                         ReduceResult1Arg(context, fn, a, v, pos)
                     }
                 }

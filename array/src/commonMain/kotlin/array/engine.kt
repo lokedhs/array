@@ -148,6 +148,7 @@ class Engine {
         // misc functions
         registerNativeFunction("sleep", SleepFunction())
         registerNativeFunction("→", ThrowFunction())
+        registerNativeFunction("labels", LabelsFunction())
 
         // maths
         registerNativeFunction("sin", SinAPLFunction())

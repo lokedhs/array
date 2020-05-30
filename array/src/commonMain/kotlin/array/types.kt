@@ -24,6 +24,39 @@ enum class FormatStyle {
     PRETTY
 }
 
+class AxisLabel(val title: String)
+
+class DimensionLabels private constructor(val labels: List<List<AxisLabel?>?>) {
+    companion object {
+        fun makeEmpty(dimensions: Dimensions): DimensionLabels {
+            val result = ArrayList<List<AxisLabel?>?>(dimensions.size)
+            repeat(dimensions.size) {
+                result.add(null)
+            }
+            return DimensionLabels(result)
+        }
+
+        fun makeDerived(dimensions: Dimensions, oldLabels: DimensionLabels?, newLabels: List<List<AxisLabel?>?>): DimensionLabels {
+            assertx(newLabels.size == dimensions.size)
+            val oldLabelsList = oldLabels?.labels
+            val result = ArrayList<List<AxisLabel?>?>(dimensions.size)
+            repeat(dimensions.size) { i ->
+                val newLabelsList = newLabels[i]
+                val v = when {
+                    newLabelsList != null -> {
+                        assertx(newLabelsList.size == dimensions[i])
+                        newLabelsList
+                    }
+                    oldLabelsList != null -> oldLabelsList[i]
+                    else -> null
+                }
+                result.add(v)
+            }
+            return DimensionLabels(result)
+        }
+    }
+}
+
 interface APLValue {
     val aplValueType: APLValueType
 
@@ -45,6 +78,8 @@ interface APLValue {
     fun compareEquals(reference: APLValue): Boolean
     fun compare(reference: APLValue, pos: Position? = null): Int =
         throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
+
+    val labels: DimensionLabels? get() = null
 
     /**
      * Return a value which can be used as a hash key when storing references to this object in Kotlin maps.
@@ -230,6 +265,26 @@ abstract class APLArray : APLValue {
                 curr = (curr * 63) xor v.makeKey().hashCode()
             }
             return curr
+        }
+    }
+}
+
+class LabelledArray private constructor(val value: APLValue, override val labels: DimensionLabels) : APLArray() {
+    override val dimensions = value.dimensions
+    override fun valueAt(p: Int) = value.valueAt(p)
+
+    override fun collapse(): APLValue {
+        val v = value.collapse()
+        return if (v === value) {
+            this
+        } else {
+            LabelledArray(v, labels)
+        }
+    }
+
+    companion object {
+        fun make(value: APLValue, extraLabels: List<List<AxisLabel?>?>): LabelledArray {
+            return LabelledArray(value, DimensionLabels.makeDerived(value.dimensions, value.labels, extraLabels))
         }
     }
 }

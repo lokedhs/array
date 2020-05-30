@@ -72,11 +72,11 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
             when (d.size) {
                 0 -> {
                     Either.Left(v.ensureNumber(pos).asInt()
-                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i) })
+                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i, pos) })
                 }
                 1 -> Either.Right(IntArray(d[0]) { i2 ->
                     v.valueAt(i2).ensureNumber(pos).asInt()
-                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i) }
+                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i, pos) }
                 })
                 else -> throw InvalidDimensionsException("Invalid dimension in array index argument ${i}", pos)
             }

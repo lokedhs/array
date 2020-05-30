@@ -777,7 +777,7 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
         val aDimensions = a.dimensions
         val bDimensions = bFixed.dimensions
         val axisInt = if (axis == null) defaultAxis(bFixed) else axis.ensureNumber(pos).asInt()
-        ensureValidAxis(axisInt, bDimensions)
+        ensureValidAxis(axisInt, bDimensions, pos)
         if (!((aDimensions.size == 0 && bDimensions.size == 1)
                     || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
         ) {
