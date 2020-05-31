@@ -159,7 +159,9 @@ class Client(val application: ClientApplication, val stage: Stage) {
 
     private inner class SendToMainCharacterOutput : CharacterOutput {
         override fun writeString(s: String) {
-            resultList.addOutput(s)
+            Platform.runLater {
+                resultList.addOutput(s)
+            }
         }
     }
 
