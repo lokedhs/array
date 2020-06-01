@@ -50,7 +50,7 @@ class ROStyledArea(
 
     fun displayPrompt() {
         withUpdateEnabled {
-            val inputDocument = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
+            val inputDocument = ReadOnlyStyledDocumentBuilder(segOps, ParStyle(ParStyle.ParStyleType.NORMAL))
                 .addParagraph(
                     listOf(
                         StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
@@ -140,14 +140,13 @@ class ROStyledArea(
         return document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
     }
 
-    fun <T> withUpdateEnabled(fn: () -> T): T {
+    fun withUpdateEnabled(fn: () -> Unit) {
         contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         val oldEnabled = updatesEnabled
         updatesEnabled = true
         try {
-            return fn().also {
-                moveToEndOfInput()
-            }
+            fn()
+            moveToEndOfInput()
         } finally {
             updatesEnabled = oldEnabled
         }
@@ -161,6 +160,30 @@ class ROStyledArea(
             insert(inputPos.promptStartPos, builder.build())
         }
         showParagraphAtTop(document.paragraphs.size - 1)
+    }
+
+    fun appendOutputEnd(text: String) {
+        withUpdateEnabled {
+            val textStyle = TextStyle(TextStyle.Type.OUTPUT)
+            val builder = ReadOnlyStyledDocumentBuilder(segOps, ParStyle(ParStyle.ParStyleType.OUTPUT))
+            text.split("\n").forEach { part -> builder.addParagraph(part, textStyle) }
+
+            val inputPos = findInputStartEnd()
+            val p = inputPos.promptStartPos
+            // Input position at the beginning of the buffer
+            if (p == 0) {
+                TODO("This code path is never tested")
+            } else {
+                val style = document.getParagraphStyleAtPosition(p - 1)
+                val newPos = if (style.type == ParStyle.ParStyleType.OUTPUT) {
+                    p - 1
+                } else {
+                    builder.addParagraph("", textStyle)
+                    p
+                }
+                insert(newPos, builder.build())
+            }
+        }
     }
 
     override fun replace(start: Int, end: Int, replacement: StyledDocument<ParStyle, String, TextStyle>) {

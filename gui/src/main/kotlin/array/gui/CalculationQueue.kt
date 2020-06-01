@@ -17,7 +17,7 @@ class CalculationQueue(val engine: Engine) {
                 val request = queue.take()
                 var queueResult: Either<APLValue, Exception>
                 try {
-                    val result = engine.parseAndEval(request.source, request.linkNewContext)
+                    val result = engine.parseAndEval(request.source, request.linkNewContext).collapse()
                     queueResult = Either.Left(result)
                 } catch (e: Exception) {
                     queueResult = Either.Right(e)

@@ -31,7 +31,7 @@ class ResultList3(val client: Client) {
 
     init {
         val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
-            if (u.indent) {
+            if (u.type == ParStyle.ParStyleType.INDENT) {
                 t.border =
                     Border(BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths(5.0, 5.0, 5.0, 30.0)))
             }
@@ -69,32 +69,24 @@ class ResultList3(val client: Client) {
     fun getNode() = scrollArea
 
     fun addResult(v: APLValue) {
-        styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
-        }
+        styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
     }
 
     fun addExceptionResult(e: Exception) {
-        styledArea.withUpdateEnabled {
-            val message = if (e is APLGenericException) {
-                e.formattedError()
-            } else {
-                "Exception from KAP engine: ${e.message}"
-            }
-            styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
+        val message = if (e is APLGenericException) {
+            e.formattedError()
+        } else {
+            "Exception from KAP engine: ${e.message}"
         }
+        styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
     }
 
     fun addOutput(text: String) {
-        styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.OUTPUT))
-        }
+        styledArea.appendOutputEnd(text)
     }
 
     private fun addInput(text: String) {
-        styledArea.withUpdateEnabled {
-            styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT), ParStyle(indent = true))
-        }
+        styledArea.appendTextEnd(text + "\n", TextStyle(TextStyle.Type.LOG_INPUT), ParStyle(ParStyle.ParStyleType.INDENT))
     }
 
     inner class ResultHistoryListener : HistoryListener {
