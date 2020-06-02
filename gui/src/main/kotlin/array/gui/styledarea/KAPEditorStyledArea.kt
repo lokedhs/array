@@ -16,15 +16,15 @@ import org.fxmisc.wellbehaved.event.Nodes
 import java.util.function.BiConsumer
 import java.util.function.Function
 
-open class KAPEditorStyledArea(
+open class KAPEditorStyledArea<S>(
     val keyboardInput: ExtendedCharsKeyboardInput,
     parStyle: ParStyle,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
     textStyle: TextStyle,
-    document: EditableStyledDocument<ParStyle, String, TextStyle>,
-    segmentOps: TextOps<String, TextStyle>,
-    nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
-) : GenericStyledArea<ParStyle, String, TextStyle>(
+    document: EditableStyledDocument<ParStyle, S, TextStyle>,
+    segmentOps: TextOps<S, TextStyle>,
+    nodeFactory: Function<StyledSegment<S, TextStyle>, Node>
+) : GenericStyledArea<ParStyle, S, TextStyle>(
     parStyle,
     applyParagraphStyle,
     textStyle,

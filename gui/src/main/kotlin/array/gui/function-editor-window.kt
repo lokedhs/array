@@ -139,7 +139,7 @@ class FunctionEditorArea(
     document: EditableStyledDocument<ParStyle, String, TextStyle>,
     styledTextOps: TextOps<String, TextStyle>,
     nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
-) : KAPEditorStyledArea(
+) : KAPEditorStyledArea<String>(
     keyboardInput,
     ParStyle(),
     applyParagraphStyle,

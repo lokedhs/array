@@ -17,10 +17,10 @@ import kotlin.contracts.contract
 class ROStyledArea(
     keyboardInput: ExtendedCharsKeyboardInput,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
-    document: EditableStyledDocument<ParStyle, String, TextStyle>,
-    styledTextOps: TextOps<String, TextStyle>,
-    nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
-) : KAPEditorStyledArea(
+    document: EditableStyledDocument<ParStyle, EditorContent, TextStyle>,
+    styledTextOps: TextOps<EditorContent, TextStyle>,
+    nodeFactory: Function<StyledSegment<EditorContent, TextStyle>, Node>
+) : KAPEditorStyledArea<EditorContent>(
     keyboardInput,
     ParStyle(),
     applyParagraphStyle,
@@ -53,8 +53,8 @@ class ROStyledArea(
             val inputDocument = ReadOnlyStyledDocumentBuilder(segOps, ParStyle(ParStyle.ParStyleType.NORMAL))
                 .addParagraph(
                     listOf(
-                        StyledSegment(">", TextStyle(TextStyle.Type.PROMPT)),
-                        StyledSegment(" ", TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
+                        StyledSegment(EditorContent.makeString(">"), TextStyle(TextStyle.Type.PROMPT)),
+                        StyledSegment(EditorContent.makeString(" "), TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
                 .build()
             insert(document.length(), inputDocument)
         }
@@ -155,18 +155,32 @@ class ROStyledArea(
     fun appendTextEnd(text: String, style: TextStyle, parStyle: ParStyle? = null) {
         withUpdateEnabled {
             val builder = ReadOnlyStyledDocumentBuilder(segOps, parStyle ?: ParStyle())
-            text.split("\n").forEach { part -> builder.addParagraph(part, style) }
+            text.split("\n").forEach { part -> builder.addParagraph(EditorContent.makeString(part), style) }
             val inputPos = findInputStartEnd()
             insert(inputPos.promptStartPos, builder.build())
         }
         showParagraphAtTop(document.paragraphs.size - 1)
     }
 
+    fun appendErrorMessage(text: String) {
+        withUpdateEnabled {
+            val inputPos = findInputStartEnd()
+            val newDoc = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
+                .addParagraph(
+                    mutableListOf(
+                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR)),
+                        StyledSegment(FXButtonEditorContentEntry("Details"), TextStyle(TextStyle.Type.ERROR))))
+                .addParagraph(EditorContent.makeBlank(), TextStyle(TextStyle.Type.ERROR))
+                .build()
+            insert(inputPos.promptStartPos, newDoc)
+        }
+    }
+
     fun appendOutputEnd(text: String) {
         withUpdateEnabled {
             val textStyle = TextStyle(TextStyle.Type.OUTPUT)
             val builder = ReadOnlyStyledDocumentBuilder(segOps, ParStyle(ParStyle.ParStyleType.OUTPUT))
-            text.split("\n").forEach { part -> builder.addParagraph(part, textStyle) }
+            text.split("\n").forEach { part -> builder.addParagraph(EditorContent.makeString(part), textStyle) }
 
             val inputPos = findInputStartEnd()
             val p = inputPos.promptStartPos
@@ -178,7 +192,7 @@ class ROStyledArea(
                 val newPos = if (style.type == ParStyle.ParStyleType.OUTPUT) {
                     p - 1
                 } else {
-                    builder.addParagraph("", textStyle)
+                    builder.addParagraph(EditorContent.makeBlank(), textStyle)
                     p
                 }
                 insert(newPos, builder.build())
@@ -186,16 +200,16 @@ class ROStyledArea(
         }
     }
 
-    override fun replace(start: Int, end: Int, replacement: StyledDocument<ParStyle, String, TextStyle>) {
+    override fun replace(start: Int, end: Int, replacement: StyledDocument<ParStyle, EditorContent, TextStyle>) {
         when {
             updatesEnabled -> super.replace(start, end, replacement)
             isAtInput(start, end) -> super.replace(start, end, makeInputStyle(replacement.text))
         }
     }
 
-    private fun makeInputStyle(s: String): StyledDocument<ParStyle, String, TextStyle> {
+    private fun makeInputStyle(s: String): StyledDocument<ParStyle, EditorContent, TextStyle> {
         return ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
-            .addParagraph(s, TextStyle(type = TextStyle.Type.INPUT))
+            .addParagraph(EditorContent.makeString(s), TextStyle(type = TextStyle.Type.INPUT))
             .build()
     }
 

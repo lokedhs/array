@@ -3,25 +3,23 @@ package array.gui
 import array.APLGenericException
 import array.APLValue
 import array.FormatStyle
-import array.gui.styledarea.HistoryListener
-import array.gui.styledarea.ParStyle
-import array.gui.styledarea.ROStyledArea
-import array.gui.styledarea.TextStyle
+import array.gui.styledarea.*
 import javafx.scene.Node
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.TextFlow
 import org.fxmisc.flowless.VirtualizedScrollPane
-import org.fxmisc.richtext.StyledTextArea
-import org.fxmisc.richtext.TextExt
 import org.fxmisc.richtext.model.GenericEditableStyledDocument
-import org.fxmisc.richtext.model.SegmentOps
+import org.fxmisc.richtext.model.SegmentOpsBase
 import org.fxmisc.richtext.model.StyledSegment
+import org.fxmisc.richtext.model.TextOps
+import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Function
+import kotlin.collections.ArrayList
 
 class ResultList3(val client: Client) {
-    private val styledTextOps = SegmentOps.styledTextOps<TextStyle>()
+    private val styledOps = CodeSegmentOps()
     private val styledArea: ROStyledArea
     private val scrollArea: VirtualizedScrollPane<ROStyledArea>
 
@@ -30,21 +28,18 @@ class ResultList3(val client: Client) {
     private var pendingInput: String? = null
 
     init {
-        val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { t, u ->
-            if (u.type == ParStyle.ParStyleType.INDENT) {
-                t.border =
+        val applyParagraphStyle = BiConsumer<TextFlow, ParStyle> { text, parStyle ->
+            if (parStyle.type == ParStyle.ParStyleType.INDENT) {
+                text.border =
                     Border(BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.NONE, CornerRadii.EMPTY, BorderWidths(5.0, 5.0, 5.0, 30.0)))
             }
         }
-        val nodeFactory = Function<StyledSegment<String, TextStyle>, Node> { seg ->
-            val applyStyle = { a: TextExt, b: TextStyle ->
-                b.styleContent(a, client.renderContext)
-            }
-            StyledTextArea.createStyledTextNode(seg.segment, seg.style, applyStyle)
+        val nodeFactory = Function<StyledSegment<EditorContent, TextStyle>, Node> { segment ->
+            segment.segment.createNode(client.renderContext, segment.style)
         }
 
-        val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledTextOps)
-        styledArea = ROStyledArea(client.renderContext.extendedInput(), applyParagraphStyle, document, styledTextOps, nodeFactory)
+        val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledOps)
+        styledArea = ROStyledArea(client.renderContext.extendedInput(), applyParagraphStyle, document, styledOps, nodeFactory)
 
         styledArea.addCommandListener(::processCommand)
 
@@ -78,7 +73,8 @@ class ResultList3(val client: Client) {
         } else {
             "Exception from KAP engine: ${e.message}"
         }
-        styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
+        //styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
+        styledArea.appendErrorMessage(message)
     }
 
     fun addOutput(text: String) {
@@ -112,6 +108,32 @@ class ResultList3(val client: Client) {
                     pendingInput = null
                 }
             }
+        }
+    }
+
+    class CodeSegmentOps : SegmentOpsBase<EditorContent, TextStyle>(EditorContent.makeBlank()), TextOps<EditorContent, TextStyle> {
+        override fun length(seg: EditorContent): Int {
+            return seg.length()
+        }
+
+        override fun joinSeg(currentSeg: EditorContent, nextSeg: EditorContent): Optional<EditorContent> {
+            return currentSeg.joinSegment(nextSeg)
+        }
+
+        override fun realGetText(seg: EditorContent): String {
+            return seg.realGetText()
+        }
+
+        override fun realCharAt(seg: EditorContent, index: Int): Char {
+            return seg.realCharAt(index)
+        }
+
+        override fun realSubSequence(seg: EditorContent, start: Int, end: Int): EditorContent {
+            return seg.realSubsequence(start, end)
+        }
+
+        override fun create(text: String): EditorContent {
+            return EditorContent.makeString(text)
         }
     }
 }

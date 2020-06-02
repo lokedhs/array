@@ -28,7 +28,7 @@ import java.util.function.Function
 class SourceEditor(val client: Client) {
     private val stage = Stage()
     private var doc: GenericEditableStyledDocument<ParStyle, String, TextStyle>
-    private var styledArea: KAPEditorStyledArea
+    private var styledArea: KAPEditorStyledArea<String>
     private var loaded: File? = null
 
     init {
