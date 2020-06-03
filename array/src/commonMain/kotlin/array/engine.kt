@@ -257,7 +257,6 @@ class Engine {
 
     fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
-    fun makeRuntimeContext() = RuntimeContext(this, Environment.nullEnvironment(), null)
     fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
         return namespaces.getOrPut(name) {
             val namespace = Namespace(name)
