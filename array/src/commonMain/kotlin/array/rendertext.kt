@@ -134,39 +134,77 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
         }
     }
 
+    fun withOfOuterCol(colIndex: Int): Int {
+        var n = 0
+        repeat(s3) { innerX ->
+            val index = colIndex * s3 + innerX
+            n += colWidths[index]
+        }
+        return n + s3 - 1
+    }
+
     val doubleBoxed = dimensions.size > 2
     val allColsWidth = colWidths.sum() + s1 * s3 - 1
     val content = ArrayList<List<String>>()
-    content.add(if (doubleBoxed) topBottomRow("╔", "═", "╗", allColsWidth) else topBottomRow("┏", "━", "┓", allColsWidth))
+    //content.add(if (doubleBoxed) topBottomRow("╔", "═", "╗", allColsWidth) else topBottomRow("┏", "━", "┓", allColsWidth))
     // Render column labels, if needed
     if (labelsArray != null && maxXLabelsHeight > 0) {
+        ArrayList<String>().let { row ->
+            row.add(if (doubleBoxed) "╔" else "┏")
+            repeat(s2) { outerX ->
+                if (outerX > 0) {
+                    row.add(if (doubleBoxed) "╤" else "┳")
+                }
+                repeat(withOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
+            }
+            row.add(if (doubleBoxed) "╗" else "┓")
+            content.add(row)
+        }
         for (internalRow in 0 until maxXLabelsHeight) {
             val row = ArrayList<String>()
-            row.add(if (doubleBoxed) "║" else "┃")
-            for (outerX in 0 until s1) {
-                for (innerX in 0 until s3) {
+            row.add(if (doubleBoxed) "║" else "│")
+            repeat(s1) { outerX ->
+                if (outerX > 0) {
+                    row.add("│")
+                }
+                repeat(s3) { innerX ->
                     if (innerX > 0) {
                         row.add(" ")
                     }
                     val text = xLabelsArray[innerX]
+                    val index = outerX * s3 + innerX
                     if (text != null) {
                         val rowText = text.row(internalRow)
-                        repeat(colWidths[innerX] - rowText.size) {
+                        repeat(colWidths[index] - rowText.size) {
                             row.add(" ")
                         }
                         row.addAll(rowText)
                     } else {
-                        repeat(colWidths[innerX]) {
+                        repeat(colWidths[index]) {
                             row.add(" ")
                         }
                     }
                 }
             }
-            row.add(if (doubleBoxed) "║" else "┃")
+            row.add(if (doubleBoxed) "║" else "│")
             content.add(row)
         }
-        content.add(if (doubleBoxed) topBottomRow("╠", "═", "╣", allColsWidth) else topBottomRow("┣", "━", "┫", allColsWidth))
+        ArrayList<String>().let { row ->
+            row.add(if (doubleBoxed) "╠" else "┣")
+            repeat(s2) { outerX ->
+                if (outerX > 0) {
+                    row.add(if (doubleBoxed) "╧" else "┻")
+                }
+                repeat(withOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
+            }
+            row.add(if (doubleBoxed) "╣" else "┫")
+            content.add(row)
+        }
+    } else {
+        // No top labels
+        content.add(if (doubleBoxed) topBottomRow("╔", "═", "╗", allColsWidth) else topBottomRow("┏", "━", "┓", allColsWidth))
     }
+    // "foo" "bar" "abc" labels[3] 2 2 2 3 ⍴ ⍳1000
 
     // Render the actual array content
     for (outerY in 0 until s0) {
