@@ -32,7 +32,12 @@ private class String2D {
 
     fun encloseInBox(): String2D {
         val newContent = ArrayList<List<String>>()
-        newContent.add(topBottomRow("┏", "━", "┓", width))
+        ArrayList<String>().let { row ->
+            row.add("┏")
+            repeat(width) { row.add("━") }
+            row.add("┓")
+            newContent.add(row)
+        }
         content.forEach { row ->
             val newRow = ArrayList<String>()
             newRow.add("┃")
@@ -41,7 +46,12 @@ private class String2D {
             newRow.add("┃")
             newContent.add(newRow)
         }
-        newContent.add(topBottomRow("┗", "━", "┛", width))
+        ArrayList<String>().let { row ->
+            row.add("┗")
+            repeat(width) { row.add("━") }
+            row.add("┛")
+            newContent.add(row)
+        }
         return String2D(newContent)
     }
 
@@ -93,6 +103,22 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
                 d
     }
 
+    // Compute labels by the Y axis
+    var yLabelsWidth = 0
+    val yLabelsArray = ArrayList<String2D?>()
+    if (labelsArray != null && indexes[2] != null) {
+        repeat(s2) { innerY ->
+            val text = labelsArray[indexes[2]!!]?.get(innerY)
+            if (text != null) {
+                val s = String2D(text.title)
+                yLabelsArray.add(s)
+                yLabelsWidth = max(s.width(), yLabelsWidth)
+            } else {
+                yLabelsArray.add(null)
+            }
+        }
+    }
+
     // Find the max width of each column
     val colWidths = IntArray(s1 * s3) { 0 }
     for (outerY in 0 until s0) {
@@ -113,7 +139,7 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
     var maxXLabelsHeight = 0
     if (labelsArray != null) {
         for (innerX in 0 until s3) {
-            val text = labelsArray[labelsArray.size - 1]?.get(innerX)
+            val text = labelsArray[indexes[3]!!]?.get(innerX)
             if (text != null) {
                 val s = String2D(text.title)
                 xLabelsArray.add(s)
@@ -134,7 +160,7 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
         }
     }
 
-    fun withOfOuterCol(colIndex: Int): Int {
+    fun widthOfOuterCol(colIndex: Int): Int {
         var n = 0
         repeat(s3) { innerX ->
             val index = colIndex * s3 + innerX
@@ -146,16 +172,20 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
     val doubleBoxed = dimensions.size > 2
     val allColsWidth = colWidths.sum() + s1 * s3 - 1
     val content = ArrayList<List<String>>()
-    //content.add(if (doubleBoxed) topBottomRow("╔", "═", "╗", allColsWidth) else topBottomRow("┏", "━", "┓", allColsWidth))
+
     // Render column labels, if needed
     if (labelsArray != null && maxXLabelsHeight > 0) {
         ArrayList<String>().let { row ->
             row.add(if (doubleBoxed) "╔" else "┏")
-            repeat(s2) { outerX ->
+            if (yLabelsWidth > 0) {
+                repeat(yLabelsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+                row.add(if (doubleBoxed) "╦" else "┳")
+            }
+            repeat(s1) { outerX ->
                 if (outerX > 0) {
                     row.add(if (doubleBoxed) "╤" else "┳")
                 }
-                repeat(withOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
+                repeat(widthOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
             }
             row.add(if (doubleBoxed) "╗" else "┓")
             content.add(row)
@@ -163,6 +193,10 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
         for (internalRow in 0 until maxXLabelsHeight) {
             val row = ArrayList<String>()
             row.add(if (doubleBoxed) "║" else "│")
+            if (yLabelsWidth > 0) {
+                repeat(yLabelsWidth) { row.add(" ") }
+                row.add(if (doubleBoxed) "║" else "┃")
+            }
             repeat(s1) { outerX ->
                 if (outerX > 0) {
                     row.add("│")
@@ -175,45 +209,57 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
                     val index = outerX * s3 + innerX
                     if (text != null) {
                         val rowText = text.row(internalRow)
-                        repeat(colWidths[index] - rowText.size) {
-                            row.add(" ")
-                        }
+                        repeat(colWidths[index] - rowText.size) { row.add(" ") }
                         row.addAll(rowText)
                     } else {
-                        repeat(colWidths[index]) {
-                            row.add(" ")
-                        }
+                        repeat(colWidths[index]) { row.add(" ") }
                     }
                 }
             }
-            row.add(if (doubleBoxed) "║" else "│")
+            row.add(if (doubleBoxed) "║" else "┃")
             content.add(row)
         }
         ArrayList<String>().let { row ->
             row.add(if (doubleBoxed) "╠" else "┣")
-            repeat(s2) { outerX ->
+            if (yLabelsWidth > 0) {
+                repeat(yLabelsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+                row.add(if (doubleBoxed) "╬" else "╋")
+            }
+            repeat(s1) { outerX ->
                 if (outerX > 0) {
                     row.add(if (doubleBoxed) "╧" else "┻")
                 }
-                repeat(withOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
+                repeat(widthOfOuterCol(outerX)) { row.add(if (doubleBoxed) "═" else "━") }
             }
             row.add(if (doubleBoxed) "╣" else "┫")
             content.add(row)
         }
     } else {
-        // No top labels
-        content.add(if (doubleBoxed) topBottomRow("╔", "═", "╗", allColsWidth) else topBottomRow("┏", "━", "┓", allColsWidth))
+        ArrayList<String>().let { row ->
+            // No top labels, but has left labels
+            row.add(if (doubleBoxed) "╔" else "┏")
+            if (yLabelsWidth > 0) {
+                repeat(yLabelsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+                row.add(if (doubleBoxed) "╦" else "┳")
+            }
+            repeat(allColsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+            row.add(if (doubleBoxed) "╗" else "┓")
+            content.add(row)
+        }
     }
-    // "foo" "bar" "abc" labels[3] 2 2 2 3 ⍴ ⍳1000
+    // "left0" "left1" labels[2] 2 2 2 3 ⍴ ⍳1000
+    // "left0" "left1" labels[2] "foo" "bar" "abc" labels[3] 2 2 2 3 ⍴ ⍳1000
 
     // Render the actual array content
     for (outerY in 0 until s0) {
         if (outerY > 0) {
             val row = ArrayList<String>()
             row.add(if (doubleBoxed) "║" else "┃")
-            for (i in 0 until allColsWidth) {
-                row.add(" ")
+            if (yLabelsWidth > 0) {
+                repeat(yLabelsWidth) { row.add(" ") }
+                row.add(if (doubleBoxed) "║" else "┃")
             }
+            repeat(allColsWidth) { row.add(" ") }
             row.add(if (doubleBoxed) "║" else "┃")
 
             content.add(row)
@@ -227,11 +273,25 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
                     numInternalRows = max(cell.height(), numInternalRows)
                 }
             }
+            if (yLabelsWidth > 0) {
+                numInternalRows = max(yLabelsArray[innerY]?.height() ?: 0, numInternalRows)
+            }
 
             // Iterate over the internal rows and render each cell
             for (internalRow in 0 until numInternalRows) {
                 val row = ArrayList<String>()
                 row.add(if (doubleBoxed) "║" else "┃")
+                if (yLabelsWidth > 0) {
+                    val text = yLabelsArray[innerY]
+                    if (text != null) {
+                        val rowText = text.row(internalRow)
+                        repeat(yLabelsWidth - rowText.size) { row.add(" ") }
+                        row.addAll(rowText)
+                    } else {
+                        repeat(yLabelsWidth) { row.add(" ") }
+                    }
+                    row.add(if (doubleBoxed) "║" else "┃")
+                }
                 for (outerX in 0 until s1) {
                     if (outerX > 0) {
                         row.add("│")
@@ -250,7 +310,16 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
             }
         }
     }
-    content.add(if (doubleBoxed) topBottomRow("╚", "═", "╝", allColsWidth) else topBottomRow("┗", "━", "┛", allColsWidth))
+    ArrayList<String>().let { row ->
+        row.add(if (doubleBoxed) "╚" else "┗")
+        if (yLabelsWidth > 0) {
+            repeat(yLabelsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+            row.add(if (doubleBoxed) "╩" else "┻")
+        }
+        repeat(allColsWidth) { row.add(if (doubleBoxed) "═" else "━") }
+        row.add(if (doubleBoxed) "╝" else "┛")
+        content.add(row)
+    }
     return String2D(content).asString()
 }
 
@@ -259,16 +328,6 @@ fun rightJustified(dest: MutableList<String>, s: List<String>, width: Int) {
         dest.add(" ")
     }
     dest.addAll(s)
-}
-
-private fun topBottomRow(left: String, middle: String, right: String, width: Int): List<String> {
-    val row = ArrayList<String>()
-    row.add(left)
-    (0 until width).forEach { _ ->
-        row.add(middle)
-    }
-    row.add(right)
-    return row
 }
 
 fun renderStringValue(value: APLValue, style: FormatStyle): String {
