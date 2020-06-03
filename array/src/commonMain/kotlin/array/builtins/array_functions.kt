@@ -550,6 +550,8 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
     private val bDimensions: Dimensions
     private val inverseTransposedAxis: IntArray
 
+    override val labels by lazy { resolveLabels() }
+
     init {
         bDimensions = b.dimensions
         inverseTransposedAxis = IntArray(bDimensions.size) { index ->
@@ -573,6 +575,22 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
         val c = dimensions.positionFromIndex(p)
         val newPos = IntArray(dimensions.size) { index -> c[transposeAxis[index]] }
         return b.valueAt(bDimensions.indexFromPosition(newPos))
+    }
+
+    override fun collapse(): APLValue {
+        val l = labels
+        val collapsed = super.collapse()
+        return if (l == null) collapsed else LabelledArray.make(collapsed, l.labels)
+    }
+
+    private fun resolveLabels(): DimensionLabels? {
+        val parent = b.labels ?: return null
+        val parentList = parent.labels
+        val newLabels = ArrayList<List<AxisLabel?>?>()
+        for (origAxis in transposeAxis) {
+            newLabels.add(parentList[origAxis])
+        }
+        return DimensionLabels(newLabels)
     }
 }
 

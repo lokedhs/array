@@ -26,7 +26,7 @@ enum class FormatStyle {
 
 class AxisLabel(val title: String)
 
-class DimensionLabels private constructor(val labels: List<List<AxisLabel?>?>) {
+class DimensionLabels(val labels: List<List<AxisLabel?>?>) {
     companion object {
         fun makeEmpty(dimensions: Dimensions): DimensionLabels {
             val result = ArrayList<List<AxisLabel?>?>(dimensions.size)
