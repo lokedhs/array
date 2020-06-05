@@ -168,8 +168,7 @@ class ROStyledArea(
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
                 .addParagraph(
                     mutableListOf(
-                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR)),
-                        StyledSegment(FXButtonEditorContentEntry("Details"), TextStyle(TextStyle.Type.ERROR))))
+                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR))))
                 .addParagraph(EditorContent.makeBlank(), TextStyle(TextStyle.Type.ERROR))
                 .build()
             insert(inputPos.promptStartPos, newDoc)
