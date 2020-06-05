@@ -285,6 +285,10 @@ class LabelledArray(val value: APLValue, override val labels: DimensionLabels) :
     override val dimensions = value.dimensions
     override fun valueAt(p: Int) = value.valueAt(p)
 
+    override fun collapseInt(): APLValue {
+        return value.collapseInt()
+    }
+
     companion object {
         fun make(value: APLValue, extraLabels: List<List<AxisLabel?>?>): LabelledArray {
             return LabelledArray(value, DimensionLabels.makeDerived(value.dimensions, value.labels, extraLabels))
@@ -559,6 +563,8 @@ class APLString(val content: IntArray) : APLArray() {
 
     override val dimensions = dimensionsOfSize(content.size)
     override fun valueAt(p: Int) = APLChar(content[p])
+
+    override fun collapseInt() = this
 }
 
 private val NULL_DIMENSIONS = dimensionsOfSize(0)
