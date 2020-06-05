@@ -90,9 +90,8 @@ class APLParser(val tokeniser: TokenGenerator) {
                 statementList.add(instr)
             }
             if (holder.lastToken == endToken) {
-                assertx(!statementList.isEmpty())
                 return when (statementList.size) {
-                    0 -> throw ParseException("Empty statement list")
+                    0 -> LiteralAPLNullValue(holder.pos)
                     1 -> statementList[0]
                     else -> InstructionList(statementList)
                 }
