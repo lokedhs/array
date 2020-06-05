@@ -188,8 +188,47 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
     private val bSize = b.dimensions[0]
     override val dimensions = dimensionsOfSize(aSize + bSize)
 
+    override val labels by lazy { resolveLabels() }
+
     override fun valueAt(p: Int): APLValue {
         return if (p >= aSize) b.valueAt(p - aSize) else a.valueAt(p)
+    }
+
+    private fun resolveLabels(): DimensionLabels? {
+        val aLabels = a.labels
+        val bLabels = b.labels
+        if (aLabels == null && bLabels == null) {
+            return null
+        }
+
+        val newLabels = ArrayList<AxisLabel?>()
+        fun addNulls(n: Int) {
+            repeat(n) {
+                newLabels.add(null)
+            }
+        }
+
+        fun processArg(n: Int, labels: DimensionLabels?) {
+            if (labels == null) {
+                addNulls(n)
+            } else {
+                val labelsList = labels.labels[0]
+                if (labelsList == null) {
+                    addNulls(n)
+                } else {
+                    labelsList.forEach { l ->
+                        newLabels.add(l)
+                    }
+                }
+            }
+        }
+
+        processArg(aSize, aLabels)
+        processArg(bSize, bLabels)
+
+        val allLabels = ArrayList<List<AxisLabel?>?>()
+        allLabels.add(newLabels)
+        return DimensionLabels(allLabels)
     }
 }
 
@@ -289,6 +328,8 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
         private val aDimensionAxis: Int
         private val bDimensionAxis: Int
 
+        override val labels by lazy { resolveLabels() }
+
         init {
             val ad = a.dimensions
             val bd = b.dimensions
@@ -316,6 +357,51 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
             } else {
                 b.valueAt((highVal * bMultiplierAxis * bDimensionAxis) + ((axisCoord - axisA) * bMultiplierAxis) + lowVal)
             }
+        }
+
+        private fun resolveLabels(): DimensionLabels? {
+            val aLabels = a.labels
+            val bLabels = b.labels
+            if (aLabels == null && bLabels == null) {
+                return null
+            }
+            val axisLabelsA = aLabels?.run { labels[axis] }
+            val axisLabelsB = bLabels?.run { labels[axis] }
+            val axisLabels = ArrayList<AxisLabel?>()
+            val aSize = a.dimensions[axis]
+            val bSize = b.dimensions[axis]
+            var hasLabels = false
+            val d = dimensions
+            if (axisLabelsA == null) {
+                repeat(aSize) {
+                    axisLabels.add(null)
+                }
+            } else {
+                axisLabelsA.forEach { label ->
+                    axisLabels.add(label)
+                    hasLabels = true
+                }
+            }
+            if (axisLabelsB == null) {
+                repeat(bSize) {
+                    axisLabels.add(null)
+                }
+            } else {
+                axisLabelsB.forEach { label ->
+                    axisLabels.add(label)
+                    hasLabels = true
+                }
+            }
+
+            if (!hasLabels) {
+                return null
+            }
+
+            val newLabels = ArrayList<List<AxisLabel?>?>()
+            repeat(d.size) { i ->
+                newLabels.add(if (i == axis) axisLabels else null)
+            }
+            return DimensionLabels(newLabels)
         }
     }
 
@@ -526,11 +612,28 @@ class InverseAPLValue private constructor(val source: APLValue, val axis: Int) :
 
     override val dimensions get() = source.dimensions
 
+    override val labels by lazy { resolveLabels() }
+
     override fun valueAt(p: Int): APLValue {
         return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
             val coord = axisActionFactors.dimensions[axis] - axisCoord - 1
             source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
         }
+    }
+
+    private fun resolveLabels(): DimensionLabels? {
+        val parent = source.labels ?: return null
+        val parentList = parent.labels
+        val newLabels = ArrayList<List<AxisLabel?>?>()
+        parentList.forEachIndexed { i, axisLabels ->
+            val newAxisLabels = when {
+                axisLabels == null -> null
+                i == axis -> axisLabels.asReversed()
+                else -> axisLabels
+            }
+            newLabels.add(newAxisLabels)
+        }
+        return DimensionLabels(newLabels)
     }
 
     companion object {

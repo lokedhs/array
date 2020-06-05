@@ -1,8 +1,10 @@
 package array
 
 private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Either<Int, IntArray>>) : APLArray() {
+    class AxisValueAndOffset(val sourceIndex: Int, val multiplier: Int)
+
     override val dimensions: Dimensions
-    private val destToSourceAxis: IntArray
+    private val destToSourceAxis: List<AxisValueAndOffset>
     private val constantOffset: Int
 
     init {
@@ -10,7 +12,7 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Eit
 
         var offset = 0
         val a = ArrayList<Int>()
-        val destAxis = ArrayList<Int>()
+        val destAxis = ArrayList<AxisValueAndOffset>()
         indexValue.forEachIndexed { i, selection ->
             when (selection) {
                 is Either.Left -> {
@@ -18,12 +20,12 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Eit
                 }
                 is Either.Right -> {
                     a.add(selection.value.size)
-                    destAxis.add(contentMult[i])
+                    destAxis.add(AxisValueAndOffset(i, contentMult[i]))
                 }
             }
         }
         dimensions = Dimensions(a.toIntArray())
-        destToSourceAxis = destAxis.toIntArray()
+        destToSourceAxis = destAxis
         constantOffset = offset
     }
 
@@ -32,9 +34,10 @@ private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Eit
         var result = constantOffset
         for (i in positionArray.indices) {
             val positionInAxis = positionArray[i]
-            val selection = indexValue[i]
-            result += destToSourceAxis[i] * when (selection) {
-                is Either.Left -> selection.value
+            val axisValue = destToSourceAxis[i]
+            val selection = indexValue[axisValue.sourceIndex]
+            result += axisValue.multiplier * when (selection) {
+                is Either.Left -> throw IllegalStateException("Should not need to compute single-dimension values")
                 is Either.Right -> selection.value[positionInAxis]
             }
         }

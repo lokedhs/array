@@ -35,6 +35,15 @@ class ArrayLookupBracketsTest : APLTest() {
     }
 
     @Test
+    fun selectAxis() {
+        parseAPLExpression("(2 3 ⍴ ⍳6)[1;⍳3]").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(3, 4, 5), result)
+        }
+    }
+
+
+    @Test
     fun lookupWithInvalidArgument() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("(1 2 3 4)[\"foo\"]").collapse()

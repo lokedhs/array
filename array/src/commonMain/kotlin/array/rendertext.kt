@@ -192,7 +192,7 @@ private fun encloseNDim(value: APLValue, renderLabels: Boolean = true): String {
         }
         for (internalRow in 0 until maxXLabelsHeight) {
             val row = ArrayList<String>()
-            row.add(if (doubleBoxed) "║" else "│")
+            row.add(if (doubleBoxed) "║" else "┃")
             if (yLabelsWidth > 0) {
                 repeat(yLabelsWidth) { row.add(" ") }
                 row.add(if (doubleBoxed) "║" else "┃")
