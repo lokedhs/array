@@ -70,7 +70,7 @@ interface APLValue {
         get() = dimensions.contentSize()
 
     fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
-    fun collapse(): APLValue
+    fun collapseInt(): APLValue
     fun isScalar(): Boolean = rank == 0
     fun defaultValue(): APLValue = APLLONG_0
     fun arrayify(): APLValue
@@ -80,6 +80,18 @@ interface APLValue {
         throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
 
     val labels: DimensionLabels? get() = null
+
+    fun collapse(): APLValue {
+        val l = labels
+        val v = collapseInt()
+        return if (l == null) {
+            v
+        } else if (v === this) {
+            this
+        } else {
+            LabelledArray(v, l)
+        }
+    }
 
     /**
      * Return a value which can be used as a hash key when storing references to this object in Kotlin maps.
@@ -186,18 +198,18 @@ abstract class APLSingleValue : APLValue {
 
     override val size get() = 1
     override val rank get() = 0
-    override fun collapse() = this
+    override fun collapseInt() = this
     override fun arrayify() = APLArrayImpl.make(dimensionsOfSize(1)) { this }
 }
 
 abstract class APLArray : APLValue {
     override val aplValueType: APLValueType get() = APLValueType.ARRAY
 
-    override fun collapse(): APLValue {
+    override fun collapseInt(): APLValue {
         val v = unwrapDeferredValue()
         return when {
             v is APLSingleValue -> v
-            v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapse())
+            v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapseInt())
             else -> APLArrayImpl.make(v.dimensions) { v.valueAt(it).collapse() }
         }
     }
@@ -269,18 +281,9 @@ abstract class APLArray : APLValue {
     }
 }
 
-class LabelledArray private constructor(val value: APLValue, override val labels: DimensionLabels) : APLArray() {
+class LabelledArray(val value: APLValue, override val labels: DimensionLabels) : APLArray() {
     override val dimensions = value.dimensions
     override fun valueAt(p: Int) = value.valueAt(p)
-
-    override fun collapse(): APLValue {
-        val v = value.collapse()
-        return if (v === value) {
-            this
-        } else {
-            LabelledArray(v, labels)
-        }
-    }
 
     companion object {
         fun make(value: APLValue, extraLabels: List<List<AxisLabel?>?>): LabelledArray {
@@ -353,7 +356,7 @@ class APLList(val elements: List<APLValue>) : APLValue {
         return buf.toString()
     }
 
-    override fun collapse() = this
+    override fun collapseInt() = this
 
     override fun arrayify(): APLValue {
         TODO("not implemented")

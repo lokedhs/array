@@ -577,12 +577,6 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
         return b.valueAt(bDimensions.indexFromPosition(newPos))
     }
 
-    override fun collapse(): APLValue {
-        val l = labels
-        val collapsed = super.collapse()
-        return if (l == null) collapsed else LabelledArray.make(collapsed, l.labels)
-    }
-
     private fun resolveLabels(): DimensionLabels? {
         val parent = b.labels ?: return null
         val parentList = parent.labels
