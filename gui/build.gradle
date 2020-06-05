@@ -30,7 +30,7 @@ javafx {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation project(':array')
-    implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.4'
+    implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.5'
 }
 
 mainClassName = 'array.gui.Client'
