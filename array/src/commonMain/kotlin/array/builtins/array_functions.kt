@@ -4,6 +4,7 @@ import array.*
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
+
 class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
     val multipliers = dimensions.multipliers()
     val multiplierAxis = multipliers[axis]
@@ -454,6 +455,37 @@ class RandomAPLFunction : APLFunctionDescriptor {
             } else {
                 APLArrayImpl.make(v.dimensions) { index -> makeRandom(v.valueAt(index).ensureNumber(pos)) }
             }
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val aInt = a.ensureNumber(pos).asInt()
+            val bLong = b.ensureNumber(pos).asLong()
+            if (aInt < 0) {
+                throw APLIncompatibleDomainsException("A should not be negative, was: ${aInt}", pos)
+            }
+            if (bLong < 0) {
+                throw APLIncompatibleDomainsException("B should not be negative, was: ${aInt}", pos)
+            }
+            if (aInt > bLong) {
+                throw APLIncompatibleDomainsException("A should not be greater than B. A: ${aInt}, B: ${bLong}")
+            }
+
+            // TODO: We don't have a tree set available in Kotlin Native, so we're using two sets here. Very much suboptimal.
+            val picked = HashSet<Long>()
+            val result = ArrayList<Long>()
+            val count = bLong + 1
+            val n = aInt
+            for (i in count - n until count) {
+                val item = (0 until i + 1).random()
+                if (picked.contains(item)) {
+                    picked.add(i)
+                    result.add(i)
+                } else {
+                    picked.add(item)
+                    result.add(item)
+                }
+            }
+            return APLArrayImpl.make(dimensionsOfSize(result.size)) { index -> result[index].makeAPLNumber() }
         }
 
         private fun makeRandom(limit: APLNumber): APLNumber {
