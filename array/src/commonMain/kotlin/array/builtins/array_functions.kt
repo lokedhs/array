@@ -2,6 +2,7 @@ package array.builtins
 
 import array.*
 import kotlin.math.absoluteValue
+import kotlin.math.ceil
 import kotlin.math.max
 
 
@@ -243,15 +244,71 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
+            // The APL concept of using a non-integer axis to specify that you want to add a dimension (i.e. the laminate
+            // function) is a bit confusing and this operation should really have a different syntax.
+            //
+            // The reason this method is confusing is because it relies on the concept of "near integer". This is an
+            // unreliable concept that KAP tries to avoid. In this particular case, it's not too bad since the axis
+            // is almost always specified explicitly (and usually .5). We choose the completely arbitrary value
+            // of 0.01 for the check.
+            //
+            // Another problem with the APL syntax is that it chooses the axis as being the argument rounded up
+            // to the nearest integer. That means that when the index offset is set to 0 (which it always is for KAP)
+            // to extend the first dimension, the argument have to be -0.5. That's incredibly ugly.
+
             return if (axis == null) {
                 joinNoAxis(a, b)
             } else {
-                joinByAxis(a, b, axis.ensureNumber(pos).asInt())
+                val (isLaminate, newAxis) = computeLaminateAxis(axis.ensureNumber(pos))
+                if (isLaminate) {
+                    joinByLaminate(a, b, newAxis)
+                } else {
+                    joinByAxis(a, b, newAxis)
+                }
             }
         }
 
+        private fun computeLaminateAxis(axis: APLNumber): Pair<Boolean, Int> {
+            if (axis is APLLong) {
+                return Pair(false, axis.asInt())
+            }
+            val d = axis.asDouble()
+            if (d.rem(1).absoluteValue < 0.01) {
+                return Pair(false, d.toInt())
+            }
+            return Pair(true, ceil(d).toInt())
+        }
+
+        private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
+            val a1 = if (a.isScalar()) {
+                ResizedArray(b.dimensions, a)
+            } else {
+                a
+            }
+            val b1 = if (b.isScalar()) {
+                ResizedArray(a.dimensions, b)
+            } else {
+                b
+            }
+            if (a1.rank != b1.rank) {
+                throw InvalidDimensionsException("Ranks of A and B are different", pos)
+            }
+            val aDimensions = a1.dimensions
+            if (axis < 0 || axis > aDimensions.size) {
+                throw IllegalAxisException("Axis must be between 0 and ${aDimensions.size} inclusive. Found: ${axis}", pos)
+            }
+            val bDimensions = b1.dimensions
+            if (!aDimensions.compareEquals(bDimensions)) {
+                throw InvalidDimensionsException(aDimensions, bDimensions, pos)
+            }
+            val rd = aDimensions.insert(axis, 1)
+            val a2 = ResizedArray(rd, a1)
+            val b2 = ResizedArray(rd, b1)
+            return joinByAxis(a2, b2, axis)
+        }
+
         private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
+            // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
             return when {
                 a.rank == 0 && b.rank == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
                 a.rank <= 1 && b.rank <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())

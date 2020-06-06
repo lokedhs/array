@@ -19,11 +19,17 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
 
 open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 open class IncompatibleTypeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
-class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
+class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos) {
+    constructor(aDimensions: Dimensions, bDimensions: Dimensions, pos: Position)
+            : this("Mismatched dimensions. a: ${aDimensions}, b: ${bDimensions}", pos)
+}
+
 class APLIndexOutOfBoundsException(message: String, pos: Position? = null) : APLEvalException("Index out of bounds: ${message}", pos)
 class VariableNotAssigned(name: Symbol, pos: Position? = null) : APLEvalException("Variable not assigned: ${name.nameWithNamespace()}", pos)
-class IllegalAxisException(axis: Int, dimensions: Dimensions, pos: Position? = null) :
-    APLEvalException("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
+class IllegalAxisException(message: String, pos: Position?) : APLEvalException(message, pos) {
+    constructor(axis: Int, dimensions: Dimensions, pos: Position? = null)
+            : this("Axis $axis is not valid. Expected: ${dimensions.size}", pos)
+}
 
 class AxisNotSupported(pos: Position) : APLEvalException("Function does not support axis specifier", pos)
 
