@@ -82,9 +82,11 @@ kotlin {
     jvm() {
         compilations.main.kotlinOptions {
             jvmTarget = "11"
+            freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
         }
         compilations.test.kotlinOptions {
             jvmTarget = "11"
+            freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
         }
     }
 // Javascript support is not enabled as not all features used by the engine is supported yet
@@ -100,9 +102,13 @@ kotlin {
             icu
             libcurl
         }
-//        compilations.test.kotlinOptions {
+        compilations.main.kotlinOptions {
+            freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        }
+        compilations.test.kotlinOptions {
 //            freeCompilerArgs = ["-linker-options", findIcuLibs()]
-//        }
+            freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        }
         binaries {
             executable {
                 // Change to specify fully qualified name of your application's entry point:

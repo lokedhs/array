@@ -70,7 +70,6 @@ actual fun openCharFile(name: String): CharacterProvider {
     return FileCharacterProvider(LinuxByteProvider(fd), name)
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
 class FileCharacterProvider(val backend: LinuxByteProvider, val sourceName: String) : CharacterProvider {
     private val buf = ByteArray(1024)
     private var pos = 0
@@ -158,8 +157,8 @@ class FileCharacterProvider(val backend: LinuxByteProvider, val sourceName: Stri
 
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 class LinuxByteProvider(val fd: Int) : ByteProvider {
-    @ExperimentalUnsignedTypes
     override fun readByte(): Byte? {
         val buf = ByteArray(1)
         val result = readBlock(buf, 0, 1)
@@ -170,7 +169,6 @@ class LinuxByteProvider(val fd: Int) : ByteProvider {
         }
     }
 
-    @ExperimentalUnsignedTypes
     override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
         val startPos = start ?: 0
         val lengthInt = length ?: buffer.size - startPos

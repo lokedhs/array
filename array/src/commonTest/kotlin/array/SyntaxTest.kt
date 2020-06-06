@@ -28,7 +28,7 @@ class SyntaxText : APLTest() {
     @Test
     fun nonMatchedConstants() {
         assertFailsWith<ParseException> {
-            val result = parseAPLExpression(
+            parseAPLExpression(
                 """
                 |defsyntax foo (:constant x) { 10 }
                 |foo xyz

@@ -27,7 +27,7 @@ class LoadTest : APLTest() {
     fun ensureLoadPreservesOldNamespaceOnError() {
         val engine = Engine()
         try {
-            val res0 = engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/parse-error.kap\""), false)
+            engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/parse-error.kap\""), false)
         } catch (e: ParseException) {
             // expected
         }
