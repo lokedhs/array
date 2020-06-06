@@ -6,8 +6,8 @@ class ReduceResult1Arg(
     val context: RuntimeContext,
     val fn: APLFunction,
     val arg: APLValue,
-    val axis: Int,
-    val pos: Position
+    axis: Int,
+    pos: Position
 ) : APLArray() {
     override val dimensions: Dimensions
     private val stepLength: Int
@@ -19,7 +19,7 @@ class ReduceResult1Arg(
         val argDimensions = arg.dimensions
         val argMultipliers = argDimensions.multipliers()
 
-        ensureValidAxis(axis, argDimensions)
+        ensureValidAxis(axis, argDimensions, pos)
 
         stepLength = argMultipliers[axis]
         sizeAlongAxis = argDimensions[axis]
