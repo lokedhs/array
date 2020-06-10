@@ -17,6 +17,10 @@ class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
         val axisCoord = (p % highValFactor) / multiplierAxis
         return fn(highVal, lowVal, axisCoord)
     }
+
+    fun indexForAxis(high: Int, low: Int, axisPosition: Int): Int {
+        return (highValFactor * high) + (axisPosition * multiplierAxis) + low
+    }
 }
 
 class IotaArray(private val numElements: Int, private val start: Int = 0) : APLArray() {

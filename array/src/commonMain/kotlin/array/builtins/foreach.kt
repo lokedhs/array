@@ -9,7 +9,7 @@ class ForEachResult1Arg(
     val axis: APLValue?,
     val pos: Position
 ) : APLArray() {
-    override val dimensions: Dimensions
+    override val dimensions
         get() = value.dimensions
     override val rank get() = value.rank
     override fun valueAt(p: Int) = fn.eval1Arg(context, value.valueAt(p), axis)
@@ -60,7 +60,20 @@ class ForEachOp : APLOperatorOneArg {
                     b: APLValue,
                     axis: APLValue?
                 ): APLValue {
-                    return ForEachResult2Arg(context, fn, a, b, axis, pos)
+                    if (a.isScalar() && b.isScalar()) {
+                        return fn.eval2Arg(context, a, b, axis)
+                    }
+                    val a1 = if (a.isScalar()) {
+                        ConstantArray(b.dimensions, a)
+                    } else {
+                        a
+                    }
+                    val b1 = if (b.isScalar()) {
+                        ConstantArray(a.dimensions, b)
+                    } else {
+                        b
+                    }
+                    return ForEachResult2Arg(context, fn, a1, b1, axis, pos)
                 }
             }
         }

@@ -1,5 +1,7 @@
 package array
 
+import kotlin.native.concurrent.SharedImmutable
+
 inline class Dimensions(val dimensions: IntArray) {
     val size: Int
         get() = dimensions.size
@@ -102,6 +104,7 @@ inline class Dimensions(val dimensions: IntArray) {
     }
 }
 
+@SharedImmutable
 private val EMPTY_DIMENSIONS = Dimensions(intArrayOf())
 
 fun emptyDimensions() = EMPTY_DIMENSIONS
