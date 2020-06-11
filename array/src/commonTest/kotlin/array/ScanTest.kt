@@ -13,6 +13,14 @@ class ScanTest : APLTest() {
     }
 
     @Test
+    fun reverseSimpleScanTest() {
+        parseAPLExpression("⌽ +\\ ⍳15").let { result ->
+            assertDimension(dimensionsOfSize(15), result)
+            assertArrayContent(arrayOf(105, 91, 78, 66, 55, 45, 36, 28, 21, 15, 10, 6, 3, 1, 0), result)
+        }
+    }
+
+    @Test
     fun twoElementTest() {
         parseAPLExpression("+\\ 1 2").let { result ->
             assertDimension(dimensionsOfSize(2), result)
@@ -60,9 +68,17 @@ class ScanTest : APLTest() {
 
     @Test
     fun twoDimensionWithExplicitAxis2() {
-        parseAPLExpression("+\\[1] 2 3 ⍴ ⍳6 ").let { result ->
+        parseAPLExpression("+\\[1] 2 3 ⍴ ⍳6").let { result ->
             assertDimension(dimensionsOfSize(2, 3), result)
             assertArrayContent(arrayOf(0, 1, 3, 3, 7, 12), result)
+        }
+    }
+
+    @Test
+    fun reversedTwoDimensionWithExplicitAxis2() {
+        parseAPLExpression("⌽[1] +\\[1] 2 3 ⍴ 1000+⍳6").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertArrayContent(arrayOf(3003, 2001, 1000, 3012, 2007, 1003), result)
         }
     }
 

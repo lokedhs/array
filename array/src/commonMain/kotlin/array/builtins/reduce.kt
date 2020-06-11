@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlinx.coroutines.Deferred
 
 class ReduceResult1Arg(
     val context: RuntimeContext,
@@ -111,37 +112,43 @@ class ReduceOp : APLOperatorOneArg {
 class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val a: APLValue, axis: Int) : APLArray() {
     override val dimensions = a.dimensions
 
-    private val cachedResults = Array<APLValue?>(dimensions.contentSize()) { null }
+    private val cachedResults = SuspendCache<APLValue>(dimensions.contentSize())
     private val axisActionFactors = AxisActionFactors(dimensions, axis)
 
     override fun valueAt(p: Int): APLValue {
         axisActionFactors.withFactors(p) { high, low, axisCoord ->
             var currIndex = axisCoord
-            var leftValue: APLValue
+            var leftValue: Deferred<APLValue>
             while (true) {
                 val index = axisActionFactors.indexForAxis(high, low, currIndex)
-                val v = cachedResults[index]
-                if (v != null) {
-                    leftValue = v
-                    break
-                }
                 if (currIndex == 0) {
-                    val currValue = a.valueAt(index)
-                    cachedResults[index] = currValue
-                    leftValue = currValue
+                    leftValue = cachedResults.computeResult(index) {
+                        a.valueAt(index)
+                    }
                     break
+                } else {
+                    val cachedVal = cachedResults[index]
+                    if (cachedVal != null) {
+                        leftValue = cachedVal
+                        break
+                    }
                 }
                 currIndex--
             }
+
             if (currIndex < axisCoord) {
                 for (i in (currIndex + 1)..axisCoord) {
                     val index = axisActionFactors.indexForAxis(high, low, i)
-                    leftValue = fn.eval2Arg(context, leftValue, a.valueAt(index), null).collapse()
-                    cachedResults[index] = leftValue
+                    val computed = runBlockingCompat { leftValue.await() }
+                    leftValue = cachedResults.computeResult(index) {
+                        fn.eval2Arg(context, computed, a.valueAt(index), null).collapse()
+                    }
                 }
             }
-            cachedResults[axisActionFactors.indexForAxis(high, low, axisCoord)] = leftValue
-            return leftValue
+
+            return runBlockingCompat {
+                leftValue.await()
+            }
         }
     }
 }
