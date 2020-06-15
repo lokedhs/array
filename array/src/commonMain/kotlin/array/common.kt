@@ -1,9 +1,5 @@
 package array
 
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -216,30 +212,5 @@ class Optional<out T> private constructor(val content: T?) {
     companion object {
         fun <T> make(value: T) = Optional(value)
         fun empty() = Optional(null)
-    }
-}
-
-class SuspendCache<T>(size: Int) {
-    private val cache = makeAtomicRefArray<Deferred<T>>(size)
-
-    operator fun get(index: Int) = cache[index]
-
-    fun computeResult(index: Int, fn: suspend () -> T): Deferred<T> {
-        val old = cache[index]
-        if (old != null) {
-            return old
-        }
-        val newValue = CompletableDeferred<T>()
-        val v = cache.compareAndExchange(index, null, newValue)
-        return if (v == null) {
-            GlobalScope.launch {
-                val value = fn()
-                newValue.complete(value)
-            }
-            newValue.start()
-            newValue
-        } else {
-            v
-        }
     }
 }

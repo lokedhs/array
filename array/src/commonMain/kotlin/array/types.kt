@@ -4,10 +4,6 @@ import array.builtins.compareAPLArrays
 import array.rendertext.encloseInBox
 import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 enum class APLValueType(val typeName: String) {
     INTEGER("integer"),
@@ -282,52 +278,6 @@ abstract class APLArray : APLValue {
             }
             return curr
         }
-    }
-}
-
-interface DeferredAPLArray {
-    suspend fun valueAtWithSuspend(p: Int): Deferred<APLValue>
-    suspend fun valueAtWithSuspendCollapsed(p: Int): Deferred<APLValue>
-}
-
-class CachedAPLArray(val content: APLArray) : APLArray(), DeferredAPLArray {
-    override val dimensions = content.dimensions
-
-    private val cache = makeAtomicRefArray<Deferred<APLValue>>(dimensions.contentSize())
-
-    override fun valueAt(p: Int): APLValue {
-        return runBlockingCompat {
-            valueAtWithSuspend(p).await()
-        }
-    }
-
-    // {sleep 1 ◊ -⍵}¨ ⍳10
-    // {sleep 1 ◊ print ⍵ ◊ -⍵}¨ ⍳10
-
-    override suspend fun valueAtWithSuspend(p: Int): Deferred<APLValue> {
-        return makeDeferred(p, false)
-    }
-
-    override suspend fun valueAtWithSuspendCollapsed(p: Int): Deferred<APLValue> {
-        return makeDeferred(p, true)
-    }
-
-    private fun makeDeferred(p: Int, collapse: Boolean): Deferred<APLValue> {
-        val dd = cache[p] ?: run {
-            val newValue = CompletableDeferred<APLValue>()
-            val v = cache.compareAndExchange(p, null, newValue)
-            if (v === null) {
-                GlobalScope.launch {
-                    val res = content.valueAt(p)
-                    val collapsed = if (collapse) res.collapse() else res
-                    newValue.complete(collapsed)
-                }
-                newValue
-            } else {
-                v
-            }
-        }
-        return dd
     }
 }
 

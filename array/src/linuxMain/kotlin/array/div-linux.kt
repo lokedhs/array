@@ -3,11 +3,8 @@ package array
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
 import platform.posix.nanosleep
 import platform.posix.timespec
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.native.concurrent.FreezableAtomicReference
 import kotlin.native.concurrent.freeze
 import kotlin.native.concurrent.isFrozen
@@ -41,8 +38,4 @@ class LinuxMPAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
 
 actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return LinuxMPAtomicRefArray(size)
-}
-
-actual fun <T> runBlockingCompat(fn: suspend CoroutineScope.() -> T): T {
-    return runBlocking(EmptyCoroutineContext, fn)
 }

@@ -1,7 +1,6 @@
 package array.builtins
 
 import array.*
-import kotlinx.coroutines.Deferred
 
 class ReduceResult1Arg(
     val context: RuntimeContext,
@@ -112,19 +111,17 @@ class ReduceOp : APLOperatorOneArg {
 class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val a: APLValue, axis: Int) : APLArray() {
     override val dimensions = a.dimensions
 
-    private val cachedResults = SuspendCache<APLValue>(dimensions.contentSize())
+    private val cachedResults = makeAtomicRefArray<APLValue>(dimensions.contentSize())
     private val axisActionFactors = AxisActionFactors(dimensions, axis)
 
     override fun valueAt(p: Int): APLValue {
         axisActionFactors.withFactors(p) { high, low, axisCoord ->
             var currIndex = axisCoord
-            var leftValue: Deferred<APLValue>
+            var leftValue: APLValue
             while (true) {
                 val index = axisActionFactors.indexForAxis(high, low, currIndex)
                 if (currIndex == 0) {
-                    leftValue = cachedResults.computeResult(index) {
-                        a.valueAt(index)
-                    }
+                    leftValue = cachedResults.checkOrUpdate(index) { a.valueAt(index) }
                     break
                 } else {
                     val cachedVal = cachedResults[index]
@@ -139,16 +136,11 @@ class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val a: AP
             if (currIndex < axisCoord) {
                 for (i in (currIndex + 1)..axisCoord) {
                     val index = axisActionFactors.indexForAxis(high, low, i)
-                    val computed = runBlockingCompat { leftValue.await() }
-                    leftValue = cachedResults.computeResult(index) {
-                        fn.eval2Arg(context, computed, a.valueAt(index), null).collapse()
-                    }
+                    leftValue = cachedResults.checkOrUpdate(index) { fn.eval2Arg(context, leftValue, a.valueAt(index), null).collapse() }
                 }
             }
 
-            return runBlockingCompat {
-                leftValue.await()
-            }
+            return leftValue
         }
     }
 }
