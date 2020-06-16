@@ -1,5 +1,6 @@
 package array
 
+import kotlin.random.Random
 import kotlin.test.*
 
 class MapTest {
@@ -48,5 +49,57 @@ class MapTest {
         assertSame(updated1, updated2)
         assertEquals(1, updated2["foo"])
         assertFalse(updated1.containsKey("bar"))
+    }
+
+    @Test
+    fun randomAddRemove() {
+        var map = ImmutableMap<Int, Int>()
+
+        fun addN(n: Int) {
+            val sizeBefore = map.size
+            repeat(n) {
+                val key = repeatableRandom()
+                if (!map.containsKey(key)) {
+                    map = map.copyAndPut(key, key + 1000)
+                }
+            }
+            assertEquals(sizeBefore + n, map.size)
+        }
+
+        fun removeFirstN(n: Int) {
+            val sizeBefore = map.size
+            map.keys.asSequence().take(n).forEach { key ->
+                assertTrue(map.containsKey(key))
+                map = map.copyWithout(key)
+                assertFalse(map.containsKey(key))
+            }
+            assertEquals(sizeBefore - n, map.size)
+        }
+
+        addN(1000)
+        removeFirstN(200)
+        repeat(5) {
+            addN(2)
+            removeFirstN(2)
+        }
+        removeFirstN(700)
+        repeat(100) {
+            addN(2)
+            removeFirstN(2)
+        }
+        addN(200)
+        removeFirstN(300)
+        assertTrue(map.isEmpty())
+    }
+
+    private var random: Random? = null
+
+    @BeforeTest
+    fun initRandomState() {
+        random = Random(1000)
+    }
+
+    private fun repeatableRandom(): Int {
+        return random!!.nextInt()
     }
 }
