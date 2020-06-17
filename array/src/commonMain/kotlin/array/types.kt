@@ -77,7 +77,7 @@ interface APLValue {
     fun unwrapDeferredValue(): APLValue = this
     fun compareEquals(reference: APLValue): Boolean
     fun compare(reference: APLValue, pos: Position? = null): Int =
-        throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}")
+        throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}", pos)
 
     val labels: DimensionLabels? get() = null
 
@@ -547,7 +547,7 @@ class APLChar(val value: Int) : APLSingleValue() {
         if (reference is APLChar) {
             return value.compareTo(reference.value)
         } else {
-            throw IncompatibleTypeException("Chars must be compared to chars")
+            throw IncompatibleTypeException("Chars must be compared to chars", pos)
         }
     }
 
@@ -595,7 +595,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
         if (reference is APLSymbol) {
             return value.compareTo(reference.value)
         } else {
-            throw IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}")
+            throw IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}", pos)
         }
     }
 
