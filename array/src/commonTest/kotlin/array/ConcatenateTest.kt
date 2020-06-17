@@ -147,4 +147,32 @@ class ConcatenateTest : APLTest() {
                 ), result)
         }
     }
+
+    @Test
+    fun concatenateWithFirstAxis() {
+        parseAPLExpression("(2 3 ⍴ ⍳100) ⍪ (8 3 ⍴ 100+⍳100)").let { result ->
+            assertDimension(dimensionsOfSize(10, 3), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 1, 2, 3, 4, 5, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+                    110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123
+                ), result)
+        }
+    }
+
+    @Test
+    fun concatenateWithFirstAxisAndAxisSpecifier() {
+        parseAPLExpression("(3 10 ⍴ ⍳100) ⍪[1] (3 15 ⍴ 100+⍳100)").let { result ->
+            assertDimension(dimensionsOfSize(3, 25), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100, 101, 102, 103, 104, 105, 106, 107,
+                    108, 109, 110, 111, 112, 113, 114, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+                    19, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
+                    128, 129, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 130, 131, 132, 133,
+                    134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144
+                ), result)
+        }
+    }
+
 }

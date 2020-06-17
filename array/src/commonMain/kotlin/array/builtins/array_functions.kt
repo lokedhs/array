@@ -237,145 +237,145 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
     }
 }
 
-class ConcatenateAPLFunction : APLFunctionDescriptor {
-    class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            return if (a.isScalar()) {
-                APLArrayImpl.make(dimensionsOfSize(1)) { a }
+abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        return if (a.isScalar()) {
+            APLArrayImpl.make(dimensionsOfSize(1)) { a }
+        } else {
+            ResizedArray(dimensionsOfSize(a.size), a)
+        }
+    }
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        // The APL concept of using a non-integer axis to specify that you want to add a dimension (i.e. the laminate
+        // function) is a bit confusing and this operation should really have a different syntax.
+        //
+        // The reason this method is confusing is because it relies on the concept of "near integer". This is an
+        // unreliable concept that KAP tries to avoid. In this particular case, it's not too bad since the axis
+        // is almost always specified explicitly (and usually .5). We choose the completely arbitrary value
+        // of 0.01 for the check.
+        //
+        // Another problem with the APL syntax is that it chooses the axis as being the argument rounded up
+        // to the nearest integer. That means that when the index offset is set to 0 (which it always is for KAP)
+        // to extend the first dimension, the argument have to be -0.5. That's incredibly ugly.
+
+        return if (axis == null) {
+            joinNoAxis(a, b)
+        } else {
+            val (isLaminate, newAxis) = computeLaminateAxis(axis.ensureNumber(pos))
+            if (isLaminate) {
+                joinByLaminate(a, b, newAxis)
             } else {
-                ResizedArray(dimensionsOfSize(a.size), a)
+                joinByAxis(a, b, newAxis)
+            }
+        }
+    }
+
+    private fun computeLaminateAxis(axis: APLNumber): Pair<Boolean, Int> {
+        if (axis is APLLong) {
+            return Pair(false, axis.asInt())
+        }
+        val d = axis.asDouble()
+        if (d.rem(1).absoluteValue < 0.01) {
+            return Pair(false, d.toInt())
+        }
+        return Pair(true, ceil(d).toInt())
+    }
+
+    private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
+        val a1 = if (a.isScalar()) {
+            ResizedArray(b.dimensions, a)
+        } else {
+            a
+        }
+        val b1 = if (b.isScalar()) {
+            ResizedArray(a.dimensions, b)
+        } else {
+            b
+        }
+        if (a1.rank != b1.rank) {
+            throw InvalidDimensionsException("Ranks of A and B are different", pos)
+        }
+        val aDimensions = a1.dimensions
+        if (axis < 0 || axis > aDimensions.size) {
+            throw IllegalAxisException("Axis must be between 0 and ${aDimensions.size} inclusive. Found: ${axis}", pos)
+        }
+        val bDimensions = b1.dimensions
+        if (!aDimensions.compareEquals(bDimensions)) {
+            throw InvalidDimensionsException(aDimensions, bDimensions, pos)
+        }
+        val rd = aDimensions.insert(axis, 1)
+        val a2 = ResizedArray(rd, a1)
+        val b2 = ResizedArray(rd, b1)
+        return joinByAxis(a2, b2, axis)
+    }
+
+    private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
+        // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
+        return when {
+            a.rank == 0 && b.rank == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
+            a.rank <= 1 && b.rank <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
+            else -> joinByAxis(a, b, defaultAxis(a, b))
+        }
+    }
+
+    abstract fun defaultAxis(a: APLValue, b: APLValue): Int
+
+    private fun joinByAxis(a: APLValue, b: APLValue, axis: Int): APLArray {
+        if (a.rank == 0 && b.rank == 0) {
+            throw InvalidDimensionsException("Both a and b are scalar", pos)
+        }
+
+        val a1 = if (a.rank == 0) {
+            val bDimensions = b.dimensions
+            ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a)
+        } else {
+            a
+        }
+
+        val b1 = if (b.rank == 0) {
+            val aDimensions = a.dimensions
+            ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b)
+        } else {
+            b
+        }
+
+        val a2 = if (b1.rank - a1.rank == 1) {
+            // Reshape a1, inserting a new dimension at the position of the axis
+            ResizedArray(a1.dimensions.insert(axis, 1), a1)
+        } else {
+            a1
+        }
+
+        val b2 = if (a1.rank - b1.rank == 1) {
+            ResizedArray(b1.dimensions.insert(axis, 1), b1)
+        } else {
+            b1
+        }
+
+        val da = a2.dimensions
+        val db = b2.dimensions
+
+        if (da.size != db.size) {
+            throw InvalidDimensionsException("different ranks: ${da.size} compared to ${db.size}", pos)
+        }
+
+        for (i in da.indices) {
+            if (i != axis && da[i] != db[i]) {
+                throw InvalidDimensionsException("dimensions at axis $axis does not match: $da compared to $db", pos)
             }
         }
 
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            // The APL concept of using a non-integer axis to specify that you want to add a dimension (i.e. the laminate
-            // function) is a bit confusing and this operation should really have a different syntax.
-            //
-            // The reason this method is confusing is because it relies on the concept of "near integer". This is an
-            // unreliable concept that KAP tries to avoid. In this particular case, it's not too bad since the axis
-            // is almost always specified explicitly (and usually .5). We choose the completely arbitrary value
-            // of 0.01 for the check.
-            //
-            // Another problem with the APL syntax is that it chooses the axis as being the argument rounded up
-            // to the nearest integer. That means that when the index offset is set to 0 (which it always is for KAP)
-            // to extend the first dimension, the argument have to be -0.5. That's incredibly ugly.
-
-            return if (axis == null) {
-                joinNoAxis(a, b)
-            } else {
-                val (isLaminate, newAxis) = computeLaminateAxis(axis.ensureNumber(pos))
-                if (isLaminate) {
-                    joinByLaminate(a, b, newAxis)
-                } else {
-                    joinByAxis(a, b, newAxis)
-                }
-            }
+        if (a2.size == 0 || b2.size == 0) {
+            // Catenating an empty array, this needs an implementation
+            throw RuntimeException("a2.size = ${a2.size}, b2.size = ${b2.size}")
         }
 
-        private fun computeLaminateAxis(axis: APLNumber): Pair<Boolean, Int> {
-            if (axis is APLLong) {
-                return Pair(false, axis.asInt())
-            }
-            val d = axis.asDouble()
-            if (d.rem(1).absoluteValue < 0.01) {
-                return Pair(false, d.toInt())
-            }
-            return Pair(true, ceil(d).toInt())
+        if (da.size == 1 && db.size == 1) {
+            return Concatenated1DArrays(a2, b2)
         }
 
-        private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
-            val a1 = if (a.isScalar()) {
-                ResizedArray(b.dimensions, a)
-            } else {
-                a
-            }
-            val b1 = if (b.isScalar()) {
-                ResizedArray(a.dimensions, b)
-            } else {
-                b
-            }
-            if (a1.rank != b1.rank) {
-                throw InvalidDimensionsException("Ranks of A and B are different", pos)
-            }
-            val aDimensions = a1.dimensions
-            if (axis < 0 || axis > aDimensions.size) {
-                throw IllegalAxisException("Axis must be between 0 and ${aDimensions.size} inclusive. Found: ${axis}", pos)
-            }
-            val bDimensions = b1.dimensions
-            if (!aDimensions.compareEquals(bDimensions)) {
-                throw InvalidDimensionsException(aDimensions, bDimensions, pos)
-            }
-            val rd = aDimensions.insert(axis, 1)
-            val a2 = ResizedArray(rd, a1)
-            val b2 = ResizedArray(rd, b1)
-            return joinByAxis(a2, b2, axis)
-        }
-
-        private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
-            // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
-            return when {
-                a.rank == 0 && b.rank == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
-                a.rank <= 1 && b.rank <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
-                else -> joinByAxis(a, b, max(a.rank, b.rank) - 1)
-            }
-        }
-
-        private fun joinByAxis(a: APLValue, b: APLValue, axis: Int): APLArray {
-            if (a.rank == 0 && b.rank == 0) {
-                throw InvalidDimensionsException("Both a and b are scalar", pos)
-            }
-
-            val a1 = if (a.rank == 0) {
-                val bDimensions = b.dimensions
-                ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a)
-            } else {
-                a
-            }
-
-            val b1 = if (b.rank == 0) {
-                val aDimensions = a.dimensions
-                ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b)
-            } else {
-                b
-            }
-
-            val a2 = if (b1.rank - a1.rank == 1) {
-                // Reshape a1, inserting a new dimension at the position of the axis
-                ResizedArray(a1.dimensions.insert(axis, 1), a1)
-            } else {
-                a1
-            }
-
-            val b2 = if (a1.rank - b1.rank == 1) {
-                ResizedArray(b1.dimensions.insert(axis, 1), b1)
-            } else {
-                b1
-            }
-
-            val da = a2.dimensions
-            val db = b2.dimensions
-
-            if (da.size != db.size) {
-                throw InvalidDimensionsException("different ranks: ${da.size} compared to ${db.size}", pos)
-            }
-
-            for (i in da.indices) {
-                if (i != axis && da[i] != db[i]) {
-                    throw InvalidDimensionsException("dimensions at axis $axis does not match: $da compared to $db", pos)
-                }
-            }
-
-            if (a2.size == 0 || b2.size == 0) {
-                // Catenating an empty array, this needs an implementation
-                throw RuntimeException("a2.size = ${a2.size}, b2.size = ${b2.size}")
-            }
-
-            if (da.size == 1 && db.size == 1) {
-                return Concatenated1DArrays(a2, b2)
-            }
-
-            return ConcatenatedMultiDimensionalArrays(a2, b2, axis)
-        }
+        return ConcatenatedMultiDimensionalArrays(a2, b2, axis)
     }
 
     // This is an inner class since it's highly dependent on invariants that are established in the parent class
@@ -465,8 +465,22 @@ class ConcatenateAPLFunction : APLFunctionDescriptor {
             return DimensionLabels(newLabels)
         }
     }
+}
 
-    override fun make(pos: Position) = ConcatenateAPLFunctionImpl(pos)
+class ConcatenateAPLFunctionFirstAxis : APLFunctionDescriptor {
+    class ConcatenateAPLFunctionFirstAxisImpl(pos: Position) : ConcatenateAPLFunctionImpl(pos) {
+        override fun defaultAxis(a: APLValue, b: APLValue) = 0
+    }
+
+    override fun make(pos: Position) = ConcatenateAPLFunctionFirstAxisImpl(pos)
+}
+
+class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
+    class ConcatenateAPLFunctionLastAxisImpl(pos: Position) : ConcatenateAPLFunctionImpl(pos) {
+        override fun defaultAxis(a: APLValue, b: APLValue) = max(a.rank, b.rank) - 1
+    }
+
+    override fun make(pos: Position) = ConcatenateAPLFunctionLastAxisImpl(pos)
 }
 
 class AccessFromIndexAPLFunction : APLFunctionDescriptor {
