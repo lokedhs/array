@@ -144,6 +144,22 @@ class ReduceTest : APLTest() {
         }
     }
 
+    @Test
+    fun reduceFirstAxis() {
+        parseAPLExpression("+⌿ 2 3 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(3, 5, 7), result)
+        }
+    }
+
+    @Test
+    fun reduceFirstAxisWithGivenAxis() {
+        parseAPLExpression("+⌿[1] 2 3 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(3, 12), result)
+        }
+    }
+
     private fun reduceTestWithFunctionName(aplFn: String, correctRes: Int) {
         val result = parseAPLExpression("${aplFn}/0⍴4")
         assertTrue(result.dimensions.compareEquals(emptyDimensions()))

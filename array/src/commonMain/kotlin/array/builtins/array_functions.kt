@@ -993,6 +993,7 @@ class SelectElementsValue(selectIndexes: IntArray, val b: APLValue, val axis: In
     }
 }
 
+@Suppress("IfThenToElvis")
 abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         val bFixed = b.arrayify()
@@ -1004,8 +1005,7 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
                     || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
         ) {
             throw InvalidDimensionsException(
-                "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.",
-                pos)
+                "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.", pos)
         }
         val selectIndexes = if (a.isScalar()) {
             a.ensureNumber(pos).asInt().let { v ->

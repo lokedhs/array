@@ -166,12 +166,14 @@ class Engine {
 
         // operators
         registerNativeOperator("¨", ForEachOp())
-        registerNativeOperator("/", ReduceOp())
+        registerNativeOperator("/", ReduceOpLastAxis())
+        registerNativeOperator("⌿", ReduceOpFirstAxis())
         registerNativeOperator("⌺", OuterJoinOp())
         registerNativeOperator(".", OuterInnerJoinOp())
         registerNativeOperator("⍨", CommuteOp())
         registerNativeOperator("⍣", PowerAPLOperator())
-        registerNativeOperator("\\", ScanOp())
+        registerNativeOperator("\\", ScanLastAxisOp())
+        registerNativeOperator("⍀", ScanFirstAxisOp())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
