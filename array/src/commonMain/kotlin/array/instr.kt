@@ -148,6 +148,10 @@ class LiteralAPLNullValue(pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLNullValue()
 }
 
+class EmptyValueMarker(pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext) = APLEmpty()
+}
+
 class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = makeAPLString(s)
 }

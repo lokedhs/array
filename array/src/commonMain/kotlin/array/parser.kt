@@ -91,7 +91,7 @@ class APLParser(val tokeniser: TokenGenerator) {
             }
             if (holder.lastToken == endToken) {
                 return when (statementList.size) {
-                    0 -> LiteralAPLNullValue(holder.pos)
+                    0 -> EmptyValueMarker(holder.pos)
                     1 -> statementList[0]
                     else -> InstructionList(statementList)
                 }
@@ -106,10 +106,12 @@ class APLParser(val tokeniser: TokenGenerator) {
         while (true) {
             val holder = parseValue()
             if (holder.lastToken == ListSeparator) {
-                statementList.add(holder.instruction.withValue({ it }, { LiteralAPLNullValue(holder.pos) }))
+                statementList.add(holder.instruction.withValue({ it }, { EmptyValueMarker(holder.pos) }))
             } else {
-                holder.instruction.withValueIfExists { instr ->
-                    statementList.add(instr)
+                if (!statementList.isEmpty()) {
+                    statementList.add(holder.instruction.withValue({ it }, { EmptyValueMarker(holder.pos) }))
+                } else {
+                    holder.instruction.withValueIfExists { statementList.add(it) }
                 }
                 val list = when {
                     statementList.isEmpty() -> Optional.empty()

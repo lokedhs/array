@@ -574,6 +574,16 @@ class APLNullValue : APLArray() {
     override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
 }
 
+/**
+ * Special version of of the regular null value that is emitted by a blank expression.
+ * This value acts like a regular null value in most cases. However, in certain contexts
+ * it has different behaviour. The main case is for array indexing.
+ */
+class APLEmpty : APLArray() {
+    override val dimensions get() = NULL_DIMENSIONS
+    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
+}
+
 abstract class DeferredResultArray : APLArray() {
     override fun unwrapDeferredValue(): APLValue {
         return if (dimensions.isEmpty()) valueAt(0).unwrapDeferredValue() else this

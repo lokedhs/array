@@ -42,6 +42,37 @@ class ArrayLookupBracketsTest : APLTest() {
         }
     }
 
+    @Test
+    fun lookupWithDefaultSelectionOneRow() {
+        parseAPLExpression("(3 4 ⍴ 10×⍳100)[2;]").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(80, 90, 100, 110), result)
+        }
+    }
+
+    @Test
+    fun lookupWithDefaultSelectionTwoRows() {
+        parseAPLExpression("(1000 4 ⍴ 10×⍳100)[992 997 1;]").let { result ->
+            assertDimension(dimensionsOfSize(3, 4), result)
+            assertArrayContent(arrayOf(680, 690, 700, 710, 880, 890, 900, 910, 40, 50, 60, 70), result)
+        }
+    }
+
+    @Test
+    fun lookupWithDefaultSelectionOneCol() {
+        parseAPLExpression("(3 4 ⍴ 10×⍳100)[;3]").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(30, 70, 110), result)
+        }
+    }
+
+    @Test
+    fun lookupWithDefaultSelectionTwoCols() {
+        parseAPLExpression("(3 4 ⍴ 10×⍳100)[;0 3]").let { result ->
+            assertDimension(dimensionsOfSize(3, 2), result)
+            assertArrayContent(arrayOf(0, 30, 40, 70, 80, 110), result)
+        }
+    }
 
     @Test
     fun lookupWithInvalidArgument() {

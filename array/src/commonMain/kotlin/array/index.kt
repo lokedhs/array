@@ -1,5 +1,7 @@
 package array
 
+import array.builtins.IotaArray
+
 private class IndexedArrayValue(val content: APLValue, val indexValue: Array<Either<Int, IntArray>>) : APLArray() {
     class AxisValueAndOffset(val sourceIndex: Int, val multiplier: Int)
 
@@ -70,7 +72,13 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
                 pos)
         }
         val axis = Array(indexAsList.listSize()) { i ->
-            val v = indexAsList.listElement(i).unwrapDeferredValue()
+            val v = indexAsList.listElement(i).unwrapDeferredValue().let { result ->
+                if (result is APLEmpty) {
+                    IotaArray(aDimensions[i])
+                } else {
+                    result
+                }
+            }
             val d = v.dimensions
             when (d.size) {
                 0 -> {
