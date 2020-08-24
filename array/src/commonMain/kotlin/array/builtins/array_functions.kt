@@ -166,7 +166,7 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
                 }
                 val index = if (d.size == 0) {
                     if (curr.dimensions.size != 1) {
-                        throw InvalidDimensionsException("Mismatched dimensions for selection")
+                        throw InvalidDimensionsException("Mismatched dimensions for selection", pos)
                     }
                     v.ensureNumber(pos).asInt()
                 } else {
@@ -357,12 +357,12 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
         val db = b2.dimensions
 
         if (da.size != db.size) {
-            throw InvalidDimensionsException("different ranks: ${da.size} compared to ${db.size}", pos)
+            throw InvalidDimensionsException("Different ranks: ${da.size} compared to ${db.size}", pos)
         }
 
         for (i in da.indices) {
             if (i != axis && da[i] != db[i]) {
-                throw InvalidDimensionsException("dimensions at axis $axis does not match: $da compared to $db", pos)
+                throw InvalidDimensionsException("Dimensions at axis $axis does not match: $da compared to $db", pos)
             }
         }
 
@@ -489,11 +489,11 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
             val aFixed = a.arrayify()
             val ad = aFixed.dimensions
             if (ad.size != 1) {
-                throw InvalidDimensionsException("position argument is not rank 1", pos)
+                throw InvalidDimensionsException("Position argument is not rank 1", pos)
             }
             val bd = b.dimensions
             if (ad[0] != bd.size) {
-                throw InvalidDimensionsException("number of values in position argument must match the number of dimensions", pos)
+                throw InvalidDimensionsException("Number of values in position argument must match the number of dimensions", pos)
             }
             val posList = IntArray(ad[0]) { i -> aFixed.valueAt(i).ensureNumber(pos).asInt() }
             val p = bd.indexFromPosition(posList)
@@ -628,7 +628,7 @@ class RandomAPLFunction : APLFunctionDescriptor {
                 throw APLIncompatibleDomainsException("B should not be negative, was: ${aInt}", pos)
             }
             if (aInt > bLong) {
-                throw APLIncompatibleDomainsException("A should not be greater than B. A: ${aInt}, B: ${bLong}")
+                throw APLIncompatibleDomainsException("A should not be greater than B. A: ${aInt}, B: ${bLong}", pos)
             }
 
             // TODO: We don't have a tree set available in Kotlin Native, so we're using two sets here. Very much suboptimal.
