@@ -3,6 +3,7 @@
 <?import array.gui.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
+<?import java.lang.Integer?>
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="array.gui.KeyboardHelp"
@@ -12,50 +13,54 @@
           style="-fx-background-color: red;"
           id="gridPane"
           stylesheets="@keyboard.css">
+    <fx:define>
+        <Integer fx:id="keywidth" fx:value="28"/>
+        <Integer fx:id="keyheight" fx:value="68"/>
+    </fx:define>
     <padding>
         <Insets top="2" bottom="2" left="2" right="2"/>
     </padding>
     <columnConstraints>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
-        <ColumnConstraints prefWidth="19"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
+        <ColumnConstraints prefWidth="${keywidth}"/>
     </columnConstraints>
     <rowConstraints>
-        <RowConstraints prefHeight="45"/>
-        <RowConstraints prefHeight="45"/>
-        <RowConstraints prefHeight="45"/>
-        <RowConstraints prefHeight="45"/>
+        <RowConstraints prefHeight="${keyheight}"/>
+        <RowConstraints prefHeight="${keyheight}"/>
+        <RowConstraints prefHeight="${keyheight}"/>
+        <RowConstraints prefHeight="${keyheight}"/>
     </rowConstraints>
     <!-- Row 1 -->
     <KeyboardButtonLabel lowerLabel="`" upperLabel="~" clickable="true" GridPane.rowIndex="0" GridPane.columnIndex="0"
