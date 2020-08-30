@@ -3,7 +3,9 @@ package array.gui
 import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
+import javafx.geometry.HPos
 import javafx.geometry.Insets
+import javafx.geometry.VPos
 import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.scene.control.Label
@@ -12,19 +14,51 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.stage.Stage
 
-class KeyboardHelpWindow(val renderContext: ClientRenderContext) {
+class KeyboardHelpWindow(renderContext: ClientRenderContext) {
     private val stage = Stage()
 
     init {
         val loader = FXMLLoader(javaClass.getResource("keyboard.fxml"))
         val root: Parent = loader.load()
         val controller: KeyboardHelp = loader.getController()
-        controller.gridPane = root as GridPane
+        controller.borderPane = root as BorderPane
+        val grid = root.center as GridPane
+        grid.setMaxSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE)
+        controller.gridPane = grid
         controller.init(renderContext)
         val scene = Scene(root, 800.0, 300.0)
         stage.title = "Keyboard Layout"
         stage.scene = scene
     }
+
+//    init {
+//        val bp = BorderPane().apply {
+//            style = "-fx-background-color: red;"
+//            center = GridPane().apply {
+//                style = "-fx-background-color: green;"
+//                setMaxSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE)
+//
+//                fun addCell(name: String, col: Int, row: Int, colour: String? = null) {
+//                    add(Button(name).also { b ->
+//                        if (colour != null) {
+//                            b.style = "-fx-background-color: $colour;"
+//                        }
+//                        GridPane.setConstraints(b, col, row, 1, 1, HPos.CENTER, VPos.CENTER, Priority.ALWAYS, Priority.ALWAYS)
+//                        b.maxWidth = Double.MAX_VALUE
+//                        b.maxHeight = Double.MAX_VALUE
+//                    }, col, row)
+//                }
+//
+//                addCell("[0,0]", 0, 0, "blue")
+//                addCell("[1,0]", 1, 0)
+//                addCell("[0,1]", 0, 1)
+//                addCell("[1,1]", 1, 1, "yellow")
+//            }
+//        }
+//        val scene = Scene(bp, 800.0, 600.0)
+//        stage.title = "Foo"
+//        stage.scene = scene
+//    }
 
     fun show() {
         stage.show()
@@ -32,6 +66,10 @@ class KeyboardHelpWindow(val renderContext: ClientRenderContext) {
 }
 
 class KeyboardHelp {
+    @FXML
+    @JvmField
+    var borderPane: BorderPane? = null
+
     @FXML
     @JvmField
     var gridPane: GridPane? = null
@@ -86,6 +124,11 @@ class KeyboardButtonLabel : AnchorPane() {
         background = Background(BackgroundFill(Color(0.95, 0.95, 0.95, 1.0), CornerRadii.EMPTY, Insets.EMPTY))
         padding = Insets(2.0, 2.0, 2.0, 2.0)
         maxWidth = Double.MAX_VALUE
+        maxHeight = Double.MAX_VALUE
+        GridPane.setHalignment(this, HPos.CENTER)
+        GridPane.setValignment(this, VPos.CENTER)
+        GridPane.setHgrow(this, Priority.ALWAYS)
+        GridPane.setVgrow(this, Priority.ALWAYS)
 
         children.add(altUpperFx)
         children.add(altLowerFx)
