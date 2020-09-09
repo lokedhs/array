@@ -40,7 +40,7 @@ class Unimplemented2ArgException(pos: Position? = null) : APLEvalException("Func
 
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 class UnexpectedSymbol(ch: Int, pos: Position? = null) : ParseException("Unexpected symbol: '${charToString(ch)}' (${ch})", pos)
-class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: $token", pos)
+class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: ${token}", pos)
 class IncompatibleTypeParseException(message: String, pos: Position? = null) : ParseException(message, pos)
 class IllegalNumberFormat(message: String, pos: Position? = null) : ParseException(message, pos)
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
