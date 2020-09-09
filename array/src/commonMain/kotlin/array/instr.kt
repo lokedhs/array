@@ -60,8 +60,8 @@ class FunctionCall2Arg(
 ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val rightValue = rightArgs.evalWithContext(context)
-        val leftValue = leftArgs.evalWithContext(context)
         val axisValue = axis?.evalWithContext(context)
+        val leftValue = leftArgs.evalWithContext(context)
         return fn.eval2Arg(context, leftValue, rightValue, axisValue)
     }
 
@@ -174,7 +174,7 @@ class UserFunction(
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             if (leftFnArgs.isNotEmpty()) {
-                throw APLIllegalArgumentException("Left argument is not empty", pos)
+                throw APLIllegalArgumentException("Left argument expected", pos)
             }
             val inner = context.link(env).apply {
                 assignArgs(rightFnArgs, a, pos)
