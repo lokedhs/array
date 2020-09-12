@@ -43,20 +43,33 @@ class ValueSyntaxRule(val variable: EnvironmentBinding) : SyntaxRule {
       foo { print ⍵ }
  */
 
-class FunctionSyntaxRule(val variable: EnvironmentBinding) : SyntaxRule {
+abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : SyntaxRule {
     override fun isValid(token: Token) = token is OpenFnDef
 
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (token, pos) = parser.tokeniser.nextTokenWithPosition()
-        if (token !is OpenFnDef) {
+        if (token != startToken()) {
             throw UnexpectedToken(token, pos)
         }
-        val fnDefinition = parser.parseFnDefinition()
+        val fnDefinition = parser.parseFnDefinition(endToken = endToken())
         syntaxRuleBindings.add(
             SyntaxRuleVariableBinding(
                 variable,
                 APLParser.EvalLambdaFnx(fnDefinition.make(pos), pos)))
     }
+
+    abstract fun startToken(): Token
+    abstract fun endToken(): Token
+}
+
+class BFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+    override fun startToken() = OpenFnDef
+    override fun endToken() = CloseFnDef
+}
+
+class ExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+    override fun startToken() = OpenParen
+    override fun endToken() = CloseParen
 }
 
 class OptionalSyntaxRule(val initialRule: SyntaxRule, val rest: List<SyntaxRule>) : SyntaxRule {
@@ -95,7 +108,8 @@ private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token:
     when (token.symbolName) {
         "constant" -> curr.add(ConstantSyntaxRule(tokeniser.nextTokenWithType()))
         "value" -> curr.add(ValueSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
-        "function" -> curr.add(FunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "function" -> curr.add(BFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "exprfunction" -> curr.add(ExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "optional" -> curr.add(processOptional(parser))
         else -> throw ParseException("Unexpected tag: ${token.nameWithNamespace()}")
     }

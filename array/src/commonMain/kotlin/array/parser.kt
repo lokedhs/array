@@ -389,13 +389,14 @@ class APLParser(val tokeniser: TokenGenerator) {
 
     fun parseFnDefinition(
         leftArgName: Symbol? = null,
-        rightArgName: Symbol? = null
+        rightArgName: Symbol? = null,
+        endToken: Token = CloseFnDef
     ): DeclaredFunction {
         val engine = tokeniser.engine
         withEnvironment {
             val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
             val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
-            val instruction = parseValueToplevel(CloseFnDef)
+            val instruction = parseValueToplevel(endToken)
             return DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
         }
     }

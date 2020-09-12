@@ -2,7 +2,12 @@ package array
 
 import array.complex.Complex
 
-abstract class Token
+abstract class Token {
+    open fun formatted(): String {
+        return this::class.simpleName ?: toString()
+    }
+}
+
 object Whitespace : Token()
 object EndOfFile : Token()
 object OpenParen : Token()
@@ -91,6 +96,7 @@ class Symbol(val symbolName: String, val namespace: Namespace) : Token(), Compar
     override fun compareTo(other: Symbol) = symbolName.compareTo(other.symbolName)
     override fun hashCode() = symbolName.hashCode()
     override fun equals(other: Any?) = other != null && other is Symbol && symbolName == other.symbolName && namespace === other.namespace
+    override fun formatted() = nameWithNamespace()
 
     fun nameWithNamespace() = namespace.name + ":" + symbolName
 }

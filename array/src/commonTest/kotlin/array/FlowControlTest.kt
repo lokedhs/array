@@ -150,4 +150,12 @@ class FlowControlTest : APLTest() {
             assertSimpleNumber(4, result)
         }
     }
+
+    @Test
+    fun whileLoopTest() {
+        parseAPLExpressionWithOutput("i←0 ◊ while (i<10) {print i ◊ prev←i ◊ i←i+1 ◊ prev+5}", true).let { (result, out) ->
+            assertSimpleNumber(1, result) // The return value should really be 14 here, the last value from the body
+            assertEquals("0123456789", out)
+        }
+    }
 }

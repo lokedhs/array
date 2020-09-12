@@ -5,3 +5,9 @@ defsyntax if (:value cond :function thenStatement :optional (:constant else :fun
 }
 
 export(if else)
+
+defsyntax while (:exprfunction cond :function body) {
+  {if (⍞cond 0) { ⍞body 0 ◊ 0 } else { 1 }} ⍣ {⍵} 0
+}
+
+export(while)
