@@ -109,4 +109,55 @@ class SyntaxText : APLTest() {
         assertSimpleNumber(10, result)
         assertEquals("aa", output)
     }
+
+    @Test
+    fun nonBindingDefinedFunction() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:nfunction a) { ⍞a 2 }
+            |{ x←1 ◊ foo { x } } 0
+            """.trimMargin())
+        assertSimpleNumber(1, result)
+    }
+
+    @Test
+    fun nonBindingDefinedFunctionWithArg() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:nfunction a) { ⍞a 2 }
+            |{ x←1+⍵ ◊ foo { x+⍵ } } 3
+            """.trimMargin())
+        assertSimpleNumber(7, result)
+    }
+
+    @Test
+    fun bindingDefinedFunctionWithArg() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:function a) { ⍞a 2 }
+            |{ x←1+⍵ ◊ foo { x+⍵ } } 3
+            """.trimMargin())
+        assertSimpleNumber(6, result)
+    }
+
+    @Test
+    fun exprFunction() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:exprfunction a) { 1+⍞a 0 }
+            |foo (2)
+            """.trimMargin())
+        assertSimpleNumber(3, result)
+    }
+
+    @Test
+    fun optionalExprFunction() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |defsyntax foo (:value x :optional (:exprfunction a)) { x+(⍞a 0)+(⍞a 0) }
+            |foo (10) (print 9)
+            """.trimMargin())
+        assertSimpleNumber(28, result)
+        assertEquals("99", out)
+    }
 }

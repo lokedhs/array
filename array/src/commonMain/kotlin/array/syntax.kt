@@ -44,14 +44,14 @@ class ValueSyntaxRule(val variable: EnvironmentBinding) : SyntaxRule {
  */
 
 abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : SyntaxRule {
-    override fun isValid(token: Token) = token is OpenFnDef
+    override fun isValid(token: Token) = token == startToken()
 
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (token, pos) = parser.tokeniser.nextTokenWithPosition()
         if (token != startToken()) {
             throw UnexpectedToken(token, pos)
         }
-        val fnDefinition = parser.parseFnDefinition(endToken = endToken())
+        val fnDefinition = parser.parseFnDefinition(endToken = endToken(), allocateEnvironment = allocateEnvironment())
         syntaxRuleBindings.add(
             SyntaxRuleVariableBinding(
                 variable,
@@ -60,16 +60,43 @@ abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : Sy
 
     abstract fun startToken(): Token
     abstract fun endToken(): Token
+    abstract fun allocateEnvironment(): Boolean
 }
 
+/**
+ * Syntax rule that describes a function delimited by braces and which allocates a new environment.
+ */
 class BFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenFnDef
     override fun endToken() = CloseFnDef
+    override fun allocateEnvironment() = true
 }
 
+/**
+ * Syntax rule that describes a function delimited by braces and does not allocate a new environment.
+ */
+class NFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+    override fun startToken() = OpenFnDef
+    override fun endToken() = CloseFnDef
+    override fun allocateEnvironment() = false
+}
+
+/**
+ * Syntax rule that describes a function delimited by parentheses and which allocates a new environment.
+ */
 class ExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenParen
     override fun endToken() = CloseParen
+    override fun allocateEnvironment() = true
+}
+
+/**
+ * Syntax rule that describes a function delimited by parentheses and does not allocate a new environment
+ */
+class NExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+    override fun startToken() = OpenParen
+    override fun endToken() = CloseParen
+    override fun allocateEnvironment() = false
 }
 
 class OptionalSyntaxRule(val initialRule: SyntaxRule, val rest: List<SyntaxRule>) : SyntaxRule {
@@ -109,7 +136,9 @@ private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token:
         "constant" -> curr.add(ConstantSyntaxRule(tokeniser.nextTokenWithType()))
         "value" -> curr.add(ValueSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "function" -> curr.add(BFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "nfunction" -> curr.add(NFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "exprfunction" -> curr.add(ExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "nexprfunction" -> curr.add(NExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "optional" -> curr.add(processOptional(parser))
         else -> throw ParseException("Unexpected tag: ${token.nameWithNamespace()}")
     }

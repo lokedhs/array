@@ -390,14 +390,20 @@ class APLParser(val tokeniser: TokenGenerator) {
     fun parseFnDefinition(
         leftArgName: Symbol? = null,
         rightArgName: Symbol? = null,
-        endToken: Token = CloseFnDef
-    ): DeclaredFunction {
-        val engine = tokeniser.engine
-        withEnvironment {
-            val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
-            val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+        endToken: Token = CloseFnDef,
+        allocateEnvironment: Boolean = true
+    ): APLFunctionDescriptor {
+        return if (allocateEnvironment) {
+            val engine = tokeniser.engine
+            withEnvironment {
+                val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
+                val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+                val instruction = parseValueToplevel(endToken)
+                DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
+            }
+        } else {
             val instruction = parseValueToplevel(endToken)
-            return DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
+            DeclaredNonBoundFunction(instruction, currentEnvironment())
         }
     }
 

@@ -158,4 +158,15 @@ class FlowControlTest : APLTest() {
             assertEquals("0123456789", out)
         }
     }
+
+    /**
+     * Test the scope of the body in defsyntax forms
+     */
+    @Test
+    fun defsyntaxScope() {
+        parseAPLExpressionWithOutput("{ if(⍵<10) { print ⍵+100 ◊ 3 } } 4", true).let { (result, out) ->
+            assertEquals("104", out)
+            assertSimpleNumber(3, result)
+        }
+    }
 }

@@ -1,6 +1,6 @@
 namespace("kap")
 
-defsyntax if (:value cond :function thenStatement :optional (:constant else :function elseStatement)) {
+defsyntax if (:value cond :nfunction thenStatement :optional (:constant else :nfunction elseStatement)) {
   ⍞((cond ≡ 1) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
 }
 
