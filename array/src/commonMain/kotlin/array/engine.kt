@@ -170,6 +170,7 @@ class Engine {
         // misc functions
         registerNativeFunction("sleep", SleepFunction())
         registerNativeFunction("→", ThrowFunction())
+        registerNativeOperator("catch", CatchOperator())
         registerNativeFunction("labels", LabelsFunction())
 
         // maths

@@ -60,6 +60,47 @@ class ThrowFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = ThrowFunctionImpl(pos)
 }
 
+class CatchOperator : APLOperatorOneArg {
+    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+        return CatchFunctionDescriptor(fn)
+    }
+
+    class CatchFunctionDescriptor(
+        val fn1Descriptor: APLFunctionDescriptor
+    ) : APLFunctionDescriptor {
+
+        override fun make(pos: Position): APLFunction {
+            val fn = fn1Descriptor.make(pos)
+            return object : APLFunction(pos) {
+                override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                    val dimensions = a.dimensions
+                    unless(dimensions.size == 2 && dimensions[1] == 2) {
+                        throw APLIllegalArgumentException("Catch argument must be a two-dimensional array with two columns", pos)
+                    }
+                    try {
+                        return fn.eval1Arg(context, APLNullValue(), null)
+                    } catch (e: TagCatch) {
+                        val sentTag = e.tag
+                        val multipliers = dimensions.multipliers()
+                        for (rowIndex in 0 until dimensions[0]) {
+                            val checked = a.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, 0), multipliers))
+                            if (sentTag.compareEquals(checked)) {
+                                val handlerFunction =
+                                    a.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, 1), multipliers)).unwrapDeferredValue()
+                                if (handlerFunction !is LambdaValue) {
+                                    throw APLIllegalArgumentException("The handler is not callable, this is currently an error.", pos)
+                                }
+                                return handlerFunction.makeClosure().eval2Arg(context, e.data, sentTag, null)
+                            }
+                        }
+                        throw e
+                    }
+                }
+            }
+        }
+    }
+}
+
 class LabelsFunction : APLFunctionDescriptor {
     class LabelsFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {

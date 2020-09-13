@@ -157,14 +157,17 @@ class FlowControlTest : APLTest() {
         assertSimpleNumber(253, result)
     }
 
+    /**
+     * Ensures that variables declared as `local(name)` will ensure allocation of a new binding.
+     */
     @Test
     fun scopeTestExplicitLocal() {
         val result = parseAPLExpression(
             """
-            |foo ← λ{ x ← 1 + ⍵ ◊ y ← { local(x) x ← 20 ◊ x+50+⍵ } 10 ◊ y+x }
-            |⍞foo 160
+            |foo ← λ{ x ← 1 + ⍵ ◊ y ← { local(x) x ← 2 ◊ x+50+⍵ } 190 ◊ y+x }
+            |⍞foo 60
             """.trimMargin())
-        assertSimpleNumber(241, result)
+        assertSimpleNumber(303, result)
     }
 
     @Ignore

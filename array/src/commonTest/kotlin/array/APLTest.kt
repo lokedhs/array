@@ -113,4 +113,10 @@ open class APLTest {
             else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.qualifiedName}")
         }
     }
+
+    fun assertSymbol(expected: String, result: APLValue) {
+        assertTrue(result is APLSymbol)
+        assertEquals(result.value.symbolName, expected)
+        assertEquals(result.value.namespace.name, "default")
+    }
 }
