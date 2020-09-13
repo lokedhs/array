@@ -143,6 +143,30 @@ class FlowControlTest : APLTest() {
         }
     }
 
+    /**
+     * Test the scope of local variables.
+     */
+    @Test
+    fun scopeTestLocalVars() {
+        val result = parseAPLExpression(
+            """
+            |foo ← λ{ x ← 1 + ⍵ }
+            |bar ← λ{ x ← 100 ◊ y ← (⍞foo 2) ◊ y + x + ⍵ }
+            |⍞bar 150
+            """.trimMargin())
+        assertSimpleNumber(253, result)
+    }
+
+    @Test
+    fun scopeTestExplicitLocal() {
+        val result = parseAPLExpression(
+            """
+            |foo ← λ{ x ← 1 + ⍵ ◊ y ← { local(x) x ← 20 ◊ x+50+⍵ } 10 ◊ y+x }
+            |⍞foo 160
+            """.trimMargin())
+        assertSimpleNumber(241, result)
+    }
+
     @Ignore
     @Test
     fun nonLocalExitTest() {

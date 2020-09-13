@@ -36,4 +36,14 @@ class EvaluationOrder : APLTest() {
         assertEquals("321", output.buf.toString())
         assertAPLValue(8, result)
     }
+
+    /**
+     * Ensure that the variable `a` is assigned before its value is read.
+     */
+    @Test
+    fun expressionEvaluationOrder() {
+        parseAPLExpression("a + 1 + a←2").let { result ->
+            assertSimpleNumber(5, result)
+        }
+    }
 }
