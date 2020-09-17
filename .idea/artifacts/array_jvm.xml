@@ -1,8 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="array-jvm">
     <output-path>$PROJECT_DIR$/array/build/libs</output-path>
-    <root id="archive" name="array-jvm.jar">
-      <element id="module-output" name="array_test.array.jvmMain" />
-    </root>
+    <root id="archive" name="array-jvm.jar" />
   </artifact>
 </component>
