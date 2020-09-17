@@ -1,6 +1,8 @@
 package array.gui
 
 import array.*
+import kotlin.math.min
+import kotlin.math.max
 import javafx.application.Platform
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
@@ -24,7 +26,7 @@ class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
 
     override fun makeKey() = window
 
-    fun updateContent(w: Int, h: Int, content: IntArray) {
+    fun updateContent(w: Int, h: Int, content: DoubleArray) {
         Platform.runLater {
             window.repaintContent(w, h, content)
         }
@@ -58,16 +60,24 @@ class DrawGraphicFunction : APLFunctionDescriptor {
             if (bDimensions.size != 2) {
                 throw InvalidDimensionsException("Right argument must be a two-dimensional array", pos)
             }
-            v.updateContent(bDimensions[1], bDimensions[0], b.toIntArray(pos))
+            v.updateContent(bDimensions[1], bDimensions[0], b.toDoubleArray(pos))
             return b
         }
     }
 
+    // ∇ range (low;high;v) { low+(⍳v)÷(v÷(high-low)) }
+    // ∇ m (x) { z←r←n←0 ◊ while((r ≤ 2) ∧ (n < 20)) { z ← x+z⋆2 ◊ r ← |z ◊ n←n+1} ◊ n÷20 }
+    // m¨(0J1×range(-2;2;200)) ∘.+ range(-2;2;200)
     override fun make(pos: Position) = DrawGraphicFunctionImpl(pos)
 }
 
 class GraphicWindow(val width: Int, val height: Int) {
     private var content: Content? = null
+
+    private val colourmap = (0..255).map { index ->
+        val v = index / 255.0
+        Color(v, v, v, 1.0)
+    }
 
     init {
         Platform.runLater {
@@ -95,7 +105,7 @@ class GraphicWindow(val width: Int, val height: Int) {
         }
     }
 
-    fun repaintContent(w: Int, h: Int, content: IntArray) {
+    fun repaintContent(w: Int, h: Int, content: DoubleArray) {
         val c = findContent() ?: return
 
         val canvasWidth = c.canvas.width
@@ -103,12 +113,10 @@ class GraphicWindow(val width: Int, val height: Int) {
         val cellWidth = canvasWidth / w
         val cellHeight = canvasHeight / h
         val graphicsContext = c.canvas.graphicsContext2D
-        val col0 = Color(1.0, 1.0, 1.0, 1.0)
-        val col1 = Color(0.0, 0.0, 0.0, 1.0)
         for (y in 0 until h) {
             for (x in 0 until w) {
-                val colour = content[y * w + x]
-                graphicsContext.fill = if (colour == 0) col0 else col1
+                val colour = (min(max(content[y * w + x], 0.0), 1.0) * 255.0).toInt()
+                graphicsContext.fill = colourmap[colour]
                 graphicsContext.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
             }
         }
