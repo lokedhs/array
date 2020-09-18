@@ -1,15 +1,18 @@
 package array.gui
 
 import array.*
+import kotlin.math.max
+import kotlin.math.min
 import javafx.application.Platform
+import javafx.event.EventType
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
+import javafx.scene.image.WritableImage
 import javafx.scene.layout.BorderPane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
+import javafx.stage.WindowEvent
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.max
-import kotlin.math.min
 
 class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
     private val window: GraphicWindow
@@ -72,7 +75,7 @@ class DrawGraphicFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = DrawGraphicFunctionImpl(pos)
 }
 
-class GraphicWindow(val width: Int, val height: Int) {
+class GraphicWindow(width: Int, height: Int) {
     private var content = AtomicReference<Content?>()
 
     private val colourmap = (0..255).map { index ->
@@ -82,15 +85,17 @@ class GraphicWindow(val width: Int, val height: Int) {
 
     init {
         Platform.runLater {
-            content.set(Content())
+            content.set(Content(width, height))
         }
     }
 
-    private inner class Content {
+    private inner class Content(width: Int, height: Int) {
         val stage = Stage()
         val canvas: Canvas
+        val image: WritableImage
 
         init {
+            image = WritableImage(width, height)
             canvas = Canvas(width.toDouble(), height.toDouble())
             val border = BorderPane().apply {
                 center = canvas
@@ -98,27 +103,27 @@ class GraphicWindow(val width: Int, val height: Int) {
             stage.scene = Scene(border, width.toDouble(), height.toDouble())
             stage.show()
         }
-    }
 
-    private fun findContent(): Content? {
-        return content.get()
-    }
-
-    fun repaintContent(w: Int, h: Int, content: DoubleArray) {
-        val c = findContent() ?: return
-
-        val canvasWidth = c.canvas.width
-        val canvasHeight = c.canvas.height
-        val cellWidth = canvasWidth / w
-        val cellHeight = canvasHeight / h
-        val graphicsContext = c.canvas.graphicsContext2D
-        for (y in 0 until h) {
-            for (x in 0 until w) {
-                val colour = (min(max(content[y * w + x], 0.0), 1.0) * 255.0).toInt()
-                graphicsContext.fill = colourmap[colour]
-                graphicsContext.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+        fun repaintCanvas(width: Int, height: Int, array: DoubleArray) {
+            val imageWidth = image.width
+            val imageHeight = image.height
+            val xStride = width.toDouble() / imageWidth
+            val yStride = height.toDouble() / imageHeight
+            val pixelWriter = image.pixelWriter
+            for (y in 0 until imageHeight.toInt()) {
+                for (x in 0 until imageWidth.toInt()) {
+                    val value = array[(y * yStride).toInt() * width + (x * xStride).toInt()]
+                    val valueByte = min(max(value * 256, 0.0), 255.0).toInt() and 0xFF
+                    val colour = (0xFF shl 24) or (valueByte shl 16) or (valueByte shl 8) or valueByte
+                    pixelWriter.setArgb(x, y, colour)
+                }
             }
+            canvas.graphicsContext2D.drawImage(image, 0.0, 0.0)
         }
+    }
+
+    fun repaintContent(width: Int, height: Int, array: DoubleArray) {
+        content.get()?.repaintCanvas(width, height, array)
     }
 }
 
