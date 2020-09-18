@@ -1,14 +1,15 @@
 package array.gui
 
 import array.*
-import kotlin.math.min
-import kotlin.math.max
 import javafx.application.Platform
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.layout.BorderPane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.max
+import kotlin.math.min
 
 class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
     private val window: GraphicWindow
@@ -72,7 +73,7 @@ class DrawGraphicFunction : APLFunctionDescriptor {
 }
 
 class GraphicWindow(val width: Int, val height: Int) {
-    private var content: Content? = null
+    private var content = AtomicReference<Content?>()
 
     private val colourmap = (0..255).map { index ->
         val v = index / 255.0
@@ -81,7 +82,7 @@ class GraphicWindow(val width: Int, val height: Int) {
 
     init {
         Platform.runLater {
-            content = Content()
+            content.set(Content())
         }
     }
 
@@ -100,9 +101,7 @@ class GraphicWindow(val width: Int, val height: Int) {
     }
 
     private fun findContent(): Content? {
-        synchronized(this) {
-            return content
-        }
+        return content.get()
     }
 
     fun repaintContent(w: Int, h: Int, content: DoubleArray) {
