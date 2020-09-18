@@ -144,6 +144,12 @@ interface APLValue {
         }
     }
 
+    fun toDoubleArray(pos: Position): DoubleArray {
+        return DoubleArray(size) { i ->
+            valueAt(i).ensureNumber(pos).asDouble()
+        }
+    }
+
     fun asBoolean(): Boolean {
         val v = unwrapDeferredValue()
         return if (v == this) {
