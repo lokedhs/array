@@ -75,6 +75,41 @@ class ArrayLookupBracketsTest : APLTest() {
     }
 
     @Test
+    fun lookupMultiDimensionalIndex() {
+        parseAPLExpression("(2 2 ⍴ 1 2 3 4)[0 ; 3 3 ⍴ 0 0 1 0 1 1 0 0 1]").let { result ->
+            assertDimension(dimensionsOfSize(3, 3), result)
+            assertArrayContent(arrayOf(1, 1, 2, 1, 2, 2, 1, 1, 2), result)
+        }
+    }
+
+    @Test
+    fun lookupOneDimensionWithMultiDimensionIndex() {
+        parseAPLExpression("(1 2 3 4)[4 4 ⍴ 0 1 3 1 2 2 0 1 2 2 0 3 1 0 2 2]").let { result ->
+            assertDimension(dimensionsOfSize(4, 4), result)
+            assertArrayContent(arrayOf(1, 2, 4, 2, 3, 3, 1, 2, 3, 3, 1, 4, 2, 1, 3, 3), result)
+        }
+    }
+
+    @Test
+    fun lookupMultiDimensionWithMultiDimensionIndex() {
+        parseAPLExpression("(2 2 2 ⍴ 100+⍳8)[0 ; 2 3 ⍴ 0 0 1 1 0 0 ; 0]").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertArrayContent(arrayOf(100, 100, 102, 102, 100, 100), result)
+        }
+    }
+
+    @Test
+    fun lookupMultiDimensionWithMultiDimensionIndex2() {
+        parseAPLExpression("(2 2 2 ⍴ 100+⍳8)[2 3 ⍴ 1 0 1 1 1 0 0 ; 2 3 ⍴ 0 1 0 1 1 0 1 ; 1]").let { result ->
+            assertDimension(dimensionsOfSize(2, 3, 2, 3), result)
+            assertArrayContent(
+                arrayOf(
+                    105, 107, 105, 107, 107, 105, 101, 103, 101, 103, 103, 101, 105, 107, 105, 107, 107, 105,
+                    105, 107, 105, 107, 107, 105, 105, 107, 105, 107, 107, 105, 101, 103, 101, 103, 103, 101), result)
+        }
+    }
+
+    @Test
     fun lookupWithInvalidArgument() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("(1 2 3 4)[\"foo\"]").collapse()

@@ -675,3 +675,33 @@ class LambdaValue(private val fn: APLFunction, private val previousContext: Runt
         }
     }
 }
+
+class IntArrayValue private constructor(
+    srcDimensions: Dimensions,
+    val values: IntArray
+) : APLArray() {
+
+    constructor(srcDimensions: IntArray, initFn: (Int) -> Int) :
+            this(Dimensions(srcDimensions), IntArray(srcDimensions.reduce { a, b -> a * b }, initFn))
+
+
+    override val dimensions = srcDimensions
+
+    override fun valueAt(p: Int) = values[p].makeAPLNumber()
+
+    fun intValueAt(p: Int) = values[p]
+
+    companion object {
+        fun fromAPLValue(src: APLValue, pos: Position? = null): IntArrayValue {
+            return if (src is IntArrayValue) {
+                src
+            } else {
+                val dimensions = src.dimensions
+                val values = IntArray(dimensions.contentSize()) { i ->
+                    src.valueAt(i).ensureNumber(pos).asInt()
+                }
+                IntArrayValue(dimensions, values)
+            }
+        }
+    }
+}
