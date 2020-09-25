@@ -6,7 +6,7 @@ class TypeofFunction : APLFunctionDescriptor {
     class TypeofFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val v = a.unwrapDeferredValue()
-            return APLSymbol(context.engine.internSymbol(v.aplValueType.typeName))
+            return APLSymbol(context.engine.internSymbol(v.aplValueType.typeName, context.engine.coreNamespace))
         }
     }
 

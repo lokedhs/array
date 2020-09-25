@@ -1,0 +1,29 @@
+namespace("output")
+
+∇ isArray (v) {
+  (typeof v) ≡ 'array
+}
+
+∇ render2d (v) {
+  colWidths ← ⌈/[0] {↑⍴⍵}¨v
+  ⍝ The hack below (a string with an array index) is to make the space character explicit
+  ⍝ until unicode name lookup works.
+  alignedStrings ← ((⍴v) ⍴ colWidths) {((⍺-⍴⍵) ⍴ (" ")[0]),⍵}¨ v
+  ⍝ need to wrap the result in box drawing chars
+  alignedStrings
+}
+
+∇ prettyPrint (v) {
+  enclosed ← if(isArray v) {
+    if (×/,('char)=typeof¨v) {
+      @",v,@"
+    } else {
+      prettyPrint¨ v
+    }
+  } else {
+    ⍕v
+  }
+  render2d v
+}
+
+export(prettyPrint)

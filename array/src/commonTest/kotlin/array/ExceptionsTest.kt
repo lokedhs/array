@@ -14,8 +14,8 @@ class ExceptionsTest : APLTest() {
 
     @Test
     fun exceptionHandlerTagCheck() {
-        parseAPLExpression("{1→'foo}catch 1 2 ⍴ 'foo λ{⍵}").let { result ->
-            assertSymbol("foo", result)
+        parseAPLExpression2("{1→'foo}catch 1 2 ⍴ 'foo λ{⍵}").let { (result, engine) ->
+            assertSymbolName(engine, "foo", result)
         }
     }
 

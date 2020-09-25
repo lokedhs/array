@@ -64,6 +64,14 @@ class CustomFunctionTest : APLTest() {
     }
 
     @Test
+    fun selfRecursion() {
+        parseAPLExpression("n←0 ◊ ∇ foo (A) { if(A≡0) { 1 } else {  n←n+1 ◊ foo ¯1+A } } ◊ n,foo 10", true).let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(10, 1), result)
+        }
+    }
+
+    @Test
     fun multilineFunction() {
         val result = parseAPLExpression(
             """

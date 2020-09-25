@@ -69,6 +69,29 @@ class StringsTest : APLTest() {
         assertEquals("\uD835\uDC9F", v.asString())
     }
 
+    @Test
+    fun formatNumber() {
+        assertString("8", parseAPLExpression("⍕8"))
+        assertString("100", parseAPLExpression("⍕100"))
+        assertString("-100", parseAPLExpression("⍕¯100"))
+    }
+
+    @Test
+    fun formatCharacter() {
+        assertString("a", parseAPLExpression("⍕@a"))
+        assertString("⍬", parseAPLExpression("⍕@⍬"))
+    }
+
+    @Test
+    fun formatNull() {
+        assertString("", parseAPLExpression("⍕⍬"))
+    }
+
+    @Test
+    fun formatSelfString() {
+        assertString("foo bar", parseAPLExpression("⍕\"foo bar\""))
+    }
+
     class OutputResult(val engine: Engine, val output: String, val result: APLValue)
 
     private fun parseWithOutput(expr: String): OutputResult {

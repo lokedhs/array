@@ -117,6 +117,12 @@ class Engine {
     var currentNamespace = initialNamespace
 
     init {
+        // Intern the names of all the types in the core namespace.
+        // This ensures that code that refers to the unqualified versions of the names pick up the correct symbol.
+        APLValueType.values().forEach { aplValueType ->
+            coreNamespace.internAndExport(aplValueType.typeName)
+        }
+
         // core functions
         registerNativeFunction("+", AddAPLFunction())
         registerNativeFunction("-", SubAPLFunction())
@@ -160,6 +166,7 @@ class Engine {
         registerNativeFunction("/", SelectElementsLastAxisFunction())
         registerNativeFunction("⌿", SelectElementsFirstAxisFunction())
         registerNativeFunction("∼", NotAPLFunction())
+        registerNativeFunction("⍕", FormatAPLFunction())
 
         // io functions
         registerNativeFunction("print", PrintAPLFunction())

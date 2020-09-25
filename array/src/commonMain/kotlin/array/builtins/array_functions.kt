@@ -1039,3 +1039,13 @@ class SelectElementsLastAxisFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = SelectElementsLastAxisFunctionImpl(pos)
 }
+
+class FormatAPLFunction : APLFunctionDescriptor {
+    class FormatAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return makeAPLString(a.formatted(FormatStyle.PLAIN))
+        }
+    }
+
+    override fun make(pos: Position) = FormatAPLFunctionImpl(pos)
+}

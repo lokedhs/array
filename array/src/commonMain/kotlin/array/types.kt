@@ -343,14 +343,10 @@ class APLMap(val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
     }
 }
 
-class APLList(val elements: List<APLValue>) : APLValue {
+class APLList(val elements: List<APLValue>) : APLSingleValue() {
     override val aplValueType: APLValueType get() = APLValueType.LIST
 
     override val dimensions get() = emptyDimensions()
-
-    override fun valueAt(p: Int): APLValue {
-        TODO("not implemented")
-    }
 
     override fun formatted(style: FormatStyle): String {
         val buf = StringBuilder()
@@ -367,10 +363,6 @@ class APLList(val elements: List<APLValue>) : APLValue {
     }
 
     override fun collapseInt() = this
-
-    override fun arrayify(): APLValue {
-        TODO("not implemented")
-    }
 
     override fun ensureList(pos: Position?) = this
 
@@ -518,7 +510,8 @@ fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
 fun arrayAsString(array: APLValue, style: FormatStyle): String {
     val v = array.collapse() // This is to prevent multiple evaluations during printing
     return when {
-        isNullValue(v) -> renderNullValue()
+        v.isScalar() -> v.formatted(style)
+        isNullValue(v) -> renderNullValue(style)
         isStringValue(v) -> renderStringValue(v, style)
         else -> encloseInBox(v)
     }

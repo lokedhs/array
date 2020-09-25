@@ -357,8 +357,12 @@ private fun renderStringValueOptionalQuotes(value: APLValue, showQuotes: Boolean
     return buf.toString()
 }
 
-fun renderNullValue(): String {
-    return "⍬"
+fun renderNullValue(style: FormatStyle): String {
+    return when (style) {
+        FormatStyle.PLAIN -> ""
+        FormatStyle.PRETTY -> "⍬"
+        FormatStyle.READABLE -> "⍬"
+    }
 }
 
 fun encloseInBox(value: APLValue): String {

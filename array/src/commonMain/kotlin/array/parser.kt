@@ -10,6 +10,7 @@ class EnvironmentBinding(val environment: Environment, val name: Symbol) {
 
 class Environment {
     private val bindings = HashMap<Symbol, EnvironmentBinding>()
+    private val localFunctions = HashMap<Symbol, UserFunction>()
 
     fun findBinding(sym: Symbol) = bindings[sym]
 
@@ -21,6 +22,14 @@ class Environment {
 
     fun localBindings(): Collection<EnvironmentBinding> {
         return bindings.values
+    }
+
+    fun registerLocalFunction(name: Symbol, userFn: UserFunction) {
+        localFunctions[name] = userFn
+    }
+
+    fun findLocalFunction(name: Symbol): APLFunctionDescriptor? {
+        return localFunctions[name]
     }
 
     companion object {
@@ -223,15 +232,27 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
         withEnvironment {
-            val leftFnArgs1 = leftFnArgs.map { findEnvironmentBinding(it) }
-            val rightFnArgs1 = rightFnArgs.map { findEnvironmentBinding(it) }
+            val leftFnArgs1 = leftFnArgs.map(this::findEnvironmentBinding)
+            val rightFnArgs1 = rightFnArgs.map(this::findEnvironmentBinding)
+            val inProcessUserFunction = UserFunction(leftFnArgs1, rightFnArgs1, DummyInstr(pos), currentEnvironment())
+            currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
             val instr = parseValueToplevel(CloseFnDef)
-            return DefinedUserFunction(UserFunction(leftFnArgs1, rightFnArgs1, instr, currentEnvironment()), name, pos)
+            inProcessUserFunction.instr = instr
+            return DefinedUserFunction(inProcessUserFunction, name, pos)
         }
     }
 
+    private fun lookupFunction(name: Symbol): APLFunctionDescriptor? {
+        environments.asReversed().forEach { env ->
+            val function = env.findLocalFunction(name)
+            if (function != null) {
+                return function
+            }
+        }
+        return tokeniser.engine.getFunction(name)
+    }
+
     private fun parseValue(): InstrTokenHolder {
-        val engine = tokeniser.engine
         val leftArgs = ArrayList<Instruction>()
 
         fun addLeftArg(instr: Instruction) {
@@ -258,7 +279,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                     if (customSyntax != null) {
                         addLeftArg(processCustomSyntax(this, customSyntax))
                     } else {
-                        val fn = engine.getFunction(token)
+                        val fn = lookupFunction(token)
                         if (fn != null) {
                             return processFn(fn, pos, leftArgs)
                         } else {

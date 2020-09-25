@@ -16,7 +16,8 @@ class EqualsAPLFunction : APLFunctionDescriptor {
                     { x, y -> makeBoolean(x == y) },
                     { x, y -> makeBoolean(x == y) },
                     { x, y -> makeBoolean(x == y) },
-                    { x, y -> makeBoolean(x == y) })
+                    { x, y -> makeBoolean(x == y) },
+                    { x, y -> if (x.compareEquals(y)) APLLONG_1 else APLLONG_0 })
             }
         }
 
@@ -39,7 +40,8 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
                     { x, y -> makeBoolean(x != y) },
                     { x, y -> makeBoolean(x != y) },
                     { x, y -> makeBoolean(x != y) },
-                    { x, y -> makeBoolean(x != y) })
+                    { x, y -> makeBoolean(x != y) },
+                    { x, y -> if (x.compareEquals(y)) APLLONG_0 else APLLONG_1 })
             }
         }
 
@@ -136,7 +138,8 @@ fun numericRelationOperation(
     fnLong: (al: Long, bl: Long) -> APLValue,
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
-    fnChar: ((aChar: Int, bChar: Int) -> APLValue)? = null
+    fnChar: ((aChar: Int, bChar: Int) -> APLValue)? = null,
+    fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue)? = null
 ): APLValue {
     return when {
         a is APLNumber && b is APLNumber -> {
@@ -152,6 +155,7 @@ fun numericRelationOperation(
             }
             fnChar(a.value, b.value)
         }
+        fnOther != null -> fnOther(a, b)
         else -> throw IncompatibleTypeException("Incompatible argument types", pos)
     }
 }

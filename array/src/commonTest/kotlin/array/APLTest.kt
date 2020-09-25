@@ -2,6 +2,7 @@ package array
 
 import array.complex.Complex
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 open class APLTest {
@@ -114,9 +115,11 @@ open class APLTest {
         }
     }
 
-    fun assertSymbol(expected: String, result: APLValue) {
-        assertTrue(result is APLSymbol)
-        assertEquals(result.value.symbolName, expected)
-        assertEquals(result.value.namespace.name, "default")
+    fun assertSymbolName(engine: Engine, name: String, value: APLValue) {
+        assertSame(engine.internSymbol(name), value.ensureSymbol().value)
+    }
+
+    fun assertSymbolNameCoreNamespace(engine: Engine, name: String, value: APLValue) {
+        assertSame(engine.internSymbol(name, engine.coreNamespace), value.ensureSymbol().value)
     }
 }

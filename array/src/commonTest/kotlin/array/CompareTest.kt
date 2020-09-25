@@ -41,6 +41,24 @@ class CompareTest : APLTest() {
         assertSimpleNumber(0, parseAPLExpression("(1;2;3) ≢ (1;2;3)"))
     }
 
+    @Test
+    fun compareEqualsNonNumeric() {
+        assertSimpleNumber(1, parseAPLExpression("@a = @a"))
+        assertSimpleNumber(0, parseAPLExpression("@a = @b"))
+        assertSimpleNumber(1, parseAPLExpression("('foo) = 'foo"))
+        assertSimpleNumber(0, parseAPLExpression("('foo) = 'bar"))
+    }
+
+    @Test
+    fun compareNotEqualsNonNumeric() {
+        assertSimpleNumber(1, parseAPLExpression("'foo ≠ 'foox"))
+        assertSimpleNumber(0, parseAPLExpression("'foo ≠ 'foo"))
+        assertSimpleNumber(0, parseAPLExpression("@b ≠ @b"))
+        assertSimpleNumber(1, parseAPLExpression("@a ≠ @b"))
+        assertSimpleNumber(0, parseAPLExpression("(1;2;3) ≠ (1;2;3)"))
+        assertSimpleNumber(1, parseAPLExpression("(1;2;3) ≠ (1;2;3;4)"))
+    }
+
     private fun testFunction(expected: Array<Long>, name: String) {
         assertSimpleNumber(expected[0], parseAPLExpression("1${name}2"))
         assertSimpleNumber(expected[1], parseAPLExpression("2${name}1"))

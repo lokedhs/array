@@ -6,6 +6,12 @@ abstract class Instruction(val pos: Position) {
     abstract fun evalWithContext(context: RuntimeContext): APLValue
 }
 
+class DummyInstr(pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        throw IllegalStateException("Attempt to call dummy instruction")
+    }
+}
+
 class RootEnvironmentInstruction(val environment: Environment, val instr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return evalWithNewContext(context.engine)
@@ -168,7 +174,7 @@ class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruct
 class UserFunction(
     private val leftFnArgs: List<EnvironmentBinding>,
     private val rightFnArgs: List<EnvironmentBinding>,
-    private val instr: Instruction,
+    var instr: Instruction,
     private val env: Environment
 ) : APLFunctionDescriptor {
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {

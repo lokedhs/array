@@ -2,7 +2,7 @@ package array
 
 import kotlin.system.measureTimeMillis
 
-fun main() {
+fun xmain() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
@@ -15,5 +15,29 @@ fun main() {
         val result = engine.parseAndEval(StringSourceLocation(srcString), true)
         result.collapse()
     }
+    println("Elapsed: ${elapsed / 1000.0}")
+}
+
+fun main() {
+    val engine = Engine()
+    engine.addLibrarySearchPath("standard-lib")
+    engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
+    val output = StringBuilder()
+    engine.standardOutput = object : CharacterOutput {
+        override fun writeString(s: String) {
+            output.append(s)
+        }
+    }
+
+    val srcString = """
+            |output:render2d 2 2 ⍴ "foo" "a" "test" "abcdefgh"
+            """.trimMargin()
+    val elapsed = measureTimeMillis {
+        val result = engine.parseAndEval(StringSourceLocation(srcString), true)
+        result.collapse()
+        println("Result:\n${result.formatted(FormatStyle.PRETTY)}")
+    }
+    println("Output:")
+    println(output.toString())
     println("Elapsed: ${elapsed / 1000.0}")
 }

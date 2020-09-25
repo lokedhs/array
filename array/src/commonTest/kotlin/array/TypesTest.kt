@@ -1,7 +1,6 @@
 package array
 
 import kotlin.test.Test
-import kotlin.test.assertSame
 
 class TypesTest : APLTest() {
     @Test
@@ -65,11 +64,6 @@ class TypesTest : APLTest() {
     private fun testResultType(expression: String, expectedResultSym: APLValueType) {
         val engine = Engine()
         val result = engine.parseAndEval(StringSourceLocation(expression), false)
-        assertSymbol(engine, expectedResultSym.typeName, result)
-    }
-
-    private fun assertSymbol(engine: Engine, expected: String, value: APLValue) {
-        val v = value.ensureSymbol()
-        assertSame(engine.internSymbol(expected), v.value)
+        assertSymbolNameCoreNamespace(engine, expectedResultSym.typeName, result)
     }
 }

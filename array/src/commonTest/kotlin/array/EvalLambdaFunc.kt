@@ -2,7 +2,6 @@ package array
 
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
-import kotlin.test.assertSame
 
 class EvalLambdaFunc : APLTest() {
     @Test
@@ -56,7 +55,7 @@ class EvalLambdaFunc : APLTest() {
     fun typeOfSimpleLambda() {
         val engine = Engine()
         val result = evalWithEngine(engine, "typeof λ { 1 + ⍵ }")
-        assertSymbolName(engine, "function", result)
+        assertSymbolNameCoreNamespace(engine, "function", result)
     }
 
     @Test
@@ -64,8 +63,8 @@ class EvalLambdaFunc : APLTest() {
         val engine = Engine()
         val result = evalWithEngine(engine, "(typeof λ { 1 + ⍵ }) (typeof λ { 5 + ⍵ })")
         assertDimension(dimensionsOfSize(2), result)
-        assertSymbolName(engine, "function", result.valueAt(0))
-        assertSymbolName(engine, "function", result.valueAt(1))
+        assertSymbolNameCoreNamespace(engine, "function", result.valueAt(0))
+        assertSymbolNameCoreNamespace(engine, "function", result.valueAt(1))
     }
 
     @Test
@@ -73,8 +72,8 @@ class EvalLambdaFunc : APLTest() {
         val engine = Engine()
         val result = evalWithEngine(engine, "x←λ { 1 + ⍵ } λ { 5 + ⍵ } ◊ (typeof x) (typeof 0⌷x)")
         assertDimension(dimensionsOfSize(2), result)
-        assertSymbolName(engine, "array", result.valueAt(0))
-        assertSymbolName(engine, "function", result.valueAt(1))
+        assertSymbolNameCoreNamespace(engine, "array", result.valueAt(0))
+        assertSymbolNameCoreNamespace(engine, "function", result.valueAt(1))
     }
 
     @Test
@@ -86,9 +85,5 @@ class EvalLambdaFunc : APLTest() {
 
     private fun evalWithEngine(engine: Engine, expr: String): APLValue {
         return engine.parseAndEval(StringSourceLocation(expr), false)
-    }
-
-    private fun assertSymbolName(engine: Engine, name: String, value: APLValue) {
-        assertSame(engine.internSymbol(name), value.ensureSymbol().value)
     }
 }
