@@ -2,7 +2,6 @@ package array
 
 import array.builtins.compareAPLArrays
 import array.rendertext.encloseInBox
-import array.rendertext.renderNullValue
 import array.rendertext.renderStringValue
 
 enum class APLValueType(val typeName: String) {
@@ -509,12 +508,7 @@ fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
 
 fun arrayAsString(array: APLValue, style: FormatStyle): String {
     val v = array.collapse() // This is to prevent multiple evaluations during printing
-    return when {
-        v.isScalar() -> v.formatted(style)
-        isNullValue(v) -> renderNullValue(style)
-        isStringValue(v) -> renderStringValue(v, style)
-        else -> encloseInBox(v)
-    }
+    return encloseInBox(v, style)
 }
 
 class ConstantArray(

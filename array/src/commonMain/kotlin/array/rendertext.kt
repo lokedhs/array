@@ -365,10 +365,12 @@ fun renderNullValue(style: FormatStyle): String {
     }
 }
 
-fun encloseInBox(value: APLValue): String {
+fun encloseInBox(value: APLValue, style: FormatStyle): String {
     return when {
-        value is APLSingleValue -> value.formatted(FormatStyle.PRETTY)
-        value.rank == 0 -> encloseString(String2D(value.valueAt(0).formatted(FormatStyle.PRETTY)))
+        value is APLSingleValue -> value.formatted(style)
+        value.isScalar() -> encloseString(String2D(value.valueAt(0).formatted(style)))
+        isNullValue(value) -> renderNullValue(style)
+        isStringValue(value) -> renderStringValue(value, style)
         else -> encloseNDim(value)
     }
 }
