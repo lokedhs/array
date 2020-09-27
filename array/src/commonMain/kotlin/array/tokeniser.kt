@@ -141,6 +141,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "]" to CloseBracket,
         "←" to LeftArrow,
         "◊" to StatementSeparator,
+        "⋄" to StatementSeparator,
         "∇" to FnDefSym,
         "⍬" to APLNullSym,
         "λ" to LambdaToken,
