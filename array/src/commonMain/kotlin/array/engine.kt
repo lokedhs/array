@@ -108,6 +108,7 @@ class Engine {
     private val namespaces = HashMap<String, Namespace>()
     private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
     private val librarySearchPaths = ArrayList<String>()
+    private val modules = ArrayList<KapModule>()
 
     val rootContext = RuntimeContext(this, Environment())
     var standardOutput: CharacterOutput = NullCharacterOutput()
@@ -209,6 +210,13 @@ class Engine {
         functionAliases[coreNamespace.internAndExport("~")] = coreNamespace.internAndExport("∼")
 
         platformInit(this)
+
+        addModule(UnicodeModule())
+    }
+
+    fun addModule(module: KapModule) {
+        module.init(this)
+        modules.add(module)
     }
 
     fun addLibrarySearchPath(path: String) {
@@ -414,4 +422,16 @@ interface FunctionDefinitionListener {
     fun functionRemoved(name: Symbol) = Unit
     fun operatorDefined(name: Symbol, fn: APLOperator) = Unit
     fun operatorRemoved(name: Symbol) = Unit
+}
+
+interface KapModule {
+    /**
+     * The name of the module.
+     */
+    val name: String
+
+    /**
+     * Initialise the module.
+     */
+    fun init(engine: Engine)
 }
