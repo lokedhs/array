@@ -48,6 +48,10 @@ data class Complex(val real: Double, val imaginary: Double) {
         }
     }
 
+    fun ln(): Complex = Complex(ln(hypot(real, imaginary)), atan2(imaginary, real))
+    fun log(base: Complex): Complex = ln() / base.ln()
+    fun log(base: Double): Complex = log(base.toComplex())
+
     override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
     override fun hashCode() = real.hashCode() xor imaginary.hashCode()
 
@@ -60,10 +64,11 @@ data class Complex(val real: Double, val imaginary: Double) {
     }
 }
 
-operator fun Double.plus(complex: Complex) = Complex(this, 0.0) + complex
-operator fun Double.times(complex: Complex) = Complex(this, 0.0) * complex
-operator fun Double.minus(complex: Complex) = Complex(this, 0.0) - complex
-operator fun Double.div(complex: Complex) = Complex(this, 0.0) / complex
+operator fun Double.plus(complex: Complex) = this.toComplex() + complex
+operator fun Double.times(complex: Complex) = this.toComplex() * complex
+operator fun Double.minus(complex: Complex) = this.toComplex() - complex
+operator fun Double.div(complex: Complex) = this.toComplex() / complex
 
 fun Double.toComplex() = Complex(this, 0.0)
-fun Double.pow(complex: Complex) = Complex(this, 0.0).pow(complex)
+fun Double.pow(complex: Complex) = this.toComplex().pow(complex)
+fun Double.log(base: Complex) = this.toComplex().log(base)

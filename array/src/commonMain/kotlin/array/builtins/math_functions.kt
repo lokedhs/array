@@ -2,6 +2,7 @@ package array.builtins
 
 import array.*
 import array.complex.Complex
+import array.complex.toComplex
 import kotlin.math.*
 
 interface CellSumFunction1Arg {
@@ -423,8 +424,30 @@ class MaxAPLFunction : APLFunctionDescriptor {
 
 class LogAPLFunction : APLFunctionDescriptor {
     class LogAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
-        override fun numberCombine1Arg(a: APLNumber) = APLDouble(ln(a.asDouble()))
-        override fun numberCombine2Arg(a: APLNumber, b: APLNumber) = APLDouble(log(b.asDouble(), a.asDouble()))
+        override fun combine1Arg(a: APLSingleValue): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> if (x < 0) x.toDouble().toComplex().ln().makeAPLNumber() else ln(x.toDouble()).makeAPLNumber() },
+                { x -> if (x < 0) x.toComplex().ln().makeAPLNumber() else ln(x).makeAPLNumber() },
+                { x -> x.ln().makeAPLNumber() }
+            )
+        }
+
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                pos,
+                a,
+                b,
+                { x, y ->
+                    if (x < 0 || y < 0) y.toDouble().toComplex().log(x.toDouble()).makeAPLNumber() else log(
+                        y.toDouble(),
+                        x.toDouble()).makeAPLNumber()
+                },
+                { x, y -> if (x < 0 || y < 0) y.toComplex().log(x.toComplex()).makeAPLNumber() else log(y, x).makeAPLNumber() },
+                { x, y -> y.log(x).makeAPLNumber() }
+            )
+        }
     }
 
     override fun make(pos: Position) = LogAPLFunctionImpl(pos)
