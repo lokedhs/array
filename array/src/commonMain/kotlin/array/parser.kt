@@ -232,8 +232,8 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
         withEnvironment {
-            val leftFnArgs1 = leftFnArgs.map(this::findEnvironmentBinding)
-            val rightFnArgs1 = rightFnArgs.map(this::findEnvironmentBinding)
+            val leftFnArgs1 = leftFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+            val rightFnArgs1 = rightFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
             val inProcessUserFunction = UserFunction(leftFnArgs1, rightFnArgs1, DummyInstr(pos), currentEnvironment())
             currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
             val instr = parseValueToplevel(CloseFnDef)

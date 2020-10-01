@@ -137,4 +137,19 @@ class CustomFunctionTest : APLTest() {
             parseAPLExpression("∇ (A;B;C;D;E;F;G;H;J;D;K;L;M) { A }")
         }
     }
+
+    @Test
+    fun functionArgumentsAreLocal() {
+        parseAPLExpression("a←1 ◊ ∇ b (a) { a←2+a } ◊ b 100 ◊ a").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
+
+    @Test
+    fun functionArgumentsAreLocalTwoArg() {
+        parseAPLExpression("a←1 ◊ c←2 ◊ ∇ (c) b (a) { a←4 ◊ c←3 } ◊ 1000 b 100 ◊ a c").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 2), result)
+        }
+    }
 }
