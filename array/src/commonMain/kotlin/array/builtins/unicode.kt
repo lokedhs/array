@@ -2,9 +2,8 @@ package array.builtins
 
 import array.*
 
-private fun toUnicodeCodepoint(valueAt: APLValue): APLValue {
-    val v = valueAt.unwrapDeferredValue()
-    return when (v) {
+private fun toUnicodeCodepoint(value: APLValue): APLValue {
+    return when (val v = value.unwrapDeferredValue()) {
         is APLChar -> v.value.makeAPLNumber()
         is APLSingleValue -> v
         else -> ToUnicodeValue(v)
@@ -29,11 +28,38 @@ class MakeCodepoints : APLFunctionDescriptor {
     override fun make(pos: Position) = MakeCodepointsImpl(pos)
 }
 
+private fun fromUnicodeCodepoint(value: APLValue): APLValue {
+    return when (val v = value.unwrapDeferredValue()) {
+        is APLNumber -> APLChar(v.asInt())
+        is APLSingleValue -> v
+        else -> FromUnicodeValue(v)
+    }
+}
+
+private class FromUnicodeValue(val value: APLValue) : APLArray() {
+    override val dimensions = value.dimensions
+
+    override fun valueAt(p: Int): APLValue {
+        return fromUnicodeCodepoint(value.valueAt(p))
+    }
+}
+
+class MakeCharsFromCodepoints : APLFunctionDescriptor {
+    class MakeCharsFromCodepointsImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return fromUnicodeCodepoint(a)
+        }
+    }
+
+    override fun make(pos: Position) = MakeCharsFromCodepointsImpl(pos)
+}
+
 class UnicodeModule : KapModule {
     override val name = "unicode"
 
     override fun init(engine: Engine) {
         val namespace = engine.makeNamespace("unicode")
         engine.registerFunction(namespace.internAndExport("toCodepoints"), MakeCodepoints())
+        engine.registerFunction(namespace.internAndExport("fromCodepoints"), MakeCharsFromCodepoints())
     }
 }
