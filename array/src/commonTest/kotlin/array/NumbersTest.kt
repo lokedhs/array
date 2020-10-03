@@ -63,6 +63,9 @@ class NumbersTest : APLTest() {
         assertDoubleWithRange(Pair(0.0009, 0.0011), parseAPLExpression("10⋆¯3"))
         assertSimpleNumber(0, parseAPLExpression("0⋆10"))
         assertSimpleNumber(1, parseAPLExpression("10⋆0"))
+        assertComplexWithRange(Pair(-0.0000001, 0.0000001), Pair(1.732050807, 1.732050809), parseAPLExpression("¯3⋆0.5"))
+        assertComplexWithRange(Pair(0.01342669136, 0.01342669138), Pair(0.04132310697, 0.04132310699), parseAPLExpression("¯7.1*¯1.6"))
+        assertSimpleNumber(-27, parseAPLExpression("¯3⋆3"))
     }
 
     @Test

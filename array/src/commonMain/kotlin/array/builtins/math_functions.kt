@@ -331,7 +331,13 @@ class PowerAPLFunction : APLFunctionDescriptor {
                 a,
                 b,
                 { x, y -> x.toDouble().pow(y.toDouble()).makeAPLNumber() },
-                { x, y -> x.pow(y).makeAPLNumber() },
+                { x, y ->
+                    if (x < 0) {
+                        x.toComplex().pow(y.toComplex()).makeAPLNumber()
+                    } else {
+                        x.pow(y).makeAPLNumber()
+                    }
+                },
                 { x, y -> x.pow(y).makeAPLNumber() }
             )
         }
