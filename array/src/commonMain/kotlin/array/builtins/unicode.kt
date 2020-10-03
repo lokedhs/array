@@ -54,6 +54,19 @@ class MakeCharsFromCodepoints : APLFunctionDescriptor {
     override fun make(pos: Position) = MakeCharsFromCodepointsImpl(pos)
 }
 
+class GraphemesFunction : APLFunctionDescriptor {
+    class GraphemesFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val graphemeList = arrayAsStringValue(a, pos).asGraphemeList()
+            return APLArrayImpl(dimensionsOfSize(graphemeList.size), Array(graphemeList.size) { i ->
+                APLString(graphemeList[i])
+            })
+        }
+    }
+
+    override fun make(pos: Position) = GraphemesFunctionImpl(pos)
+}
+
 class UnicodeModule : KapModule {
     override val name = "unicode"
 
@@ -61,5 +74,6 @@ class UnicodeModule : KapModule {
         val namespace = engine.makeNamespace("unicode")
         engine.registerFunction(namespace.internAndExport("toCodepoints"), MakeCodepoints())
         engine.registerFunction(namespace.internAndExport("fromCodepoints"), MakeCharsFromCodepoints())
+        engine.registerFunction(namespace.internAndExport("toGraphemes"), GraphemesFunction())
     }
 }

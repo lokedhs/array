@@ -116,6 +116,17 @@ class UnicodeTest : APLTest() {
         }
     }
 
+    @Test
+    fun graphemesTest() {
+        parseAPLExpression("unicode:toGraphemes \"abca⃞\"").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertString("a", result.valueAt(0))
+            assertString("b", result.valueAt(1))
+            assertString("c", result.valueAt(2))
+            assertString("a⃞", result.valueAt(3))
+        }
+    }
+
     private fun assertChar(codepoint: Int, result: APLValue) {
         assertTrue(result is APLChar)
         assertEquals(codepoint, result.value)
