@@ -24,6 +24,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     val keyboardHelpWindow: KeyboardHelpWindow
     val aboutWindow: AboutWindow
     val calculationQueue: CalculationQueue
+    val sourceEditors = ArrayList<SourceEditor>()
 
     init {
         engine = Engine()
@@ -95,8 +96,10 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     private fun openNewFile() {
-        val editor = SourceEditor(this)
-        editor.show()
+        SourceEditor(this).let { editor ->
+            sourceEditors.add(editor)
+            editor.show()
+        }
     }
 
     fun selectFile(forSave: Boolean = false): File? {
@@ -125,7 +128,11 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     fun sendInput(text: String) {
-        calculationQueue.pushRequest(StringSourceLocation(text), false) { result ->
+
+    }
+
+    fun evalSource(source: SourceLocation, linkNewContext: Boolean = false) {
+        calculationQueue.pushRequest(source, linkNewContext) { result ->
             if (result is Either.Right) {
                 result.value.printStackTrace()
             }
@@ -136,13 +143,24 @@ class Client(val application: ClientApplication, val stage: Stage) {
     private fun displayResult(result: Either<APLValue, Exception>) {
         when (result) {
             is Either.Left -> resultList.addResult(result.value)
-            is Either.Right -> resultList.addExceptionResult(result.value)
+            is Either.Right -> {
+                val ex = result.value
+                resultList.addExceptionResult(ex)
+                if (ex is APLGenericException) {
+                    val pos = ex.pos
+                    if (pos != null) {
+                        val sourceLocation = pos.source
+                        if (sourceLocation is SourceEditor.EditorSourceLocation) {
+                            sourceEditors.forEach { e ->
+                                if (e === sourceLocation.editor) {
+                                    sourceLocation.editor.moveToPos(pos)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-    }
-
-    fun evalSource(source: SourceLocation, linkNewContext: Boolean = false) {
-        val v = engine.parseAndEval(source, linkNewContext)
-        resultList.addResult(v)
     }
 
     private fun initCustomFunctions() {

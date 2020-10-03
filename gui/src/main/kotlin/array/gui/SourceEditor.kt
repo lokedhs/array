@@ -1,5 +1,6 @@
 package array.gui
 
+import array.Position
 import array.SourceLocation
 import array.StringCharacterProvider
 import array.gui.styledarea.KAPEditorStyledArea
@@ -57,8 +58,8 @@ class SourceEditor(val client: Client) {
         border.center = styledArea
 
         val toolbar = ToolBar(
-            makeToolbarButton("Run", { runClicked() }),
-            makeToolbarButton("Save", { saveClicked() }))
+            makeToolbarButton("Run", this::runClicked),
+            makeToolbarButton("Save", this::saveClicked))
         border.top = toolbar
 
         stage.scene = Scene(border, 400.0, 600.0)
@@ -96,7 +97,11 @@ class SourceEditor(val client: Client) {
         stage.show()
     }
 
-    class EditorSourceLocation(editor: SourceEditor, val text: String) : SourceLocation {
+    fun moveToPos(pos: Position) {
+        styledArea.caretSelectionBind.moveTo(pos.line, pos.col)
+    }
+
+    class EditorSourceLocation(val editor: SourceEditor, val text: String) : SourceLocation {
         private val editorReference = WeakReference(editor)
 
         override fun sourceText() = text
