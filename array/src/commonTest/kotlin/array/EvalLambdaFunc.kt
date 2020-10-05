@@ -83,6 +83,17 @@ class EvalLambdaFunc : APLTest() {
         assertArrayContent(arrayOf(2, 3, 4, 5), result)
     }
 
+    @Test
+    fun doubleNesting() {
+        parseAPLExpression(
+            """
+            |∇ foo (x) { λ{ y←⍵ ◊ λ{ ⍵+x+y } } }
+            |⍞(⍞(foo 10) 11) 12
+        """.trimMargin()).let { result ->
+            assertSimpleNumber(33, result)
+        }
+    }
+
     private fun evalWithEngine(engine: Engine, expr: String): APLValue {
         return engine.parseAndEval(StringSourceLocation(expr), false)
     }
