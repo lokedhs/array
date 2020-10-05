@@ -96,10 +96,8 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     private fun openNewFile() {
-        SourceEditor(this).let { editor ->
-            sourceEditors.add(editor)
-            editor.show()
-        }
+        val editor = SourceEditor(this)
+        editor.show()
     }
 
     fun selectFile(forSave: Boolean = false): File? {

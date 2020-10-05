@@ -63,6 +63,9 @@ class SourceEditor(val client: Client) {
         border.top = toolbar
 
         stage.scene = Scene(border, 400.0, 600.0)
+
+        client.sourceEditors.add(this)
+        stage.onCloseRequest = EventHandler { client.sourceEditors.remove(this) }
     }
 
     private fun makeToolbarButton(name: String, fn: () -> Unit): Button {
