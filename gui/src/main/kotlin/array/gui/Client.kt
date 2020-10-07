@@ -126,7 +126,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     fun sendInput(text: String) {
-
+        evalSource(StringSourceLocation(text))
     }
 
     fun evalSource(source: SourceLocation, linkNewContext: Boolean = false) {
@@ -150,8 +150,10 @@ class Client(val application: ClientApplication, val stage: Stage) {
                         val sourceLocation = pos.source
                         if (sourceLocation is SourceEditor.EditorSourceLocation) {
                             sourceEditors.forEach { e ->
-                                if (e === sourceLocation.editor) {
-                                    sourceLocation.editor.moveToPos(pos)
+                                sourceLocation.editor?.let { editor ->
+                                    if (e === editor) {
+                                        editor.highlightError(ex.message ?: "no error message", pos)
+                                    }
                                 }
                             }
                         }

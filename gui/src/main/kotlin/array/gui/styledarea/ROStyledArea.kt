@@ -20,7 +20,7 @@ class ROStyledArea(
     document: EditableStyledDocument<ParStyle, EditorContent, TextStyle>,
     styledTextOps: TextOps<EditorContent, TextStyle>,
     nodeFactory: Function<StyledSegment<EditorContent, TextStyle>, Node>
-) : KAPEditorStyledArea<EditorContent>(
+) : KAPEditorStyledArea<ParStyle, EditorContent>(
     keyboardInput,
     ParStyle(),
     applyParagraphStyle,

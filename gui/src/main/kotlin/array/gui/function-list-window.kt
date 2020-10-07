@@ -4,7 +4,6 @@ import array.*
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.ObservableValue
 import javafx.collections.FXCollections
-import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.control.Button
 import javafx.scene.control.TableCell
@@ -34,9 +33,7 @@ class FunctionListWindow private constructor(val renderContext: ClientRenderCont
     }
 
     private fun makeButtonPanel(): HBox {
-        val addButton = Button("Add").apply {
-            onAction = EventHandler { addFunction() }
-        }
+        val addButton = Button("Add")
         val editButton = Button("Edit")
         val removeButton = Button("Remove")
         return HBox(addButton, editButton, removeButton)
@@ -44,11 +41,6 @@ class FunctionListWindow private constructor(val renderContext: ClientRenderCont
 
     fun show() {
         stage.show()
-    }
-
-    private fun addFunction() {
-        val editor = FunctionEditorWindow(renderContext, engine)
-        editor.show()
     }
 
     companion object {

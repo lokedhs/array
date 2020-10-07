@@ -8,7 +8,6 @@ class ParStyle(val type: ParStyleType = ParStyleType.NORMAL) {
         return "ParStyle[type=${type}]"
     }
 
-
     enum class ParStyleType {
         NORMAL,
         INDENT,
