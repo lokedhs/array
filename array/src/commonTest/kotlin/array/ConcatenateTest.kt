@@ -73,6 +73,38 @@ class ConcatenateTest : APLTest() {
     }
 
     @Test
+    fun zeroSizeArrayLeft() {
+        parseAPLExpression("(0⍴1) , ⍳8").let { result ->
+            assertDimension(dimensionsOfSize(8), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7), result)
+        }
+    }
+
+    @Test
+    fun zeroSizeArrayRight() {
+        parseAPLExpression("(⍳8) , 0⍴1").let { result ->
+            assertDimension(dimensionsOfSize(8), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7), result)
+        }
+    }
+
+    @Test
+    fun zeroSizeLeft2Dimension() {
+        parseAPLExpression("(2 0 ⍴ 1) ,[1] 2 2 ⍴ 1+⍳4").let { result ->
+            assertDimension(dimensionsOfSize(2, 2), result)
+            assertArrayContent(arrayOf(1, 2, 3, 4), result)
+        }
+    }
+
+    @Test
+    fun zeroSizeRight2Dimension() {
+        parseAPLExpression("(2 2 ⍴ 11+⍳4) ,[1] 2 0 ⍴ 1").let { result ->
+            assertDimension(dimensionsOfSize(2, 2), result)
+            assertArrayContent(arrayOf(11, 12, 13, 14), result)
+        }
+    }
+
+    @Test
     fun mismatchedDimensions() {
         assertFailsWith<InvalidDimensionsException> {
             parseAPLExpression("(3 4 ⍴ ⍳12) , 1 2")

@@ -80,7 +80,7 @@ class IotaAPLFunction : APLFunctionDescriptor {
 }
 
 class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
-    override fun valueAt(p: Int) = if (value.isScalar()) value else value.valueAt(p % value.size)
+    override fun valueAt(p: Int) = if (value is APLSingleValue) value else value.valueAt(p % value.size)
 }
 
 class RhoAPLFunction : APLFunctionDescriptor {
@@ -327,7 +327,7 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
     abstract fun defaultAxis(a: APLValue, b: APLValue): Int
 
-    private fun joinByAxis(a: APLValue, b: APLValue, axis: Int): APLArray {
+    private fun joinByAxis(a: APLValue, b: APLValue, axis: Int): APLValue {
         if (a.rank == 0 && b.rank == 0) {
             throw InvalidDimensionsException("Both a and b are scalar", pos)
         }
@@ -372,9 +372,12 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
             }
         }
 
-        if (a2.size == 0 || b2.size == 0) {
-            // Catenating an empty array, this needs an implementation
-            throw RuntimeException("a2.size = ${a2.size}, b2.size = ${b2.size}")
+        if (a2.size == 0) {
+            return b2
+        }
+
+        if (b2.size == 0) {
+            return a2
         }
 
         if (da.size == 1 && db.size == 1) {
