@@ -49,7 +49,7 @@ open class KAPEditorStyledArea<P, S>(
             val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers), { replaceSelection(e.value) })
             entries.add(v)
         }
-
+        entries.add(InputMap.consume(EventPattern.keyTyped(" ", KeyCombination.ALT_DOWN), { replaceSelection(" ") }))
         addInputMappings(entries)
 
         // Prefix input

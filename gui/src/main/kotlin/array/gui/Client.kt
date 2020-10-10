@@ -113,8 +113,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     private fun selectAndEditFile() {
-        val file = selectFile()
-        if (file != null) {
+        selectFile()?.let { file ->
             val editor = SourceEditor(this)
             editor.setFile(file)
             editor.show()
@@ -149,8 +148,8 @@ class Client(val application: ClientApplication, val stage: Stage) {
                     if (pos != null) {
                         val sourceLocation = pos.source
                         if (sourceLocation is SourceEditor.EditorSourceLocation) {
-                            sourceEditors.forEach { e ->
-                                sourceLocation.editor?.let { editor ->
+                            sourceLocation.editor?.let { editor ->
+                                sourceEditors.forEach { e ->
                                     if (e === editor) {
                                         editor.highlightError(ex.message ?: "no error message", pos)
                                     }

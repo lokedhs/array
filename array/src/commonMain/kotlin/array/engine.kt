@@ -286,11 +286,14 @@ class Engine {
 
     fun parseAndEval(source: SourceLocation, newContext: Boolean): APLValue {
         val parser = APLParser(TokenGenerator(this, source))
-        val instr = parser.parseValueToplevel(EndOfFile)
         return if (newContext) {
-            val newInstr = RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
-            newInstr.evalWithNewContext(this)
+            withSavedNamespace {
+                val instr = parser.parseValueToplevel(EndOfFile)
+                val newInstr = RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
+                newInstr.evalWithNewContext(this)
+            }
         } else {
+            val instr = parser.parseValueToplevel(EndOfFile)
             rootContext.reinitRootBindings()
             instr.evalWithContext(rootContext)
         }

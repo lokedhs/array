@@ -143,6 +143,71 @@ class EncloseAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = EncloseAPLFunctionImpl(pos)
 }
 
+class DisclosedArrayValue(val value: APLValue, pos: Position) : APLArray() {
+    override val dimensions: Dimensions
+
+    private val cutoffMultiplier: Int
+    private val newDimensionsMultipliers: IntArray
+
+    init {
+        val d = value.dimensions
+        assertx(d.size > 0)
+
+        val m = maxShapeOf(value, pos)
+        val resultDimension = Dimensions(IntArray(d.size + m.size) { i ->
+            if (i < d.size) {
+                d[i]
+            } else {
+                m[i - d.size]
+            }
+        })
+
+        val multipliers = resultDimension.multipliers()
+        dimensions = resultDimension
+        cutoffMultiplier = multipliers[d.size - 1]
+        newDimensionsMultipliers = m.multipliers()
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        val index = p / cutoffMultiplier
+        val v = value.valueAt(index)
+
+        val innerIndex = p % cutoffMultiplier
+        return if (v.isScalar() && innerIndex == 0) {
+            v
+        } else {
+            val d = v.dimensions
+            val position = Dimensions.positionFromIndexWithMultipliers(innerIndex, newDimensionsMultipliers)
+            for (i in position.indices) {
+                if (position[i] >= d[i]) {
+                    return v.defaultValue()
+                }
+            }
+            return v.valueAt(d.indexFromPosition(position))
+        }
+    }
+
+    private fun maxShapeOf(v: APLValue, pos: Position? = null): Dimensions {
+        var elements: IntArray? = null
+        v.iterateMembers { value ->
+            val dimensions = value.dimensions
+            if (elements == null) {
+                elements = IntArray(dimensions.size) { i -> dimensions[i] }
+            } else {
+                if (dimensions.size != elements!!.size) {
+                    throw InvalidDimensionsException("Not all elements in array have the same dimensions", pos)
+                }
+                for (i in 0 until elements!!.size) {
+                    if (elements!![i] < dimensions[i]) {
+                        elements!![i] = dimensions[i]
+                    }
+                }
+            }
+        }
+        return Dimensions(elements!!) // TODO: This will crash with an empty argument
+    }
+}
+
 class DiscloseAPLFunction : APLFunctionDescriptor {
     class DiscloseAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
@@ -150,7 +215,7 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
             return when {
                 v is APLSingleValue -> a
                 v.isScalar() -> v.valueAt(0)
-                else -> v
+                else -> DisclosedArrayValue(v, pos)
             }
         }
 

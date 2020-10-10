@@ -63,15 +63,7 @@ inline class Dimensions(val dimensions: IntArray) {
     }
 
     fun positionFromIndex(p: Int): IntArray {
-        val multipliers = multipliers()
-        val a = IntArray(dimensions.size) { 0 }
-        var curr = p
-        for (i in dimensions.indices) {
-            val multiplier = multipliers[i]
-            a[i] = curr / multiplier
-            curr %= multiplier
-        }
-        return a
+        return positionFromIndexWithMultipliers(p, multipliers())
     }
 
     fun lastDimension(pos: Position? = null): Int {
@@ -101,6 +93,19 @@ inline class Dimensions(val dimensions: IntArray) {
         }
         buf.append("]")
         return buf.toString()
+    }
+
+    companion object {
+        fun positionFromIndexWithMultipliers(p: Int, multipliers: IntArray): IntArray {
+            var curr = p
+            val a = IntArray(multipliers.size) { i ->
+                val multiplier = multipliers[i]
+                val result = curr / multiplier
+                curr %= multiplier
+                result
+            }
+            return a
+        }
     }
 }
 

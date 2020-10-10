@@ -4,26 +4,70 @@ namespace("output")
   (typeof v) ≡ 'array
 }
 
+∇ stringToGraphemes (s) {
+  {1 (↑⍴⍵) ⍴ ⍵} unicode:toGraphemes s
+}
+
+∇ wrapBox (strlist) {
+  w ← ↑ ⍴ ↑strlist
+  top ← "┏" , (w ⍴ "━") , "┓"
+  bottom ← "┗" , (w ⍴ "━") , "┛"
+  (⊂top) , ({"┃",⍵,"┃"}¨strlist) , ⊂bottom
+}
+
+∇ println (v) {
+  print v
+  print unicode:fromCodepoints 10
+  v
+}
+
 ∇ render2d (v) {
-  colWidths ← ⌈/[0] {↑⍴⍵}¨v
-  ⍝ The hack below (a string with an array index) is to make the space character explicit
-  ⍝ until unicode name lookup works.
-  alignedStrings ← ((⍴v) ⍴ colWidths) {((⍺-⍴⍵) ⍴ (" ")[0]),⍵}¨ v
-  ⍝ need to wrap the result in box drawing chars
-  alignedStrings
+  v ← v
+⍝  println "Rendering"
+⍝  println v
+⍝  println "---end---"
+
+  ⍝ The width of each column is the maximum width of any cell
+  colWidths ← ⌈/[0] {(⍴⍵)[1]}¨v
+  ⍝ Pad each cell to the correct width
+  xAligned ← ((⍴v) ⍴ colWidths) {((↑⍴⍵) (⍺-(⍴⍵)[1]) ⍴ (⊂" ")),⍵}¨ v
+
+  ⍝ Compute the height of each row in a similar way as the cols
+  colHeights ← ⌈/[1] {↑⍴⍵}¨xAligned
+  ⍝ Pad each row so that they are all the same height
+  yAligned ← ((⍴ xAligned) ⍴ colHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
+
+  ⍝ Add a space between cells on each row
+  vSeparated ← {⍺,((↑⍴⍵) 1 ⍴ ⊂" "),⍵}/ yAligned
+
+  ⍝ Since all rows are now the same width, the total width is the width of the first row
+⍝  spaces ← (1 (⍴ ↑ vSeparated)[1]) ⍴ (⊂" ")
+⍝  strlist ← ,/[1] ⊃ {⍺,[0]spaces,[0]⍵}/ vSeparated
+
+⍝  wrapBox strlist
+
+  ⊃ {⍺,[0]⍵}/ vSeparated
 }
 
 ∇ prettyPrint (v) {
   enclosed ← if(isArray v) {
     if (×/,('char)=typeof¨v) {
-      @",v,@"
+      stringToGraphemes @",v,@"
     } else {
-      prettyPrint¨ v
+      render2d prettyPrint¨ v
     }
   } else {
-    ⍕v
+    stringToGraphemes ⍕v
   }
-  render2d v
+  enclosed
 }
+
+∇ testData (x) {
+  a ← 2 2 ⍴ "a" "b" "c" "d"
+  b ← 4 4 ⍴ ⊃,/ {{⍕⍵}¨⍵}¨ "1234" "qwer" "zxcv" "asdf"
+  z ← 3 2 ⍴ a b b a
+}
+
+⍝ output:prettyPrint 3 3 ⍴ (2 2 ⍴ 12 123 1) 3 (2 3 ⍴ 1 12 123 1234) 999
 
 export(prettyPrint)
