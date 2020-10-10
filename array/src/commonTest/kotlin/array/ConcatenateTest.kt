@@ -207,4 +207,27 @@ class ConcatenateTest : APLTest() {
         }
     }
 
+    @Test
+    fun oneArgFirstAxisCatenate() {
+        parseAPLExpression("⍪ 100 200 300 400 500 600").let { result ->
+            assertDimension(dimensionsOfSize(6, 1), result)
+            assertArrayContent(arrayOf(100, 200, 300, 400, 500, 600), result)
+        }
+    }
+
+    @Test
+    fun oneArgFirstAxisSingleElement() {
+        parseAPLExpression("⍪9").let { result ->
+            assertDimension(dimensionsOfSize(1, 1), result)
+            assertArrayContent(arrayOf(9), result)
+        }
+    }
+
+    @Test
+    fun oneArgFirstAxis3DArg() {
+        parseAPLExpression("⍪ 3 3 2 ⍴ ⍳18").let { result ->
+            assertDimension(dimensionsOfSize(3, 6), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17), result)
+        }
+    }
 }

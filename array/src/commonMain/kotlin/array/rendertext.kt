@@ -27,7 +27,7 @@ private class String2D {
     fun row(i: Int) = if (i < content.size) content[i] else emptyList()
 
     private fun computeLongestRow(rows: List<List<String>>): Int {
-        return rows.map { it.size }.reduceWithInitial({ a, b -> max(a, b) }, 0)
+        return rows.map { it.size }.reduceWithInitial(0, { a, b -> max(a, b) })
     }
 
     fun encloseInBox(): String2D {

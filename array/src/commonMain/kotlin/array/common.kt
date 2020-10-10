@@ -153,7 +153,7 @@ inline fun <T, R : Comparable<R>> List<T>.maxValueBy(fn: (T) -> R): R {
     return currMax!!
 }
 
-inline fun <T, R> List<T>.reduceWithInitial(fn: (R, T) -> R, initial: R): R {
+inline fun <T, R> List<T>.reduceWithInitial(initial: R, fn: (R, T) -> R): R {
     var curr = initial
     for (element in this) {
         curr = fn(curr, element)

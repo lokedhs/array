@@ -238,20 +238,6 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
 }
 
 abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
-    private class DelegatedAPLArrayValue(override val dimensions: Dimensions, val value: APLValue) : APLArray() {
-        override fun valueAt(p: Int): APLValue {
-            return value.valueAt(0)
-        }
-    }
-
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-        return when {
-            a is APLSingleValue -> APLArrayImpl.make(dimensionsOfSize(1)) { a }
-            a.rank == 0 -> DelegatedAPLArrayValue(dimensionsOfSize(1), a)
-            else -> ResizedArray(dimensionsOfSize(a.size), a)
-        }
-    }
-
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         // The APL concept of using a non-integer axis to specify that you want to add a dimension (i.e. the laminate
         // function) is a bit confusing and this operation should really have a different syntax.
@@ -478,6 +464,18 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
 class ConcatenateAPLFunctionFirstAxis : APLFunctionDescriptor {
     class ConcatenateAPLFunctionFirstAxisImpl(pos: Position) : ConcatenateAPLFunctionImpl(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            val aDimensions = a.dimensions
+            val c = if (aDimensions.size == 0) {
+                dimensionsOfSize(1, 1)
+            } else {
+                dimensionsOfSize(
+                    aDimensions[0],
+                    aDimensions.dimensions.drop(1).reduceWithInitial(1) { v1, v2 -> v1 * v2 })
+            }
+            return ResizedArray(c, a)
+        }
+
         override fun defaultAxis(a: APLValue, b: APLValue) = 0
     }
 
@@ -486,6 +484,20 @@ class ConcatenateAPLFunctionFirstAxis : APLFunctionDescriptor {
 
 class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
     class ConcatenateAPLFunctionLastAxisImpl(pos: Position) : ConcatenateAPLFunctionImpl(pos) {
+        private class DelegatedAPLArrayValue(override val dimensions: Dimensions, val value: APLValue) : APLArray() {
+            override fun valueAt(p: Int): APLValue {
+                return value.valueAt(0)
+            }
+        }
+
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            return when {
+                a is APLSingleValue -> APLArrayImpl.make(dimensionsOfSize(1)) { a }
+                a.rank == 0 -> DelegatedAPLArrayValue(dimensionsOfSize(1), a)
+                else -> ResizedArray(dimensionsOfSize(a.size), a)
+            }
+        }
+
         override fun defaultAxis(a: APLValue, b: APLValue) = max(a.rank, b.rank) - 1
     }
 
