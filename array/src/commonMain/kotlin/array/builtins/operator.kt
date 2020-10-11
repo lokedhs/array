@@ -4,12 +4,10 @@ import array.*
 
 class PowerAPLOperator : APLOperatorTwoArg {
     override fun combineFunction(
-        fn1: APLFunctionDescriptor,
-        fn2: APLFunctionDescriptor,
+        fn1: APLFunction,
+        fn2: APLFunction,
         operatorAxis: Instruction?,
-        opPos: Position,
-        fn1Pos: Position,
-        fn2Pos: Position
+        opPos: Position
     ): APLFunctionDescriptor {
         if (operatorAxis != null) {
             throw AxisNotSupported(opPos)
@@ -18,12 +16,10 @@ class PowerAPLOperator : APLOperatorTwoArg {
     }
 
     class PowerAPLFunctionDescriptor(
-        val fn1Descriptor: APLFunctionDescriptor,
-        val fn2Descriptor: APLFunctionDescriptor,
+        val fn1: APLFunction,
+        val fn2: APLFunction,
     ) : APLFunctionDescriptor {
         override fun make(pos: Position): APLFunction {
-            val fn1 = fn1Descriptor.make(pos)
-            val fn2 = fn2Descriptor.make(pos)
             return object : APLFunction(pos) {
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     var curr = a

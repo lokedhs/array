@@ -38,18 +38,16 @@ class ForEachResult2Arg(
 }
 
 class ForEachOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
             throw AxisNotSupported(pos)
         }
         return ForEachFunctionDescriptor(fn)
     }
 
-    class ForEachFunctionDescriptor(val fnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
+    class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
         override fun make(pos: Position): APLFunction {
             return object : APLFunction(pos) {
-                private val fn = fnDescriptor.make(pos)
-
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     return ForEachResult1Arg(context, fn, a, axis, pos)
                 }

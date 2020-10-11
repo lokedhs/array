@@ -453,11 +453,11 @@ class APLParser(val tokeniser: TokenGenerator) {
                 val axis = parseAxis()
                 when (op) {
                     is APLOperatorOneArg -> {
-                        currentFn = op.combineFunction(currentFn, axis, fnPos)
+                        currentFn = op.combineFunction(currentFn.make(fnPos), axis, opPos)
                     }
                     is APLOperatorTwoArg -> {
                         parseTwoArgOperatorArgument().let { (fn2, fn2Pos) ->
-                            currentFn = op.combineFunction(fn, fn2, axis, opPos, fnPos, fn2Pos)
+                            currentFn = op.combineFunction(fn.make(fnPos), fn2.make(fn2Pos), axis, opPos)
                         }
                     }
                     else -> throw IllegalStateException("Operators must be either one or two arg")

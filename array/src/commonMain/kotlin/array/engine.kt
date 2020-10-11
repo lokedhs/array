@@ -83,17 +83,15 @@ class DeclaredNonBoundFunction(val instruction: Instruction, val env: Environmen
 interface APLOperator
 
 interface APLOperatorOneArg : APLOperator {
-    fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor
+    fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor
 }
 
 interface APLOperatorTwoArg : APLOperator {
     fun combineFunction(
-        fn1: APLFunctionDescriptor,
-        fn2: APLFunctionDescriptor,
+        fn1: APLFunction,
+        fn2: APLFunction,
         operatorAxis: Instruction?,
-        opPos: Position,
-        fn1Pos: Position,
-        fn2Pos: Position): APLFunctionDescriptor
+        opPos: Position): APLFunctionDescriptor
 }
 
 private const val CORE_NAMESPACE_NAME = "kap"

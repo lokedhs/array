@@ -34,7 +34,9 @@ class InnerJoinResult(
     val a: APLValue,
     val b: APLValue,
     val fn1: APLFunction,
+    val fn1Axis: APLValue?,
     val fn2: APLFunction,
+    val fn2Axis: APLValue?,
     val pos: Position
 ) : APLArray() {
 
@@ -73,29 +75,28 @@ class InnerJoinResult(
         var pb = posInB
         val rightArg = APLArrayImpl.make(axisDimensions) { b.valueAt(pb).also { pb += bStepSize } }
 
-        val v = fn2.eval2Arg(context, leftArg, rightArg, null)
-        return ReduceResult1Arg(context, fn1, v, 0, pos)
+        val v = fn2.eval2Arg(context, leftArg, rightArg, fn2Axis)
+        return ReduceResult1Arg(context, fn1, fn1Axis, v, 0, pos)
     }
 }
 
 class OuterJoinOp : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         return OuterInnerJoinOp.OuterJoinFunctionDescriptor(fn)
     }
 }
 
 class OuterInnerJoinOp : APLOperatorTwoArg {
     override fun combineFunction(
-        fn1: APLFunctionDescriptor,
-        fn2: APLFunctionDescriptor,
+        fn1: APLFunction,
+        fn2: APLFunction,
         operatorAxis: Instruction?,
         opPos: Position,
-        fn1Pos: Position,
-        fn2Pos: Position): APLFunctionDescriptor {
+    ): APLFunctionDescriptor {
         if (operatorAxis != null) {
             throw AxisNotSupported(opPos)
         }
-        return if (fn1 is NullFunction) {
+        return if (fn1 is NullFunction.NullFunctionImpl) {
             OuterJoinFunctionDescriptor(fn2)
         } else {
             InnerJoinFunctionDescriptor(fn1, fn2)
@@ -103,10 +104,8 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
     }
 
 
-    class OuterJoinFunctionDescriptor(val fnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
+    class OuterJoinFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
         override fun make(pos: Position): APLFunction {
-            val fn = fnDescriptor.make(pos)
-
             return object : APLFunction(pos) {
                 override fun eval2Arg(
                     context: RuntimeContext,
@@ -123,11 +122,9 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
         }
     }
 
-    class InnerJoinFunctionDescriptor(val fn1Descriptor: APLFunctionDescriptor, val fn2Descriptor: APLFunctionDescriptor) :
+    class InnerJoinFunctionDescriptor(val fn1: APLFunction, val fn2: APLFunction) :
         APLFunctionDescriptor {
         override fun make(pos: Position): APLFunction {
-            val fn1 = fn1Descriptor.make(pos)
-            val fn2 = fn2Descriptor.make(pos)
             return object : APLFunction(fn1.pos) {
                 override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                     if (axis != null) {
@@ -155,9 +152,9 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     }
                     return if (a1Dimensions.size == 1 && b1Dimensions.size == 1) {
                         val v = fn2.eval2Arg(context, a1, b1, null)
-                        ReduceResult1Arg(context, fn1, v, 0, pos)
+                        ReduceResult1Arg(context, fn1, null, v, 0, pos)
                     } else {
-                        InnerJoinResult(context, a1, b1, fn1, fn2, pos)
+                        InnerJoinResult(context, a1, b1, fn1, null, fn2, null, pos)
                     }
                 }
             }
@@ -177,7 +174,6 @@ class NullFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position): APLFunction {
-        // TODO: Should an error be thrown here?
         return NullFunctionImpl(pos)
     }
 

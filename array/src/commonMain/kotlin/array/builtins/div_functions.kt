@@ -61,16 +61,16 @@ class ThrowFunction : APLFunctionDescriptor {
 }
 
 class CatchOperator : APLOperatorOneArg {
-    override fun combineFunction(fn: APLFunctionDescriptor, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         return CatchFunctionDescriptor(fn)
     }
 
     class CatchFunctionDescriptor(
-        val fn1Descriptor: APLFunctionDescriptor
+        val fn1Descriptor: APLFunction
     ) : APLFunctionDescriptor {
 
         override fun make(pos: Position): APLFunction {
-            val fn = fn1Descriptor.make(pos)
+            val fn = fn1Descriptor
             return object : APLFunction(pos) {
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     val dimensions = a.dimensions
