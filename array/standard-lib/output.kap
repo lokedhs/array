@@ -9,10 +9,10 @@ namespace("output")
 }
 
 ∇ wrapBox (strlist) {
-  w ← ↑ ⍴ ↑strlist
-  top ← "┏" , (w ⍴ "━") , "┓"
-  bottom ← "┗" , (w ⍴ "━") , "┛"
-  (⊂top) , ({"┃",⍵,"┃"}¨strlist) , ⊂bottom
+  w ← (⍴ strlist)[1]
+  top ← (⊂"┏") , (w ⍴ ⊂"━") , ⊂"┓"
+  bottom ← (⊂"┗") , (w ⍴ ⊂"━") , ⊂"┛"
+  {top,[0]⍵,[0]bottom} (⊂"┃") , strlist , ⊂"┃"
 }
 
 ∇ println (v) {
@@ -38,7 +38,7 @@ namespace("output")
   yAligned ← ((⍴ xAligned) ⍴ colHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
 
   ⍝ Add a space between cells on each row
-  vSeparated ← {⍺,((↑⍴⍵) 1 ⍴ ⊂" "),⍵}/ yAligned
+  vSeparated ← {⍺,(⊂" "),⍵}/ yAligned
 
   ⍝ Since all rows are now the same width, the total width is the width of the first row
 ⍝  spaces ← (1 (⍴ ↑ vSeparated)[1]) ⍴ (⊂" ")
@@ -46,7 +46,7 @@ namespace("output")
 
 ⍝  wrapBox strlist
 
-  ⊃ ,[0]/ vSeparated
+  wrapBox ⊃ ,[0]/ vSeparated
 }
 
 ∇ prettyPrint (v) {
@@ -60,12 +60,6 @@ namespace("output")
     stringToGraphemes ⍕v
   }
   enclosed
-}
-
-∇ testData (x) {
-  a ← 2 2 ⍴ "a" "b" "c" "d"
-  b ← 4 4 ⍴ ⊃,/ {{⍕⍵}¨⍵}¨ "1234" "qwer" "zxcv" "asdf"
-  z ← 3 2 ⍴ a b b a
 }
 
 ⍝ output:prettyPrint 3 3 ⍴ (2 2 ⍴ 12 123 1) 3 (2 3 ⍴ 1 12 123 1234) 999
