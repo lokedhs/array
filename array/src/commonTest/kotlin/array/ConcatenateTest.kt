@@ -1,7 +1,10 @@
 package array
 
+import kotlin.math.exp
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class ConcatenateTest : APLTest() {
     @Test
@@ -229,5 +232,41 @@ class ConcatenateTest : APLTest() {
             assertDimension(dimensionsOfSize(3, 6), result)
             assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17), result)
         }
+    }
+
+    @Test
+    fun concatenatingEnclosedVectors() {
+        parseAPLExpression("(⊂\"ab\") , (⊂\"hjk\")").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertString("ab", result.valueAt(0))
+            assertString("hjk", result.valueAt(1))
+        }
+    }
+
+    @Test
+    fun concatenateLeftEnclosed() {
+        parseAPLExpression("(⊂\"as\") , \"abc\"").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertString("as", result.valueAt(0))
+            assertChar('a'.toInt(), result.valueAt(1))
+            assertChar('b'.toInt(), result.valueAt(2))
+            assertChar('c'.toInt(), result.valueAt(3))
+        }
+    }
+
+    @Test
+    fun concatenateRightEnclosed() {
+        parseAPLExpression("\"foo\" , (⊂\"as\")").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertChar('f'.toInt(), result.valueAt(0))
+            assertChar('o'.toInt(), result.valueAt(1))
+            assertChar('o'.toInt(), result.valueAt(2))
+            assertString("as", result.valueAt(3))
+        }
+    }
+
+    private fun assertChar(expected: Int, result: APLValue) {
+        assertTrue(result is APLChar)
+        assertEquals(expected, result.value)
     }
 }

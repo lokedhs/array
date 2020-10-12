@@ -46,7 +46,7 @@ namespace("output")
 
 ⍝  wrapBox strlist
 
-  ⊃ {⍺,[0]⍵}/ vSeparated
+  ⊃ ,[0]/ vSeparated
 }
 
 ∇ prettyPrint (v) {

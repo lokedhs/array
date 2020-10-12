@@ -77,6 +77,7 @@ interface APLValue {
     fun compareEquals(reference: APLValue): Boolean
     fun compare(reference: APLValue, pos: Position? = null): Int =
         throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}", pos)
+    fun disclose(): APLValue
 
     val labels: DimensionLabels? get() = null
 
@@ -205,6 +206,7 @@ abstract class APLSingleValue : APLValue {
     override val rank get() = 0
     override fun collapseInt() = this
     override fun arrayify() = APLArrayImpl.make(dimensionsOfSize(1)) { this }
+    override fun disclose() = this
 }
 
 abstract class APLArray : APLValue {
@@ -267,6 +269,8 @@ abstract class APLArray : APLValue {
             else -> compareAPLArrays(this, reference)
         }
     }
+
+    override fun disclose() = if(dimensions.size == 0) valueAt(0) else this
 
     override fun makeKey() = object {
         override fun equals(other: Any?): Boolean {

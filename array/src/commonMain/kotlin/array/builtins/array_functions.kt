@@ -341,12 +341,12 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
     private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
         val a1 = if (a.isScalar()) {
-            ResizedArray(b.dimensions, a)
+            ResizedArray(b.dimensions, a.disclose())
         } else {
             a
         }
         val b1 = if (b.isScalar()) {
-            ResizedArray(a.dimensions, b)
+            ResizedArray(a.dimensions, b.disclose())
         } else {
             b
         }
@@ -368,9 +368,8 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
     }
 
     private fun joinNoAxis(a: APLValue, b: APLValue): APLValue {
-        // This is pretty much a step-by-step reimplementation of the catenate function in the ISO spec.
         return when {
-            a.rank == 0 && b.rank == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a else b }
+            a.rank == 0 && b.rank == 0 -> APLArrayImpl.make(dimensionsOfSize(2)) { i -> if (i == 0) a.disclose() else b.disclose() }
             a.rank <= 1 && b.rank <= 1 -> Concatenated1DArrays(a.arrayify(), b.arrayify())
             else -> joinByAxis(a, b, defaultAxis(a, b))
         }
@@ -385,14 +384,14 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
         val a1 = if (a.rank == 0) {
             val bDimensions = b.dimensions
-            ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a)
+            ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a.disclose())
         } else {
             a
         }
 
         val b1 = if (b.rank == 0) {
             val aDimensions = a.dimensions
-            ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b)
+            ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b.disclose())
         } else {
             b
         }
