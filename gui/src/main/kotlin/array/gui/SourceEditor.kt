@@ -42,8 +42,8 @@ class SourceEditor(val client: Client) {
         val vbox = VBox()
 
         val toolbar = ToolBar(
-            makeToolbarButton("Run", this::runClicked),
-            makeToolbarButton("Save", this::saveClicked))
+            makeToolbarButton("Save", this::saveClicked),
+            makeToolbarButton("Run", this::runClicked))
         vbox.children.add(toolbar)
 
         styledArea = initStyledArea()
