@@ -27,7 +27,6 @@ namespace("output")
   println "=== end:",title," ==="
   data
 }
-⍝  N⌿⊃1⍴⊂A
 
 ∇ render2d (v) {
   v ← v
@@ -42,7 +41,6 @@ namespace("output")
   ⍝ Pad each row so that they are all the same height
   yAligned ← (⍉ (⍴ xAligned) ⍴ rowHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
 
-  ⍝ Add a space between cells on each row
   vSeparated ← {⍺,(⊂" "),⍵}/ yAligned
 
   wrapBox ⊃ ,[0]/ vSeparated
@@ -63,7 +61,7 @@ namespace("output")
 
 ∇ prettyPrint (v) {
   result ← prettyPrintToChars v
-  a←println¨,/result
+  println¨,/result
   0
 }
 
