@@ -832,4 +832,20 @@ class SelectElementsTest : APLTest() {
                 ), result)
         }
     }
+
+    @Test
+    fun lastAxisWithScalarLeftArgAndAxisArg() {
+        parseAPLExpression("2 ⌿[2] 3 2 2 ⍴ ⍳24").let { result ->
+            assertDimension(dimensionsOfSize(3, 2, 4), result)
+            assertArrayContent(arrayOf(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11), result)
+        }
+    }
+
+    @Test
+    fun lastAxisWithScalarLeftArgNoAxisArg() {
+        parseAPLExpression("2 ⌿ 3 2 2 ⍴ ⍳24").let { result ->
+            assertDimension(dimensionsOfSize(6, 2, 2), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8, 9, 10, 11, 8, 9, 10, 11), result)
+        }
+    }
 }

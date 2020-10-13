@@ -1086,15 +1086,14 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
         val bDimensions = bFixed.dimensions
         val axisInt = if (axis == null) defaultAxis(bFixed) else axis.ensureNumber(pos).asInt()
         ensureValidAxis(axisInt, bDimensions, pos)
-        if (!((aDimensions.size == 0 && bDimensions.size == 1)
-                    || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
+        if (!(aDimensions.size == 0 || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))
         ) {
             throw InvalidDimensionsException(
                 "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.", pos)
         }
         val selectIndexes = if (a.isScalar()) {
             a.ensureNumber(pos).asInt().let { v ->
-                IntArray(bDimensions[0]) { v }
+                IntArray(bDimensions[axisInt]) { v }
             }
         } else {
             a.toIntArray(pos)
