@@ -118,16 +118,16 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
         }
     }
 
-    open fun combine1Arg(a: APLSingleValue): APLValue = TODO("not implemented")
-    open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = TODO("not implemented")
+    open fun combine1Arg(a: APLSingleValue): APLValue = throw Unimplemented1ArgException(pos)
+    open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = throw Unimplemented2ArgException(pos)
 }
 
 abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
     override fun combine1Arg(a: APLSingleValue): APLValue = numberCombine1Arg(a.ensureNumber(pos))
     override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(pos), b.ensureNumber())
 
-    open fun numberCombine1Arg(a: APLNumber): APLValue = TODO("not implemented")
-    open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = TODO("not implemented")
+    open fun numberCombine1Arg(a: APLNumber): APLValue = throw Unimplemented1ArgException(pos)
+    open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = throw Unimplemented2ArgException(pos)
 }
 
 class AddAPLFunction : APLFunctionDescriptor {
