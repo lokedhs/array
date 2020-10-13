@@ -42,7 +42,7 @@ class SyntaxText : APLTest() {
             """
             |defsyntax foo (:value x) { x + 1 }
             |foo (100)
-            """.trimIndent())
+            """.trimMargin())
         assertSimpleNumber(101, result)
     }
 
@@ -52,7 +52,7 @@ class SyntaxText : APLTest() {
             """
             |defsyntax foo (:value x :value y) { x + y }
             |foo (200) (10)
-            """.trimIndent())
+            """.trimMargin())
         assertSimpleNumber(210, result)
     }
 
