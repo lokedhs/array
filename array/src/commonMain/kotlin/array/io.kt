@@ -121,6 +121,6 @@ class PathUtils {
             return path.substring(0, i)
         }
 
-        fun isAbsolutePath(path: String) = path.length > 0 && path[0] == '/'
+        fun isAbsolutePath(path: String) = path.isNotEmpty() && path[0] == '/'
     }
 }

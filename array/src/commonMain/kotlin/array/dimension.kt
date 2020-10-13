@@ -98,13 +98,12 @@ inline class Dimensions(val dimensions: IntArray) {
     companion object {
         fun positionFromIndexWithMultipliers(p: Int, multipliers: IntArray): IntArray {
             var curr = p
-            val a = IntArray(multipliers.size) { i ->
+            return IntArray(multipliers.size) { i ->
                 val multiplier = multipliers[i]
                 val result = curr / multiplier
                 curr %= multiplier
                 result
             }
-            return a
         }
     }
 }

@@ -16,7 +16,7 @@ actual fun isWhitespace(codepoint: Int): Boolean {
 }
 
 actual fun charToString(codepoint: Int): String {
-    return String(Char.toChars(codepoint))
+    return Char.toChars(codepoint).concatToString()
 }
 
 actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {

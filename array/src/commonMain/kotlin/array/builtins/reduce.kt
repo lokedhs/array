@@ -80,7 +80,7 @@ class ReduceResult1Arg(
 }
 
 abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruction?, pos: Position) : APLFunction(pos) {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, fnAxis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber(pos).asInt() else null
         return if (a.rank == 0) {
             if (axisParam != null && axisParam != 0) {
@@ -90,7 +90,7 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
         } else {
             val v = axisParam ?: defaultAxis(a)
             ensureValidAxis(v, a.dimensions, pos)
-            ReduceResult1Arg(context, fn, fnAxis, a, v, pos)
+            ReduceResult1Arg(context, fn, axis, a, v, pos)
         }
     }
 
@@ -169,7 +169,7 @@ class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val fnAxi
 }
 
 abstract class ScanFunctionImpl(val fn: APLFunction, val operatorAxis: Instruction?, pos: Position) : APLFunction(pos) {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, fnAxis: APLValue?): APLValue {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber(pos).asInt() else null
         return if (a.rank == 0) {
             if (axisParam != null && axisParam != 0) {
@@ -179,7 +179,7 @@ abstract class ScanFunctionImpl(val fn: APLFunction, val operatorAxis: Instructi
         } else {
             val v = axisParam ?: defaultAxis(a)
             ensureValidAxis(v, a.dimensions, pos)
-            ScanResult1Arg(context, fn, fnAxis, a, v)
+            ScanResult1Arg(context, fn, axis, a, v)
         }
     }
 

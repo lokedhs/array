@@ -1,6 +1,5 @@
 package array
 
-import kotlin.math.exp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

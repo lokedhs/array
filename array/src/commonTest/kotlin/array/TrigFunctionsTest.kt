@@ -1,6 +1,5 @@
 package array
 
-import array.complex.Complex
 import kotlin.test.Test
 
 class TrigFunctionsTest : APLTest() {

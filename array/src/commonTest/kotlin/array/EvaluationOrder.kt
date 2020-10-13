@@ -53,7 +53,8 @@ class EvaluationOrder : APLTest() {
      */
     @Test
     fun collapseResultWhenNotUsed() {
-        parseAPLExpressionWithOutput("""
+        parseAPLExpressionWithOutput(
+            """
             |∇ printx (v) {
             |  print v
             |  v

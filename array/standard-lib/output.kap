@@ -21,11 +21,16 @@ namespace("output")
   v
 }
 
+∇ dbg (title;data) {
+  println "=== begin:",title," ==="
+  println data
+  println "=== end:",title," ==="
+  data
+}
+⍝  N⌿⊃1⍴⊂A
+
 ∇ render2d (v) {
   v ← v
-⍝  println "Rendering"
-⍝  println v
-⍝  println "---end---"
 
   ⍝ The width of each column is the maximum width of any cell
   colWidths ← ⌈/[0] {(⍴⍵)[1]}¨v
@@ -33,28 +38,22 @@ namespace("output")
   xAligned ← ((⍴v) ⍴ colWidths) {((↑⍴⍵) (⍺-(⍴⍵)[1]) ⍴ (⊂" ")),⍵}¨ v
 
   ⍝ Compute the height of each row in a similar way as the cols
-  colHeights ← ⌈/[1] {↑⍴⍵}¨xAligned
+  rowHeights ← ⌈/[1] {↑⍴⍵}¨xAligned
   ⍝ Pad each row so that they are all the same height
-  yAligned ← ((⍴ xAligned) ⍴ colHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
+  yAligned ← (⍉ (⍴ xAligned) ⍴ rowHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
 
   ⍝ Add a space between cells on each row
   vSeparated ← {⍺,(⊂" "),⍵}/ yAligned
 
-  ⍝ Since all rows are now the same width, the total width is the width of the first row
-⍝  spaces ← (1 (⍴ ↑ vSeparated)[1]) ⍴ (⊂" ")
-⍝  strlist ← ,/[1] ⊃ {⍺,[0]spaces,[0]⍵}/ vSeparated
-
-⍝  wrapBox strlist
-
   wrapBox ⊃ ,[0]/ vSeparated
 }
 
-∇ prettyPrint (v) {
+∇ prettyPrintToChars (v) {
   enclosed ← if(isArray v) {
     if (×/,('char)=typeof¨v) {
       stringToGraphemes @",v,@"
     } else {
-      render2d prettyPrint¨ v
+      render2d prettyPrintToChars¨ v
     }
   } else {
     stringToGraphemes ⍕v
@@ -62,6 +61,10 @@ namespace("output")
   enclosed
 }
 
-⍝ output:prettyPrint 3 3 ⍴ (2 2 ⍴ 12 123 1) 3 (2 3 ⍴ 1 12 123 1234) 999
+∇ prettyPrint (v) {
+  result ← prettyPrintToChars v
+  a←println¨,/result
+  0
+}
 
 export(prettyPrint)
