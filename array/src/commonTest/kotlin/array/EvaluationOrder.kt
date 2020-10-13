@@ -46,4 +46,24 @@ class EvaluationOrder : APLTest() {
             assertSimpleNumber(5, result)
         }
     }
+
+    /**
+     * Ensure that calls are evaluated when the result of a call is not used.
+     * This is needed if a call is for side-effects only.
+     */
+    @Test
+    fun collapseResultWhenNotUsed() {
+        parseAPLExpressionWithOutput("""
+            |∇ printx (v) {
+            |  print v
+            |  v
+            |}
+            |
+            |printx¨11 22
+            |33
+        """.trimMargin()).let { (result, out) ->
+            assertEquals("1122", out)
+            assertSimpleNumber(33, result)
+        }
+    }
 }

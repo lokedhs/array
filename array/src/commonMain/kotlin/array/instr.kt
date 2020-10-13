@@ -24,14 +24,11 @@ class RootEnvironmentInstruction(val environment: Environment, val instr: Instru
 
 class InstructionList(val instructions: List<Instruction>) : Instruction(instructions[0].pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        var result: APLValue? = null
-        for (instr in instructions) {
-            result = instr.evalWithContext(context)
+        for (i in 0 until instructions.size - 1) {
+            val instr = instructions[i]
+            instr.evalWithContext(context).collapse()
         }
-        if (result == null) {
-            throw IllegalStateException("Empty instruction list")
-        }
-        return result
+        return instructions.last().evalWithContext(context)
     }
 }
 
