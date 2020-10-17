@@ -305,8 +305,7 @@ class ModAPLFunction : APLFunctionDescriptor {
                 b,
                 { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
                 { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
-                { _, _ -> TODO("Not implemented") }
-            )
+                { _, _ -> TODO("Not implemented") })
         }
     }
 
@@ -510,13 +509,19 @@ class AtanAPLFunction : APLFunctionDescriptor {
 class AndAPLFunction : APLFunctionDescriptor {
     class AndAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-            val aValue = a.asDouble()
-            val bValue = b.asDouble()
-            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-                return (if (aValue == 1.0 && bValue == 1.0) 1 else 0).makeAPLNumber()
-            } else {
-                TODO("LCM is not implemented")
-            }
+//            val aValue = a.asDouble()
+//            val bValue = b.asDouble()
+//            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+//                return (if (aValue == 1.0 && bValue == 1.0) 1 else 0).makeAPLNumber()
+//            } else {
+//                TODO("LCM is not implemented")
+//            }
+            return numericRelationOperation(pos,
+                a,
+                b,
+                { x, y -> TODO("int lcm") },
+                { x, y -> TODO("float lcm") },
+                { x, y -> (y * (x / complexGcd(x, y))).makeAPLNumber() })
         }
 
         override fun identityValue() = APLLONG_1
@@ -525,16 +530,42 @@ class AndAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = AndAPLFunctionImpl(pos)
 }
 
+fun complexGcd(a: Complex, b: Complex): Complex {
+    var a1 = Complex(a.real.roundToLong().toDouble(), a.imaginary.roundToLong().toDouble())
+    var b1 = Complex(b.real.roundToLong().toDouble(), b.imaginary.roundToLong().toDouble())
+    while (true) {
+        if (a1.abs() > b1.abs()) {
+            val tmp = a1
+            a1 = b1
+            b1 = tmp
+        }
+        if (a1.abs() < 0.2) {
+            return b1
+        }
+        val quot = b1 / a1
+        val q = Complex(quot.real.roundToLong().toDouble(), quot.imaginary.roundToLong().toDouble())
+        val r = b1 - q * a1
+        b1 = a1
+        a1 = r
+    }
+}
+
 class OrAPLFunction : APLFunctionDescriptor {
     class OrAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-            val aValue = a.asDouble()
-            val bValue = b.asDouble()
-            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-                return (if (aValue == 1.0 || bValue == 1.0) 1 else 0).makeAPLNumber()
-            } else {
-                TODO("GCD is not implemented")
-            }
+//            val aValue = a.asDouble()
+//            val bValue = b.asDouble()
+//            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
+//                return (if (aValue == 1.0 || bValue == 1.0) 1 else 0).makeAPLNumber()
+//            } else {
+//                TODO("GCD is not implemented")
+//            }
+            return numericRelationOperation(pos,
+                a,
+                b,
+                { x, y -> TODO("int lcm") },
+                { x, y -> TODO("float lcm") },
+                { x, y -> complexGcd(x, y).makeAPLNumber() })
         }
 
         override fun identityValue() = APLLONG_0

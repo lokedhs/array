@@ -35,8 +35,12 @@ class LogicTest : APLTest() {
     @Test
     fun leastCommonMultipleComplex() {
         assertSimpleComplex(Complex(123.0, 192.0), parseAPLExpression("6J21∧9J30"))
-        assertSimpleComplex(Complex(103.0, -48.0), parseAPLExpression("5J8∧1J6"))
+        assertSimpleComplex(Complex(38.0, 43.0), parseAPLExpression("5J8∧1J6"))
         assertSimpleComplex(Complex(-495.0, 312.0), parseAPLExpression("9J30∧5J18"))
+        assertSimpleComplex(Complex(-5.0, -14.0), parseAPLExpression("2J3∧4J1"))
+        assertSimpleComplex(Complex(25.0, -19.0), parseAPLExpression("5J3∧5J2"))
+        assertSimpleComplex(Complex(31.0, -5.0), parseAPLExpression("¯5J3∧5J2"))
+        assertSimpleComplex(Complex(-159.0, -15.0), parseAPLExpression("9J30∧1J5"))
     }
 
     @Test
@@ -45,6 +49,11 @@ class LogicTest : APLTest() {
         assertSimpleNumber(1, parseAPLExpression("0∨1"))
         assertSimpleNumber(1, parseAPLExpression("1∨0"))
         assertSimpleNumber(1, parseAPLExpression("1∨1"))
+    }
+
+    @Test
+    fun greatestCommonDenominatorComplex() {
+        assertSimpleComplex(Complex(123.0, 192.0), parseAPLExpression("6J21∧9J30"))        
     }
 
     @Test
