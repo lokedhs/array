@@ -509,25 +509,70 @@ class AtanAPLFunction : APLFunctionDescriptor {
 class AndAPLFunction : APLFunctionDescriptor {
     class AndAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-//            val aValue = a.asDouble()
-//            val bValue = b.asDouble()
-//            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-//                return (if (aValue == 1.0 && bValue == 1.0) 1 else 0).makeAPLNumber()
-//            } else {
-//                TODO("LCM is not implemented")
-//            }
             return numericRelationOperation(pos,
                 a,
                 b,
-                { x, y -> TODO("int lcm") },
-                { x, y -> TODO("float lcm") },
-                { x, y -> (y * (x / complexGcd(x, y))).makeAPLNumber() })
+                { x, y ->
+                    when {
+                        x == 0L || y == 0L -> APLLONG_0
+                        x == 1L && x == 1L -> APLLONG_1
+                        else -> (x * (y / integerGcd(x, y))).makeAPLNumber()
+                    }
+                },
+                { x, y ->
+                    when {
+                        x == 0.0 || y == 0.0 -> APLLONG_0
+                        x == 1.0 || y == 1.0 -> APLLONG_1
+                        else -> (x * (y / floatGcd(x, y))).makeAPLNumber()
+                    }
+                },
+                { x, y -> (y * (x / complexGcd(x, y))).nearestGaussian().makeAPLNumber() })
         }
 
         override fun identityValue() = APLLONG_1
     }
 
     override fun make(pos: Position) = AndAPLFunctionImpl(pos)
+}
+
+fun integerGcd(m: Long, n: Long): Long {
+    if (m == 0L) return n
+    if (n == 0L) return m
+    var aa = 1L
+    var b = 1L
+    var a = 0L
+    var bb = 0L
+    var c = m.absoluteValue
+    var d = n.absoluteValue
+    while (true) {
+        val r = c % d
+        if (r == 0L) return d
+        val q = c / d
+        val ta = aa
+        val tb = bb
+        c = d
+        d = r
+        aa = a
+        a = ta - q * a
+        bb = b
+        b = tb - q * b
+    }
+}
+
+fun floatGcd(a: Double, b: Double): Double {
+    var a1 = a.absoluteValue
+    var b1 = b.absoluteValue
+    if (b1 < a1) {
+        val tmp = b1
+        b1 = a1
+        a1 = tmp
+    }
+    while (true) {
+        if (a1.absoluteValue < 0.00001) return b1
+        val r = b1.rem(a1)
+        b1 = a1
+        a1 = r
+    }
 }
 
 fun complexGcd(a: Complex, b: Complex): Complex {
@@ -553,18 +598,26 @@ fun complexGcd(a: Complex, b: Complex): Complex {
 class OrAPLFunction : APLFunctionDescriptor {
     class OrAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-//            val aValue = a.asDouble()
-//            val bValue = b.asDouble()
-//            if ((aValue == 0.0 || aValue == 1.0) && (bValue == 0.0 || bValue == 1.0)) {
-//                return (if (aValue == 1.0 || bValue == 1.0) 1 else 0).makeAPLNumber()
-//            } else {
-//                TODO("GCD is not implemented")
-//            }
             return numericRelationOperation(pos,
                 a,
                 b,
-                { x, y -> TODO("int lcm") },
-                { x, y -> TODO("float lcm") },
+                { x, y ->
+                    when {
+                        x == 0L && y == 0L -> APLLONG_0
+                        (x == 0L || x == 1L) && y == 1L -> APLLONG_1
+                        x == 1L && (y == 0L || y == 1L) -> APLLONG_1
+                        else -> integerGcd(x, y).makeAPLNumber()
+                    }
+                },
+                { x, y ->
+                    when {
+                        x == 0.0 && y == 0.0 -> APLLONG_0
+                        (x == 0.0 || x == 1.0) && y == 1.0 -> APLLONG_1
+                        x == 1.0 && (y == 0.0 || y == 1.0) -> APLLONG_1
+                        else -> floatGcd(x, y).makeAPLNumber()
+
+                    }
+                },
                 { x, y -> complexGcd(x, y).makeAPLNumber() })
         }
 

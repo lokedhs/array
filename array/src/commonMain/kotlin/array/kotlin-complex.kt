@@ -52,6 +52,10 @@ data class Complex(val real: Double, val imaginary: Double) {
     fun log(base: Complex): Complex = ln() / base.ln()
     fun log(base: Double): Complex = log(base.toComplex())
 
+    fun nearestGaussian(): Complex {
+        return Complex(real.roundToLong().toDouble(), imaginary.roundToLong().toDouble())
+    }
+
     override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
     override fun hashCode() = real.hashCode() xor imaginary.hashCode()
 
