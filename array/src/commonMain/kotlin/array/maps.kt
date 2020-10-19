@@ -76,6 +76,18 @@ class ImmutableMap2<K, V> private constructor(val content: PersistentMap<K, V>) 
         }
     }
 
+    fun copyWithoutMultiple(keys: Array<K>): ImmutableMap2<K, V> {
+        return if (keys.isNotEmpty()) {
+            var curr = content
+            keys.forEach { key ->
+                curr = curr.remove(key)
+            }
+            ImmutableMap2(curr)
+        } else {
+            this
+        }
+    }
+
     companion object {
         fun <K, V> makeFromContent(content: List<Pair<K, V>>): ImmutableMap2<K, V> {
             val result = persistentHashMapOf(*content.toTypedArray())

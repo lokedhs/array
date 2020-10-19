@@ -105,3 +105,22 @@ class MapPutAPLFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = MapPutAPLFunctionImpl(pos)
 }
+
+class MapRemoveAPLFunction : APLFunctionDescriptor {
+    class MapRemoveAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val map = ensureMap(a, pos)
+            val b1 = b.arrayify().collapse()
+            if (b1.dimensions.size != 1) {
+                throw InvalidDimensionsException("Right argument should be a scalar or a rank-1 array", pos)
+            }
+            val toRemove = ArrayList<APLValue>()
+            b1.iterateMembers { value ->
+                toRemove.add(value)
+            }
+            return map.removeValues(toRemove)
+        }
+    }
+
+    override fun make(pos: Position) = MapRemoveAPLFunctionImpl(pos)
+}

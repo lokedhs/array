@@ -171,6 +171,7 @@ class Engine {
         registerNativeFunction("map", MapAPLFunction())
         registerNativeFunction("mapGet", MapGetAPLFunction())
         registerNativeFunction("mapPut", MapPutAPLFunction())
+        registerNativeFunction("mapRemove", MapRemoveAPLFunction())
 
         // io functions
         registerNativeFunction("print", PrintAPLFunction())

@@ -349,11 +349,15 @@ class APLMap(val content: ImmutableMap2<Any, APLValue>) : APLSingleValue() {
     }
 
     fun updateValues(elements: List<Pair<APLValue, APLValue>>): APLValue {
-        return APLMap(content.copyAndPutMultiple(*elements.toTypedArray()))
+        return APLMap(content.copyAndPutMultiple(*elements.map { v -> Pair(v.first.makeKey(), v.second) }.toTypedArray()))
     }
 
     fun elementCount(): Int {
         return content.size
+    }
+
+    fun removeValues(toRemove: ArrayList<APLValue>): APLMap {
+        return APLMap(content.copyWithoutMultiple(toRemove.map { v -> v.makeKey() }.toTypedArray()))
     }
 
     companion object {

@@ -74,9 +74,57 @@ class MapTest : APLTest() {
         val result = parseAPLExpression(
             """
             |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
-            |b ← a mapPut "foo" "c"
+            |b ← a mapPut "foo" "update"
             |↑b mapGet ⊂"foo"
         """.trimMargin())
-        assertString("abc", result)
+        assertString("update", result)
+    }
+
+    @Test
+    fun insertTest() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |b ← a mapPut "foo2" "insert"
+            |↑b mapGet ⊂"foo2"
+        """.trimMargin())
+        assertString("insert", result)
+    }
+
+    @Test
+    fun removeTest() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |b ← a mapRemove ⊂"foo"
+            |↑b mapGet ⊂"foo"
+        """.trimMargin())
+        assertAPLNull(result)
+    }
+
+    @Test
+    fun putAndRemove() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |b ← a mapPut "foo2" "added"
+            |c ← b mapRemove ⊂"foo2"
+            |↑c mapGet ⊂"foo2"
+        """.trimMargin())
+        assertAPLNull(result)
+    }
+
+    @Test
+    fun putMultiple() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |b ← a mapPut 2 2 ⍴ "foo2" "added2" "foo3" "added3"
+            |b mapGet "bar" "foo2" "foo3"
+        """.trimMargin())
+        assertDimension(dimensionsOfSize(3), result)
+        assertString("bcd", result.valueAt(0))
+        assertString("added2", result.valueAt(1))
+        assertString("added3", result.valueAt(2))
     }
 }
