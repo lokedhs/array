@@ -6,7 +6,7 @@ import kotlin.test.*
 class MapTest {
     @Test
     fun simpleMapTest() {
-        val map = ImmutableMap<String, Int>()
+        val map = ImmutableMap2<String, Int>()
         assertEquals(0, map.size)
 
         val updated0 = map.copyAndPut("foo", 1)
@@ -27,7 +27,7 @@ class MapTest {
 
     @Test
     fun removeTest() {
-        val map = ImmutableMap<String, Int>()
+        val map = ImmutableMap2<String, Int>()
         assertEquals(0, map.size)
 
         val updated0 = map.copyAndPutMultiple("foo" to 1, "bar" to 2)
@@ -53,7 +53,7 @@ class MapTest {
 
     @Test
     fun randomAddRemove() {
-        var map = ImmutableMap<Int, Int>()
+        var map = ImmutableMap2<Int, Int>()
 
         fun addN(n: Int) {
             val sizeBefore = map.size

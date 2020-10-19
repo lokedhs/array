@@ -576,8 +576,8 @@ fun floatGcd(a: Double, b: Double): Double {
 }
 
 fun complexGcd(a: Complex, b: Complex): Complex {
-    var a1 = Complex(a.real.roundToLong().toDouble(), a.imaginary.roundToLong().toDouble())
-    var b1 = Complex(b.real.roundToLong().toDouble(), b.imaginary.roundToLong().toDouble())
+    var a1 = a.nearestGaussian()
+    var b1 = b.nearestGaussian()
     while (true) {
         if (a1.abs() > b1.abs()) {
             val tmp = a1
@@ -588,7 +588,7 @@ fun complexGcd(a: Complex, b: Complex): Complex {
             return b1
         }
         val quot = b1 / a1
-        val q = Complex(quot.real.roundToLong().toDouble(), quot.imaginary.roundToLong().toDouble())
+        val q = quot.nearestGaussian()
         val r = b1 - q * a1
         b1 = a1
         a1 = r

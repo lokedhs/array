@@ -38,7 +38,7 @@ private fun parseObject(reader: JsonReader): APLMap {
         }
     }
     reader.endObject()
-    return APLMap(ImmutableMap.makeFromContent(content))
+    return APLMap(ImmutableMap3.makeFromContent(content))
 }
 
 private fun parseArray(reader: JsonReader): APLArray {

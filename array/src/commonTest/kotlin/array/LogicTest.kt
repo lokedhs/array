@@ -44,7 +44,7 @@ class LogicTest : APLTest() {
         assertSimpleComplex(Complex(495.0, -312.0), parseAPLExpression("9J30∧5J18"))
         assertSimpleComplex(Complex(-5.0, -14.0), parseAPLExpression("2J3∧4J1"))
         assertSimpleComplex(Complex(25.0, -19.0), parseAPLExpression("5J3∧5J2"))
-        assertSimpleComplex(Complex(31.0, -5.0), parseAPLExpression("¯5J3∧5J2"))
+        assertSimpleComplex(Complex(-31.0, 5.0), parseAPLExpression("¯5J3∧5J2"))
         assertSimpleComplex(Complex(-141.0, 75.0), parseAPLExpression("9J30∧1J5"))
         assertSimpleComplex(Complex(-6.0, 18.0), parseAPLExpression("3J6∧2J2"))
         assertSimpleComplex(Complex(4.0, 18.0), parseAPLExpression("3J5∧4J18"))

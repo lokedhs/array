@@ -306,7 +306,7 @@ class LabelledArray(val value: APLValue, override val labels: DimensionLabels) :
     }
 }
 
-class APLMap(val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
+class APLMap(val content: ImmutableMap3<Any, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 
@@ -343,7 +343,7 @@ class APLMap(val content: ImmutableMap<Any, APLValue>) : APLSingleValue() {
     }
 
     companion object {
-        fun makeEmptyMap() = APLMap(ImmutableMap())
+        fun makeEmptyMap() = APLMap(ImmutableMap3())
     }
 }
 

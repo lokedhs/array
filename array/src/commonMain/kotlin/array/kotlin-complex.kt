@@ -28,8 +28,7 @@ data class Complex(val real: Double, val imaginary: Double) {
     operator fun times(other: Complex): Complex =
         Complex(
             (real * other.real) - (imaginary * other.imaginary),
-            (real * other.imaginary) + (imaginary * other.real)
-        )
+            (real * other.imaginary) + (imaginary * other.real))
 
     operator fun div(other: Complex): Complex = this * other.reciprocal()
 
@@ -53,7 +52,7 @@ data class Complex(val real: Double, val imaginary: Double) {
     fun log(base: Double): Complex = log(base.toComplex())
 
     fun nearestGaussian(): Complex {
-        return Complex(real.roundToLong().toDouble(), imaginary.roundToLong().toDouble())
+        return Complex(round(real), round(imaginary))
     }
 
     override fun equals(other: Any?) = other != null && other is Complex && real == other.real && imaginary == other.imaginary
