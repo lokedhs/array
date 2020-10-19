@@ -167,6 +167,11 @@ class Engine {
         registerNativeFunction("∼", NotAPLFunction())
         registerNativeFunction("⍕", FormatAPLFunction())
 
+        // hash tables
+        registerNativeFunction("map", MapAPLFunction())
+        registerNativeFunction("mapGet", MapGetAPLFunction())
+        registerNativeFunction("mapPut", MapPutAPLFunction())
+
         // io functions
         registerNativeFunction("print", PrintAPLFunction())
         registerNativeFunction("readCsvFile", ReadCSVFunction())

@@ -102,7 +102,7 @@ interface APLValue {
      * In other words, if two instances of [APLValue] are to be considered equivalent, then the objects returned
      * by this method should be the same when compared using [equals] and return the same value from [hashCode].
      */
-    fun makeKey(): Any
+    fun makeKey(): APLValueKey
 
     fun singleValueOrError(): APLValue {
         return when {
@@ -158,6 +158,16 @@ interface APLValue {
         } else {
             v.asBoolean()
         }
+    }
+
+    abstract class APLValueKey(val value: APLValue) {
+        override fun equals(other: Any?) = other is APLValueKey && value.compareEquals(other.value)
+        override fun hashCode(): Int = throw RuntimeException("Need to implement hashCode")
+    }
+
+    class APLValueKeyImpl(value: APLValue, val data: Any) : APLValueKey(value) {
+        override fun equals(other: Any?) = other is APLValueKeyImpl && data == other.data
+        override fun hashCode() = data.hashCode()
     }
 }
 
@@ -273,11 +283,7 @@ abstract class APLArray : APLValue {
 
     override fun disclose() = if (dimensions.size == 0) valueAt(0) else this
 
-    override fun makeKey() = object {
-        override fun equals(other: Any?): Boolean {
-            return other is APLArray && compare(other) == 0
-        }
-
+    override fun makeKey() = object : APLValue.APLValueKey(this) {
         override fun hashCode(): Int {
             var curr = 0
             dimensions.dimensions.forEach { dim ->
@@ -306,7 +312,7 @@ class LabelledArray(val value: APLValue, override val labels: DimensionLabels) :
     }
 }
 
-class APLMap(val content: ImmutableMap3<Any, APLValue>) : APLSingleValue() {
+class APLMap(val content: ImmutableMap2<Any, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 
@@ -330,8 +336,8 @@ class APLMap(val content: ImmutableMap3<Any, APLValue>) : APLSingleValue() {
         return true
     }
 
-    override fun makeKey(): Any {
-        return content
+    override fun makeKey(): APLValue.APLValueKey {
+        return APLValue.APLValueKeyImpl(this, content)
     }
 
     fun lookupValue(key: APLValue): APLValue {
@@ -342,8 +348,16 @@ class APLMap(val content: ImmutableMap3<Any, APLValue>) : APLSingleValue() {
         return APLMap(content.copyAndPut(key.makeKey(), value))
     }
 
+    fun updateValues(elements: List<Pair<APLValue, APLValue>>): APLValue {
+        return APLMap(content.copyAndPutMultiple(*elements.toTypedArray()))
+    }
+
+    fun elementCount(): Int {
+        return content.size
+    }
+
     companion object {
-        fun makeEmptyMap() = APLMap(ImmutableMap3())
+        fun makeEmptyMap() = APLMap(ImmutableMap2())
     }
 }
 
@@ -385,8 +399,8 @@ class APLList(val elements: List<APLValue>) : APLSingleValue() {
         return true
     }
 
-    override fun makeKey(): Any {
-        return ComparableList<Any>().apply { addAll(elements.map(APLValue::makeKey)) }
+    override fun makeKey(): APLValue.APLValueKey {
+        return APLValue.APLValueKeyImpl(this, ComparableList<Any>().apply { addAll(elements.map(APLValue::makeKey)) })
     }
 
     fun listSize() = elements.size
@@ -573,7 +587,7 @@ class APLChar(val value: Int) : APLSingleValue() {
 
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 
-    override fun makeKey() = value
+    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
 }
 
 fun makeAPLString(s: String) = APLString(s)
@@ -631,7 +645,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
 
     override fun ensureSymbol(pos: Position?) = this
 
-    override fun makeKey() = value
+    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
 }
 
 /**
@@ -651,7 +665,7 @@ class LambdaValue(private val fn: APLFunction, private val previousContext: Runt
 
     override fun compareEquals(reference: APLValue) = this === reference
 
-    override fun makeKey() = fn
+    override fun makeKey() = APLValue.APLValueKeyImpl(this, fn)
 
     fun makeClosure(): APLFunction {
         return object : APLFunction(fn.pos) {

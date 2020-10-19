@@ -12,20 +12,14 @@ import kotlin.math.max
 import kotlin.math.min
 
 class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
-    private val window: GraphicWindow
-
-    init {
-        window = GraphicWindow(width, height)
-    }
+    private val window = GraphicWindow(width, height)
 
     override val aplValueType: APLValueType
         get() = APLValueType.INTERNAL
 
     override fun formatted(style: FormatStyle) = "graphic-window"
-
     override fun compareEquals(reference: APLValue) = reference is GraphicWindowAPLValue && window === reference.window
-
-    override fun makeKey() = window
+    override fun makeKey() = APLValue.APLValueKeyImpl(this, window)
 
     fun updateContent(w: Int, h: Int, content: DoubleArray) {
         Platform.runLater {

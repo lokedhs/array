@@ -37,6 +37,8 @@ class APLIllegalArgumentException(message: String, pos: Position? = null) : APLE
 class APLIncompatibleDomainsException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class Unimplemented1ArgException(pos: Position? = null) : APLEvalException("Function cannot be called with one argument", pos)
 class Unimplemented2ArgException(pos: Position? = null) : APLEvalException("Function cannot be called with two arguments", pos)
+class IllegalArgumentNumException(expectedCount: Int, receivedCount: Int, pos: Position? = null) :
+    APLEvalException("Expected a list of ${expectedCount} values. Actual elements: ${receivedCount}", pos)
 
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 class UnexpectedSymbol(ch: Int, pos: Position? = null) : ParseException("Unexpected symbol: '${charToString(ch)}' (${ch})", pos)

@@ -61,6 +61,11 @@ class TypesTest : APLTest() {
         testResultType("typeof (1;2;3)", APLValueType.LIST)
     }
 
+    @Test
+    fun testMaps() {
+        testResultType("typeof map \"a\" 2", APLValueType.MAP)
+    }
+
     private fun testResultType(expression: String, expectedResultSym: APLValueType) {
         val engine = Engine()
         val result = engine.parseAndEval(StringSourceLocation(expression), false)

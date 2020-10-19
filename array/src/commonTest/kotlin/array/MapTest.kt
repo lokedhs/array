@@ -1,105 +1,82 @@
 package array
 
-import kotlin.random.Random
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
-class MapTest {
+class MapTest : APLTest() {
     @Test
-    fun simpleMapTest() {
-        val map = ImmutableMap2<String, Int>()
-        assertEquals(0, map.size)
-
-        val updated0 = map.copyAndPut("foo", 1)
-        assertEquals(0, map.size)
-        assertEquals(1, updated0.size)
-        assertEquals(1, updated0["foo"])
-
-        val updated1 = updated0.copyAndPut("bar", 2)
-        assertEquals(0, map.size)
-        assertEquals(1, updated0.size)
-        assertEquals(2, updated1.size)
-        assertEquals(1, updated0["foo"])
-        assertEquals(1, updated1["foo"])
-        assertEquals(2, updated1["bar"])
-        assertTrue(updated1.containsValue(1))
-        assertTrue(updated1.containsValue(2))
+    fun simpleMap() {
+        parseAPLExpression("map 3 2 ⍴ \"foo\" 1 \"bar\" 2 \"a\" 3").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(3, result.elementCount())
+            assertSimpleNumber(1, result.lookupValue(APLString("foo")))
+            assertSimpleNumber(2, result.lookupValue(APLString("bar")))
+            assertSimpleNumber(3, result.lookupValue(APLString("a")))
+        }
     }
 
     @Test
-    fun removeTest() {
-        val map = ImmutableMap2<String, Int>()
-        assertEquals(0, map.size)
-
-        val updated0 = map.copyAndPutMultiple("foo" to 1, "bar" to 2)
-        assertEquals(0, map.size)
-        assertEquals(2, updated0.size)
-        assertEquals(1, updated0["foo"])
-        assertEquals(2, updated0["bar"])
-
-        val updated1 = updated0.copyWithout("bar")
-        assertEquals(0, map.size)
-        assertEquals(2, updated0.size)
-        assertEquals(1, updated1.size)
-        assertEquals(1, updated1["foo"])
-        assertFalse(updated1.containsKey("bar"))
-        assertFalse(updated1.containsValue(2))
-
-        // This test ensures that removing an element that does not exist in the map will return the same map
-        val updated2 = updated1.copyWithout("bar")
-        assertSame(updated1, updated2)
-        assertEquals(1, updated2["foo"])
-        assertFalse(updated1.containsKey("bar"))
+    fun oneElementMap() {
+        parseAPLExpression("map \"foo\" 1").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(1, result.elementCount())
+            assertSimpleNumber(1, result.lookupValue(APLString("foo")))
+        }
     }
 
     @Test
-    fun randomAddRemove() {
-        var map = ImmutableMap2<Int, Int>()
-
-        fun addN(n: Int) {
-            val sizeBefore = map.size
-            repeat(n) {
-                val key = repeatableRandom()
-                if (!map.containsKey(key)) {
-                    map = map.copyAndPut(key, key + 1000)
-                }
-            }
-            assertEquals(sizeBefore + n, map.size)
+    fun missingElementsReturnsNull() {
+        parseAPLExpression("map 3 2 ⍴ \"foo\" 1 \"bar\" 2 \"a\" 3").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(3, result.elementCount())
+            assertSimpleNumber(1, result.lookupValue(APLString("foo")))
+            assertSimpleNumber(2, result.lookupValue(APLString("bar")))
+            assertSimpleNumber(3, result.lookupValue(APLString("a")))
+            assertAPLNull(result.lookupValue(APLString("x")))
         }
-
-        fun removeFirstN(n: Int) {
-            val sizeBefore = map.size
-            map.keys.asSequence().take(n).forEach { key ->
-                assertTrue(map.containsKey(key))
-                map = map.copyWithout(key)
-                assertFalse(map.containsKey(key))
-            }
-            assertEquals(sizeBefore - n, map.size)
-        }
-
-        addN(1000)
-        removeFirstN(200)
-        repeat(5) {
-            addN(2)
-            removeFirstN(2)
-        }
-        removeFirstN(700)
-        repeat(100) {
-            addN(2)
-            removeFirstN(2)
-        }
-        addN(200)
-        removeFirstN(300)
-        assertTrue(map.isEmpty())
     }
 
-    private var random: Random? = null
-
-    @BeforeTest
-    fun initRandomState() {
-        random = Random(1000)
+    @Test
+    fun mixedKeyTypes() {
+        parseAPLExpression("map 3 2 ⍴ 1 2 @a 3 (3 2 ⍴ 1 2 3 4 5 6) 4").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(3, result.elementCount())
+            assertSimpleNumber(2, result.lookupValue(1.makeAPLNumber()))
+            assertSimpleNumber(3, result.lookupValue(APLChar('a'.toInt())))
+            assertSimpleNumber(
+                4,
+                result.lookupValue(
+                    APLArrayImpl(
+                        dimensionsOfSize(3, 2),
+                        arrayOf(1, 2, 3, 4, 5, 6).map { v -> v.makeAPLNumber() }.toTypedArray())))
+        }
     }
 
-    private fun repeatableRandom(): Int {
-        return random!!.nextInt()
+    @Test
+    fun stringValues() {
+        parseAPLExpression("map 2 2 ⍴ \"foo\" \"a\" \"bar\" \"b\"").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(2, result.elementCount())
+            assertString("a", result.lookupValue(APLString("foo")))
+            assertString("b", result.lookupValue(APLString("bar")))
+        }
+    }
+
+    @Test
+    fun lookupTest() {
+        val result = parseAPLExpression("(map 4 2 ⍴ 1 2 3 4 \"foo\" \"a\" \"bar\" \"b\") mapGet 1")
+        assertSimpleNumber(2, result)
+    }
+
+    @Test
+    fun updateTest() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |b ← a mapPut "foo" "c"
+            |↑b mapGet ⊂"foo"
+        """.trimMargin())
+        assertString("abc", result)
     }
 }

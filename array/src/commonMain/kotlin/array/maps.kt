@@ -1,6 +1,7 @@
 package array
 
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentMapOf
 
 // This is a test implementation of an immutable map. This is not meant to be a proper implementation
@@ -72,6 +73,13 @@ class ImmutableMap2<K, V> private constructor(val content: PersistentMap<K, V>) 
             ImmutableMap2(content.remove(key))
         } else {
             this
+        }
+    }
+
+    companion object {
+        fun <K, V> makeFromContent(content: List<Pair<K, V>>): ImmutableMap2<K, V> {
+            val result = persistentHashMapOf(*content.toTypedArray())
+            return ImmutableMap2(result)
         }
     }
 }
