@@ -1,16 +1,18 @@
 package array
 
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentHashMapOf
 import kotlin.system.measureTimeMillis
 
-fun xmain() {
+fun xxmain() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
     val srcString = """
-            |∇ range (low;high;v) { low+((⍳v)×(high-low))÷v }
-            |∇ m (x) { n←0 ◊ {n←n+1 ◊ x+⍵×⍵}⍣{(2<|⍺) ∨ n≥50} 0 ◊ n }
-            |m¨(0J1×range(-2;2;1000)) ∘.+ range(-2;2;1000)
-            """.trimMargin()
+            |m←map "foo" "bar"
+            |{m←m mapPut ⍵ ("Message ",⍕⍵) ◊ ⍵+1}⍣{⍵=10000000} 0
+        """.trimMargin()
+    println("Starting")
     val elapsed = measureTimeMillis {
         val result = engine.parseAndEval(StringSourceLocation(srcString), true)
         result.collapse()
@@ -19,6 +21,21 @@ fun xmain() {
 }
 
 fun main() {
+    var m: PersistentMap<Any, String>
+    println("Starting")
+    val time = measureTimeMillis {
+        m = persistentHashMapOf()
+        repeat(10000000) { i ->
+            m = m.put(i, "This a message in the hashmap: ${i}")
+        }
+    }
+    println("Evaluation time: ${time / 1000.0}")
+    println("Map has ${m.size} elements")
+    println("Random element: ${m.get(1234)}")
+    println("Random element: ${m.get(918211)}")
+}
+
+fun xmain() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
