@@ -89,16 +89,16 @@ class MapPutAPLFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val map = ensureMap(a, pos)
             val b1 = ensureKeyValuesArray(b, pos)
-            if (b1.dimensions[0] > 0) {
+            return if (b1.dimensions[0] > 0) {
                 val content = ArrayList<Pair<APLValue, APLValue>>()
                 repeat(b1.dimensions[0]) { i ->
                     val key = b1.valueAt(i * 2).collapse()
                     val value = b1.valueAt(i * 2 + 1).collapse()
                     content.add(Pair(key, value))
                 }
-                return map.updateValues(content)
+                map.updateValues(content)
             } else {
-                return a
+                a
             }
         }
     }
