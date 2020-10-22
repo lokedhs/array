@@ -1,8 +1,8 @@
 package array.json
 
 import array.APLValue
-import array.ByteProvider
+import array.CharacterProvider
 
-actual fun parseJsonToAPL(input: ByteProvider): APLValue {
+actual fun parseJsonToAPL(input: CharacterProvider): APLValue {
     TODO("Not implemented")
 }

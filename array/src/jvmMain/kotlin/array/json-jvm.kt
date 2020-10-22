@@ -4,12 +4,10 @@ import array.*
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
-import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
 
-actual fun parseJsonToAPL(input: ByteProvider): APLValue {
+actual fun parseJsonToAPL(input: CharacterProvider): APLValue {
     val gson = Gson()
-    val jsonReader = gson.newJsonReader(InputStreamReader(ByteProviderInputStream(input), StandardCharsets.UTF_8))
+    val jsonReader = gson.newJsonReader(CharacterProviderReaderWrapper(input))
     return parseEntry(jsonReader)
 }
 
@@ -73,7 +71,7 @@ private fun parseNull(reader: JsonReader): APLNullValue {
 }
 
 fun main() {
-    val result = parseJsonToAPL(openFile("array/test-data/json-test.json"))
+    val result = parseJsonToAPL(openCharFile("array/test-data/json-test.json"))
     if (result is APLMap) {
         result.content.forEach { (key, value) ->
             println("key: ${key}\nValue:\n${value.formatted(FormatStyle.PRETTY)}\n\n")

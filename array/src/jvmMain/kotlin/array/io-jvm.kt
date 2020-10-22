@@ -1,6 +1,7 @@
 package array
 
 import java.io.*
+import kotlin.math.min
 
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
     private var pos = 0
@@ -68,6 +69,55 @@ class ReaderCharacterProvider(private val reader: Reader, val sourceName: String
         reader.close()
     }
 
+}
+
+class CharacterProviderReaderWrapper(val provider: CharacterProvider) : Reader() {
+    private val buf = CharArray(10)
+    private var bufPos = 0
+    private var end = false
+
+    override fun read(cbuf: CharArray, off: Int, len: Int): Int {
+        if (end) {
+            return -1
+        }
+        var i = 0
+        if (bufPos > 0) {
+            val length = min(len, bufPos)
+            buf.copyInto(cbuf, 0, 0, length)
+            i += length
+            if (length < bufPos) {
+                val newLength = bufPos - length
+                buf.copyInto(buf, 0, length, newLength)
+                bufPos = newLength
+            } else {
+                bufPos = 0
+            }
+        }
+        while (i < len) {
+            val value = provider.nextCodepoint() ?: break
+            val valueString = charToString(value)
+            val charsToCopy = min(valueString.length, len - i)
+            var valueIndex = 0
+            while (valueIndex < charsToCopy) {
+                cbuf[i++] = valueString[valueIndex++]
+            }
+            if (charsToCopy < valueString.length) {
+                var bufIndex = 0
+                while (valueIndex < valueString.length) {
+                    buf[bufIndex++] = valueString[valueIndex++]
+                }
+                bufPos = bufIndex
+            }
+        }
+        if (i < len) {
+            end = true
+        }
+        return if (i == 0) -1 else i
+    }
+
+    override fun close() {
+        TODO("not implemented")
+    }
 }
 
 actual fun openCharFile(name: String): CharacterProvider {

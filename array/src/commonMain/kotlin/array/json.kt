@@ -1,6 +1,6 @@
 package array.json
 
 import array.APLValue
-import array.ByteProvider
+import array.CharacterProvider
 
-expect fun parseJsonToAPL(input: ByteProvider): APLValue
+expect fun parseJsonToAPL(input: CharacterProvider): APLValue
