@@ -310,15 +310,25 @@ class APLParser(val tokeniser: TokenGenerator) {
         val leftArgs = ArrayList<Instruction>()
 
         fun addLeftArg(instr: Instruction) {
-            val (token, pos) = tokeniser.nextTokenWithPosition()
-            val instrWithIndex = if (token == OpenBracket) {
-                val indexInstr = parseValueToplevel(CloseBracket)
-                ArrayIndex(instr, indexInstr, pos)
-            } else {
-                tokeniser.pushBackToken(token)
-                instr
+//            val (token, pos) = tokeniser.nextTokenWithPosition()
+//            val instrWithIndex = if (token == OpenBracket) {
+//                val indexInstr = parseValueToplevel(CloseBracket)
+//                ArrayIndex(instr, indexInstr, pos)
+//            } else {
+//                tokeniser.pushBackToken(token)
+//                instr
+//            }
+//            leftArgs.add(instrWithIndex)
+            leftArgs.add(instr)
+        }
+
+        fun processIndex(pos: Position) {
+            if (leftArgs.isEmpty()) {
+                throw ParseException("Index referencing without argument", pos)
             }
-            leftArgs.add(instrWithIndex)
+            val element = leftArgs.removeLast()
+            val index = parseValueToplevel(CloseBracket)
+            leftArgs.add(ArrayIndex(element, index, pos))
         }
 
         while (true) {
@@ -368,6 +378,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
                 is IncludeToken -> leftArgs.add(processInclude(pos))
                 is LocalToken -> processLocal()
+                is OpenBracket -> processIndex(pos)
                 else -> throw UnexpectedToken(token, pos)
             }
         }

@@ -142,4 +142,46 @@ class ArrayLookupBracketsTest : APLTest() {
             parseAPLExpression("(1 2 3 4)[5]").collapse()
         }
     }
+
+    @Test
+    fun indexLookupWrongType() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("@a[0]")
+        }
+    }
+
+    @Test
+    fun lookupIndexOfInt() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("1 2 3 4[2]")
+        }
+    }
+
+    @Test
+    fun missingClosingBracket() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(1 2 3 4 5 6)[0")
+        }
+    }
+
+    @Test
+    fun missingOpenBracket() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(1 2 3 4 5 6)0]")
+        }
+    }
+
+    @Test
+    fun invalidSyntaxInIndex() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(1 2 3 4 5 6)[0+]")
+        }
+    }
+
+    @Test
+    fun functionInIndex() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(1 2 3 4)[=]")
+        }
+    }
 }
