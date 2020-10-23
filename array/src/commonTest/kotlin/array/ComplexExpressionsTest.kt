@@ -153,6 +153,21 @@ class ComplexExpressionsTest : APLTest() {
         }
     }
 
+    @Test
+    fun functionInParens() {
+        parseAPLExpression("8 16 32 (÷) 2").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(4, 8, 16), result)
+        }
+    }
+
+    @Test
+    fun twoFunctionCalls() {
+        parseAPLExpression("1 + 2 + 3").let { result ->
+            assertSimpleNumber(6, result)
+        }
+    }
+
     // Test ignored since it's not clear how the parser is supposed to handle this case at the moment
     @Test
     @Ignore

@@ -45,6 +45,7 @@ class UnexpectedSymbol(ch: Int, pos: Position? = null) : ParseException("Unexpec
 class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: ${token.formatted()}", pos)
 class IncompatibleTypeParseException(message: String, pos: Position? = null) : ParseException(message, pos)
 class IllegalNumberFormat(message: String, pos: Position? = null) : ParseException(message, pos)
+class IllegalContextForFunction(pos: Position? = null) : ParseException("Illegal function call", pos)
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
     ParseException("In custom syntax rule: Expected: ${expectedSymbol.symbolName}. Found: ${foundSymbol.symbolName}", pos)
 
