@@ -20,3 +20,9 @@ interface MPAtomicRefArray<T> {
 }
 
 expect fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T>
+
+/**
+ * Format a double in a standardised way. A value with zero decimal part should be rendered as 4.0.
+ * This is needed because Javascript does not include the decimal by default.
+ */
+expect fun Double.formatDouble(): String

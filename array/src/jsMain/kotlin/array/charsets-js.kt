@@ -1,25 +1,30 @@
 package array
 
+val XRegExp = js("require('xregexp')")
+val letterRegexp = XRegExp("^\\p{L}$")
+val digitRegexp = XRegExp("^\\p{N}$")
+val whitespaceRegexp = XRegExp("^\\p{Zs}$")
+
 actual fun isLetter(codepoint: Int): Boolean {
-    val regex = "^\\p{L}$".toRegex()
-    return regex.matches(codepoint.toChar().toString())
+    return letterRegexp.test(charToString(codepoint)) as Boolean
 }
 
 actual fun isDigit(codepoint: Int): Boolean {
-    val regex = "^\\p{N}$".toRegex()
-    return regex.matches(codepoint.toChar().toString())
+    return digitRegexp.test(codepoint.toChar().toString()) as Boolean
 }
 
 actual fun isWhitespace(codepoint: Int): Boolean {
-    val regex = "^\\p{Zs}$".toRegex()
-    return regex.matches(codepoint.toChar().toString())
+    return whitespaceRegexp.test(codepoint.toChar().toString()) as Boolean
 }
 
 actual fun charToString(codepoint: Int): String {
-    if (codepoint < 0x10000) {
-        return codepoint.toChar().toString()
+    return if (codepoint < 0x10000) {
+        codepoint.toChar().toString()
     } else {
-        throw RuntimeException("JS implementation only supports BMP")
+        val off = 0xD800 - (0x10000 shr 10)
+        val high = off + (codepoint shr 10)
+        val low = 0xDC00 + (codepoint and 0x3FF)
+        "${high.toChar()}${low.toChar()}"
     }
 }
 
@@ -33,7 +38,8 @@ fun makeCharFromSurrogatePair(high: Char, low: Char): Int {
     val lowInt = low.toInt()
     assertx(highInt in 0xD800..0xDBFF)
     assertx(lowInt in 0xDC00..0xDFFF)
-    return ((highInt - 0xD800) * 0xD400) + (lowInt - 0xDC00)
+    val off = 0x10000 - (0xD800 shl 10) - 0xDC00
+    return (highInt shl 10) + lowInt + off
 }
 
 actual fun String.asCodepointList(): List<Int> {
@@ -58,7 +64,15 @@ actual fun String.asCodepointList(): List<Int> {
     return result
 }
 
+//@JsModule("grapheme-breaker-mjs")
+//@JsNonModule
+//external object GraphemeBreaker {
+//    fun `break`(s: String): Array<String>
+//}
+val GraphemeSplitter = js("require('grapheme-splitter')")
+val graphemeSplitter = GraphemeSplitter()
+
 actual fun String.asGraphemeList(): List<String> {
-    // TODO: Need ICU for this
-    return this.asCodepointList().map(::charToString)
+    val result = graphemeSplitter.splitGraphemes(this) as Array<String>
+    return result.asList()
 }

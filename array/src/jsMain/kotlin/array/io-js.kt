@@ -42,3 +42,7 @@ actual fun openFile(name: String): ByteProvider {
 actual fun openCharFile(name: String): CharacterProvider {
     TODO("Not implemented")
 }
+
+actual fun fileExists(path: String): Boolean {
+    TODO("not implemented")
+}

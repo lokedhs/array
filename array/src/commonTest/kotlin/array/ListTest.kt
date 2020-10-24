@@ -24,7 +24,7 @@ class ListTest : APLTest() {
     }
 
     private fun assertListContent(expected: List<Any>, list: APLValue) {
-        assertTrue(list is APLList, "actual type: ${list::class.qualifiedName}")
+        assertTrue(list is APLList, "actual type: ${list::class.simpleName}")
         assertEquals(expected.size, list.listSize())
         expected.forEachIndexed { index, item ->
             assertAPLValue(item, list.listElement(index))

@@ -252,7 +252,7 @@ class ScalarTest : APLTest() {
     fun floorConvertsComplexToDouble() {
         val result = parseAPLExpression("⌊3.4J0.01")
         val v = result.unwrapDeferredValue()
-        assertTrue(v is APLDouble, "expected APLDouble, actual type: ${v::class.qualifiedName}")
+        assertTrue(v is APLDouble, "expected APLDouble, actual type: ${v::class.simpleName}")
         assertSimpleDouble(3.0, v)
     }
 

@@ -132,7 +132,7 @@ class APLComplex(val value: Complex) : APLNumber() {
             FormatStyle.READABLE -> formatToAPL()
         }
 
-    private fun formatToAPL() = "${value.real}J${value.imaginary}"
+    private fun formatToAPL() = "${value.real.formatDouble()}J${value.imaginary.formatDouble()}"
 
     override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
 

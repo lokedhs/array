@@ -111,7 +111,7 @@ open class APLTest {
             is Double -> assertSimpleDouble(expected, result)
             is Complex -> assertSimpleComplex(expected, result)
             is String -> assertString(expected, result)
-            else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.qualifiedName}")
+            else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.simpleName}")
         }
     }
 

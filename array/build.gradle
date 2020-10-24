@@ -151,6 +151,8 @@ kotlin {
 //        jsMain {
 //            dependencies {
 //                implementation kotlin('stdlib-js')
+//                implementation npm('xregexp', '4.3.0')
+//                implementation npm('grapheme-splitter', '1.0.4')
 //            }
 //        }
 //        jsTest {

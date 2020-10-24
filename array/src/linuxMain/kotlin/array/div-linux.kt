@@ -39,3 +39,5 @@ class LinuxMPAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
 actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return LinuxMPAtomicRefArray(size)
 }
+
+actual fun Double.formatDouble() = this.toString()
