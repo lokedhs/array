@@ -31,18 +31,49 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
     override fun close() {}
 }
 
+class ByteArrayByteProvider(val content: ByteArray, val name: String? = null) : ByteProvider {
+    override fun sourceName() = name
+
+    var pos = 0
+
+    override fun readByte(): Byte? {
+        return if (pos >= content.size) null else content[pos++]
+    }
+
+    override fun close() {
+    }
+}
+
 actual fun makeKeyboardInput(): KeyboardInput {
     TODO("Not implemented")
 }
 
+val registeredFiles = HashMap<String, ByteArray>()
+
 actual fun openFile(name: String): ByteProvider {
-    TODO("Not implemented")
+    val found = registeredFiles[name] ?: throw MPFileException("File not found: ${name}")
+    return ByteArrayByteProvider(found, name)
 }
 
 actual fun openCharFile(name: String): CharacterProvider {
-    TODO("Not implemented")
+    return ByteToCharacterProvider(openFile(name))
 }
 
 actual fun fileExists(path: String): Boolean {
-    TODO("not implemented")
+    return registeredFiles.containsKey(path)
+}
+
+val jsFilesystem = js("require('fs')")
+
+fun libFilesInit() {
+    fun initDirectory(dir: String, base: String) {
+        val files = jsFilesystem.readdirSync("${dir}/${base}") as Array<String>
+        files.forEach { name ->
+            val n = "${base}/${name}"
+            val content = jsFilesystem.readFileSync("${dir}/${n}")
+            registeredFiles[n] = content
+        }
+    }
+    initDirectory("../../../../array", "standard-lib")
+    initDirectory("../../../../array", "test-data")
 }

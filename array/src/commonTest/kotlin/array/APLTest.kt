@@ -1,6 +1,7 @@
 package array
 
 import array.complex.Complex
+import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -122,4 +123,11 @@ open class APLTest {
     fun assertSymbolNameCoreNamespace(engine: Engine, name: String, value: APLValue) {
         assertSame(engine.internSymbol(name, engine.coreNamespace), value.ensureSymbol().value)
     }
+
+    @BeforeTest
+    fun initTest() {
+        nativeTestInit()
+    }
 }
+
+expect fun nativeTestInit()

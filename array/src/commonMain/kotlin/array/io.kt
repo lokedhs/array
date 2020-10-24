@@ -15,12 +15,24 @@ fun <T : NativeCloseable, R> T.use(fn: (T) -> R): R {
 }
 
 interface ByteProvider : NativeCloseable {
+    fun sourceName(): String? = null
     fun readByte(): Byte?
-    fun readBlock(buffer: ByteArray, start: Int? = null, length: Int? = null): Int?
+
+    fun readBlock(buffer: ByteArray, start: Int? = null, length: Int? = null): Int? {
+        val startPos = start ?: 0
+        val n = length ?: buffer.size - startPos
+        var i = 0
+        while (i < n) {
+            val value = readByte() ?: break
+            buffer[startPos + i] = value
+            i++
+        }
+        return if (i == 0) null else i
+    }
 }
 
 interface CharacterProvider : NativeCloseable {
-    fun sourceName(): String?
+    fun sourceName(): String? = null
     fun nextCodepoint(): Int?
 
     fun nextLine(): String? {
@@ -88,6 +100,72 @@ class PushBackCharacterProvider(val sourceLocation: SourceLocation) : CharacterP
     }
 
     override fun sourceName() = source.sourceName()
+}
+
+class ByteToCharacterProvider(val source: ByteProvider) : CharacterProvider {
+    override fun sourceName(): String? = source.sourceName()
+
+    private var pushbackChar: Byte? = null
+
+    override fun nextCodepoint(): Int? {
+        var utfCodepoint = 0
+        var utfBytesSeen = 0
+        var utfBytesNeeded = 0
+        var utfLowerBoundary = 0x80
+        var utfUpperBoundary = 0xBF
+
+        while (true) {
+            val nextByte = source.readByte()
+            if (nextByte == null) {
+                if (utfBytesNeeded != 0) {
+                    throw MPFileException("Truncated UTF-8 stream")
+                } else {
+                    return null
+                }
+            }
+            val a = nextByte.toInt() and 0xFF
+            if (utfBytesNeeded == 0) {
+                when {
+                    a <= 0x7F -> {
+                        return a
+                    }
+                    a in (0xC2..0xDF) -> {
+                        utfBytesNeeded = 1
+                        utfCodepoint = (a and 0x1F)
+                    }
+                    a in (0xE0..0xEF) -> {
+                        if (a == 0xE0) utfLowerBoundary = 0xA0
+                        else if (a == 0xED) utfUpperBoundary = 0x9F
+                        utfBytesNeeded = 2
+                        utfCodepoint = (a and 0xF)
+                    }
+                    a in (0xF0..0xF4) -> {
+                        if (a == 0xF0) utfLowerBoundary = 0x90
+                        else if (a == 0xF4) utfUpperBoundary = 0x8F
+                        utfBytesNeeded = 3
+                        utfCodepoint = (a and 0x7)
+                    }
+                    else -> throw MPFileException("Unexpected value in UTF-8 stream")
+                }
+            } else {
+                if (a < utfLowerBoundary || a > utfUpperBoundary) {
+                    pushbackChar = nextByte
+                    throw MPFileException("Invalid UTF-8 bytes")
+                }
+                utfLowerBoundary = 0x80
+                utfUpperBoundary = 0xBF
+                utfCodepoint = (utfCodepoint shl 6) or (a and 0x3F)
+                utfBytesSeen++
+                if (utfBytesSeen == utfBytesNeeded) {
+                    return utfCodepoint
+                }
+            }
+        }
+    }
+
+    override fun close() {
+        source.close()
+    }
 }
 
 expect class StringCharacterProvider(s: String) : CharacterProvider

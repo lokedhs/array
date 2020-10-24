@@ -89,14 +89,19 @@ kotlin {
             freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
         }
     }
-// Javascript support is not enabled as not all features used by the engine is supported yet
-// Specifically, reflection does not work
-//    js {
+    js {
 //        browser {
+//            testTask {
+//                useKarma {
+//                    useFirefox()
+//                    useChrome()
+//                    useSafari()
+//                }
+//            }
 //        }
-//        nodejs {
-//        }
-//    }
+        nodejs {
+        }
+    }
     linuxX64("linux") {
         compilations.main.cinterops {
             icu
@@ -148,18 +153,18 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
-//        jsMain {
-//            dependencies {
-//                implementation kotlin('stdlib-js')
-//                implementation npm('xregexp', '4.3.0')
-//                implementation npm('grapheme-splitter', '1.0.4')
-//            }
-//        }
-//        jsTest {
-//            dependencies {
-//                implementation kotlin('test-js')
-//            }
-//        }
+        jsMain {
+            dependencies {
+                implementation kotlin('stdlib-js')
+                implementation npm('xregexp', '4.3.0')
+                implementation npm('grapheme-splitter', '1.0.4')
+            }
+        }
+        jsTest {
+            dependencies {
+                implementation kotlin('test-js')
+            }
+        }
         linuxMain {
         }
         linuxTest {
