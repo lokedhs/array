@@ -3,10 +3,7 @@ package array.clientweb
 import array.*
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.css.Cursor
-import kotlinx.css.LinearDimension
-import kotlinx.css.cursor
-import kotlinx.css.width
+import kotlinx.css.*
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
@@ -70,12 +67,17 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
                             }
                         }
                     }
-                    styledDiv {
-                        if (entry.result != null) {
+                    if (entry.result != null) {
+                        styledDiv {
                             renderValue(entry.result)
-                        } else {
-                            if (entry.errorMessage == null) {
-                                throw RuntimeException("No result nor error message")
+                        }
+                    } else {
+                        if (entry.errorMessage == null) {
+                            throw RuntimeException("No result nor error message")
+                        }
+                        styledDiv {
+                            css {
+                                color = Color.red
                             }
                             +entry.errorMessage
                         }
@@ -121,7 +123,7 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
             d.size == 0 -> genericTableRender(1, 1, { _, _ -> value.valueAt(0) })
             d.size == 1 -> genericTableRender(1, d[0], { _, col -> value.valueAt(col) })
             d.size == 2 -> renderTableValue2D(value)
-            else -> +value.formatted(FormatStyle.PRETTY)
+            else -> styledPre { +value.formatted(FormatStyle.PRETTY) }
         }
     }
 
@@ -131,7 +133,10 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
         genericTableRender(d[0], d[1], { row, col -> value.valueAt(d.indexFromPosition(intArrayOf(row, col), multipliers)) })
     }
 
-    private fun StyledDOMBuilder<HtmlBlockTag>.genericTableRender(numRows: Int, numCols: Int, reader: (row: Int, col: Int) -> APLValue) {
+    private fun StyledDOMBuilder<HtmlBlockTag>.genericTableRender(
+        numRows: Int,
+        numCols: Int,
+        reader: (row: Int, col: Int) -> APLValue) {
         styledTable {
             css {
                 +ClientStyles.table
