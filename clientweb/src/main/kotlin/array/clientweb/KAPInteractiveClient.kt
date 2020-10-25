@@ -30,6 +30,7 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
     private val engine = Engine()
 
     init {
+        engine.addLibrarySearchPath("standard-lib")
         state = ClientState(props.name, ArrayList())
     }
 
