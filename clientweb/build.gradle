@@ -1,0 +1,39 @@
+plugins {
+    id 'org.jetbrains.kotlin.js'
+}
+group = 'com.dhsdevelopments.kap'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://dl.bintray.com/kotlin/kotlinx'
+    }
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-js'
+    implementation 'org.jetbrains.kotlinx:kotlinx-html-js:0.7.2'
+    implementation project(':array')
+}
+
+kotlin {
+    js {
+        browser {
+            binaries.executable()
+            webpackTask {
+                cssSupport.enabled = true
+            }
+            runTask {
+                cssSupport.enabled = true
+            }
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                    webpackConfig.cssSupport.enabled = true
+                }
+            }
+        }
+    }
+}
