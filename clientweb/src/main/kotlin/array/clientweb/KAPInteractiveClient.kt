@@ -1,12 +1,16 @@
 package array.clientweb
 
-import array.Engine
-import array.FormatStyle
-import array.StringSourceLocation
+import array.*
+import kotlinx.browser.document
+import kotlinx.browser.window
+import kotlinx.css.Cursor
 import kotlinx.css.LinearDimension
+import kotlinx.css.cursor
 import kotlinx.css.width
+import kotlinx.html.HtmlBlockTag
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
+import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onKeyPressFunction
 import org.w3c.dom.HTMLInputElement
 import react.RBuilder
@@ -19,21 +23,28 @@ external interface ClientProps : RProps {
     var name: String
 }
 
-data class HistoryResult(val input: String, val result: String) : RState
+data class HistoryResult(val input: String, val result: APLValue?, val errorMessage: String?) : RState
 data class ClientState(val inputText: String, val history: List<HistoryResult>) : RState
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientState>(props) {
 
-    val engine = Engine()
+    private val engine = Engine()
 
     init {
         state = ClientState(props.name, ArrayList())
     }
 
+    override fun componentDidUpdate(prevProps: ClientProps, prevState: ClientState, snapshot: Any) {
+        val body = document.body
+        if (body != null) {
+            window.scrollTo(0.0, body.scrollHeight.toDouble())
+        }
+    }
+
     override fun RBuilder.render() {
-        styledDiv {
+        styledP {
             +"""
              Type a KAP statement in the input box and press return to execute it.
              Note that evaluation is performed asynchronously,
@@ -47,8 +58,28 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
             state.history.forEach { entry ->
                 styledHr { }
                 styledDiv {
-                    styledDiv { +entry.input }
-                    styledPre { +entry.result }
+                    styledDiv {
+                        css {
+                            cursor = Cursor.pointer
+                        }
+                        val input = entry.input
+                        +input
+                        attrs {
+                            onClickFunction = { event ->
+                                setState(ClientState(input, state.history))
+                            }
+                        }
+                    }
+                    styledDiv {
+                        if (entry.result != null) {
+                            renderValue(entry.result)
+                        } else {
+                            if (entry.errorMessage == null) {
+                                throw RuntimeException("No result nor error message")
+                            }
+                            +entry.errorMessage
+                        }
+                    }
                 }
             }
         }
@@ -63,16 +94,56 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
                     setState(ClientState((event.target as HTMLInputElement).value, state.history))
                 }
                 onKeyPressFunction = { event ->
-                    console.log("event = ${event}, type = ${event.type}")
                     val keyEvent: dynamic = event
-                    console.log("event.key = ${keyEvent.key}")
                     if (keyEvent.key == "Enter") {
                         val inputText = state.inputText
-                        val result = engine.parseAndEval(StringSourceLocation(inputText), false)
+                        var historyResult: HistoryResult
+                        try {
+                            val result = engine.parseAndEval(StringSourceLocation(inputText), false).collapse()
+                            historyResult = HistoryResult(inputText, result, null)
+                        } catch (e: APLGenericException) {
+                            historyResult = HistoryResult(inputText, null, e.formattedError())
+                        }
                         val history = ArrayList(state.history)
-                        val s = result.formatted(FormatStyle.PRETTY)
-                        history.add(HistoryResult(inputText, s))
+                        history.add(historyResult)
                         setState(ClientState(inputText, history))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun StyledDOMBuilder<HtmlBlockTag>.renderValue(value: APLValue) {
+        val d = value.dimensions
+        when {
+            value is APLSingleValue -> +value.formatted(FormatStyle.PRETTY)
+            isStringValue(value) -> +value.formatted(FormatStyle.PRETTY)
+            d.size == 0 -> genericTableRender(1, 1, { _, _ -> value.valueAt(0) })
+            d.size == 1 -> genericTableRender(1, d[0], { _, col -> value.valueAt(col) })
+            d.size == 2 -> renderTableValue2D(value)
+            else -> +value.formatted(FormatStyle.PRETTY)
+        }
+    }
+
+    private fun StyledDOMBuilder<HtmlBlockTag>.renderTableValue2D(value: APLValue) {
+        val d = value.dimensions
+        val multipliers = d.multipliers()
+        genericTableRender(d[0], d[1], { row, col -> value.valueAt(d.indexFromPosition(intArrayOf(row, col), multipliers)) })
+    }
+
+    private fun StyledDOMBuilder<HtmlBlockTag>.genericTableRender(numRows: Int, numCols: Int, reader: (row: Int, col: Int) -> APLValue) {
+        styledTable {
+            css {
+                +ClientStyles.table
+            }
+            styledTbody {
+                repeat(numRows) { row ->
+                    styledTr {
+                        repeat(numCols) { col ->
+                            styledTd {
+                                renderValue(reader(row, col))
+                            }
+                        }
                     }
                 }
             }
