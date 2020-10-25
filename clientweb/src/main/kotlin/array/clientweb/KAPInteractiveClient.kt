@@ -31,6 +31,11 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
 
     init {
         engine.addLibrarySearchPath("standard-lib")
+        try {
+            engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), false)
+        } catch (e: APLGenericException) {
+            console.log("Error loading standard-lib: ${e.message}")
+        }
         state = ClientState(props.name, ArrayList())
     }
 

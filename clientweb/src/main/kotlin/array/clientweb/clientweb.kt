@@ -25,7 +25,6 @@ fun loadLibraries() {
 private fun loadLibFiles(vararg names: String) {
     numOutstandingRequests = names.size
     names.forEach { name ->
-        console.log("Downloading ${name}")
         val http = XMLHttpRequest()
         http.open("GET", name)
         http.onload = {
