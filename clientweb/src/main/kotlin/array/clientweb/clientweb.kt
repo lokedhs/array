@@ -2,25 +2,16 @@ package array.clientweb
 
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.html.InputType
-import kotlinx.html.div
-import kotlinx.html.dom.append
-import kotlinx.html.input
-import kotlinx.html.onSubmit
-import org.w3c.dom.Node
+import react.dom.render
 
+@OptIn(ExperimentalJsExport::class)
 fun main() {
-    window.onload = { document.body?.sayHello() }
-}
-
-fun Node.sayHello() {
-    append {
-        div {
-            +"Web client for KAP"
-        }
-        div {
-            input(type = InputType.text) {
-                +"foo"
+    window.onload = {
+        render(document.getElementById("root")) {
+            child(KAPInteractiveClient::class) {
+                attrs {
+                    name = ""
+                }
             }
         }
     }
