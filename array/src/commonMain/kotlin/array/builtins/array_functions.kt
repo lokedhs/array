@@ -1070,7 +1070,7 @@ class SelectElementsValue(selectIndexes: IntArray, val b: APLValue, val axis: In
     private val aIndex: IntArray
 
     init {
-        val sizeAlongAxis = selectIndexes.reduce { a, b -> a + b }
+        val sizeAlongAxis = selectIndexes.reduceWithInitial(0) { a, b -> a + b }
         dimensions = Dimensions(IntArray(bDimensions.size) { i ->
             if (i == axis) {
                 sizeAlongAxis

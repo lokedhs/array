@@ -164,6 +164,14 @@ inline fun <T, R> List<T>.reduceWithInitial(initial: R, fn: (R, T) -> R): R {
     return curr
 }
 
+inline fun IntArray.reduceWithInitial(initial: Int, fn: (Int, Int) -> Int): Int {
+    var curr = initial
+    for (element in this) {
+        curr = fn(curr, element)
+    }
+    return curr
+}
+
 fun stringIntersperse(list: Sequence<String>, separator: String): String {
     val buf = StringBuilder()
     var first = true
