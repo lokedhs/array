@@ -1119,10 +1119,19 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
         }
         val selectIndexes = if (a.isScalar()) {
             a.ensureNumber(pos).asInt().let { v ->
+                if (v < 0) {
+                    throw APLIncompatibleDomainsException("Selection index is negative", pos)
+                }
                 IntArray(bDimensions[axisInt]) { v }
             }
         } else {
-            a.toIntArray(pos)
+            a.toIntArray(pos).also { indexes ->
+                indexes.forEach { v ->
+                    if (v < 0) {
+                        throw APLIncompatibleDomainsException("Selection index is negative", pos)
+                    }
+                }
+            }
         }
         return SelectElementsValue(selectIndexes, bFixed, axisInt)
     }
@@ -1182,6 +1191,8 @@ class WhereAPLFunction : APLFunctionDescriptor {
                         repeat(n) {
                             result.add(index)
                         }
+                    } else if (n < 0) {
+                        throw APLIncompatibleDomainsException("Negative value found in right argument")
                     }
                 }
                 APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
