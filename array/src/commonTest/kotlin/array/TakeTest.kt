@@ -189,39 +189,14 @@ class TakeTest : APLTest() {
             assertDimension(dimensionsOfSize(4, 8), result)
             assertArrayContent(
                 arrayOf(
-                    0,
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                    7,
-                    40,
-                    41,
-                    42,
-                    43,
-                    44,
-                    45,
-                    46,
-                    47,
-                    80,
-                    81,
-                    82,
-                    83,
-                    84,
-                    85,
-                    86,
-                    87,
-                    120,
-                    121,
-                    122,
-                    123,
-                    124,
-                    125,
-                    126,
-                    127
+                    0, 1, 2, 3, 4, 5, 6, 7, 40, 41, 42, 43, 44, 45, 46, 47, 80, 81, 82,
+                    83, 84, 85, 86, 87, 120, 121, 122, 123, 124, 125, 126, 127
                 ), result)
         }
+    }
+
+    @Test
+    fun takeFromEmpty() {
+        assertSimpleNumber(0, parseAPLExpression("↑⍬"))
     }
 }

@@ -184,4 +184,11 @@ class ArrayLookupBracketsTest : APLTest() {
             parseAPLExpression("(1 2 3 4)[=]")
         }
     }
+
+    @Test
+    fun onlyBrackets() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("[0]")
+        }
+    }
 }

@@ -45,6 +45,12 @@ class IotaTest : APLTest() {
 
     @Test
     fun iota2DArray() {
+        fun assertNumbers(a: Long, b: Long, value: APLValue) {
+            assertDimension(dimensionsOfSize(2), value)
+            assertSimpleNumber(a, value.valueAt(0))
+            assertSimpleNumber(b, value.valueAt(1))
+        }
+
         parseAPLExpression("⍳ 4 5").let { result ->
             assertDimension(dimensionsOfSize(4, 5), result)
             assertNumbers(0, 0, result.valueAt(0))
@@ -70,16 +76,42 @@ class IotaTest : APLTest() {
         }
     }
 
-    private fun assertNumbers(a: Long, b: Long, value: APLValue) {
-        assertDimension(dimensionsOfSize(2), value)
-        assertSimpleNumber(a, value.valueAt(0))
-        assertSimpleNumber(b, value.valueAt(1))
+    @Test
+    fun iota3DArray() {
+        fun assertNumbers(a: Long, b: Long, c: Long, value: APLValue) {
+            assertDimension(dimensionsOfSize(3), value)
+            assertSimpleNumber(a, value.valueAt(0))
+            assertSimpleNumber(b, value.valueAt(1))
+            assertSimpleNumber(c, value.valueAt(2))
+        }
+
+        parseAPLExpression("⍳ 2 3 2").let { result ->
+            assertNumbers(0, 0, 0, result.valueAt(0))
+            assertNumbers(0, 0, 1, result.valueAt(1))
+            assertNumbers(0, 1, 0, result.valueAt(2))
+            assertNumbers(0, 1, 1, result.valueAt(3))
+            assertNumbers(0, 2, 0, result.valueAt(4))
+            assertNumbers(0, 2, 1, result.valueAt(5))
+            assertNumbers(1, 0, 0, result.valueAt(6))
+            assertNumbers(1, 0, 1, result.valueAt(7))
+            assertNumbers(1, 1, 0, result.valueAt(8))
+            assertNumbers(1, 1, 1, result.valueAt(9))
+            assertNumbers(1, 2, 0, result.valueAt(10))
+            assertNumbers(1, 2, 1, result.valueAt(11))
+        }
     }
 
     @Test
     fun singleElementDimension() {
         parseAPLExpression("⍳,9").let { result ->
             assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), result)
+        }
+    }
+
+    @Test
+    fun iotaEmpty() {
+        parseAPLExpression("⍳0").let { result ->
+            assertAPLNull(result)
         }
     }
 

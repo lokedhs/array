@@ -49,7 +49,7 @@ class IotaArray(val indexes: IntArray) : APLArray() {
             }
             p.makeAPLNumber()
         } else {
-            val index = dimensions.positionFromIndex(p)
+            val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
             APLArrayImpl(dimensionsOfSize(indexes.size), Array(index.size) { i -> index[i].makeAPLNumber() })
         }
     }
@@ -1158,4 +1158,36 @@ class FormatAPLFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = FormatAPLFunctionImpl(pos)
+}
+
+class WhereAPLFunction : APLFunctionDescriptor {
+    class WhereAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return if (a.isScalar()) {
+                APLNullValue()
+            } else {
+                val aDimensions = a.dimensions
+                val multipliers = aDimensions.multipliers()
+                val result = ArrayList<APLValue>()
+                a.iterateMembersWithPosition { value, i ->
+                    val n = value.ensureNumber(pos).asInt()
+                    if (n > 0) {
+                        val index = if (aDimensions.size == 1) {
+                            i.makeAPLNumber()
+                        } else {
+                            val positionIndex = Dimensions.positionFromIndexWithMultipliers(i, multipliers)
+                            val valueArray = Array<APLValue>(positionIndex.size) { v -> positionIndex[v].makeAPLNumber() }
+                            APLArrayImpl(dimensionsOfSize(valueArray.size), valueArray)
+                        }
+                        repeat(n) {
+                            result.add(index)
+                        }
+                    }
+                }
+                APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+            }
+        }
+    }
+
+    override fun make(pos: Position) = WhereAPLFunctionImpl(pos)
 }

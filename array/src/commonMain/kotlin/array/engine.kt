@@ -166,6 +166,7 @@ class Engine {
         registerNativeFunction("⌿", SelectElementsFirstAxisFunction())
         registerNativeFunction("∼", NotAPLFunction())
         registerNativeFunction("⍕", FormatAPLFunction())
+        registerNativeFunction("⍸", WhereAPLFunction())
 
         // hash tables
         registerNativeFunction("map", MapAPLFunction())
