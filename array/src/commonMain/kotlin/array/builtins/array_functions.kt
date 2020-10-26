@@ -5,7 +5,6 @@ import kotlin.math.absoluteValue
 import kotlin.math.ceil
 import kotlin.math.max
 
-
 class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
     val multipliers = dimensions.multipliers()
     val multiplierAxis = multipliers[axis]
