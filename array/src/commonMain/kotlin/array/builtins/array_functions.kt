@@ -23,7 +23,7 @@ class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
     }
 }
 
-class IotaArray(private val numElements: Int, private val start: Int = 0) : APLArray() {
+class IotaArrayOld(private val numElements: Int, private val start: Int = 0) : APLArray() {
     override val dimensions get() = dimensionsOfSize(numElements)
 
     override fun valueAt(p: Int): APLValue {
@@ -31,6 +31,28 @@ class IotaArray(private val numElements: Int, private val start: Int = 0) : APLA
             throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}")
         }
         return (p + start).makeAPLNumber()
+    }
+}
+
+class IotaArray(val indexes: IntArray) : APLArray() {
+    override val dimensions = Dimensions(indexes)
+
+    private val multipliers = dimensions.multipliers()
+
+    init {
+        assertx(indexes.isNotEmpty())
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        return if (indexes.size == 1) {
+            if (p < 0 || p >= indexes[0]) {
+                throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${indexes.size}")
+            }
+            p.makeAPLNumber()
+        } else {
+            val index = dimensions.positionFromIndex(p)
+            APLArrayImpl(dimensionsOfSize(indexes.size), Array(index.size) { i -> index[i].makeAPLNumber() })
+        }
     }
 }
 
@@ -65,7 +87,13 @@ class FindIndexArray(val a: APLValue, val b: APLValue, val context: RuntimeConte
 class IotaAPLFunction : APLFunctionDescriptor {
     class IotaAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            return IotaArray(a.unwrapDeferredValue().ensureNumber(pos).asInt())
+            val aDimensions = a.dimensions
+            val indexes = when (aDimensions.size) {
+                0 -> IntArray(1) { a.ensureNumber(pos).asInt() }
+                1 -> IntArray(aDimensions[0]) { i -> a.valueAt(i).ensureNumber(pos).asInt() }
+                else -> throw InvalidDimensionsException("Right argument must be rank 0 or 1", pos)
+            }
+            return IotaArray(indexes)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {

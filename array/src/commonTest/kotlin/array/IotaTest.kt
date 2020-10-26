@@ -43,13 +43,53 @@ class IotaTest : APLTest() {
         }
     }
 
+    @Test
+    fun iota2DArray() {
+        parseAPLExpression("⍳ 4 5").let { result ->
+            assertDimension(dimensionsOfSize(4, 5), result)
+            assertNumbers(0, 0, result.valueAt(0))
+            assertNumbers(0, 1, result.valueAt(1))
+            assertNumbers(0, 2, result.valueAt(2))
+            assertNumbers(0, 3, result.valueAt(3))
+            assertNumbers(0, 4, result.valueAt(4))
+            assertNumbers(1, 0, result.valueAt(5))
+            assertNumbers(1, 1, result.valueAt(6))
+            assertNumbers(1, 2, result.valueAt(7))
+            assertNumbers(1, 3, result.valueAt(8))
+            assertNumbers(1, 4, result.valueAt(9))
+            assertNumbers(2, 0, result.valueAt(10))
+            assertNumbers(2, 1, result.valueAt(11))
+            assertNumbers(2, 2, result.valueAt(12))
+            assertNumbers(2, 3, result.valueAt(13))
+            assertNumbers(2, 4, result.valueAt(14))
+            assertNumbers(3, 0, result.valueAt(15))
+            assertNumbers(3, 1, result.valueAt(16))
+            assertNumbers(3, 2, result.valueAt(17))
+            assertNumbers(3, 3, result.valueAt(18))
+            assertNumbers(3, 4, result.valueAt(19))
+        }
+    }
+
+    private fun assertNumbers(a: Long, b: Long, value: APLValue) {
+        assertDimension(dimensionsOfSize(2), value)
+        assertSimpleNumber(a, value.valueAt(0))
+        assertSimpleNumber(b, value.valueAt(1))
+    }
+
+    @Test
+    fun singleElementDimension() {
+        parseAPLExpression("⍳,9").let { result ->
+            assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), result)
+        }
+    }
+
     /**
      * This should work in the future, but currently it's not supported so it should fail
      */
     @Test
-    fun failWithArrayArgument() {
+    fun failWith2DArrayArgument() {
         assertFailsWith<APLEvalException> {
-            parseAPLExpression("⍳3 4")
+            parseAPLExpression("⍳ 2 2 ⍴ 1 2 3 4")
         }
     }
 }

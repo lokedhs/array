@@ -83,7 +83,7 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
         val axis = Array(indexAsList.listSize()) { i ->
             val v = indexAsList.listElement(i).unwrapDeferredValue().let { result ->
                 if (result is APLEmpty) {
-                    IotaArray(aDimensions[i])
+                    IotaArray(intArrayOf(aDimensions[i]))
                 } else {
                     result
                 }
