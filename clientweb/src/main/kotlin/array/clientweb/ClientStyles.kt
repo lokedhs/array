@@ -23,6 +23,7 @@ object ClientStyles : StyleSheet("ClientStyles", isStatic = true) {
             borderWidth = 1.px
             borderColor = Color.black
             borderStyle = BorderStyle.solid
+            padding(all = 2.px)
         }
     }
 }
