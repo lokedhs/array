@@ -1,9 +1,6 @@
 package array.repl
 
-import array.Engine
-import array.FormatStyle
-import array.StringSourceLocation
-import array.makeKeyboardInput
+import array.*
 import array.options.ArgParser
 import array.options.Option
 
@@ -22,8 +19,12 @@ fun runRepl(args: Array<String>) {
         val line = keyboardInput.readString(prompt) ?: break
         val stringTrimmed = line.trim()
         if (stringTrimmed != "") {
-            val result = engine.parseAndEval(StringSourceLocation(line), false)
-            println(result.formatted(FormatStyle.PRETTY))
+            try {
+                val result = engine.parseAndEval(StringSourceLocation(line), false)
+                println(result.formatted(FormatStyle.PRETTY))
+            } catch (e: APLGenericException) {
+                println(e.formattedError())
+            }
         }
     }
 }

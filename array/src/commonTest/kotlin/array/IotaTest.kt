@@ -115,9 +115,6 @@ class IotaTest : APLTest() {
         }
     }
 
-    /**
-     * This should work in the future, but currently it's not supported so it should fail
-     */
     @Test
     fun failWith2DArrayArgument() {
         assertFailsWith<APLEvalException> {
