@@ -131,15 +131,17 @@ fun makeBoolean(value: Boolean): APLValue {
     return (if (value) 1 else 0).makeAPLNumber()
 }
 
-fun numericRelationOperation(
+inline fun numericRelationOperation(
     pos: Position,
     a: APLSingleValue,
     b: APLSingleValue,
     fnLong: (al: Long, bl: Long) -> APLValue,
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
-    fnChar: ((aChar: Int, bChar: Int) -> APLValue)? = null,
-    fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue)? = null
+    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ -> throw IncompatibleTypeException("Incompatible argument types", pos) },
+    fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue) = { _, _ ->
+        throw IncompatibleTypeException("Incompatible argument types", pos)
+    }
 ): APLValue {
     return when {
         a is APLNumber && b is APLNumber -> {
@@ -150,13 +152,9 @@ fun numericRelationOperation(
             }
         }
         a is APLChar && b is APLChar -> {
-            if (fnChar == null) {
-                throw IncompatibleTypeException("Function cannot be used with characters", pos)
-            }
             fnChar(a.value, b.value)
         }
-        fnOther != null -> fnOther(a, b)
-        else -> throw IncompatibleTypeException("Incompatible argument types", pos)
+        else -> fnOther(a, b)
     }
 }
 
