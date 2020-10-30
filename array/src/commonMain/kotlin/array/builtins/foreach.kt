@@ -62,12 +62,12 @@ class ForEachOp : APLOperatorOneArg {
                         return fn.eval2Arg(context, a, b, axis)
                     }
                     val a1 = if (a.isScalar()) {
-                        ConstantArray(b.dimensions, a)
+                        ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
                     } else {
                         a
                     }
                     val b1 = if (b.isScalar()) {
-                        ConstantArray(a.dimensions, b)
+                        ConstantArray(a.dimensions, b.valueAtWithScalarCheck(0))
                     } else {
                         b
                     }

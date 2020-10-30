@@ -180,4 +180,16 @@ class ComplexExpressionsTest : APLTest() {
             parseAPLExpression("1 2 (4\n)").collapse()
         }
     }
+
+    @Test
+    fun forEachWithEnclose() {
+        parseAPLExpression("(-⍳5) ⌽¨ ⊂10 20 30 40 50").let { result ->
+            assertDimension(dimensionsOfSize(5), result)
+            assertArrayContent(arrayOf(10, 20, 30, 40, 50), result.valueAt(0))
+            assertArrayContent(arrayOf(50, 10, 20, 30, 40), result.valueAt(1))
+            assertArrayContent(arrayOf(40, 50, 10, 20, 30), result.valueAt(2))
+            assertArrayContent(arrayOf(30, 40, 50, 10, 20), result.valueAt(3))
+            assertArrayContent(arrayOf(20, 30, 40, 50, 10), result.valueAt(4))
+        }
+    }
 }
