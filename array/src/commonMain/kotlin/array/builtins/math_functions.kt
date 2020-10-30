@@ -64,6 +64,10 @@ class ArraySum2Args(
 
 abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        if(a is APLSingleValue) {
+            return combine1Arg(a)
+        }
+
         val fn = object : CellSumFunction1Arg {
             override fun combine(a: APLSingleValue): APLValue {
                 return combine1Arg(a)
@@ -73,6 +77,10 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        if(a is APLSingleValue && b is APLSingleValue) {
+            return combine2Arg(a, b)
+        }
+
         val fn = object : CellSumFunction2Args {
             override fun combineValues(a: APLSingleValue, b: APLSingleValue): APLValue {
                 return combine2Arg(a, b)

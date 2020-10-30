@@ -131,15 +131,17 @@ fun makeBoolean(value: Boolean): APLValue {
     return (if (value) 1 else 0).makeAPLNumber()
 }
 
-fun numericRelationOperation(
+inline fun numericRelationOperation(
     pos: Position,
     a: APLSingleValue,
     b: APLSingleValue,
     fnLong: (al: Long, bl: Long) -> APLValue,
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
-    fnChar: ((aChar: Int, bChar: Int) -> APLValue)? = null,
-    fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue)? = null
+    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ -> throw IncompatibleTypeException("Incompatible argument types", pos) },
+    fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue) = { _, _ ->
+        throw IncompatibleTypeException("Incompatible argument types", pos)
+    }
 ): APLValue {
     return when {
         a is APLNumber && b is APLNumber -> {
@@ -150,35 +152,25 @@ fun numericRelationOperation(
             }
         }
         a is APLChar && b is APLChar -> {
-            if (fnChar == null) {
-                throw IncompatibleTypeException("Function cannot be used with characters", pos)
-            }
             fnChar(a.value, b.value)
         }
-        fnOther != null -> fnOther(a, b)
-        else -> throw IncompatibleTypeException("Incompatible argument types", pos)
+        else -> fnOther(a, b)
     }
 }
 
-fun singleArgNumericRelationOperation(
+inline fun singleArgNumericRelationOperation(
     pos: Position,
     a: APLSingleValue,
     fnLong: (a: Long) -> APLValue,
     fnDouble: (a: Double) -> APLValue,
     fnComplex: (a: Complex) -> APLValue,
-    fnChar: ((a: Int) -> APLValue)? = null
+    fnChar: ((a: Int) -> APLValue) = { _ -> throw IncompatibleTypeException("Incompatible argument types", pos) }
 ): APLValue {
     return when (a) {
         is APLLong -> fnLong(a.asLong())
         is APLDouble -> fnDouble(a.asDouble())
         is APLComplex -> fnComplex(a.asComplex())
-        is APLChar -> {
-            if (fnChar == null) {
-                throw IncompatibleTypeException("Function cannot be used with characters", pos)
-            } else {
-                fnChar(a.value)
-            }
-        }
+        is APLChar -> fnChar(a.value)
         else -> throw IncompatibleTypeException("Incompatible argument types", pos)
     }
 }
