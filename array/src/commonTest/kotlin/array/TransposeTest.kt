@@ -1,9 +1,6 @@
 package array
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TransposeTest : APLTest() {
     @Test
@@ -200,6 +197,16 @@ class TransposeTest : APLTest() {
         parseAPLExpression("1⊖4 5 ⍴ ⍳100").let { result ->
             assertDimension(dimensionsOfSize(4, 5), result)
             assertArrayContent(arrayOf(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 0, 1, 2, 3, 4), result)
+        }
+    }
+
+    // Disabled since this functionality hasn't been implemented yet
+    @Ignore
+    @Test
+    fun rotateLeftWithArrayLeftArg() {
+        parseAPLExpression("1 2 3 ⌽ 3 3 ⍴ ⍳9").let { result ->
+            assertDimension(dimensionsOfSize(3, 3), result)
+            assertArrayContent(arrayOf(1, 2, 0, 5, 3, 4, 6, 7, 8), result)
         }
     }
 }

@@ -501,7 +501,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun parseTwoArgOperatorArgument(): APLFunction {
+    fun parseTwoArgOperatorArgument(): APLFunction {
         val (token, pos) = tokeniser.nextTokenWithPosition()
         return when (token) {
             is Symbol -> {
@@ -521,30 +521,19 @@ class APLParser(val tokeniser: TokenGenerator) {
         loop@ while (true) {
             val (readToken, opPos) = tokeniser.nextTokenWithPosition()
             token = readToken
-            if (token is Symbol) {
-                val op = tokeniser.engine.getOperator(token) ?: break
-                val axis = parseAxis()
-                when (op) {
-                    is APLOperatorOneArg -> {
-                        currentFn = op.combineFunction(currentFn, axis, opPos).make(opPos)
-                    }
-                    is APLOperatorTwoArg -> {
-                        parseTwoArgOperatorArgument().let { fn2 ->
-                            currentFn = op.combineFunction(fn, fn2, axis, opPos).make(opPos)
-                        }
-                    }
-                    else -> throw IllegalStateException("Operators must be either one or two arg")
+            when (token) {
+                is Symbol -> {
+                    val op = tokeniser.engine.getOperator(token) ?: break
+                    currentFn = op.parseAndCombineFunctions(this, currentFn, opPos)
                 }
-
-            } else {
-                break
+                else -> break
             }
         }
         tokeniser.pushBackToken(token)
         return currentFn
     }
 
-    private fun parseAxis(): Instruction? {
+    fun parseAxis(): Instruction? {
         val token = tokeniser.nextToken()
         if (token != OpenBracket) {
             tokeniser.pushBackToken(token)

@@ -80,13 +80,26 @@ class DeclaredNonBoundFunction(val instruction: Instruction, val env: Environmen
     override fun make(pos: Position) = DeclaredNonBoundFunctionImpl(pos)
 }
 
-interface APLOperator
+interface APLOperator {
+    fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction
+}
 
 interface APLOperatorOneArg : APLOperator {
+    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+        val axis = aplParser.parseAxis()
+        return combineFunction(currentFn, axis, opPos).make(opPos)
+    }
+
     fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor
 }
 
 interface APLOperatorTwoArg : APLOperator {
+    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+        val axis = aplParser.parseAxis()
+        val rightFn = aplParser.parseTwoArgOperatorArgument()
+        return combineFunction(currentFn, rightFn, axis, opPos).make(opPos)
+    }
+
     fun combineFunction(
         fn1: APLFunction,
         fn2: APLFunction,
