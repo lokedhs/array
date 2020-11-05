@@ -61,7 +61,7 @@ sealed class RegisteredEntry(val name: String) {
 
         fun registerFile(path: String, content: ByteArray) {
             val parts = splitName(path)
-            val dir = findPathElement(parts.subList(0, parts.size - 1), true)
+            val dir = findPathElement(parts.subList(0, parts.size - 1), createDirs = true, lastElementIsDir = true)
             if (dir !is Directory) {
                 throw MPFileException("Parent path does not represent a directory")
             }
@@ -71,7 +71,7 @@ sealed class RegisteredEntry(val name: String) {
 
         private fun splitName(path: String) = path.split("/").filter { s -> s.isNotEmpty() }
 
-        private fun findPathElement(parts: List<String>, createDirs: Boolean): RegisteredEntry? {
+        private fun findPathElement(parts: List<String>, createDirs: Boolean = false, lastElementIsDir: Boolean = false): RegisteredEntry? {
             if (parts.isEmpty()) {
                 return this
             }
@@ -92,7 +92,12 @@ sealed class RegisteredEntry(val name: String) {
                 curr = p
             }
             val s = parts.last()
-            return curr.files[s]
+            val f = curr.files[s]
+            return when {
+                f != null -> f
+                createDirs && lastElementIsDir -> curr.createDirectory(s)
+                else -> null
+            }
         }
 
         fun createDirectory(name: String, errorIfExists: Boolean = true): Directory {
