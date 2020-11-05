@@ -1,6 +1,8 @@
 package array
 
 import java.io.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.math.min
 
 actual class StringCharacterProvider actual constructor(private val s: String) : CharacterProvider {
@@ -182,4 +184,25 @@ private inline fun <T> transformIOException(fn: () -> T): T {
 
 actual fun fileExists(path: String): Boolean {
     return File(path).exists()
+}
+
+actual fun readDirectoryContent(dirName: String): List<PathEntry> {
+    val path = Paths.get(dirName)
+    unless(Files.isDirectory(path)) {
+        throw MPFileException("Argument is not a directory: ${dirName}")
+    }
+    val result = ArrayList<PathEntry>()
+    Files.newDirectoryStream(path).forEach { p ->
+        val fileNameType = when {
+            Files.isDirectory(p) -> FileNameType.DIRECTORY
+            Files.isRegularFile(p) -> FileNameType.FILE
+            else -> FileNameType.UNDEFINED
+        }
+        result.add(
+            PathEntry(
+                p.fileName.toString(),
+                if (fileNameType == FileNameType.FILE) Files.size(p) else 0,
+                fileNameType))
+    }
+    return result
 }

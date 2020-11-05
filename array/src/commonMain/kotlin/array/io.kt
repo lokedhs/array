@@ -202,3 +202,13 @@ class PathUtils {
         fun isAbsolutePath(path: String) = path.isNotEmpty() && path[0] == '/'
     }
 }
+
+enum class FileNameType {
+    FILE,
+    DIRECTORY,
+    UNDEFINED
+}
+
+data class PathEntry(val name: String, val size: Long, val type: FileNameType)
+
+expect fun readDirectoryContent(dirName: String): List<PathEntry>

@@ -1,6 +1,6 @@
 package array.clientweb
 
-import array.registeredFiles
+import array.registeredFilesRoot
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.w3c.xhr.XMLHttpRequest
@@ -29,7 +29,7 @@ private fun loadLibFiles(vararg names: String) {
         http.open("GET", name)
         http.onload = {
             if (http.readyState == 4.toShort() && http.status == 200.toShort()) {
-                registeredFiles[name] = http.responseText.encodeToByteArray()
+                registeredFilesRoot.registerFile(name, http.responseText.encodeToByteArray())
             } else {
                 console.log("Error loading library file: ${name}. Code: ${http.status}")
             }

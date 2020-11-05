@@ -74,3 +74,74 @@ class HttpRequestFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = HttpRequestFunctionImpl(pos)
 }
+
+class ReaddirFunction : APLFunctionDescriptor {
+    class ReaddirFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return loadContent(context, a, emptyList())
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return loadContent(context, b, parseOutputTypes(context, a))
+        }
+
+        private fun loadContent(context: RuntimeContext, file: APLValue, selectors: List<OutputType>): APLValue {
+            val content = readDirectoryContent(arrayAsStringValue(file))
+            val numCols = 1 + selectors.size
+            val d = dimensionsOfSize(content.size, numCols)
+            val valueList = Array(d.contentSize()) { i ->
+                val row = i / numCols
+                val col = i % numCols
+                val pathEntry = content[row]
+                if (col == 0) {
+                    makeAPLString(pathEntry.name)
+                } else {
+                    when (selectors[col - 1]) {
+                        OutputType.SIZE -> pathEntry.size.makeAPLNumber()
+                        OutputType.TYPE -> pathEntryTypeToAPL(context, pathEntry.type)
+                    }
+                }
+            }
+            return APLArrayImpl(d, valueList)
+        }
+
+        private fun pathEntryTypeToAPL(context: RuntimeContext, type: FileNameType): APLValue {
+            val sym = when (type) {
+                FileNameType.FILE -> context.engine.internSymbol("file", context.engine.keywordNamespace)
+                FileNameType.DIRECTORY -> context.engine.internSymbol("directory", context.engine.keywordNamespace)
+                FileNameType.UNDEFINED -> context.engine.internSymbol("undefined", context.engine.keywordNamespace)
+            }
+            return APLSymbol(sym)
+        }
+
+        private fun parseOutputTypes(context: RuntimeContext, value: APLValue): List<OutputType> {
+            val keywordToType = OutputType.values()
+                .map { outputType -> Pair(context.engine.internSymbol(outputType.selector, context.engine.keywordNamespace), outputType) }
+                .toMap()
+
+            val result = ArrayList<OutputType>()
+            val asArray = value.arrayify()
+            if (asArray.dimensions.size != 1) {
+                throw InvalidDimensionsException("Selector must be a scalar or a rank-1 array", pos)
+            }
+            asArray.iterateMembers { v ->
+                val collapsed = v.collapse()
+                if (collapsed !is APLSymbol) {
+                    throw APLIllegalArgumentException("Selector must be a symbol", pos)
+                }
+                val found =
+                    keywordToType[collapsed.value]
+                        ?: throw APLIllegalArgumentException("Illegal selector: ${collapsed.value.nameWithNamespace()}", pos)
+                result.add(found)
+            }
+            return result
+        }
+    }
+
+    override fun make(pos: Position) = ReaddirFunctionImpl(pos)
+
+    private enum class OutputType(val selector: String) {
+        SIZE("size"),
+        TYPE("type")
+    }
+}

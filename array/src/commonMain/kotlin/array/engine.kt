@@ -192,6 +192,7 @@ class Engine {
         registerNativeFunction("readCsvFile", ReadCSVFunction())
         registerNativeFunction("load", LoadFunction())
         registerNativeFunction("httpRequest", HttpRequestFunction())
+        registerNativeFunction("readdir", ReaddirFunction())
 
         // misc functions
         registerNativeFunction("sleep", SleepFunction())

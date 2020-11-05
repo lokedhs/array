@@ -127,3 +127,38 @@ actual fun fileExists(path: String): Boolean {
         return result == 0
     }
 }
+
+@OptIn(ExperimentalUnsignedTypes::class)
+actual fun readDirectoryContent(dirName: String): List<PathEntry> {
+    println("Loading directory: ${dirName}")
+    val dir = opendir(dirName) ?: throw MPFileException("Can't open directory: ${dirName}")
+    try {
+        memScoped {
+            val result = ArrayList<PathEntry>()
+            val statInfo = alloc<stat>()
+            while (true) {
+                val ent = readdir(dir) ?: break
+                val filename = ent.pointed.d_name.toKString()
+                if (filename != "." && filename != "..") {
+                    val statRes = stat("${dirName}/${filename}", statInfo.ptr)
+                    if (statRes == 0) {
+                        val fileNameType = when (ent.pointed.d_type.toInt()) {
+                            DT_DIR -> FileNameType.DIRECTORY
+                            DT_REG -> FileNameType.FILE
+                            else -> FileNameType.UNDEFINED
+                        }
+                        val size = if (fileNameType == FileNameType.FILE) {
+                            statInfo.st_size
+                        } else {
+                            0
+                        }
+                        result.add(PathEntry(filename, size, fileNameType))
+                    }
+                }
+            }
+            return result
+        }
+    } finally {
+        closedir(dir)
+    }
+}

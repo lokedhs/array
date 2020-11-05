@@ -4,13 +4,12 @@ import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlin.system.measureTimeMillis
 
-fun xxmain() {
+fun main() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
     val srcString = """
-            |m←map "foo" "bar"
-            |{m←m mapPut ⍵ ("Message ",⍕⍵) ◊ ⍵+1}⍣{⍵=10000000} 0
+            |{⍵+⍺}/⍳200000000
         """.trimMargin()
     println("Starting")
     val elapsed = measureTimeMillis {
@@ -20,7 +19,7 @@ fun xxmain() {
     println("Elapsed: ${elapsed / 1000.0}")
 }
 
-fun main() {
+fun xxmain() {
     var m: PersistentMap<Any, String>
     println("Starting")
     val time = measureTimeMillis {
