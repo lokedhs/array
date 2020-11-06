@@ -794,10 +794,32 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
     }
 }
 
+class MultiRotationRotatedAPLValue(val source: APLValue, val axis: Int, val selectionMultipliers: IntArray, val selection: IntArray) :
+    APLArray() {
+    override val dimensions = source.dimensions
+
+    private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
+    private val sourceMultipliers = dimensions.multipliers()
+
+    override fun valueAt(p: Int): APLValue {
+        val coords = Dimensions.positionFromIndexWithMultipliers(p, sourceMultipliers)
+        var curr = 0
+        repeat(selectionMultipliers.size) { i ->
+            val dimensionIndex = coords[if (i < axis) i else i + 1]
+            curr += selectionMultipliers[i] * dimensionIndex
+        }
+        val numShifts = selection[curr]
+        return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
+            val coord = (axisCoord + numShifts.toLong()).plusMod(dimensions[axis].toLong()).toInt()
+            source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
+        }
+    }
+}
+
 class InverseAPLValue private constructor(val source: APLValue, val axis: Int) : APLArray() {
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
 
-    override val dimensions get() = source.dimensions
+    override val dimensions = source.dimensions
 
     override val labels by lazy { resolveLabels() }
 
@@ -842,9 +864,21 @@ abstract class RotateFunction(pos: Position) : APLFunction(pos) {
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-        val numShifts = a.ensureNumber(pos).asLong()
         val axisInt = if (axis == null) defaultAxis(b) else axis.ensureNumber(pos).asInt()
-        return RotatedAPLValue.make(b, axisInt, numShifts)
+        if (a.isScalar()) {
+            val numShifts = a.ensureNumber(pos).asLong()
+            return RotatedAPLValue.make(b, axisInt, numShifts)
+        } else {
+            val aCollapsed = a.collapse()
+            val aDimensions = aCollapsed.dimensions
+            val bDimensions = b.dimensions
+            repeat(aDimensions.size) { i ->
+                if (aDimensions[i] != bDimensions[if (i < axisInt) i else i + 1]) {
+                    throw InvalidDimensionsException("Invalid dimension", pos)
+                }
+            }
+            return MultiRotationRotatedAPLValue(b, axisInt, aCollapsed.dimensions.multipliers(), aCollapsed.toIntArray(pos))
+        }
     }
 
     abstract fun defaultAxis(value: APLValue): Int
