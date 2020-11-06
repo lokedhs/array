@@ -195,10 +195,11 @@ class Engine {
         registerNativeFunction("readdir", ReaddirFunction())
 
         // misc functions
-        registerNativeFunction("sleep", SleepFunction())
+        registerNativeFunction("sleep", SleepFunction(), "time")
         registerNativeFunction("→", ThrowFunction())
         registerNativeOperator("catch", CatchOperator())
         registerNativeFunction("labels", LabelsFunction())
+        registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
 
         // maths
         registerNativeFunction("sin", SinAPLFunction())
@@ -274,8 +275,9 @@ class Engine {
         functionDefinitionListeners.forEach { it.functionDefined(name, fn) }
     }
 
-    private fun registerNativeFunction(name: String, fn: APLFunctionDescriptor) {
-        val sym = coreNamespace.internAndExport(name)
+    private fun registerNativeFunction(name: String, fn: APLFunctionDescriptor, namespaceName: String? = null) {
+        val namespace = if (namespaceName == null) coreNamespace else makeNamespace(namespaceName)
+        val sym = namespace.internAndExport(name)
         registerFunction(sym, fn)
     }
 

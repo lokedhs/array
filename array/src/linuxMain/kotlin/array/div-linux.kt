@@ -3,8 +3,7 @@ package array
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import platform.posix.nanosleep
-import platform.posix.timespec
+import platform.posix.*
 import kotlin.native.concurrent.FreezableAtomicReference
 import kotlin.native.concurrent.freeze
 import kotlin.native.concurrent.isFrozen
@@ -41,3 +40,13 @@ actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
 }
 
 actual fun Double.formatDouble() = this.toString()
+
+actual fun currentTime(): Long {
+    memScoped {
+        val value = alloc<timeval>()
+        if (gettimeofday(value.ptr, null) != 0) {
+            throw RuntimeException("Error getting time: ${strerror(errno)}")
+        }
+        return (value.tv_sec * 1000) + (value.tv_usec / 1000)
+    }
+}

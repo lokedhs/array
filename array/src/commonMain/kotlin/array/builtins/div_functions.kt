@@ -26,7 +26,7 @@ class IsLocallyBoundFunction : APLFunctionDescriptor {
 
 class CompFunction : APLFunctionDescriptor {
     class CompFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             return a.collapse()
         }
     }
@@ -141,4 +141,17 @@ class LabelsFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = LabelsFunctionImpl(pos)
+}
+
+class TimeMillisFunction : APLFunctionDescriptor {
+    class TimeMillisFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            unless(a.ensureNumber(pos).asInt() == 0) {
+                throw APLIllegalArgumentException("Argument to timeMillis must be 0", pos)
+            }
+            return currentTime().makeAPLNumber()
+        }
+    }
+
+    override fun make(pos: Position) = TimeMillisFunctionImpl(pos)
 }

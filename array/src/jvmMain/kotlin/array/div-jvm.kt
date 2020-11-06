@@ -21,3 +21,7 @@ actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
 }
 
 actual fun Double.formatDouble() = this.toString()
+
+actual fun currentTime(): Long {
+    return System.currentTimeMillis()
+}

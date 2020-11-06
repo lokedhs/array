@@ -26,3 +26,8 @@ expect fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T>
  * This is needed because Javascript does not include the decimal by default.
  */
 expect fun Double.formatDouble(): String
+
+/**
+ * Return the current time in number of milliseconds
+ */
+expect fun currentTime(): Long

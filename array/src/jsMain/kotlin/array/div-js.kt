@@ -1,5 +1,7 @@
 package array
 
+import kotlin.js.Date
+
 actual fun sleepMillis(time: Long) {
     TODO("not implemented")
 }
@@ -35,4 +37,8 @@ actual fun Double.formatDouble(): String {
     } else {
         this.toString()
     }
+}
+
+actual fun currentTime(): Long {
+    return Date.now().toLong()
 }

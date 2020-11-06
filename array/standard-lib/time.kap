@@ -1,0 +1,10 @@
+namespace("time")
+
+∇ measureTime (fn) {
+  startTime ← time:timeMillis 0
+  result ← ⍞fn 0
+  endTime ← time:timeMillis 0
+  endTime - startTime
+}
+
+export(measureTime)
