@@ -89,9 +89,20 @@ class EvalLambdaFunc : APLTest() {
             """
             |∇ foo (x) { λ{ y←⍵ ◊ λ{ ⍵+x+y } } }
             |⍞(⍞(foo 10) 11) 12
-        """.trimMargin()).let { result ->
+            """.trimMargin()).let { result ->
             assertSimpleNumber(33, result)
         }
+    }
+
+    @Test
+    fun lambdaWithParen() {
+        val result = parseAPLExpression(
+            """
+            |∇ (x) foo (y) { x + y }
+            |x ← λ(foo)
+            |1 ⍞x 2
+            """.trimMargin())
+        assertSimpleNumber(3, result)
     }
 
     private fun evalWithEngine(engine: Engine, expr: String): APLValue {
