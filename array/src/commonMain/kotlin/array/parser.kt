@@ -478,7 +478,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             is Symbol -> {
-                val fnDefinition = lookupFunction(token) ?: throw ParseException("Symbol is not a valid function")
+                val fnDefinition = lookupFunction(token) ?: throw ParseException("Symbol is not a valid function", pos)
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             is OpenParen -> {
