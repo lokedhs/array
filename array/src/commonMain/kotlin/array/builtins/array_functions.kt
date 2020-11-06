@@ -794,8 +794,12 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
     }
 }
 
-class MultiRotationRotatedAPLValue(val source: APLValue, val axis: Int, val selectionMultipliers: IntArray, val selection: IntArray) :
-    APLArray() {
+class MultiRotationRotatedAPLValue(
+    val source: APLValue,
+    val axis: Int,
+    val selectionMultipliers: IntArray,
+    val selection: IntArray
+) : APLArray() {
     override val dimensions = source.dimensions
 
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
