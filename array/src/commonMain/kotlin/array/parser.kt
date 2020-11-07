@@ -192,17 +192,19 @@ class APLParser(val tokeniser: TokenGenerator) {
                 }
                 ParseResultHolder.FnParseResult(fn, holder.lastToken, holder.pos)
             }
-            is ParseResultHolder.InstrParseResult -> if (leftArgs.isEmpty()) {
-                ParseResultHolder.InstrParseResult(
-                    FunctionCall1Arg(parsedFn, holder.instr, axis, fn.pos),
-                    holder.lastToken,
-                    holder.pos)
-            } else {
-                val leftArgsChecked = makeResultList(leftArgs) ?: throw ParseException("Left args is empty", holder.pos)
-                ParseResultHolder.InstrParseResult(
-                    FunctionCall2Arg(parsedFn, leftArgsChecked, holder.instr, axis, fn.pos),
-                    holder.lastToken,
-                    holder.pos)
+            is ParseResultHolder.InstrParseResult -> {
+                if (leftArgs.isEmpty()) {
+                    ParseResultHolder.InstrParseResult(
+                        FunctionCall1Arg(parsedFn, holder.instr, axis, fn.pos),
+                        holder.lastToken,
+                        holder.pos)
+                } else {
+                    val leftArgsChecked = makeResultList(leftArgs) ?: throw ParseException("Left args is empty", holder.pos)
+                    ParseResultHolder.InstrParseResult(
+                        FunctionCall2Arg(parsedFn, leftArgsChecked, holder.instr, axis, fn.pos),
+                        holder.lastToken,
+                        holder.pos)
+                }
             }
             is ParseResultHolder.FnParseResult -> throw IllegalContextForFunction(holder.pos)
         }
@@ -363,6 +365,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is OpenParen -> when (val expr = parseExprToplevel(CloseParen)) {
                     is ParseResultHolder.InstrParseResult -> leftArgs.add(expr.instr)
                     is ParseResultHolder.FnParseResult -> return processFn(expr.fn, leftArgs)
+                    is ParseResultHolder.EmptyParseResult -> throw ParseException("Empty expression", pos)
                 }
                 is OpenFnDef -> return processFn(parseFnDefinition().make(pos), leftArgs)
                 is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
