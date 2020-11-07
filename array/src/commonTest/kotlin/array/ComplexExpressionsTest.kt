@@ -162,6 +162,13 @@ class ComplexExpressionsTest : APLTest() {
     }
 
     @Test
+    fun functionInParensLeftArg() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(2+) 3 4 5")
+        }
+    }
+
+    @Test
     fun twoFunctionCalls() {
         parseAPLExpression("1 + 2 + 3").let { result ->
             assertSimpleNumber(6, result)

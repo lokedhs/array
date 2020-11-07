@@ -185,9 +185,13 @@ class APLParser(val tokeniser: TokenGenerator) {
     private fun processFn(fn: APLFunction, leftArgs: List<Instruction>): ParseResultHolder {
         val axis = parseAxis()
         val parsedFn = parseOperator(fn)
-        val holder = parseValue()
-        return when (holder) {
-            is ParseResultHolder.EmptyParseResult -> ParseResultHolder.FnParseResult(fn, holder.lastToken, holder.pos)
+        return when (val holder = parseValue()) {
+            is ParseResultHolder.EmptyParseResult -> {
+                if (leftArgs.isNotEmpty()) {
+                    throw ParseException("Missing right argument", fn.pos)
+                }
+                ParseResultHolder.FnParseResult(fn, holder.lastToken, holder.pos)
+            }
             is ParseResultHolder.InstrParseResult -> if (leftArgs.isEmpty()) {
                 ParseResultHolder.InstrParseResult(
                     FunctionCall1Arg(parsedFn, holder.instr, axis, fn.pos),
