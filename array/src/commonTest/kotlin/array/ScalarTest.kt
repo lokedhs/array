@@ -256,6 +256,21 @@ class ScalarTest : APLTest() {
         assertSimpleDouble(3.0, v)
     }
 
+    @Test
+    fun scalarFunctionWithEnclosedArg() {
+        parseAPLExpression("(⊂1 2 3) + 10 20").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(11, 12, 13), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(21, 22, 23), v)
+            }
+        }
+    }
+
     private fun runMaxTest(expected: Any, op: String, a: String, b: String) {
         assertAPLValue(expected, parseAPLExpression("${a}${op}${b}"))
         assertAPLValue(expected, parseAPLExpression("${b}${op}${a}"))

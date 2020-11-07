@@ -51,8 +51,16 @@ class ArraySum2Args(
     override val rank = dimensions.size
 
     override fun valueAt(p: Int): APLValue {
-        val v1 = if (a is APLSingleValue) a else a.valueAt(p)
-        val v2 = if (b is APLSingleValue) b else b.valueAt(p)
+        val v1 = when {
+            a is APLSingleValue -> a
+            a.isScalar() -> a.valueAt(0)
+            else -> a.valueAt(p)
+        }
+        val v2 = when {
+            b is APLSingleValue -> b
+            b.isScalar() -> b.valueAt(0)
+            else -> b.valueAt(p)
+        }
         return if (v1 is APLSingleValue && v2 is APLSingleValue) {
             fn.combineValues(v1, v2)
         } else {
