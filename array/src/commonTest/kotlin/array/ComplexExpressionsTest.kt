@@ -1,9 +1,6 @@
 package array
 
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.*
 
 class ComplexExpressionsTest : APLTest() {
     @Test
@@ -158,6 +155,38 @@ class ComplexExpressionsTest : APLTest() {
         parseAPLExpression("8 16 32 (÷) 2").let { result ->
             assertDimension(dimensionsOfSize(3), result)
             assertArrayContent(arrayOf(4, 8, 16), result)
+        }
+    }
+
+    @Test
+    fun functionAndOperatorInParen() {
+        parseAPLExpression("2 (↑¨) (1 2 3 4) (4 5 6 7)").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 2), result.valueAt(0))
+            assertArrayContent(arrayOf(4, 5), result.valueAt(1))
+        }
+    }
+
+    @Test
+    fun functionInParenWithOperator() {
+        parseAPLExpression("(⊂)¨ (0 1 2) (3 4 5)").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertTrue(v.isScalar())
+                assertArrayContent(arrayOf(0, 1, 2), v.valueAt(0))
+            }
+            result.valueAt(1).let { v ->
+                assertTrue(v.isScalar())
+                assertArrayContent(arrayOf(3, 4, 5), v.valueAt(0))
+            }
+        }
+    }
+
+    @Test
+    fun operatorInParenShouldFail() {
+        // TODO: This should probably be a parse error. Being able to have a variable with the same name as an operator can be confusing.
+        assertFailsWith<VariableNotAssigned> {
+            parseAPLExpression("1 2 3 +(¨) 4 5 6")
         }
     }
 

@@ -85,7 +85,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    fun findEnvironmentBinding(sym: Symbol): EnvironmentBinding {
+    private fun findEnvironmentBinding(sym: Symbol): EnvironmentBinding {
         environments.asReversed().forEach { env ->
             val binding = env.findBinding(sym)
             if (binding != null) {
@@ -190,7 +190,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 if (leftArgs.isNotEmpty()) {
                     throw ParseException("Missing right argument", fn.pos)
                 }
-                ParseResultHolder.FnParseResult(fn, holder.lastToken, holder.pos)
+                ParseResultHolder.FnParseResult(parsedFn, holder.lastToken, holder.pos)
             }
             is ParseResultHolder.InstrParseResult -> {
                 if (leftArgs.isEmpty()) {
@@ -269,11 +269,11 @@ class APLParser(val tokeniser: TokenGenerator) {
         return LiteralSymbol(definedUserFunction.name, definedUserFunction.pos)
     }
 
-    fun registerDefinedUserFunction(definedUserFunction: DefinedUserFunction) {
+    private fun registerDefinedUserFunction(definedUserFunction: DefinedUserFunction) {
         tokeniser.engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
     }
 
-    fun parseUserDefinedFn(pos: Position): DefinedUserFunction {
+    private fun parseUserDefinedFn(pos: Position): DefinedUserFunction {
         val leftFnArgs = parseFnArgs()
         val name = tokeniser.nextTokenWithType<Symbol>()
         val rightFnArgs = parseFnArgs()
@@ -312,21 +312,8 @@ class APLParser(val tokeniser: TokenGenerator) {
         return tokeniser.engine.getFunction(name)
     }
 
-    private fun parseValue(): ParseResultHolder {
+    fun parseValue(): ParseResultHolder {
         val leftArgs = ArrayList<Instruction>()
-
-        fun addLeftArg(instr: Instruction) {
-//            val (token, pos) = tokeniser.nextTokenWithPosition()
-//            val instrWithIndex = if (token == OpenBracket) {
-//                val indexInstr = parseValueToplevel(CloseBracket)
-//                ArrayIndex(instr, indexInstr, pos)
-//            } else {
-//                tokeniser.pushBackToken(token)
-//                instr
-//            }
-//            leftArgs.add(instrWithIndex)
-            leftArgs.add(instr)
-        }
 
         fun processIndex(pos: Position) {
             if (leftArgs.isEmpty()) {
@@ -352,13 +339,13 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is Symbol -> {
                     val customSyntax = tokeniser.engine.syntaxRulesForSymbol(token)
                     if (customSyntax != null) {
-                        addLeftArg(processCustomSyntax(this, customSyntax))
+                        leftArgs.add(processCustomSyntax(this, customSyntax))
                     } else {
                         val fn = lookupFunction(token)
                         if (fn != null) {
                             return processFn(fn.make(pos), leftArgs)
                         } else {
-                            addLeftArg(makeVariableRef(token, pos))
+                            leftArgs.add(makeVariableRef(token, pos))
                         }
                     }
                 }

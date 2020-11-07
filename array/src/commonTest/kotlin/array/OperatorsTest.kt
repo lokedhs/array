@@ -68,4 +68,36 @@ class OperatorsTest : APLTest() {
             verifySingle(2, arrayOf(30, 31, 32, 60, 61, 62, 90, 91, 92, 33, 34, 35, 63, 64, 65, 93, 94, 95))
         }
     }
+
+    @Test
+    fun customOperatorWithNumberArgument() {
+        class FooCombinedFunction(val fn: APLFunction, val arg: Instruction, pos: Position) : APLFunction(pos) {
+            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+                val argValue = arg.evalWithContext(context)
+                val c = fn.eval2Arg(context, argValue, a, null)
+                return (c.ensureNumber(pos).asLong() * b.ensureNumber(pos).asLong()).makeAPLNumber()
+            }
+        }
+
+        class FooOperator : APLOperator {
+            override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+                val axis = aplParser.parseAxis()
+                if (axis != null) {
+                    throw ParseException("Axis argument not supported", opPos)
+                }
+                val rightArg = aplParser.parseValue()
+                if (rightArg !is ParseResultHolder.InstrParseResult) {
+                    throw ParseException("Right argument is not a value", rightArg.pos)
+                }
+                aplParser.tokeniser.pushBackToken(rightArg.lastToken)
+                return FooCombinedFunction(currentFn, rightArg.instr, opPos)
+            }
+        }
+
+        val engine = Engine()
+        engine.registerOperator(engine.currentNamespace.internAndExport("foo"), FooOperator())
+        engine.parseAndEval(StringSourceLocation("1 (+foo 2) 3"), newContext = false).let { result ->
+            assertSimpleNumber(9, result)
+        }
+    }
 }
