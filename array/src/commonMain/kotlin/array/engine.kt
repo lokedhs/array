@@ -202,12 +202,12 @@ class Engine {
         registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
 
         // maths
-        registerNativeFunction("sin", SinAPLFunction())
-        registerNativeFunction("cos", CosAPLFunction())
-        registerNativeFunction("tan", TanAPLFunction())
-        registerNativeFunction("asin", AsinAPLFunction())
-        registerNativeFunction("acos", AcosAPLFunction())
-        registerNativeFunction("atan", AtanAPLFunction())
+        registerNativeFunction("sin", SinAPLFunction(), "math")
+        registerNativeFunction("cos", CosAPLFunction(), "math")
+        registerNativeFunction("tan", TanAPLFunction(), "math")
+        registerNativeFunction("asin", AsinAPLFunction(), "math")
+        registerNativeFunction("acos", AcosAPLFunction(), "math")
+        registerNativeFunction("atan", AtanAPLFunction(), "math")
 
         // metafunctions
         registerNativeFunction("typeof", TypeofFunction())

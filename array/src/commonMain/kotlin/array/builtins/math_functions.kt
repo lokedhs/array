@@ -1,8 +1,7 @@
 package array.builtins
 
 import array.*
-import array.complex.Complex
-import array.complex.toComplex
+import array.complex.*
 import kotlin.math.*
 
 interface CellSumFunction1Arg {
@@ -64,7 +63,7 @@ class ArraySum2Args(
 
 abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-        if(a is APLSingleValue) {
+        if (a is APLSingleValue) {
             return combine1Arg(a)
         }
 
@@ -77,7 +76,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-        if(a is APLSingleValue && b is APLSingleValue) {
+        if (a is APLSingleValue && b is APLSingleValue) {
             return combine2Arg(a, b)
         }
 
@@ -328,7 +327,7 @@ class PowerAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> exp(x.toDouble()).makeAPLNumber() },
                 { x -> exp(x).makeAPLNumber() },
-                { x -> Complex(E).pow(x).makeAPLNumber() }
+                { x -> E.pow(x).makeAPLNumber() }
             )
         }
 
@@ -468,7 +467,15 @@ class LogAPLFunction : APLFunctionDescriptor {
 
 class SinAPLFunction : APLFunctionDescriptor {
     class SinAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
-        override fun numberCombine1Arg(a: APLNumber) = APLDouble(sin(a.asDouble()))
+        override fun numberCombine1Arg(a: APLNumber): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> sin(x.toDouble()).makeAPLNumber() },
+                { x -> sin(x).makeAPLNumber() },
+                { x -> complexSin(x).makeAPLNumber() }
+            )
+        }
     }
 
     override fun make(pos: Position) = SinAPLFunctionImpl(pos)
@@ -476,7 +483,15 @@ class SinAPLFunction : APLFunctionDescriptor {
 
 class CosAPLFunction : APLFunctionDescriptor {
     class CosAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
-        override fun numberCombine1Arg(a: APLNumber) = APLDouble(cos(a.asDouble()))
+        override fun numberCombine1Arg(a: APLNumber): APLValue {
+            return singleArgNumericRelationOperation(
+                pos,
+                a,
+                { x -> cos(x.toDouble()).makeAPLNumber() },
+                { x -> cos(x).makeAPLNumber() },
+                { x -> complexCos(x).makeAPLNumber() }
+            )
+        }
     }
 
     override fun make(pos: Position) = CosAPLFunctionImpl(pos)

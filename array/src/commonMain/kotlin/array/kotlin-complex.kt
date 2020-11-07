@@ -64,6 +64,7 @@ data class Complex(val real: Double, val imaginary: Double) {
         }
 
         val ZERO = Complex(0.0, 0.0)
+        val I = Complex(0.0, 1.0)
     }
 }
 
@@ -75,3 +76,11 @@ operator fun Double.div(complex: Complex) = this.toComplex() / complex
 fun Double.toComplex() = Complex(this, 0.0)
 fun Double.pow(complex: Complex) = this.toComplex().pow(complex)
 fun Double.log(base: Complex) = this.toComplex().log(base)
+
+fun complexSin(v: Complex): Complex {
+    return (E.pow(v * Complex.I) - E.pow(-v * Complex.I)) / Complex(0.0, 2.0)
+}
+
+fun complexCos(v: Complex): Complex {
+    return (E.pow(v * Complex.I) + E.pow(-v * Complex.I)) / 2.0
+}
