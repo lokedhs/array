@@ -96,7 +96,24 @@ interface APLOperatorOneArg : APLOperator {
 interface APLOperatorTwoArg : APLOperator {
     override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
         val axis = aplParser.parseAxis()
-        val rightFn = aplParser.parseTwoArgOperatorArgument()
+        val (token, pos) = aplParser.tokeniser.nextTokenWithPosition()
+        val rightFn = when (token) {
+            is Symbol -> {
+                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
+                fn.make(pos)
+            }
+            is OpenFnDef -> {
+                aplParser.parseFnDefinition().make(pos)
+            }
+            is OpenParen -> {
+                val holder = aplParser.parseExprToplevel(CloseParen)
+                if(holder !is ParseResultHolder.FnParseResult) {
+                    throw ParseException("Expected function", pos)
+                }
+                holder.fn
+            }
+            else -> throw ParseException("Expected function, got: ${token}", pos)
+        }
         return combineFunction(currentFn, rightFn, axis, opPos).make(opPos)
     }
 

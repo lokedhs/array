@@ -104,7 +104,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun parseExprToplevel(endToken: Token): ParseResultHolder {
+    fun parseExprToplevel(endToken: Token): ParseResultHolder {
         val firstExpr = parseList()
         if (firstExpr.lastToken == endToken) {
             return firstExpr
@@ -503,20 +503,6 @@ class APLParser(val tokeniser: TokenGenerator) {
         } else {
             val instruction = parseValueToplevel(endToken)
             DeclaredNonBoundFunction(instruction, currentEnvironment())
-        }
-    }
-
-    fun parseTwoArgOperatorArgument(): APLFunction {
-        val (token, pos) = tokeniser.nextTokenWithPosition()
-        return when (token) {
-            is Symbol -> {
-                val fn = tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
-                parseOperator(fn.make(pos))
-            }
-            is OpenFnDef -> {
-                parseFnDefinition().make(pos)
-            }
-            else -> throw ParseException("Expected function, got: ${token}", pos)
         }
     }
 
