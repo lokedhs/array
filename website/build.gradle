@@ -1,0 +1,30 @@
+// build.gradle
+plugins {
+    // Add the official Orchid Gradle plugin so you can use Orchid with the custom DSL   
+    id "com.eden.orchidPlugin" version "0.21.0"
+}
+
+repositories {
+    // Orchid uses dependencies from both Jcenter and Jitpack, so both must be included. jcenter also includes 
+    // everything available from MavenCentral, while Jitpack makes accessible any Github project.
+    jcenter()
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
+
+dependencies {
+    // Add an Orchid Bundle. OrchidAll comes with all official themes included.
+    // You must include a theme separately when using the OrchidBlog bundle.
+    // Any additional plugins may be added as dependencies here as well.
+    orchidRuntime "io.github.javaeden.orchid:OrchidAll:0.21.0"
+    orchidRuntime "io.github.javaeden.orchid:OrchidAsciidoc:0.21.0"
+}
+
+orchid {
+    // All properties are optional
+    theme   = "{theme}"                           // can also be set as `site.theme` in `config.yml`
+    version = "${project.version}"                // defaults to project version
+//    baseUrl = "{baseUrl}"                         // a baseUrl prepended to all generated links. Can also be set as `site.baseUrl` in `config.yml` Defaults to '/'
+//    srcDir  = "path/to/new/source/directory"      // defaults to 'src/orchid/resources'
+//    destDir = "path/to/new/destination/directory" // defaults to 'build/docs/orchid'
+    runTask = "build"                             // specify a task to run with 'gradle orchidRun'
+}
