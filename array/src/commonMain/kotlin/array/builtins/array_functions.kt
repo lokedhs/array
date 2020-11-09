@@ -996,6 +996,12 @@ class CompareFunction : APLFunctionDescriptor {
 
 class CompareNotEqualFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val dimensions = a.dimensions
+            val ret = if (dimensions.size == 0) 0 else dimensions[0]
+            return ret.makeAPLNumber()
+        }
+
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             return makeBoolean(!a.compareEquals(b))
         }

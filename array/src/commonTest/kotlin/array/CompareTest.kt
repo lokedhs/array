@@ -67,4 +67,16 @@ class CompareTest : APLTest() {
         assertSimpleNumber(expected[4], parseAPLExpression("1${name}0"))
         assertSimpleNumber(expected[5], parseAPLExpression("0${name}0"))
     }
+
+    @Test
+    fun oneArgumentIdenticalTest() {
+        assertSimpleNumber(0, parseAPLExpression("≢0⍴0"))
+        assertSimpleNumber(0, parseAPLExpression("≢4"))
+        assertSimpleNumber(4, parseAPLExpression("≢1 2 3 4"))
+        assertSimpleNumber(1, parseAPLExpression("≢,4"))
+        assertSimpleNumber(2, parseAPLExpression("≢2 3 ⍴ ⍳100"))
+        assertSimpleNumber(8, parseAPLExpression("≢8 3 4 ⍴ ⍳100"))
+        assertSimpleNumber(2, parseAPLExpression("≢(2 2 ⍴ ⍳4) (2 2 ⍴ ⍳4)"))
+        assertSimpleNumber(5, parseAPLExpression("≢(1 2) (3 4) (5 6) (7 8) (9 10)"))
+    }
 }
