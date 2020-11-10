@@ -124,6 +124,23 @@ interface APLOperatorTwoArg : APLOperator {
         opPos: Position): APLFunctionDescriptor
 }
 
+interface APLOperatorValueRightArg : APLOperator {
+    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+        val axis = aplParser.parseAxis()
+        if (axis != null) {
+            throw ParseException("Axis argument not supported", opPos)
+        }
+        val rightArg = aplParser.parseValue()
+        if (rightArg !is ParseResultHolder.InstrParseResult) {
+            throw ParseException("Right argument is not a value", rightArg.pos)
+        }
+        aplParser.tokeniser.pushBackToken(rightArg.lastToken)
+        return combineFunction(currentFn, rightArg.instr, opPos)
+    }
+
+    fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction
+}
+
 private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "core"
 private const val DEFAULT_NAMESPACE_NAME = "default"

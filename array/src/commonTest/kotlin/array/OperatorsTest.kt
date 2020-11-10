@@ -79,18 +79,9 @@ class OperatorsTest : APLTest() {
             }
         }
 
-        class FooOperator : APLOperator {
-            override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
-                val axis = aplParser.parseAxis()
-                if (axis != null) {
-                    throw ParseException("Axis argument not supported", opPos)
-                }
-                val rightArg = aplParser.parseValue()
-                if (rightArg !is ParseResultHolder.InstrParseResult) {
-                    throw ParseException("Right argument is not a value", rightArg.pos)
-                }
-                aplParser.tokeniser.pushBackToken(rightArg.lastToken)
-                return FooCombinedFunction(currentFn, rightArg.instr, opPos)
+        class FooOperator : APLOperatorValueRightArg {
+            override fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction {
+                return FooCombinedFunction(fn, instr, opPos)
             }
         }
 

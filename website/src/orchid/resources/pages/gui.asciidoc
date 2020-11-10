@@ -1,0 +1,33 @@
+= GUI
+:experimental
+
+== Launching the GUI
+
+Run the GNU client by typing:
+
+----
+./gradlew gui:run
+----
+
+After launching the UI, the commandline is shown in the main window.
+The commandline can be used to type KAP expressions and evaluate them
+in the engine.
+
+----
+> 1 2 3 4 + 5
+┏━━━━━━━┓
+┃6 7 8 9┃
+┗━━━━━━━┛
+----
+
+== Entering APL symbols
+
+The GUI provides two ways of entering APL symbols:
+
+- Hold kbd:[Alt] together with the appropriate key
+- Type kbd:[.] followed by the appropriate key
+
+The keymap can be displayed by selecting menu:Window[Keyboard]. This will
+display a window with the keymap. Currently, the keymap will always display
+a US keymap. Implementing support for other keymaps is easy, and help with
+this effort would be appreciated.
