@@ -37,43 +37,43 @@ class ForEachResult2Arg(
     override val size get() = arg1.size
 }
 
+class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
+    override fun make(pos: Position): APLFunction {
+        return object : APLFunction(pos) {
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                return ForEachResult1Arg(context, fn, a, axis, pos)
+            }
+
+            override fun eval2Arg(
+                context: RuntimeContext,
+                a: APLValue,
+                b: APLValue,
+                axis: APLValue?
+            ): APLValue {
+                if (a.isScalar() && b.isScalar()) {
+                    return fn.eval2Arg(context, a, b, axis)
+                }
+                val a1 = if (a.isScalar()) {
+                    ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
+                } else {
+                    a
+                }
+                val b1 = if (b.isScalar()) {
+                    ConstantArray(a.dimensions, b.valueAtWithScalarCheck(0))
+                } else {
+                    b
+                }
+                return ForEachResult2Arg(context, fn, a1, b1, axis, pos)
+            }
+        }
+    }
+}
+
 class ForEachOp : APLOperatorOneArg {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
             throw AxisNotSupported(pos)
         }
         return ForEachFunctionDescriptor(fn)
-    }
-
-    class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
-        override fun make(pos: Position): APLFunction {
-            return object : APLFunction(pos) {
-                override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                    return ForEachResult1Arg(context, fn, a, axis, pos)
-                }
-
-                override fun eval2Arg(
-                    context: RuntimeContext,
-                    a: APLValue,
-                    b: APLValue,
-                    axis: APLValue?
-                ): APLValue {
-                    if (a.isScalar() && b.isScalar()) {
-                        return fn.eval2Arg(context, a, b, axis)
-                    }
-                    val a1 = if (a.isScalar()) {
-                        ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
-                    } else {
-                        a
-                    }
-                    val b1 = if (b.isScalar()) {
-                        ConstantArray(a.dimensions, b.valueAtWithScalarCheck(0))
-                    } else {
-                        b
-                    }
-                    return ForEachResult2Arg(context, fn, a1, b1, axis, pos)
-                }
-            }
-        }
     }
 }

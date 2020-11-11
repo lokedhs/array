@@ -170,17 +170,18 @@ class EncloseAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = EncloseAPLFunctionImpl(pos)
 }
 
-class DisclosedArrayValue(val value: APLValue, pos: Position) : APLArray() {
+class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
+    private val valueInt = value.collapseFirstLevel()
     override val dimensions: Dimensions
 
     private val cutoffMultiplier: Int
     private val newDimensionsMultipliers: IntArray
 
     init {
-        val d = value.dimensions
+        val d = valueInt.dimensions
         assertx(d.size > 0)
 
-        val m = maxShapeOf(value, pos)
+        val m = maxShapeOf(valueInt, pos)
         val resultDimension = Dimensions(IntArray(d.size + m.size) { i ->
             if (i < d.size) {
                 d[i]
@@ -197,7 +198,7 @@ class DisclosedArrayValue(val value: APLValue, pos: Position) : APLArray() {
 
     override fun valueAt(p: Int): APLValue {
         val index = p / cutoffMultiplier
-        val v = value.valueAt(index)
+        val v = valueInt.valueAt(index)
 
         val innerIndex = p % cutoffMultiplier
         return if (v.isScalar() && innerIndex == 0) {

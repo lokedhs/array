@@ -70,6 +70,7 @@ interface APLValue {
 
     fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
     fun collapseInt(): APLValue
+    fun collapseFirstLevel(): APLValue
     fun isScalar(): Boolean = rank == 0
     fun defaultValue(): APLValue = APLLONG_0
     fun arrayify(): APLValue
@@ -216,6 +217,7 @@ abstract class APLSingleValue : APLValue {
     override val size get() = 1
     override val rank get() = 0
     override fun collapseInt() = this
+    override fun collapseFirstLevel() = this
     override fun arrayify() = APLArrayImpl.make(dimensionsOfSize(1)) { this }
     override fun disclose() = this
 }
@@ -230,6 +232,10 @@ abstract class APLArray : APLValue {
             v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapseInt())
             else -> APLArrayImpl.make(v.dimensions) { i -> v.valueAt(i).collapseInt() }
         }
+    }
+
+    override fun collapseFirstLevel(): APLValue {
+        return APLArrayImpl(dimensions, Array(dimensions.contentSize(), this::valueAt))
     }
 
     override fun formatted(style: FormatStyle) =

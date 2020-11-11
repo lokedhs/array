@@ -258,6 +258,7 @@ class Engine {
         registerNativeOperator("⍣", PowerAPLOperator())
         registerNativeOperator("\\", ScanLastAxisOp())
         registerNativeOperator("⍀", ScanFirstAxisOp())
+        registerNativeOperator("⍤", RankOperator())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
