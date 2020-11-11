@@ -1,5 +1,9 @@
-= Test
+= KAP
 
-This is the main page. This page is created using asciidoc.
+Array language based on APL.
 
-Here is another paragraph.
+== Documentation
+
+The language is described here.
+
+Link: [gui]
