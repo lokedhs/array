@@ -159,11 +159,55 @@ class HideAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = HideAPLFunctionImpl(pos)
 }
 
+class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
+    override val dimensions: Dimensions
+
+    private var stepLength: Int
+    private val sizeAlongAxis: Int
+    private val fromSourceMul: Int
+    private val toDestMul: Int
+
+    init {
+        val aDimensions = value.dimensions
+
+        val argMultipliers = aDimensions.multipliers()
+
+        stepLength = argMultipliers[axis]
+        sizeAlongAxis = aDimensions[axis]
+        dimensions = aDimensions.remove(axis)
+
+        val multipliers = dimensions.multipliers()
+
+        fromSourceMul = if (axis == 0) dimensions.contentSize() else multipliers[axis - 1]
+        toDestMul = fromSourceMul * aDimensions[axis]
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        return if (sizeAlongAxis == 0) {
+            APLLONG_0
+        } else {
+            val highPosition = p / fromSourceMul
+            val lowPosition = p % fromSourceMul
+            val posInSrc = highPosition * toDestMul + lowPosition
+
+            return APLArrayImpl(dimensionsOfSize(sizeAlongAxis), Array(sizeAlongAxis) { i ->
+                value.valueAt(i * stepLength + posInSrc)
+            })
+        }
+    }
+}
+
 class EncloseAPLFunction : APLFunctionDescriptor {
-    class EncloseAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+    class EncloseAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             val v = a.unwrapDeferredValue()
-            return if (v is APLSingleValue) v else EnclosedAPLValue(v)
+            return if (axis == null) {
+                if (v is APLSingleValue) v else EnclosedAPLValue(v)
+            } else {
+                val axisInt = axis.ensureNumber(pos).asInt()
+                ensureValidAxis(axisInt, v.dimensions, pos)
+                AxisEnclosedValue(v, axisInt)
+            }
         }
     }
 
