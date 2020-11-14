@@ -162,7 +162,7 @@ class HideAPLFunction : APLFunctionDescriptor {
 class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
     override val dimensions: Dimensions
 
-    private var stepLength: Int
+    private val stepLength: Int
     private val sizeAlongAxis: Int
     private val fromSourceMul: Int
     private val toDestMul: Int
