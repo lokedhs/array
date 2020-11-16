@@ -15,12 +15,6 @@ namespace("output")
   {top,[0]⍵,[0]bottom} (⊂"┃") , strlist , ⊂"┃"
 }
 
-∇ println (v) {
-  print v
-  print unicode:fromCodepoints 10
-  v
-}
-
 ∇ dbg (title;data) {
   println "=== begin:",title," ==="
   println data
