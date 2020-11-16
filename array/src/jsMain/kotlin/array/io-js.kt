@@ -125,9 +125,14 @@ actual fun openCharFile(name: String): CharacterProvider {
     return ByteToCharacterProvider(openFile(name))
 }
 
-actual fun fileExists(path: String): Boolean {
+actual fun fileType(path: String): FileNameType? {
     val found = registeredFilesRoot.find(path)
-    return found != null && found is RegisteredEntry.File
+    return when {
+        found == null -> null
+        found is RegisteredEntry.File -> FileNameType.FILE
+        found is RegisteredEntry.Directory -> FileNameType.DIRECTORY
+        else -> FileNameType.UNDEFINED
+    }
 }
 
 actual fun readDirectoryContent(dirName: String): List<PathEntry> {

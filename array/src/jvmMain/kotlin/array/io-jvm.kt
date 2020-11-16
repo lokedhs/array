@@ -2,6 +2,7 @@ package array
 
 import java.io.*
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.min
 
@@ -182,8 +183,14 @@ private inline fun <T> transformIOException(fn: () -> T): T {
     }
 }
 
-actual fun fileExists(path: String): Boolean {
-    return File(path).exists()
+actual fun fileType(path: String): FileNameType? {
+    val p = Path.of(path)
+    return when {
+        !Files.exists(p) -> null
+        Files.isRegularFile(p) -> FileNameType.FILE
+        Files.isDirectory(p) -> FileNameType.DIRECTORY
+        else -> FileNameType.UNDEFINED
+    }
 }
 
 actual fun readDirectoryContent(dirName: String): List<PathEntry> {

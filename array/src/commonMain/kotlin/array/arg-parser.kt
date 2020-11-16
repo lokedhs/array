@@ -2,7 +2,7 @@ package array.options
 
 class InvalidOption(name: String) : Exception("Invalid arg: ${name}")
 
-class Option(val name: String, val requireArg: Boolean)
+class Option(val name: String, val requireArg: Boolean = false, val description: String? = null)
 class OptionResult(val option: Option, val arg: String?)
 
 private val LONG_OPTION_ARG_PATTERN = "^--([a-zA-Z0-9-]+)=(.*)$".toRegex()
@@ -26,6 +26,22 @@ class ArgParser(vararg options: Option) {
             parseResults[option.option.name] = option.arg
         }
         return parseResults
+    }
+
+    fun printHelp() {
+        println("Options:")
+        definedOptions.keys.sorted().forEach { key ->
+            val option = definedOptions[key]!!
+            val description = option.description
+            val buf = StringBuilder()
+            buf.append("  --")
+            buf.append(option.name)
+            if(description != null) {
+                buf.append(" ")
+                buf.append(description)
+            }
+            println(buf.toString())
+        }
     }
 
     private fun matchOption(arg: String): OptionResult {

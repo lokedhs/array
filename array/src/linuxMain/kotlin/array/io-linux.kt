@@ -120,11 +120,20 @@ private fun nativeErrorString(): String {
     return strerror(errno)?.toKString() ?: "unknown error"
 }
 
-actual fun fileExists(path: String): Boolean {
+@OptIn(ExperimentalUnsignedTypes::class)
+actual fun fileType(path: String): FileNameType? {
     memScoped {
         val statInfo = alloc<stat>()
         val result = stat(path, statInfo.ptr)
-        return result == 0
+        if(result != 0) {
+            return null
+        }
+        val m = statInfo.st_mode and S_IFMT.toUInt()
+        return when {
+            m == S_IFREG.toUInt() -> FileNameType.FILE
+            m == S_IFDIR.toUInt() -> FileNameType.DIRECTORY
+            else -> FileNameType.UNDEFINED
+        }
     }
 }
 

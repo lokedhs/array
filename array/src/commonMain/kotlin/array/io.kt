@@ -187,7 +187,9 @@ class NullCharacterOutput : CharacterOutput {
     override fun writeString(s: String) = Unit
 }
 
-expect fun fileExists(path: String): Boolean
+fun fileExists(path: String) = fileType(path) != null
+
+expect fun fileType(path: String): FileNameType?
 
 class PathUtils {
     companion object {
