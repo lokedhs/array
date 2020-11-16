@@ -46,8 +46,10 @@ class RankOperator : APLOperatorValueRightArg {
                 val aInt = a.collapseFirstLevel()
                 val opArg = findAndCheckOpArg(context)
                 val aDimensions = aInt.dimensions
-                val newRank = (if (opArg.isScalar()) opArg else opArg.valueAt(0)).ensureNumber().asInt().let { index ->
-                    min(if (index < 0) -index else aDimensions.size - index, aDimensions.size)
+                val newRank = computeRankFromOpArg(opArg).let { v ->
+                    v.ensureNumber().asInt().let { index ->
+                        min(if (index < 0) -index else aDimensions.size - index, aDimensions.size)
+                    }
                 }
                 val newDimensions = Dimensions(IntArray(newRank) { i ->
                     aDimensions[i]
@@ -58,11 +60,33 @@ class RankOperator : APLOperatorValueRightArg {
                 val m = aDimensions.multipliers()[aDimensions.size - innerDimensions.size - 1]
                 val resultArray = APLArrayImpl(newDimensions, Array(newDimensions.contentSize()) { i ->
                     val offset = i * m
-                    fn.eval1Arg(context, APLArrayImpl(innerDimensions, Array(innerDimensions.contentSize()) { i2 ->
+                    val a1 = APLArrayImpl(innerDimensions, Array(innerDimensions.contentSize()) { i2 ->
                         aInt.valueAt(offset + i2)
-                     }), null)
+                    })
+                    fn.eval1Arg(context, a1, null)
                 })
                 return DisclosedArrayValue(resultArray, pos)
+            }
+
+            private fun computeRankFromOpArg(opArg: APLValue): APLValue {
+                fun raiseError(): Nothing {
+                    throw APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos)
+                }
+
+                val d = opArg.dimensions
+                if (d.size > 1) {
+                    raiseError()
+                }
+                return if (d.size == 1) {
+                    when (d[0]) {
+                        1 -> opArg.valueAt(0)
+                        2 -> opArg.valueAt(1)
+                        3 -> opArg.valueAt(0)
+                        else -> raiseError()
+                    }
+                } else {
+                    raiseError()
+                }
             }
 
             override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {

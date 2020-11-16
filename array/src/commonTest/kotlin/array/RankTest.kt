@@ -23,7 +23,7 @@ class RankTest : APLTest() {
 
     @Test
     fun rank1Test() {
-        parseAPLExpression(",({100,9+⍵}⍤1) ⍳10").let { result ->
+        parseAPLExpression("({100,9+⍵}⍤1) ⍳10").let { result ->
             assertDimension(dimensionsOfSize(11), result)
             assertArrayContent(arrayOf(100, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18), result)
         }
@@ -89,7 +89,17 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample10() {
-        assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤ 9 2) 1 2 3⍴⍳6"))
+//        val res = parseAPLExpression("(⊂⍤ 9 2) 1 2 3⍴⍳6")
+        val res = parseAPLExpression("({99,⍵,99}⍤ 9 2) 1 2 3⍴⍳6")
+        println("res:\n${res.formatted(FormatStyle.PRETTY)}")
+        val res2 = res.collapse()
+        println("res2:\n${res2.formatted(FormatStyle.PRETTY)}")
+        println("dim=${res2.dimensions}")
+        println("dim0=${res2.valueAt(0).dimensions}")
+        println("dim1=${res2.valueAt(0).valueAt(0).dimensions}")
+        if (false) {
+            assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤ 9 2) 1 2 3⍴⍳6"))
+        }
     }
 
     @Test
