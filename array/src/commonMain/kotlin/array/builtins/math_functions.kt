@@ -2,7 +2,6 @@ package array.builtins
 
 import array.*
 import array.complex.*
-import kotlinx.collections.immutable.persistentSetOf
 import kotlin.math.*
 
 interface CellSumFunction1Arg {
@@ -305,16 +304,13 @@ class NotAPLFunction : APLFunctionDescriptor {
                 throw InvalidDimensionsException("Left argument to without must be a scalar or a 1-dimensional array", pos)
             }
             val b1 = b.arrayify()
-            val map = persistentSetOf<Any>()
-            val updated = map.builder().let { builder ->
-                b1.iterateMembers { v ->
-                    builder.add(v.makeKey())
-                }
-                builder.build()
+            val map = HashSet<Any>()
+            b1.iterateMembers { v ->
+                map.add(v.makeKey())
             }
             val result = ArrayList<APLValue>()
             a1.iterateMembers { v ->
-                if (!updated.contains(v.makeKey())) {
+                if (!map.contains(v.makeKey())) {
                     result.add(v)
                 }
             }
