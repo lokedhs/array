@@ -7,12 +7,15 @@ import array.options.Option
 fun runRepl(args: Array<String>) {
     val argResult = ArgParser(Option("lib-path", true)).parse(args)
     val keyboardInput = makeKeyboardInput()
-    val engine = Engine()
-
-    if (argResult.containsKey("lib-path")) {
-        val path = argResult["lib-path"]!!
-        engine.addLibrarySearchPath(path)
+    val engine = Engine().apply {
+        standardOutput = object : CharacterOutput {
+            override fun writeString(s: String) {
+                print(s)
+            }
+        }
+        argResult["lib-path"]?.let(this::addLibrarySearchPath)
     }
+
 
     val prompt = "> "
     while (true) {
