@@ -23,7 +23,7 @@ fun runRepl(args: Array<String>) {
         }
         argResult["lib-path"]?.let { libPath ->
             val libPathType = fileType(libPath)
-            if (libPathType == null && libPathType == FileNameType.DIRECTORY) {
+            if (libPathType != null && libPathType == FileNameType.DIRECTORY) {
                 addLibrarySearchPath(libPath)
             } else {
                 println("Warning: ${libPath} is not a directory, ignoring")
