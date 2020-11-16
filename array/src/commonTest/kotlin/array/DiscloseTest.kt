@@ -39,6 +39,134 @@ class DiscloseTest : APLTest() {
         }
     }
 
+    @Test
+    fun discloseWithAxis0() {
+        parseAPLExpression("⊃[0] 2 3 2 ⍴ (0 1) (2 3) (4 5) (6 7) (8 9)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 3, 2), result)
+            assertArrayContent(arrayOf(0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 1, 3, 5, 7, 9, 1, 3, 5, 7, 9, 1, 3), result)
+        }
+    }
+
+    @Test
+    fun discloseWithAxis1() {
+        parseAPLExpression("⊃[1] 2 3 2 ⍴ (0 1) (2 3) (4 5) (6 7) (8 9)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 3, 2), result)
+            assertArrayContent(arrayOf(0, 2, 4, 6, 8, 0, 1, 3, 5, 7, 9, 1, 2, 4, 6, 8, 0, 2, 3, 5, 7, 9, 1, 3), result)
+        }
+    }
+
+    @Test
+    fun discloseWithAxis2() {
+        parseAPLExpression("⊃[2] 2 3 2 ⍴ (0 1) (2 3) (4 5) (6 7) (8 9)").let { result ->
+            assertDimension(dimensionsOfSize(2, 3, 2, 2), result)
+            assertArrayContent(arrayOf(0, 2, 1, 3, 4, 6, 5, 7, 8, 0, 9, 1, 2, 4, 3, 5, 6, 8, 7, 9, 0, 2, 1, 3), result)
+        }
+    }
+
+    @Test
+    fun discloseWithAxisMultiDimensional() {
+        parseAPLExpression("⊃[2] 2 3 4 ⍴ (2 2 ⍴ 0 1 10 20) (2 2 ⍴ 2 3 30 40) (2 2 ⍴ 4 5 10 20) (2 2 ⍴ 6 7 30 40) (2 2 ⍴ 8 9 50 60)").let { result ->
+            assertDimension(dimensionsOfSize(2, 3, 2, 2, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 2, 4, 6, 1, 3, 5, 7, 10, 30, 10, 30, 20, 40, 20, 40, 8, 0, 2, 4, 9,
+                    1, 3, 5, 50, 10, 30, 10, 60, 20, 40, 20, 6, 8, 0, 2, 7, 9, 1, 3, 30,
+                    50, 10, 30, 40, 60, 20, 40, 4, 6, 8, 0, 5, 7, 9, 1, 10, 30, 50, 10,
+                    20, 40, 60, 20, 2, 4, 6, 8, 3, 5, 7, 9, 30, 10, 30, 50, 40, 20, 40,
+                    60, 0, 2, 4, 6, 1, 3, 5, 7, 10, 30, 10, 30, 20, 40, 20, 40
+                ), result)
+        }
+    }
+
+    @Test
+    fun discloseWithAxisMultiDimensional2() {
+        parseAPLExpression("⊃[1] 2 3 4 ⍴ (2 2 ⍴ 0 1 10 20) (2 2 ⍴ 2 3 30 40) (2 2 ⍴ 4 5 10 20) (2 2 ⍴ 6 7 30 40) (2 2 ⍴ 8 9 50 60)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 2, 3, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 1, 3, 5, 7, 9, 1, 3, 5, 7, 9, 1,
+                    3, 10, 30, 10, 30, 50, 10, 30, 10, 30, 50, 10, 30, 20, 40, 20, 40, 60,
+                    20, 40, 20, 40, 60, 20, 40, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 4, 6, 5, 7,
+                    9, 1, 3, 5, 7, 9, 1, 3, 5, 7, 10, 30, 50, 10, 30, 10, 30, 50, 10, 30,
+                    10, 30, 20, 40, 60, 20, 40, 20, 40, 60, 20, 40, 20, 40
+                ), result)
+        }
+    }
+
+    @Test
+    fun discloseWithArrayAxis1() {
+        parseAPLExpression("⊃[1 2]2 3 4 ⍴ (2 2 ⍴ 0 1 101 102) (2 2 ⍴ 2 3 103 104) (2 2 ⍴ 4 5 105 106) (2 2 ⍴ 6 7 107 108) (2 2 ⍴ 8 9 109 110)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 2, 3, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 1, 3, 5, 7, 9, 1, 3, 5, 7, 9, 1,
+                    3, 101, 103, 105, 107, 109, 101, 103, 105, 107, 109, 101, 103, 102,
+                    104, 106, 108, 110, 102, 104, 106, 108, 110, 102, 104, 4, 6, 8, 0, 2,
+                    4, 6, 8, 0, 2, 4, 6, 5, 7, 9, 1, 3, 5, 7, 9, 1, 3, 5, 7, 105, 107,
+                    109, 101, 103, 105, 107, 109, 101, 103, 105, 107, 106, 108, 110, 102,
+                    104, 106, 108, 110, 102, 104, 106, 108
+                ), result)
+        }
+    }
+
+    @Test
+    fun discloseWithArrayAxis2() {
+        parseAPLExpression("⊃[2 1]2 3 4 ⍴ (2 2 ⍴ 0 1 101 102) (2 2 ⍴ 2 3 103 104) (2 2 ⍴ 4 5 105 106) (2 2 ⍴ 6 7 107 108) (2 2 ⍴ 8 9 109 110)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 2, 3, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 101, 103, 105, 107, 109, 101, 103,
+                    105, 107, 109, 101, 103, 1, 3, 5, 7, 9, 1, 3, 5, 7, 9, 1, 3, 102, 104,
+                    106, 108, 110, 102, 104, 106, 108, 110, 102, 104, 4, 6, 8, 0, 2, 4, 6,
+                    8, 0, 2, 4, 6, 105, 107, 109, 101, 103, 105, 107, 109, 101, 103, 105,
+                    107, 5, 7, 9, 1, 3, 5, 7, 9, 1, 3, 5, 7, 106, 108, 110, 102, 104, 106,
+                    108, 110, 102, 104, 106, 108
+                ), result)
+        }
+    }
+
+    @Test
+    fun discloseWithArrayAxis3() {
+        parseAPLExpression("⊃[0 2]2 3 4 ⍴ (2 2 ⍴ 0 1 101 102) (2 2 ⍴ 2 3 103 104) (2 2 ⍴ 4 5 105 106) (2 2 ⍴ 6 7 107 108) (2 2 ⍴ 8 9 109 110)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 2, 3, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    0, 2, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 1, 3, 5, 7, 9, 1, 3, 5, 7, 9, 1,
+                    3, 4, 6, 8, 0, 2, 4, 6, 8, 0, 2, 4, 6, 5, 7, 9, 1, 3, 5, 7, 9, 1, 3,
+                    5, 7, 101, 103, 105, 107, 109, 101, 103, 105, 107, 109, 101, 103, 102,
+                    104, 106, 108, 110, 102, 104, 106, 108, 110, 102, 104, 105, 107, 109,
+                    101, 103, 105, 107, 109, 101, 103, 105, 107, 106, 108, 110, 102, 104,
+                    106, 108, 110, 102, 104, 106, 108), result)
+        }
+    }
+
+    @Test
+    fun discloseWithIllegalAxis() {
+        assertFailsWith<IllegalAxisException> {
+            parseAPLExpression("⊃[4] 2 3 2 ⍴ (0 1) (2 3) (4 5) (6 7) (8 9)")
+        }
+    }
+
+    @Test
+    fun illegalAxis2() {
+        assertFailsWith<IllegalAxisException> {
+            parseAPLExpression("⊃[1] 1")
+        }
+    }
+
+
+    @Test
+    fun discloseScalarWithAxis() {
+        assertSimpleNumber(1, parseAPLExpression("⊃[0] 1"))
+    }
+
+    @Test
+    fun discloseEmpty() {
+        parseAPLExpression("⊃⍬").let { result ->
+            assertDimension(dimensionsOfSize(0), result)
+        }
+    }
+
     /////////////////////////////
     // Tests for pick
     /////////////////////////////

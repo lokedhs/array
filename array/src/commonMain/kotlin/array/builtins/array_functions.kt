@@ -159,11 +159,55 @@ class HideAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = HideAPLFunctionImpl(pos)
 }
 
+class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
+    override val dimensions: Dimensions
+
+    private val stepLength: Int
+    private val sizeAlongAxis: Int
+    private val fromSourceMul: Int
+    private val toDestMul: Int
+
+    init {
+        val aDimensions = value.dimensions
+
+        val argMultipliers = aDimensions.multipliers()
+
+        stepLength = argMultipliers[axis]
+        sizeAlongAxis = aDimensions[axis]
+        dimensions = aDimensions.remove(axis)
+
+        val multipliers = dimensions.multipliers()
+
+        fromSourceMul = if (axis == 0) dimensions.contentSize() else multipliers[axis - 1]
+        toDestMul = fromSourceMul * aDimensions[axis]
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        return if (sizeAlongAxis == 0) {
+            APLLONG_0
+        } else {
+            val highPosition = p / fromSourceMul
+            val lowPosition = p % fromSourceMul
+            val posInSrc = highPosition * toDestMul + lowPosition
+
+            return APLArrayImpl(dimensionsOfSize(sizeAlongAxis), Array(sizeAlongAxis) { i ->
+                value.valueAt(i * stepLength + posInSrc)
+            })
+        }
+    }
+}
+
 class EncloseAPLFunction : APLFunctionDescriptor {
-    class EncloseAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+    class EncloseAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             val v = a.unwrapDeferredValue()
-            return if (v is APLSingleValue) v else EnclosedAPLValue(v)
+            return if (axis == null) {
+                if (v is APLSingleValue) v else EnclosedAPLValue(v)
+            } else {
+                val axisInt = axis.ensureNumber(pos).asInt()
+                ensureValidAxis(axisInt, v.dimensions, pos)
+                AxisEnclosedValue(v, axisInt)
+            }
         }
     }
 
@@ -216,6 +260,9 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
     }
 
     private fun maxShapeOf(v: APLValue, pos: Position? = null): Dimensions {
+        if (v.dimensions.contentSize() == 0) {
+            return emptyDimensions()
+        }
         var elements: IntArray? = null
         v.iterateMembers { value ->
             val dimensions = value.dimensions
@@ -232,22 +279,72 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
                 }
             }
         }
-        return Dimensions(elements!!) // TODO: This will crash with an empty argument
+        return Dimensions(elements!!)
     }
 }
 
 class DiscloseAPLFunction : APLFunctionDescriptor {
-    class DiscloseAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+    class DiscloseAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             val v = a.unwrapDeferredValue()
             return when {
-                v is APLSingleValue -> a
-                v.isScalar() -> v.valueAt(0)
-                else -> DisclosedArrayValue(v, pos)
+                v.isScalar() -> processScalarValue(a, axis)
+                axis == null -> DisclosedArrayValue(v, pos)
+                else -> processAxis(v, a, axis)
             }
         }
 
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+        private fun processScalarValue(a: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) {
+                val axisInt = makeAxisIntArray(axis, 1)
+                if (axisInt[0] != 0) {
+                    throw IllegalAxisException("Only axis 0 is allowed for scalars", pos)
+                }
+            }
+            return if (a is APLSingleValue) a else a.valueAt(0)
+        }
+
+        private fun processAxis(v: APLValue, a: APLValue, axis: APLValue): TransposedAPLValue {
+            val z1 = DisclosedArrayValue(v, pos)
+            val z1Dimensions = z1.dimensions
+            val maxAxis = z1Dimensions.size - a.dimensions.size
+            val axisInt = makeAxisIntArray(axis, maxAxis)
+            axisInt.forEach { v0 ->
+                ensureValidAxis(v0, z1Dimensions, pos)
+            }
+            if (axisInt.distinct().count() != axisInt.size) {
+                throw APLIllegalArgumentException("Duplicated values in axis", pos)
+            }
+            val newAxisList = ArrayList<Int>()
+            repeat(z1Dimensions.size) { i ->
+                if (axisInt.indexOf(i) == -1) {
+                    newAxisList.add(i)
+                }
+            }
+            axisInt.forEach { v0 ->
+                newAxisList.add(v0)
+            }
+            assertx(newAxisList.size == z1Dimensions.size)
+            return TransposedAPLValue(newAxisList.toIntArray(), z1, pos)
+        }
+
+        private fun makeAxisIntArray(axis: APLValue, maxAxis: Int): IntArray {
+            val axisArray = axis.arrayify()
+            if (axisArray.dimensions.size != 1) {
+                throw APLIllegalArgumentException("Axis specifier must be a scalar or a rank-1 array")
+            }
+            val v0 = axisArray.toIntArray(pos)
+            return when {
+                v0.size == maxAxis -> v0
+                v0.size < maxAxis -> IntArray(maxAxis) { i -> if (i < v0.size) v0[i] else v0[v0.size - 1] + i - v0.size + 1 }
+                else -> throw IllegalAxisException("Too many axis specifiers. Max allowed: ${maxAxis}. Got ${v0.size}.", pos)
+            }
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) {
+                throw AxisNotSupported(pos)
+            }
             if (a.dimensions.size !in 0..1) {
                 throw InvalidDimensionsException("Left argument to pick should be rank 0 or 1", pos)
             }
@@ -1246,4 +1343,27 @@ class WhereAPLFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = WhereAPLFunctionImpl(pos)
+}
+
+class UniqueFunction : APLFunctionDescriptor {
+    class UniqueFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val a1 = a.arrayify().collapse()
+            if(a1.rank != 1) {
+                throw InvalidDimensionsException("Argument to unique must be a scalar or a 1-dimensional array", pos)
+            }
+            val map = HashSet<APLValue.APLValueKey>()
+            val result = ArrayList<APLValue>()
+            a1.iterateMembers { v ->
+                val key = v.makeKey()
+                if(!map.contains(key)) {
+                    result.add(v)
+                    map.add(key)
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
+    }
+
+    override fun make(pos: Position) = UniqueFunctionImpl(pos)
 }

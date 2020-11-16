@@ -1,0 +1,9 @@
+namespace("file")
+
+∇ println (v) {
+  print v
+  print unicode:fromCodepoints 10
+  v
+}
+
+export(println)

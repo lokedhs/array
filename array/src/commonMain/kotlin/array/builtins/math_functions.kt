@@ -294,6 +294,28 @@ class NotAPLFunction : APLFunctionDescriptor {
             }
             return result.makeAPLNumber()
         }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) {
+                throw AxisNotSupported(pos)
+            }
+            val a1 = a.arrayify()
+            if (a1.dimensions.size != 1) {
+                throw InvalidDimensionsException("Left argument to without must be a scalar or a 1-dimensional array", pos)
+            }
+            val b1 = b.arrayify()
+            val map = HashSet<Any>()
+            b1.iterateMembers { v ->
+                map.add(v.makeKey())
+            }
+            val result = ArrayList<APLValue>()
+            a1.iterateMembers { v ->
+                if (!map.contains(v.makeKey())) {
+                    result.add(v)
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
     }
 
     override fun make(pos: Position): APLFunction {

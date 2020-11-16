@@ -24,7 +24,7 @@ class ReduceResult1Arg(
 
         stepLength = argMultipliers[axis]
         sizeAlongAxis = argDimensions[axis]
-        dimensions = arg.dimensions.remove(axis)
+        dimensions = argDimensions.remove(axis)
 
         val multipliers = dimensions.multipliers()
 

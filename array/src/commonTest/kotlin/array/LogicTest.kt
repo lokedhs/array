@@ -102,4 +102,70 @@ class LogicTest : APLTest() {
             parseAPLExpression("~10")
         }
     }
+
+    //////////////////////////////
+    // Tests for without
+    //////////////////////////////
+
+    @Test
+    fun simpleWithout() {
+        parseAPLExpression("(⍳19) ~ 1 4 5 10").let { result ->
+            assertDimension(dimensionsOfSize(15), result)
+            assertArrayContent(arrayOf(0, 2, 3, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18), result)
+        }
+    }
+
+    @Test
+    fun removeNoElements() {
+        parseAPLExpression("(⍳3) ~ 10 11").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(0, 1, 2), result)
+        }
+    }
+
+    @Test
+    fun removeOneElement() {
+        parseAPLExpression("(⍳3) ~ 2").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(0, 1), result)
+        }
+    }
+
+    @Test
+    fun removeMultiDimension() {
+        parseAPLExpression("(⍳12) ~ 2 2 ⍴ 0 3 10 11").let { result ->
+            assertDimension(dimensionsOfSize(8), result)
+            assertArrayContent(arrayOf(1, 2, 4, 5, 6, 7, 8, 9), result)
+        }
+    }
+
+    @Test
+    fun removeFromMultiDimensionShouldFail() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("(2 4 ⍴ ⍳4) ~ 1 2")
+        }
+    }
+
+    @Test
+    fun removeComplexElement() {
+        parseAPLExpression("((2 2 ⍴ 0 1 2 3) (2 2 ⍴ 3 4 5 6)) ~ ⊂(2 2 ⍴ 0 1 2 3)").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            val v = result.valueAt(0)
+            assertDimension(dimensionsOfSize(2, 2), v)
+            assertArrayContent(arrayOf(3, 4, 5, 6), v)
+        }
+    }
+
+    @Test
+    fun removeFromScalarNoMatch() {
+        parseAPLExpression("2 ~ 1").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            assertArrayContent(arrayOf(2), result)
+        }
+    }
+
+    @Test
+    fun removeFromScalarMatch() {
+        assertAPLNull(parseAPLExpression("2 ~ 2"))
+    }
 }

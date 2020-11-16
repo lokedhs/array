@@ -39,6 +39,15 @@ class PowerAPLOperator : APLOperatorTwoArg {
     }
 }
 
+/*
+Implementation note:
+
+From my presentation at the Dyalog '19 user meeting, (f⍤k)x ←→ ↑f¨⊂[(-k)↑⍳≢⍴x]x. Slides to download here.
+For two ranks, you have to find which ranks correspond to which arguments, then use the ⊂[…] thing on each argument separately.
+It also assumes a positive rank; to convert a negative rank to positive I think the formula is k←0⌊(≢⍴x)+k.
+There's also the reference implementation in BQN, which has the same functionality as APL (it supports leading axis agreement, but only because Each does)
+ */
+
 class RankOperator : APLOperatorValueRightArg {
     override fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction {
         return object : APLFunction(opPos) {
