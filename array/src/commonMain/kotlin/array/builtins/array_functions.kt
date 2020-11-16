@@ -1344,3 +1344,26 @@ class WhereAPLFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = WhereAPLFunctionImpl(pos)
 }
+
+class UniqueFunction : APLFunctionDescriptor {
+    class UniqueFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val a1 = a.arrayify().collapse()
+            if(a1.rank != 1) {
+                throw InvalidDimensionsException("Argument to unique must be a scalar or a 1-dimensional array", pos)
+            }
+            val map = HashSet<APLValue.APLValueKey>()
+            val result = ArrayList<APLValue>()
+            a1.iterateMembers { v ->
+                val key = v.makeKey()
+                if(!map.contains(key)) {
+                    result.add(v)
+                    map.add(key)
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
+    }
+
+    override fun make(pos: Position) = UniqueFunctionImpl(pos)
+}
