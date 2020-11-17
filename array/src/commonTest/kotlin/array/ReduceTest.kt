@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
+@Suppress("ComplexRedundantLet")
 class ReduceTest : APLTest() {
     @Test
     fun reduceIotaTest() {
@@ -157,6 +158,140 @@ class ReduceTest : APLTest() {
         parseAPLExpression("+⌿[1] 2 3 ⍴ ⍳100").let { result ->
             assertDimension(dimensionsOfSize(2), result)
             assertArrayContent(arrayOf(3, 12), result)
+        }
+    }
+
+    @Test
+    fun plainNWise() {
+        parseAPLExpression("2+/⍳10").let { result ->
+            assertDimension(dimensionsOfSize(9), result)
+            assertArrayContent(arrayOf(1, 3, 5, 7, 9, 11, 13, 15, 17), result)
+        }
+    }
+
+    @Test
+    fun plainNWiseSubarraySize3() {
+        parseAPLExpression("3+/⍳10").let { result ->
+            assertDimension(dimensionsOfSize(8), result)
+            assertArrayContent(arrayOf(3, 6, 9, 12, 15, 18, 21, 24), result)
+        }
+    }
+
+    @Test
+    fun scalarWithNWise1Dimension() {
+        parseAPLExpression("1+/1").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            assertArrayContent(arrayOf(1), result)
+        }
+    }
+
+    @Test
+    fun scalarWithNWise2Dimension() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("2+/1")
+        }
+    }
+
+    @Test
+    fun plainNWiseWithNegativeSubarraySize() {
+        parseAPLExpression("¯2,/⍳10").let { result ->
+            fun assertCell(index: Int, v0: Int, v1: Int) {
+                val cell = result.valueAt(index)
+                assertDimension(dimensionsOfSize(2), cell)
+                assertArrayContent(arrayOf(v0, v1), cell)
+            }
+            assertDimension(dimensionsOfSize(9), result)
+            assertCell(0, 1, 0)
+            assertCell(1, 2, 1)
+            assertCell(2, 3, 2)
+            assertCell(3, 4, 3)
+            assertCell(4, 5, 4)
+            assertCell(5, 6, 5)
+            assertCell(6, 7, 6)
+            assertCell(7, 8, 7)
+            assertCell(8, 9, 8)
+        }
+    }
+
+    @Test
+    fun multidimensionalNWiseWithCatenate() {
+        parseAPLExpression("2,/3 5 ⍴ ⍳10").let { result ->
+            fun assertCell(index: Int, v0: Int, v1: Int) {
+                val cell = result.valueAt(index)
+                assertDimension(dimensionsOfSize(2), cell)
+                assertArrayContent(arrayOf(v0, v1), cell)
+            }
+            assertDimension(dimensionsOfSize(3, 4), result)
+            assertCell(0, 0, 1)
+            assertCell(1, 1, 2)
+            assertCell(2, 2, 3)
+            assertCell(3, 3, 4)
+            assertCell(4, 5, 6)
+            assertCell(5, 6, 7)
+            assertCell(6, 7, 8)
+            assertCell(7, 8, 9)
+            assertCell(8, 0, 1)
+            assertCell(9, 1, 2)
+            assertCell(10, 2, 3)
+            assertCell(11, 3, 4)
+        }
+    }
+
+    @Test
+    fun twoDimensionalNWise() {
+        parseAPLExpression("2+/ 3 4 ⍴ ⍳10").let { result ->
+            assertDimension(dimensionsOfSize(3, 3), result)
+            assertArrayContent(arrayOf(1, 3, 5, 9, 11, 13, 17, 9, 1), result)
+        }
+    }
+
+    @Test
+    fun smallArrayNWise() {
+        parseAPLExpression("6+/1+⍳5").let { result ->
+            assertAPLNull(result)
+        }
+    }
+
+    @Test
+    fun failsWithNWiseOfTooSmallArray() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("5+/1 2 3")
+        }
+    }
+
+    @Test
+    fun twoDimensionalNWiseWithAxis() {
+        parseAPLExpression("2,/[0] 3 5 ⍴ ⍳10").let { result ->
+            fun assertCell(index: Int, v0: Int, v1: Int) {
+                val cell = result.valueAt(index)
+                assertDimension(dimensionsOfSize(2), cell)
+                assertArrayContent(arrayOf(v0, v1), cell)
+            }
+            assertDimension(dimensionsOfSize(2, 5), result)
+            assertCell(0, 0, 5)
+            assertCell(1, 1, 6)
+            assertCell(2, 2, 7)
+            assertCell(3, 3, 8)
+            assertCell(4, 4, 9)
+            assertCell(5, 5, 0)
+            assertCell(6, 6, 1)
+            assertCell(7, 7, 2)
+            assertCell(8, 8, 3)
+            assertCell(9, 9, 4)
+        }
+    }
+
+    @Test
+    fun fourDimensionalNWiseWithAxis() {
+        parseAPLExpression("2+/[1] 2 4 3 3 ⍴ ⍳1000").let { result ->
+            assertDimension(dimensionsOfSize(2, 3, 3, 3), result)
+            assertArrayContent(
+                arrayOf(
+                    9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43,
+                    45, 47, 49, 51, 53, 55, 57, 59, 61, 81, 83, 85, 87, 89, 91, 93, 95,
+                    97, 99, 101, 103, 105, 107, 109, 111, 113, 115, 117, 119, 121, 123,
+                    125, 127, 129, 131, 133
+                ), result)
         }
     }
 

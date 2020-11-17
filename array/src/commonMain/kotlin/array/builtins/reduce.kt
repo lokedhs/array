@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlin.math.absoluteValue
 
 class ReduceResult1Arg(
     val context: RuntimeContext,
@@ -79,9 +80,58 @@ class ReduceResult1Arg(
     }
 }
 
+class ReduceNWiseResultValue(
+    val context: RuntimeContext,
+    val fn: APLFunction,
+    val axis: APLValue?,
+    val reductionSize: Int,
+    val b: APLValue,
+    operatorAxis: Int) : APLArray() {
+    override val dimensions: Dimensions
+
+    private val axisActionFactors: AxisActionFactors
+    private val highMultiplier: Int
+    private val axisMultiplier: Int
+    private val dir: Int
+    private val reductionSizeAbsolute: Int
+
+    init {
+        val bDimensions = b.dimensions
+        dimensions = Dimensions(IntArray(bDimensions.size) { i ->
+            val s = bDimensions[i]
+            if (i == operatorAxis) {
+                s - reductionSize.absoluteValue + 1
+            } else {
+                s
+            }
+        })
+
+        val bMultipliers = bDimensions.multipliers()
+        axisMultiplier = bMultipliers[operatorAxis]
+        highMultiplier = axisMultiplier * bDimensions[operatorAxis]
+        dir = if(reductionSize < 0) -1 else 1
+        reductionSizeAbsolute = reductionSize.absoluteValue
+
+        axisActionFactors = AxisActionFactors(dimensions, operatorAxis)
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        axisActionFactors.withFactors(p) { high, low, axisCoord ->
+            var pos = if(reductionSize < 0) reductionSizeAbsolute - 1 else 0
+            var curr = b.valueAt((high * highMultiplier) + ((axisCoord + pos) * axisMultiplier) + low)
+            repeat (reductionSizeAbsolute - 1) {
+                pos += dir
+                val value = b.valueAt((high * highMultiplier) + ((axisCoord + pos) * axisMultiplier) + low)
+                curr = fn.eval2Arg(context, curr, value, axis)
+            }
+            return curr
+        }
+    }
+}
+
 abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruction?, pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-        val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber(pos).asInt() else null
+        val axisParam = findAxis(operatorAxis, context)
         return if (a.rank == 0) {
             if (axisParam != null && axisParam != 0) {
                 throw IllegalAxisException(axisParam, a.dimensions, pos)
@@ -94,14 +144,54 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
         }
     }
 
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        val axisParam = findAxis(operatorAxis, context)
+        val size = a.ensureNumber(pos).asInt()
+        if(b.isScalar()) {
+            if(axisParam != null && axisParam != 0) {
+                throw IllegalAxisException(axisParam, b.dimensions, pos)
+            }
+            return when (size) {
+                1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(b))
+                0 -> APLNullValue()
+                -1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(APLLONG_0))
+                else -> throw InvalidDimensionsException("Invalid left argument for scalar right arg", pos)
+            }
+        }
+        val axisInt = axisParam ?: defaultAxis(b)
+        ensureValidAxis(axisInt, b.dimensions, pos)
+        return when {
+            size.absoluteValue > b.dimensions[axisInt] + 1 -> {
+                throw InvalidDimensionsException("Left argument is too large", pos)
+            }
+            size.absoluteValue == b.dimensions[axisInt] + 1 -> {
+                APLNullValue()
+            }
+            else -> {
+                ReduceNWiseResultValue(context, fn, axis, size, b.collapse(), axisInt)
+            }
+        }
+    }
+
     abstract fun defaultAxis(a: APLValue): Int
+
+    @Suppress("IfThenToSafeAccess")
+    private fun findAxis(operatorAxis: Instruction?, context: RuntimeContext): Int? {
+        return if (operatorAxis != null) {
+            operatorAxis.evalWithContext(context).ensureNumber(pos).asInt()
+        } else {
+            null
+        }
+    }
 }
 
-class ReduceFunctionImplLastAxis(fn: APLFunction, operatorAxis: Instruction?, pos: Position) : ReduceFunctionImpl(fn, operatorAxis, pos) {
+class ReduceFunctionImplLastAxis(fn: APLFunction, operatorAxis: Instruction?, pos: Position) :
+    ReduceFunctionImpl(fn, operatorAxis, pos) {
     override fun defaultAxis(a: APLValue) = a.dimensions.size - 1
 }
 
-class ReduceFunctionImplFirstAxis(fn: APLFunction, operatorAxis: Instruction?, pos: Position) : ReduceFunctionImpl(fn, operatorAxis, pos) {
+class ReduceFunctionImplFirstAxis(fn: APLFunction, operatorAxis: Instruction?, pos: Position) :
+    ReduceFunctionImpl(fn, operatorAxis, pos) {
     override fun defaultAxis(a: APLValue) = 0
 }
 
@@ -159,7 +249,8 @@ class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val fnAxi
             if (currIndex < axisCoord) {
                 for (i in (currIndex + 1)..axisCoord) {
                     val index = axisActionFactors.indexForAxis(high, low, i)
-                    leftValue = cachedResults.checkOrUpdate(index) { fn.eval2Arg(context, leftValue, a.valueAt(index), fnAxis).collapse() }
+                    leftValue =
+                        cachedResults.checkOrUpdate(index) { fn.eval2Arg(context, leftValue, a.valueAt(index), fnAxis).collapse() }
                 }
             }
 
