@@ -109,7 +109,7 @@ class ReduceNWiseResultValue(
         val bMultipliers = bDimensions.multipliers()
         axisMultiplier = bMultipliers[operatorAxis]
         highMultiplier = axisMultiplier * bDimensions[operatorAxis]
-        dir = if(reductionSize < 0) -1 else 1
+        dir = if (reductionSize < 0) -1 else 1
         reductionSizeAbsolute = reductionSize.absoluteValue
 
         axisActionFactors = AxisActionFactors(dimensions, operatorAxis)
@@ -117,9 +117,9 @@ class ReduceNWiseResultValue(
 
     override fun valueAt(p: Int): APLValue {
         axisActionFactors.withFactors(p) { high, low, axisCoord ->
-            var pos = if(reductionSize < 0) reductionSizeAbsolute - 1 else 0
+            var pos = if (reductionSize < 0) reductionSizeAbsolute - 1 else 0
             var curr = b.valueAt((high * highMultiplier) + ((axisCoord + pos) * axisMultiplier) + low)
-            repeat (reductionSizeAbsolute - 1) {
+            repeat(reductionSizeAbsolute - 1) {
                 pos += dir
                 val value = b.valueAt((high * highMultiplier) + ((axisCoord + pos) * axisMultiplier) + low)
                 curr = fn.eval2Arg(context, curr, value, axis)
@@ -145,11 +145,12 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
     }
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+        val bDimensions = b.dimensions
         val axisParam = findAxis(operatorAxis, context)
         val size = a.ensureNumber(pos).asInt()
-        if(b.isScalar()) {
-            if(axisParam != null && axisParam != 0) {
-                throw IllegalAxisException(axisParam, b.dimensions, pos)
+        if (bDimensions.size == 0) {
+            if (axisParam != null && axisParam != 0) {
+                throw IllegalAxisException(axisParam, bDimensions, pos)
             }
             return when (size) {
                 1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(b))
@@ -159,13 +160,16 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
             }
         }
         val axisInt = axisParam ?: defaultAxis(b)
-        ensureValidAxis(axisInt, b.dimensions, pos)
+        ensureValidAxis(axisInt, bDimensions, pos)
         return when {
-            size.absoluteValue > b.dimensions[axisInt] + 1 -> {
+            size.absoluteValue > bDimensions[axisInt] + 1 -> {
                 throw InvalidDimensionsException("Left argument is too large", pos)
             }
-            size.absoluteValue == b.dimensions[axisInt] + 1 -> {
-                APLNullValue()
+            size.absoluteValue == bDimensions[axisInt] + 1 -> {
+                val d = Dimensions(IntArray(bDimensions.size) { i ->
+                    if (i == axisInt) 0 else bDimensions[i]
+                })
+                APLArrayImpl(d, emptyArray())
             }
             else -> {
                 ReduceNWiseResultValue(context, fn, axis, size, b.collapse(), axisInt)

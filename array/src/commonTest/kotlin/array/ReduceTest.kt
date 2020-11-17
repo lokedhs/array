@@ -295,6 +295,13 @@ class ReduceTest : APLTest() {
         }
     }
 
+    @Test
+    fun twoDimensionalNWiseWithNullResult() {
+        parseAPLExpression("5 ,/ 3 4 ⍴ ⍳1000").let { result ->
+            assertDimension(dimensionsOfSize(3, 0), result)
+        }
+    }
+
     private fun reduceTestWithFunctionName(aplFn: String, correctRes: Int) {
         val result = parseAPLExpression("${aplFn}/0⍴4")
         assertTrue(result.dimensions.compareEquals(emptyDimensions()))
