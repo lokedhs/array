@@ -152,4 +152,34 @@ class CustomFunctionTest : APLTest() {
             assertArrayContent(arrayOf(1, 2), result)
         }
     }
+
+    @Test
+    fun functionTwoArgCallWithOneArg() {
+        assertFailsWith<VariableNotAssigned> {
+            parseAPLExpression(
+                """
+                |∇ (x) foo (y) {
+                |  x + y + 1
+                |}  
+                |foo 10
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun twoArgFunctionWithArgCheck() {
+        val result = parseAPLExpression(
+            """
+            |∇ (x) foo (y) {
+            |  if (isLocallyBound('x)) {
+            |    x + y + 1
+            |  } else {
+            |    y + 1000
+            |  }
+            |}  
+            |(foo 1) (1 foo 2)              
+            """.trimMargin(), true)
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(1001, 4), result)
+    }
 }

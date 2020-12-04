@@ -845,9 +845,8 @@ class RandomAPLFunction : APLFunctionDescriptor {
             val picked = HashSet<Long>()
             val result = ArrayList<Long>()
             val count = bLong + 1
-            val n = aInt
-            for (i in count - n until count) {
-                val item = (0 until i + 1).random()
+            for (i in count - aInt until count) {
+                val item = (0 until bLong).random()
                 if (picked.contains(item)) {
                     picked.add(i)
                     result.add(i)
