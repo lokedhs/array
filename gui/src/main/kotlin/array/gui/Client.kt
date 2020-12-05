@@ -144,22 +144,42 @@ class Client(val application: ClientApplication, val stage: Stage) {
                 val ex = result.value
                 resultList.addExceptionResult(ex)
                 if (ex is APLGenericException) {
+                    if(ex.pos != null) {
+                        StackTrace.makeStackTraceWindow(this, ex)
+                    }
                     val pos = ex.pos
-                    if (pos != null) {
-                        val sourceLocation = pos.source
-                        if (sourceLocation is SourceEditor.EditorSourceLocation) {
-                            sourceLocation.editor?.let { editor ->
-                                sourceEditors.forEach { e ->
-                                    if (e === editor) {
-                                        editor.highlightError(ex.message ?: "no error message", pos)
-                                    }
-                                }
-                            }
-                        }
+                    if(pos != null) {
+                        highlightSourceLocation(pos, ex.message ?: "no error message")
+                    }
+//                    if (pos != null) {
+//                        val sourceLocation = pos.source
+//                        if (sourceLocation is SourceEditor.EditorSourceLocation) {
+//                            sourceLocation.editor?.let { editor ->
+//                                sourceEditors.forEach { e ->
+//                                    if (e === editor) {
+//                                        editor.highlightError(ex.message ?: "no error message", pos)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+                }
+            }
+        }
+    }
+
+    fun highlightSourceLocation(pos: Position, message: String? = null) {
+        val sourceLocation = pos.source
+        if (sourceLocation is SourceEditor.EditorSourceLocation) {
+            sourceLocation.editor?.let { editor ->
+                sourceEditors.forEach { e ->
+                    if (e === editor) {
+                        editor.highlightError(pos, message)
                     }
                 }
             }
         }
+
     }
 
     private fun initCustomFunctions() {

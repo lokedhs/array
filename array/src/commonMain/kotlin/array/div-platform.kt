@@ -1,5 +1,7 @@
 package array
 
+import kotlin.reflect.KClass
+
 expect fun sleepMillis(time: Long)
 
 interface MPAtomicRefArray<T> {
@@ -20,6 +22,12 @@ interface MPAtomicRefArray<T> {
 }
 
 expect fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T>
+
+interface MPThreadLocal<T> {
+    var value: T?
+}
+
+expect fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T>
 
 /**
  * Format a double in a standardised way. A value with zero decimal part should be rendered as 4.0.

@@ -134,7 +134,7 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
         val axisParam = findAxis(operatorAxis, context)
         return if (a.rank == 0) {
             if (axisParam != null && axisParam != 0) {
-                throw IllegalAxisException(axisParam, a.dimensions, pos)
+                throwAPLException(IllegalAxisException(axisParam, a.dimensions, pos))
             }
             a
         } else {
@@ -150,20 +150,20 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
         val size = a.ensureNumber(pos).asInt()
         if (bDimensions.size == 0) {
             if (axisParam != null && axisParam != 0) {
-                throw IllegalAxisException(axisParam, bDimensions, pos)
+                throwAPLException(IllegalAxisException(axisParam, bDimensions, pos))
             }
             return when (size) {
                 1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(b))
                 0 -> APLNullValue()
                 -1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(APLLONG_0))
-                else -> throw InvalidDimensionsException("Invalid left argument for scalar right arg", pos)
+                else -> throwAPLException(InvalidDimensionsException("Invalid left argument for scalar right arg", pos))
             }
         }
         val axisInt = axisParam ?: defaultAxis(b)
         ensureValidAxis(axisInt, bDimensions, pos)
         return when {
             size.absoluteValue > bDimensions[axisInt] + 1 -> {
-                throw InvalidDimensionsException("Left argument is too large", pos)
+                throwAPLException(InvalidDimensionsException("Left argument is too large", pos))
             }
             size.absoluteValue == bDimensions[axisInt] + 1 -> {
                 val d = Dimensions(IntArray(bDimensions.size) { i ->
@@ -268,7 +268,7 @@ abstract class ScanFunctionImpl(val fn: APLFunction, val operatorAxis: Instructi
         val axisParam = if (operatorAxis != null) operatorAxis.evalWithContext(context).ensureNumber(pos).asInt() else null
         return if (a.rank == 0) {
             if (axisParam != null && axisParam != 0) {
-                throw IllegalAxisException(axisParam, a.dimensions, pos)
+                throwAPLException(IllegalAxisException(axisParam, a.dimensions, pos))
             }
             a
         } else {

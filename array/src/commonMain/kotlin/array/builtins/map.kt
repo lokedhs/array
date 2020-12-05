@@ -79,7 +79,7 @@ private fun ensureKeyValuesArray(a: APLValue, pos: Position): APLValue {
 private fun ensureMap(a: APLValue, pos: Position): APLMap {
     val map = a.unwrapDeferredValue()
     if (map !is APLMap) {
-        throw IncompatibleTypeException("Left argument must be a map", pos)
+        throwAPLException(IncompatibleTypeException("Left argument must be a map", pos))
     }
     return map
 }
@@ -112,7 +112,7 @@ class MapRemoveAPLFunction : APLFunctionDescriptor {
             val map = ensureMap(a, pos)
             val b1 = b.arrayify().collapse()
             if (b1.dimensions.size != 1) {
-                throw InvalidDimensionsException("Right argument should be a scalar or a rank-1 array", pos)
+                throwAPLException(InvalidDimensionsException("Right argument should be a scalar or a rank-1 array", pos))
             }
             val toRemove = ArrayList<APLValue>()
             b1.iterateMembers { value ->

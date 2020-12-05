@@ -85,7 +85,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
             val result = instr.evalWithContext(context)
             val v = result.unwrapDeferredValue()
             if (v !is LambdaValue) {
-                throw IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}", pos)
+                throwAPLException(IncompatibleTypeException("Cannot evaluate values of type: ${v.aplValueType.typeName}", pos))
             }
             return v.makeClosure()
         }
@@ -98,7 +98,7 @@ class DynamicFunctionDescriptor(val instr: Instruction) : APLFunctionDescriptor 
 
 class VariableRef(val name: Symbol, val binding: EnvironmentBinding, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        return context.getVar(binding) ?: throw VariableNotAssigned(binding.name, pos)
+        return context.getVar(binding) ?: throwAPLException(VariableNotAssigned(binding.name, pos))
     }
 
     override fun toString() = "Var(${name})"
@@ -169,6 +169,7 @@ class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruct
 }
 
 class UserFunction(
+    private val name: Symbol,
     private val leftFnArgs: List<EnvironmentBinding>,
     private val rightFnArgs: List<EnvironmentBinding>,
     var instr: Instruction,
@@ -179,7 +180,7 @@ class UserFunction(
             val inner = context.link(env).apply {
                 assignArgs(rightFnArgs, a, pos)
             }
-            return inner.withCallStackElement("userfunction1", pos) {
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
                 instr.evalWithContext(inner)
             }
         }
@@ -189,7 +190,7 @@ class UserFunction(
                 assignArgs(leftFnArgs, a, pos)
                 assignArgs(rightFnArgs, b, pos)
             }
-            return inner.withCallStackElement("userfunction2", pos) {
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
                 instr.evalWithContext(inner)
             }
         }

@@ -7,6 +7,7 @@ import platform.posix.*
 import kotlin.native.concurrent.FreezableAtomicReference
 import kotlin.native.concurrent.freeze
 import kotlin.native.concurrent.isFrozen
+import kotlin.reflect.KClass
 
 actual fun sleepMillis(time: Long) {
     memScoped {
@@ -37,6 +38,13 @@ class LinuxMPAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
 
 actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return LinuxMPAtomicRefArray(size)
+}
+
+actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+    // Use the single-threaded implementation as the native version doesn't support multi-threading yet
+    return object : MPThreadLocal<T> {
+        override var value: T? = null
+    }
 }
 
 actual fun Double.formatDouble() = this.toString()

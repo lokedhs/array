@@ -128,7 +128,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
             return object : APLFunction(fn1.pos) {
                 override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                     if (axis != null) {
-                        throw APLIllegalArgumentException("inner join does not support axis arguments", pos)
+                        throwAPLException(APLIllegalArgumentException("inner join does not support axis arguments", pos))
                     }
                     val aDimensions = a.dimensions
                     val bDimensions = b.dimensions
@@ -148,7 +148,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     val a1Dimensions = a1.dimensions
                     val b1Dimensions = b1.dimensions
                     if (a1Dimensions[a1Dimensions.size - 1] != b1Dimensions[0]) {
-                        throw InvalidDimensionsException("a and b dimensions are incompatible", pos)
+                        throwAPLException(InvalidDimensionsException("a and b dimensions are incompatible", pos))
                     }
                     return if (a1Dimensions.size == 1 && b1Dimensions.size == 1) {
                         val v = fn2.eval2Arg(context, a1, b1, null)
@@ -165,11 +165,11 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
 class NullFunction : APLFunctionDescriptor {
     class NullFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            throw APLEvalException("null function cannot be called", pos)
+            throwAPLException(APLEvalException("null function cannot be called", pos))
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            throw APLEvalException("null function cannot be called", pos)
+            throwAPLException(APLEvalException("null function cannot be called", pos))
         }
     }
 

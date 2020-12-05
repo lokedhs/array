@@ -19,7 +19,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
                 plainSym -> FormatStyle.PLAIN
                 prettySym -> FormatStyle.PRETTY
                 readSym -> FormatStyle.READABLE
-                else -> throw APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}", pos)
+                else -> throwAPLException(APLIllegalArgumentException("Invalid print style: ${styleName.symbolName}", pos))
             }
             printValue(context, b, style)
             return b
@@ -122,16 +122,16 @@ class ReaddirFunction : APLFunctionDescriptor {
             val result = ArrayList<OutputType>()
             val asArray = value.arrayify()
             if (asArray.dimensions.size != 1) {
-                throw InvalidDimensionsException("Selector must be a scalar or a rank-1 array", pos)
+                throwAPLException(InvalidDimensionsException("Selector must be a scalar or a rank-1 array", pos))
             }
             asArray.iterateMembers { v ->
                 val collapsed = v.collapse()
                 if (collapsed !is APLSymbol) {
-                    throw APLIllegalArgumentException("Selector must be a symbol", pos)
+                    throwAPLException(APLIllegalArgumentException("Selector must be a symbol", pos))
                 }
                 val found =
                     keywordToType[collapsed.value]
-                        ?: throw APLIllegalArgumentException("Illegal selector: ${collapsed.value.nameWithNamespace()}", pos)
+                        ?: throwAPLException(APLIllegalArgumentException("Illegal selector: ${collapsed.value.nameWithNamespace()}", pos))
                 result.add(found)
             }
             return result

@@ -56,7 +56,7 @@ class APLLong(val value: Long) : APLNumber() {
 }
 
 private fun throwComplexComparisonException(pos: Position?): Nothing {
-    throw APLEvalException("Complex numbers does not have a total order", pos)
+    throwAPLException(APLEvalException("Complex numbers does not have a total order", pos))
 }
 
 class APLDouble(val value: Double) : APLNumber() {

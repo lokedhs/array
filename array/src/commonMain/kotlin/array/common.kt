@@ -5,6 +5,8 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause) {
+    var callStack: List<CallStackElement>? = null
+
     fun formattedError(): String {
         val exceptionText = message ?: "no message"
         return if (pos != null) {
@@ -138,7 +140,7 @@ fun assertx(condition: Boolean, message: String = "Assertion error") {
 
 fun ensureValidAxis(axis: Int, dimensions: Dimensions, pos: Position? = null) {
     if (axis < 0 || axis >= dimensions.size) {
-        throw IllegalAxisException(axis, dimensions, pos)
+        throwAPLException(IllegalAxisException(axis, dimensions, pos))
     }
 }
 

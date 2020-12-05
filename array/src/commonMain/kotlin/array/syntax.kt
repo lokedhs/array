@@ -20,7 +20,7 @@ class ConstantSyntaxRule(val symbolName: Symbol) : SyntaxRule {
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (sym, pos) = parser.tokeniser.nextTokenAndPosWithType<Symbol>()
         if (sym !== symbolName) {
-            throw SyntaxRuleMismatch(symbolName, sym, pos)
+            throwAPLException(SyntaxRuleMismatch(symbolName, sym, pos))
         }
     }
 }
@@ -49,7 +49,7 @@ abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : Sy
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (token, pos) = parser.tokeniser.nextTokenWithPosition()
         if (token != startToken()) {
-            throw UnexpectedToken(token, pos)
+            throwAPLException(UnexpectedToken(token, pos))
         }
         val fnDefinition = parser.parseFnDefinition(endToken = endToken(), allocateEnvironment = allocateEnvironment())
         syntaxRuleBindings.add(
@@ -130,7 +130,7 @@ class CallWithVarInstruction(
 private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token: Symbol, pos: Position) {
     val tokeniser = parser.tokeniser
     if (token.namespace !== tokeniser.engine.keywordNamespace) {
-        throw ParseException("Tag is not a keyword: ${token.nameWithNamespace()}", pos)
+        throwAPLException(ParseException("Tag is not a keyword: ${token.nameWithNamespace()}", pos))
     }
     when (token.symbolName) {
         "constant" -> curr.add(ConstantSyntaxRule(tokeniser.nextTokenWithType()))
@@ -149,7 +149,7 @@ private fun processPairs(parser: APLParser): ArrayList<SyntaxRule> {
     parser.tokeniser.iterateUntilToken(CloseParen) { token, pos ->
         when (token) {
             is Symbol -> processPair(parser, rulesList, token, pos)
-            else -> throw UnexpectedToken(token, pos)
+            else -> throwAPLException(UnexpectedToken(token, pos))
         }
     }
     return rulesList

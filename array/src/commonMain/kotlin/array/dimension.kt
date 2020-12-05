@@ -37,7 +37,7 @@ inline class Dimensions(val dimensions: IntArray) {
 
     fun indexFromPosition(p: IntArray, multipliers: IntArray? = null, pos: Position? = null): Int {
         if (p.size != dimensions.size) {
-            throw InvalidDimensionsException("Dimensions does not match", pos)
+            throwAPLException(InvalidDimensionsException("Dimensions does not match", pos))
         }
         val sizes = multipliers ?: multipliers()
         var curr = 0
@@ -45,7 +45,7 @@ inline class Dimensions(val dimensions: IntArray) {
             val pi = p[i]
             val di = dimensions[i]
             if (pi < 0 || pi >= di) {
-                throw APLIndexOutOfBoundsException("Index out of range: pi=$pi, di=$di", pos)
+                throwAPLException(APLIndexOutOfBoundsException("Index out of range: pi=$pi, di=$di", pos))
             }
             curr += pi * sizes[i]
         }
@@ -68,7 +68,7 @@ inline class Dimensions(val dimensions: IntArray) {
 
     fun lastDimension(pos: Position? = null): Int {
         return if (dimensions.isEmpty()) {
-            throw InvalidDimensionsException("Can't take dimension from scalar", pos)
+            throwAPLException(InvalidDimensionsException("Can't take dimension from scalar", pos))
         } else {
             dimensions[dimensions.size - 1]
         }
@@ -76,7 +76,7 @@ inline class Dimensions(val dimensions: IntArray) {
 
     fun lastAxis(pos: Position? = null): Int {
         if (dimensions.isEmpty()) {
-            throw InvalidDimensionsException("No axis available", pos)
+            throwAPLException(InvalidDimensionsException("No axis available", pos))
         } else {
             return dimensions.size - 1
         }

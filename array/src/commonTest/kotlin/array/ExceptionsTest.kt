@@ -1,8 +1,7 @@
 package array
 
 import array.builtins.TagCatch
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.*
 
 class ExceptionsTest : APLTest() {
     @Test
@@ -37,6 +36,30 @@ class ExceptionsTest : APLTest() {
     fun throwWithoutTagHandler() {
         assertFailsWith<TagCatch> {
             parseAPLExpression("2 + 1→'foo")
+        }
+    }
+
+    @Test
+    fun stackTrace() {
+        try {
+            parseAPLExpression(
+                """
+            |∇ foo (x) {
+            |  x[1;2]
+            |}
+            |
+            |∇ bar (y) {
+            |  foo y
+            |}
+            |
+            |bar 1 2 3 4
+            """.trimMargin()
+            )
+            assertTrue(false, "Exception was expected")
+        } catch(ex: APLGenericException) {
+            val callStack = ex.callStack
+            assertNotNull(callStack)
+            assertEquals(2, callStack.size)
         }
     }
 }

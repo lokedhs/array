@@ -180,7 +180,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         if (token is T) {
             return token
         } else {
-            throw UnexpectedToken(token, pos)
+            throwAPLException(UnexpectedToken(token, pos))
         }
     }
 
@@ -189,7 +189,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         if (token is T) {
             return Pair(token, pos)
         } else {
-            throw UnexpectedToken(token, pos)
+            throwAPLException(UnexpectedToken(token, pos))
         }
     }
 
@@ -264,7 +264,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private fun collectChar(): ParsedCharacter {
         val (ch, pos) = content.nextCodepointWithPos()
         if (ch == null) {
-            throw ParseException("Incomplete character in input", pos)
+            throwAPLException(ParseException("Incomplete character in input", pos))
         }
         return ParsedCharacter(ch)
     }

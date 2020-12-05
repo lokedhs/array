@@ -44,7 +44,7 @@ class ArraySum2Args(
 
     init {
         unless(aRank == 0 || bRank == 0 || a.dimensions.compareEquals(b.dimensions)) {
-            throw InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos)
+            throwAPLException(InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos))
         }
         a0 = a.unwrapDeferredValue()
         b0 = b.unwrapDeferredValue()
@@ -107,7 +107,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
                 ensureValidAxis(axisInt, d2, pos)
                 if (d1[0] != d2[axisInt]) {
-                    throw InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}", pos)
+                    throwAPLException(InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}", pos))
                 }
                 val d = d2.remove(axisInt).insert(d2.size - 1, d2[axisInt])
                 val transposeAxis = IntArray(d2.size) { i ->
@@ -124,11 +124,11 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             // dimension of the other arguments across the axis
             val (a1, b1) = when {
                 aDimensions.size == 1 && bDimensions.size == 1 -> {
-                    if (axisInt == 0) Pair(a, b) else throw IllegalAxisException(axisInt, aDimensions, pos)
+                    if (axisInt == 0) Pair(a, b) else throwAPLException(IllegalAxisException(axisInt, aDimensions, pos))
                 }
                 aDimensions.size == 1 -> Pair(computeTransformation(a, aDimensions, bDimensions), b)
                 bDimensions.size == 1 -> Pair(a, computeTransformation(b, bDimensions, aDimensions))
-                else -> throw APLIllegalArgumentException("When specifying an axis, A or B has ro be rank 1", pos)
+                else -> throwAPLException(APLIllegalArgumentException("When specifying an axis, A or B has ro be rank 1", pos))
             }
 
             return ArraySum2Args(fn, a1, b1, pos)
@@ -284,7 +284,7 @@ class NotAPLFunction : APLFunctionDescriptor {
                     if (x.imaginary == 0.0) {
                         notOp(x.real.toLong(), pos)
                     } else {
-                        throw APLIncompatibleDomainsException("Not operation not supported for complex", pos)
+                        throwAPLException(APLIncompatibleDomainsException("Not operation not supported for complex", pos))
                     }
                 }
             )
@@ -294,7 +294,7 @@ class NotAPLFunction : APLFunctionDescriptor {
             val result = when (v) {
                 0L -> 1
                 1L -> 0
-                else -> throw APLIncompatibleDomainsException("Not operation not supported for value", pos)
+                else -> throwAPLException(APLIncompatibleDomainsException("Not operation not supported for value", pos))
             }
             return result.makeAPLNumber()
         }
@@ -305,7 +305,7 @@ class NotAPLFunction : APLFunctionDescriptor {
             }
             val a1 = a.arrayify()
             if (a1.dimensions.size != 1) {
-                throw InvalidDimensionsException("Left argument to without must be a scalar or a 1-dimensional array", pos)
+                throwAPLException(InvalidDimensionsException("Left argument to without must be a scalar or a 1-dimensional array", pos))
             }
             val b1 = b.arrayify()
             val map = HashSet<Any>()

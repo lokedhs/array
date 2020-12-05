@@ -1,6 +1,8 @@
 package array
 
+import java.lang.IllegalStateException
 import java.util.concurrent.atomic.AtomicReferenceArray
+import kotlin.reflect.KClass
 
 actual fun sleepMillis(time: Long) {
     Thread.sleep(time)
@@ -18,6 +20,18 @@ class JvmMPAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
 
 actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return JvmMPAtomicRefArray(size)
+}
+
+actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+    return object : MPThreadLocal<T> {
+        val tl = object : ThreadLocal<T?>() {
+            override fun initialValue(): T? = null
+        }
+
+        override var value: T?
+            get() = tl.get()
+            set(newValue) = tl.set(newValue)
+    }
 }
 
 actual fun Double.formatDouble() = this.toString()

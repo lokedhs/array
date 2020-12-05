@@ -11,7 +11,7 @@ abstract class APLFunction(val pos: Position) {
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue =
         throw Unimplemented2ArgException(pos)
 
-    open fun identityValue(): APLValue = throw APLIncompatibleDomainsException("Function does not have an identity value", pos)
+    open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
@@ -39,6 +39,7 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
  * A function that is declared directly in a { ... } expression.
  */
 class DeclaredFunction(
+    val name: String,
     val instruction: Instruction,
     val leftArgName: EnvironmentBinding,
     val rightArgName: EnvironmentBinding,
@@ -103,7 +104,7 @@ interface APLOperatorTwoArg : APLOperator {
         val (token, pos) = aplParser.tokeniser.nextTokenWithPosition()
         val rightFn = when (token) {
             is Symbol -> {
-                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
+                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throwAPLException(ParseException("Symbol is not a function", pos))
                 fn.make(pos)
             }
             is OpenFnDef -> {
@@ -112,11 +113,11 @@ interface APLOperatorTwoArg : APLOperator {
             is OpenParen -> {
                 val holder = aplParser.parseExprToplevel(CloseParen)
                 if (holder !is ParseResultHolder.FnParseResult) {
-                    throw ParseException("Expected function", pos)
+                    throwAPLException(ParseException("Expected function", pos))
                 }
                 holder.fn
             }
-            else -> throw ParseException("Expected function, got: ${token}", pos)
+            else -> throwAPLException(ParseException("Expected function, got: ${token}", pos))
         }
         return combineFunction(currentFn, rightFn, axis, opPos).make(opPos)
     }
@@ -149,7 +150,11 @@ private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "core"
 private const val DEFAULT_NAMESPACE_NAME = "default"
 
-class CallStackElement(context: RuntimeContext, name: String, pos: Position)
+val threadLocalEngineRef = makeMPThreadLocal(Engine::class)
+
+class CallStackElement(val name: String, val pos: Position) {
+    fun copy() = CallStackElement(name, pos)
+}
 
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
@@ -349,17 +354,19 @@ class Engine {
     fun getOperator(name: Symbol) = operators[resolveAlias(name)]
 
     fun parseAndEval(source: SourceLocation, newContext: Boolean): APLValue {
-        val parser = APLParser(TokenGenerator(this, source))
-        return if (newContext) {
-            withSavedNamespace {
+        withThreadLocalAssigned {
+            val parser = APLParser(TokenGenerator(this, source))
+            return if (newContext) {
+                withSavedNamespace {
+                    val instr = parser.parseValueToplevel(EndOfFile)
+                    val newInstr = RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
+                    newInstr.evalWithNewContext(this)
+                }
+            } else {
                 val instr = parser.parseValueToplevel(EndOfFile)
-                val newInstr = RootEnvironmentInstruction(parser.currentEnvironment(), instr, instr.pos)
-                newInstr.evalWithNewContext(this)
+                rootContext.reinitRootBindings()
+                instr.evalWithContext(rootContext)
             }
-        } else {
-            val instr = parser.parseValueToplevel(EndOfFile)
-            rootContext.reinitRootBindings()
-            instr.evalWithContext(rootContext)
         }
     }
 
@@ -397,7 +404,7 @@ class Engine {
     }
 
     inline fun <T> withCallStackElement(context: RuntimeContext, name: String, pos: Position, fn: () -> T): T {
-        val callStackElement = CallStackElement(context, name, pos)
+        val callStackElement = CallStackElement(name, pos)
         callStack.add(callStackElement)
         val prevSize = callStack.size
         try {
@@ -408,6 +415,24 @@ class Engine {
             assertx(removedElement === callStackElement)
         }
     }
+
+    inline fun <T> withThreadLocalAssigned(fn: () -> T): T {
+        val oldThreadLocal = threadLocalEngineRef.value
+        threadLocalEngineRef.value = this
+        try {
+            return fn()
+        } finally {
+            threadLocalEngineRef.value = oldThreadLocal
+        }
+    }
+}
+
+fun throwAPLException(ex: APLGenericException): Nothing {
+    val engine = threadLocalEngineRef.value
+    if(engine != null) {
+        ex.callStack = engine.callStack.map { e -> e.copy() }
+    }
+    throw ex
 }
 
 expect fun platformInit(engine: Engine)
@@ -480,7 +505,7 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {
             if (expectedLength != actualLength) {
-                throw APLIllegalArgumentException("Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}", pos)
+                throwAPLException(APLIllegalArgumentException("Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}", pos))
             }
         }
 

@@ -143,9 +143,9 @@ class SourceEditor(val client: Client) {
         stage.show()
     }
 
-    fun highlightError(message: String, pos: Position) {
+    fun highlightError(pos: Position, message: String?) {
         try {
-            messageArea.text = message
+            messageArea.text = message ?: ""
             styledArea.caretSelectionBind.moveTo(pos.line, pos.col)
             styledArea.highlightRow(pos.line)
             highlightedRow = pos.line

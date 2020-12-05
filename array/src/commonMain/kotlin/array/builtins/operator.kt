@@ -79,7 +79,7 @@ class RankOperator : APLOperatorValueRightArg {
 
             private fun computeRankFromOpArg(opArg: APLValue): APLValue {
                 fun raiseError(): Nothing {
-                    throw APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos)
+                    throwAPLException(APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos))
                 }
 
                 val d = opArg.dimensions
@@ -106,7 +106,7 @@ class RankOperator : APLOperatorValueRightArg {
                 val opArg = instr.evalWithContext(context)
                 val opArgDimension = opArg.dimensions
                 unless(opArgDimension.size == 0 || (opArgDimension.size == 1 && opArgDimension[0] <= 2)) {
-                    throw InvalidDimensionsException("Operator argument must be scalar or an array with at most 3 elements", pos)
+                    throwAPLException(InvalidDimensionsException("Operator argument must be scalar or an array with at most 3 elements", pos))
                 }
                 return opArg
             }

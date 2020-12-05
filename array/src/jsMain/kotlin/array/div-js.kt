@@ -1,6 +1,7 @@
 package array
 
 import kotlin.js.Date
+import kotlin.reflect.KClass
 
 actual fun sleepMillis(time: Long) {
     TODO("not implemented")
@@ -29,6 +30,12 @@ class JsAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
 
 actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return JsAtomicRefArray(size)
+}
+
+actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+    return object : MPThreadLocal<T> {
+        override var value: T? = null
+    }
 }
 
 actual fun Double.formatDouble(): String {

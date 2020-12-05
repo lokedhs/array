@@ -77,7 +77,7 @@ interface APLValue {
     fun unwrapDeferredValue(): APLValue = this
     fun compareEquals(reference: APLValue): Boolean
     fun compare(reference: APLValue, pos: Position? = null): Int =
-        throw IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}", pos)
+        throwAPLException(IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}", pos))
 
     fun disclose(): APLValue
 
@@ -116,7 +116,7 @@ interface APLValue {
     fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a numeric value (type=${aplValueType.typeName})", pos)
+            throwAPLException(IncompatibleTypeException("Value $this is not a numeric value (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureNumber(pos)
         }
@@ -125,7 +125,7 @@ interface APLValue {
     fun ensureSymbol(pos: Position? = null): APLSymbol {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a symbol (type=${aplValueType.typeName})", pos)
+            throwAPLException(IncompatibleTypeException("Value $this is not a symbol (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureSymbol(pos)
         }
@@ -134,7 +134,7 @@ interface APLValue {
     fun ensureList(pos: Position? = null): APLList {
         val v = unwrapDeferredValue()
         if (v == this) {
-            throw IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos)
+            throwAPLException(IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureList(pos)
         }
@@ -278,10 +278,10 @@ abstract class APLArray : APLValue {
             }
             // Until we have a proper ordering of all types, we have to prevent comparing scalars to anything which is not a scalar
             isScalar() && !reference.isScalar() -> {
-                throw IncompatibleTypeException("Comparison is not supported using these types", pos)
+                throwAPLException(IncompatibleTypeException("Comparison is not supported using these types", pos))
             }
             !isScalar() && reference.isScalar() -> {
-                throw IncompatibleTypeException("Comparison is not supported using these types", pos)
+                throwAPLException(IncompatibleTypeException("Comparison is not supported using these types", pos))
             }
             else -> compareAPLArrays(this, reference)
         }
@@ -524,14 +524,14 @@ fun isStringValue(value: APLValue): Boolean {
 fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
     val dimensions = array.dimensions
     if (dimensions.size != 1) {
-        throw IncompatibleTypeException("Argument is not a string", pos)
+        throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
     }
 
     val buf = StringBuilder()
     for (i in 0 until array.size) {
         val v = array.valueAt(i)
         if (v !is APLChar) {
-            throw IncompatibleTypeException("Argument is not a string", pos)
+            throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
         }
         buf.append(v.asString())
     }
@@ -595,7 +595,7 @@ class APLChar(val value: Int) : APLSingleValue() {
         if (reference is APLChar) {
             return value.compareTo(reference.value)
         } else {
-            throw IncompatibleTypeException("Chars must be compared to chars", pos)
+            throwAPLException(IncompatibleTypeException("Chars must be compared to chars", pos))
         }
     }
 
@@ -653,7 +653,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
         if (reference is APLSymbol) {
             return value.compareTo(reference.value)
         } else {
-            throw IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}", pos)
+            throwAPLException(IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}", pos))
         }
     }
 

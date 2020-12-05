@@ -213,11 +213,11 @@ class APLParser(val tokeniser: TokenGenerator) {
     private fun processAssignment(pos: Position, leftArgs: List<Instruction>): ParseResultHolder.InstrParseResult {
         // Ensure that the left argument to leftarrow is a single symbol
         unless(leftArgs.size == 1) {
-            throw IncompatibleTypeParseException("Can only assign to a single variable", pos)
+            throwAPLException(IncompatibleTypeParseException("Can only assign to a single variable", pos))
         }
         val dest = leftArgs[0]
         if (dest !is VariableRef) {
-            throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable", pos)
+            throwAPLException(IncompatibleTypeParseException("Attempt to assign to a type which is not a variable", pos))
         }
         return when (val holder = parseValue()) {
             is ParseResultHolder.InstrParseResult -> ParseResultHolder.InstrParseResult(
@@ -226,7 +226,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                     holder.instr,
                     pos), holder.lastToken, pos)
             is ParseResultHolder.FnParseResult -> throw IllegalContextForFunction(holder.pos)
-            is ParseResultHolder.EmptyParseResult -> throw ParseException("No right-side value in assignment instruction", pos)
+            is ParseResultHolder.EmptyParseResult -> throwAPLException(ParseException("No right-side value in assignment instruction", pos))
         }
     }
 
@@ -243,7 +243,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         when (token) {
             is CloseParen -> return result
             is Symbol -> result.add(token)
-            else -> throw ParseException("Token is not a symbol: ${token}", pos)
+            else -> throwAPLException(ParseException("Token is not a symbol: ${token}", pos))
         }
         while (true) {
             val (newToken, newPos) = tokeniser.nextTokenWithPosition()
@@ -262,7 +262,7 @@ class APLParser(val tokeniser: TokenGenerator) {
 
     private fun processFunctionDefinition(pos: Position, leftArgs: List<Instruction>): Instruction {
         if (leftArgs.isNotEmpty()) {
-            throw ParseException("Function definition with non-null left argument", pos)
+            throwAPLException(ParseException("Function definition with non-null left argument", pos))
         }
         val definedUserFunction = parseUserDefinedFn(pos)
         registerDefinedUserFunction(definedUserFunction)
@@ -282,7 +282,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         fun checkArgs(list: List<Symbol>) {
             val duplicated = list.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
             if (duplicated.isNotEmpty()) {
-                throw ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos)
+                throwAPLException(ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos))
             }
         }
         checkArgs(leftFnArgs)
@@ -294,7 +294,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         withEnvironment {
             val leftFnArgs1 = leftFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
             val rightFnArgs1 = rightFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
-            val inProcessUserFunction = UserFunction(leftFnArgs1, rightFnArgs1, DummyInstr(pos), currentEnvironment())
+            val inProcessUserFunction = UserFunction(name, leftFnArgs1, rightFnArgs1, DummyInstr(pos), currentEnvironment())
             currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
             val instr = parseValueToplevel(CloseFnDef)
             inProcessUserFunction.instr = instr
@@ -317,7 +317,7 @@ class APLParser(val tokeniser: TokenGenerator) {
 
         fun processIndex(pos: Position) {
             if (leftArgs.isEmpty()) {
-                throw ParseException("Index referencing without argument", pos)
+                throwAPLException(ParseException("Index referencing without argument", pos))
             }
             val element = leftArgs.removeLast()
             val index = parseValueToplevel(CloseBracket)
@@ -352,7 +352,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is OpenParen -> when (val expr = parseExprToplevel(CloseParen)) {
                     is ParseResultHolder.InstrParseResult -> leftArgs.add(expr.instr)
                     is ParseResultHolder.FnParseResult -> return processFn(expr.fn, leftArgs)
-                    is ParseResultHolder.EmptyParseResult -> throw ParseException("Empty expression", pos)
+                    is ParseResultHolder.EmptyParseResult -> throwAPLException(ParseException("Empty expression", pos))
                 }
                 is OpenFnDef -> return processFn(parseFnDefinition().make(pos), leftArgs)
                 is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
@@ -373,7 +373,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is IncludeToken -> leftArgs.add(processInclude(pos))
                 is LocalToken -> processLocal()
                 is OpenBracket -> processIndex(pos)
-                else -> throw UnexpectedToken(token, pos)
+                else -> throwAPLException(UnexpectedToken(token, pos))
             }
         }
     }
@@ -399,7 +399,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 }
             }
         } catch (e: MPFileException) {
-            throw ParseException("Error loading file: ${e.message}", pos)
+            throwAPLException(ParseException("Error loading file: ${e.message}", pos))
         }
     }
 
@@ -426,7 +426,7 @@ class APLParser(val tokeniser: TokenGenerator) {
             when (token) {
                 is Symbol -> fn(token)
                 is CloseParen -> break
-                else -> throw UnexpectedToken(token, pos)
+                else -> throwAPLException(UnexpectedToken(token, pos))
             }
         }
     }
@@ -472,13 +472,13 @@ class APLParser(val tokeniser: TokenGenerator) {
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             is Symbol -> {
-                val fnDefinition = lookupFunction(token) ?: throw ParseException("Symbol is not a valid function", pos)
+                val fnDefinition = lookupFunction(token) ?: throwAPLException(ParseException("Symbol is not a valid function", pos))
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             is OpenParen -> {
                 val holder = parseExprToplevel(CloseParen)
                 if (holder !is ParseResultHolder.FnParseResult) {
-                    throw ParseException("Argument is not a function", pos)
+                    throwAPLException(ParseException("Argument is not a function", pos))
                 }
                 EvalLambdaFnx(holder.fn, pos)
             }
@@ -498,7 +498,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
                 val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
                 val instruction = parseValueToplevel(endToken)
-                DeclaredFunction(instruction, leftBinding, rightBinding, currentEnvironment())
+                DeclaredFunction("<unnamed>", instruction, leftBinding, rightBinding, currentEnvironment())
             }
         } else {
             val instruction = parseValueToplevel(endToken)

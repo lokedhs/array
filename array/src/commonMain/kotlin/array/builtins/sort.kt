@@ -65,7 +65,7 @@ abstract class GradeFunction(pos: Position) : NoAxisAPLFunction(pos) {
 
         // Scalars can't be sorted
         if (aDimensions.size == 0) {
-            throw InvalidDimensionsException("Scalars cannot be sorted", pos)
+            throwAPLException(InvalidDimensionsException("Scalars cannot be sorted", pos))
         }
 
         // If the value has a single element along its first axis, return a simple zero

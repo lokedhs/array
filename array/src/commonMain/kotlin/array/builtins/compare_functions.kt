@@ -138,9 +138,9 @@ inline fun numericRelationOperation(
     fnLong: (al: Long, bl: Long) -> APLValue,
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
-    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ -> throw IncompatibleTypeException("Incompatible argument types", pos) },
+    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ -> throwAPLException(IncompatibleTypeException("Incompatible argument types", pos)) },
     fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue) = { _, _ ->
-        throw IncompatibleTypeException("Incompatible argument types", pos)
+        throwAPLException(IncompatibleTypeException("Incompatible argument types", pos))
     }
 ): APLValue {
     return when {
@@ -164,13 +164,13 @@ inline fun singleArgNumericRelationOperation(
     fnLong: (a: Long) -> APLValue,
     fnDouble: (a: Double) -> APLValue,
     fnComplex: (a: Complex) -> APLValue,
-    fnChar: ((a: Int) -> APLValue) = { _ -> throw IncompatibleTypeException("Incompatible argument types", pos) }
+    fnChar: ((a: Int) -> APLValue) = { _ -> throwAPLException(IncompatibleTypeException("Incompatible argument types", pos)) }
 ): APLValue {
     return when (a) {
         is APLLong -> fnLong(a.asLong())
         is APLDouble -> fnDouble(a.asDouble())
         is APLComplex -> fnComplex(a.asComplex())
         is APLChar -> fnChar(a.value)
-        else -> throw IncompatibleTypeException("Incompatible argument types", pos)
+        else -> throwAPLException(IncompatibleTypeException("Incompatible argument types", pos))
     }
 }

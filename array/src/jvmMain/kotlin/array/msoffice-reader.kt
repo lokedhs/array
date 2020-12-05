@@ -83,13 +83,13 @@ class LoadExcelFileFunction : APLFunctionDescriptor {
 
         private fun arrayToString(a: APLValue): String {
             if (a.rank != 1) {
-                throw InvalidDimensionsException("String must be rank 1", pos)
+                throwAPLException(InvalidDimensionsException("String must be rank 1", pos))
             }
             val buf = StringBuilder()
             for (i in 0 until a.size) {
                 val charValue = a.valueAt(i)
                 if (charValue !is APLChar) {
-                    throw IncompatibleTypeException("Value at position $i is not a character", pos)
+                    throwAPLException(IncompatibleTypeException("Value at position $i is not a character", pos))
                 }
                 buf.addCodepoint(charValue.value)
             }

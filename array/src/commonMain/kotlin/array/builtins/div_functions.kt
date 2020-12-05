@@ -75,7 +75,7 @@ class CatchOperator : APLOperatorOneArg {
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     val dimensions = a.dimensions
                     unless(dimensions.size == 2 && dimensions[1] == 2) {
-                        throw APLIllegalArgumentException("Catch argument must be a two-dimensional array with two columns", pos)
+                        throwAPLException(APLIllegalArgumentException("Catch argument must be a two-dimensional array with two columns", pos))
                     }
                     try {
                         return fn.eval1Arg(context, APLNullValue(), null)
@@ -88,7 +88,7 @@ class CatchOperator : APLOperatorOneArg {
                                 val handlerFunction =
                                     a.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, 1), multipliers)).unwrapDeferredValue()
                                 if (handlerFunction !is LambdaValue) {
-                                    throw APLIllegalArgumentException("The handler is not callable, this is currently an error.", pos)
+                                    throwAPLException(APLIllegalArgumentException("The handler is not callable, this is currently an error.", pos))
                                 }
                                 return handlerFunction.makeClosure().eval2Arg(context, e.data, sentTag, null)
                             }
@@ -111,10 +111,10 @@ class LabelsFunction : APLFunctionDescriptor {
 
                 val aDimensions = a.dimensions
                 if (aDimensions.size != 1) {
-                    throw InvalidDimensionsException("Left argument must be an array of labels", pos)
+                    throwAPLException(InvalidDimensionsException("Left argument must be an array of labels", pos))
                 }
                 if (aDimensions[0] != bDimensions[axisInt]) {
-                    throw InvalidDimensionsException("Label list has incorrect length", pos)
+                    throwAPLException(InvalidDimensionsException("Label list has incorrect length", pos))
                 }
                 val extraLabels = ArrayList<List<AxisLabel?>?>(bDimensions.size)
                 repeat(bDimensions.size) { i ->
@@ -123,7 +123,7 @@ class LabelsFunction : APLFunctionDescriptor {
                         repeat(bDimensions[axisInt]) { i2 ->
                             val value = a.valueAt(i2)
                             if (value.dimensions.size != 1) {
-                                throw InvalidDimensionsException("Label should be a single-dimensional array", pos)
+                                throwAPLException(InvalidDimensionsException("Label should be a single-dimensional array", pos))
                             }
                             labelsList.add(if (value.dimensions[0] == 0) null else AxisLabel(arrayAsStringValue(value)))
                         }
@@ -135,7 +135,7 @@ class LabelsFunction : APLFunctionDescriptor {
                 }
                 return LabelledArray.make(b, extraLabels)
             } else {
-                throw APLIncompatibleDomainsException("Unable to set labels on non-array instances", pos)
+                throwAPLException(APLIncompatibleDomainsException("Unable to set labels on non-array instances", pos))
             }
         }
     }
@@ -147,7 +147,7 @@ class TimeMillisFunction : APLFunctionDescriptor {
     class TimeMillisFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             unless(a.ensureNumber(pos).asInt() == 0) {
-                throw APLIllegalArgumentException("Argument to timeMillis must be 0", pos)
+                throwAPLException(APLIllegalArgumentException("Argument to timeMillis must be 0", pos))
             }
             return currentTime().makeAPLNumber()
         }
