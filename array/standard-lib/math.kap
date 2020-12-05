@@ -1,0 +1,66 @@
+⍝ Implementation here:
+⍝ https://gitlab.com/n9n/apl/-/commit/af428f5713b2ddd5c928806168316b6fb3b79132
+
+∇ norm (B) {
+  (B+.×+B)*0.5
+}
+
+∇ QR (B) {
+  n←(⍴B)[1]
+  if (n ≤ 1) {
+    t ← norm ,B
+    (B÷t) (⍪t)
+  } else {
+    m ← ⌈n÷2
+    a0 ← ((1↑⍴B),m) ↑ B
+    a1 ← (0,m) ↓ B
+    t ← QR a0
+    q0 ← ↑t[0]
+    r0 ← ↑t[1]
+    c ← (+⍉q0) +.× a1
+    tx ← QR a1-q0+.×c
+    q1 ← ↑tx[0]
+    r1 ← ↑tx[1]
+    (q0,q1) ((r0,c)⍪((⌊n÷2),-n)↑r1)
+  }
+}
+
+∇ Rinv (B) {
+  n ← 1↑⍴B
+  if (n = 1) {
+    ÷B
+  } else {
+    m ← ⌈n÷2
+    ai ← Rinv (m,m)↑B
+    di ← Rinv (m,m)↓B
+    b ← (m,m-n)↑B
+    bx ← -ai+.×b+.×di
+    (ai,bx)⍪((⌊n÷2),-n)↑di    
+  }
+}
+
+
+∇ (A) ⌹ (B) {
+  if (isLocallyBound('A)) {
+    (⌹B)+.×A
+  } else {
+    rankB ← ↑⍴⍴B
+    if (0 = rankB) {
+      ÷B
+    } else {
+      if (1 = rankB) {
+        ⌹ ⍪B
+      } else {
+        if ((2 ≠ rankB) ∨ (0∊≥/⍴B)) {
+          →"error"
+        }
+        t ← QR B
+        Q ← ↑t[0]
+        R ← ↑t[1]
+        (Rinv R) +.× +⍉Q
+      }
+    }
+  }
+}
+
+export(⌹)

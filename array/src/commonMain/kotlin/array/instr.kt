@@ -179,7 +179,9 @@ class UserFunction(
             val inner = context.link(env).apply {
                 assignArgs(rightFnArgs, a, pos)
             }
-            return instr.evalWithContext(inner)
+            return inner.withCallStackElement("userfunction1", pos) {
+                instr.evalWithContext(inner)
+            }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
@@ -187,7 +189,9 @@ class UserFunction(
                 assignArgs(leftFnArgs, a, pos)
                 assignArgs(rightFnArgs, b, pos)
             }
-            return instr.evalWithContext(inner)
+            return inner.withCallStackElement("userfunction2", pos) {
+                instr.evalWithContext(inner)
+            }
         }
     }
 

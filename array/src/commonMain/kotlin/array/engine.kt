@@ -48,14 +48,18 @@ class DeclaredFunction(
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             val localContext = context.link(env)
             localContext.setVar(rightArgName, a)
-            return instruction.evalWithContext(localContext)
+            return localContext.withCallStackElement("declaredFunction1", pos) {
+                instruction.evalWithContext(localContext)
+            }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
             val localContext = context.link(env)
             localContext.setVar(leftArgName, a)
             localContext.setVar(rightArgName, b)
-            return instruction.evalWithContext(localContext)
+            return localContext.withCallStackElement("declaredFunction2", pos) {
+                instruction.evalWithContext(localContext)
+            }
         }
     }
 
@@ -107,7 +111,7 @@ interface APLOperatorTwoArg : APLOperator {
             }
             is OpenParen -> {
                 val holder = aplParser.parseExprToplevel(CloseParen)
-                if(holder !is ParseResultHolder.FnParseResult) {
+                if (holder !is ParseResultHolder.FnParseResult) {
                     throw ParseException("Expected function", pos)
                 }
                 holder.fn
@@ -145,6 +149,8 @@ private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "core"
 private const val DEFAULT_NAMESPACE_NAME = "default"
 
+class CallStackElement(context: RuntimeContext, name: String, pos: Position)
+
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
@@ -161,6 +167,7 @@ class Engine {
     val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
     val initialNamespace = makeNamespace(DEFAULT_NAMESPACE_NAME)
     var currentNamespace = initialNamespace
+    val callStack = ArrayList<CallStackElement>()
 
     init {
         // Intern the names of all the types in the core namespace.
@@ -388,6 +395,19 @@ class Engine {
             currentNamespace = oldNamespace
         }
     }
+
+    inline fun <T> withCallStackElement(context: RuntimeContext, name: String, pos: Position, fn: () -> T): T {
+        val callStackElement = CallStackElement(context, name, pos)
+        callStack.add(callStackElement)
+        val prevSize = callStack.size
+        try {
+            return fn()
+        } finally {
+            assertx(prevSize == callStack.size)
+            val removedElement = callStack.removeLast()
+            assertx(removedElement === callStackElement)
+        }
+    }
 }
 
 expect fun platformInit(engine: Engine)
@@ -474,6 +494,10 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
             checkLength(args.size, 1)
             setVar(args[0], a)
         }
+    }
+
+    inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
+        return engine.withCallStackElement(this, name, pos, fn)
     }
 }
 

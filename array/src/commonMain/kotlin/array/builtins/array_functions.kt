@@ -714,7 +714,7 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos)
 }
 
-class TakeArrayValue(val selection: IntArray, val source: APLValue) : APLArray() {
+class TakeArrayValue(val selection: IntArray, val source: APLValue, val pos: Position? = null) : APLArray() {
     override val dimensions = Dimensions(selection.map { v -> v.absoluteValue }.toIntArray())
     private val sourceDimensions = source.dimensions
 
@@ -729,7 +729,7 @@ class TakeArrayValue(val selection: IntArray, val source: APLValue) : APLArray()
                 sourceDimensions[i] + d + v
             }
         }
-        return source.valueAt(sourceDimensions.indexFromPosition(adjusted))
+        return source.valueAt(sourceDimensions.indexFromPosition(adjusted, null, pos))
     }
 }
 
@@ -752,7 +752,7 @@ class TakeAPLFunction : APLFunctionDescriptor {
             ) {
                 throw InvalidDimensionsException("Size of A must match the rank of B", pos)
             }
-            return TakeArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b)
+            return TakeArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b, pos)
         }
     }
 
