@@ -132,14 +132,17 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     }
                     val aDimensions = a.dimensions
                     val bDimensions = b.dimensions
+
+                    fun scalarOrVector(d: Dimensions) = d.size == 0 || (d.size == 1 && d[0] == 1)
+
                     val a1 = when {
-                        a.size == 1 && b.size == 1 -> a.arrayify()
-                        a.size == 1 -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
+                        scalarOrVector(aDimensions) && scalarOrVector(bDimensions) -> a.arrayify()
+                        scalarOrVector(aDimensions) -> ConstantArray(dimensionsOfSize(bDimensions[0]), a.singleValueOrError())
                         else -> a
                     }
                     val b1 = when {
-                        a.size == 1 && b.size == 1 -> b.arrayify()
-                        b.size == 1 -> ConstantArray(
+                        scalarOrVector(aDimensions) && scalarOrVector(bDimensions) -> b.arrayify()
+                        scalarOrVector(bDimensions) -> ConstantArray(
                             dimensionsOfSize(aDimensions[aDimensions.size - 1]),
                             b.singleValueOrError()
                         )

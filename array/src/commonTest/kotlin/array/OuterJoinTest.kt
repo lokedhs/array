@@ -155,7 +155,6 @@ class OuterJoinTest : APLTest() {
         }
     }
 
-    @Ignore
     @Test
     fun innerJoinWithLength1Arg() {
         parseAPLExpression("(4 1 ⍴ 20 30 40 50) +.× (1 1 ⍴ 9)").let { result ->

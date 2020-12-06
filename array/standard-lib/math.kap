@@ -16,7 +16,6 @@ namespace("kap")
 }
 
 ∇ QR (B) {
-  p ("start of QR" ; B)
   n←(⍴B)[1]
   if (n ≤ 1) {
     t ← norm ,B
@@ -25,14 +24,10 @@ namespace("kap")
     m ← ⌈n÷2
     a0 ← ((1↑⍴B),m) ↑ B
     a1 ← (0,m) ↓ B
-    file:println "before recurse"
     t ← QR a0
-    file:println "after recurse"
     q0 ← ↑t[0]
     r0 ← ↑t[1]
-    p ("q0";q0) ◊ p ("r0";r0)
     c ← (+⍉q0) +.× a1
-    p ("a1" ; a1) ◊ p ("prod" ; q0+.×c)
     tx ← QR a1-q0+.×c
     q1 ← ↑tx[0]
     r1 ← ↑tx[1]

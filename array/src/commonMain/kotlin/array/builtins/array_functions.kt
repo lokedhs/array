@@ -703,7 +703,10 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
             }
             val bd = b.dimensions
             if (ad[0] != bd.size) {
-                throwAPLException(InvalidDimensionsException("Number of values in position argument must match the number of dimensions", pos))
+                throwAPLException(
+                    InvalidDimensionsException(
+                        "Number of values in position argument must match the number of dimensions",
+                        pos))
             }
             val posList = IntArray(ad[0]) { i -> aFixed.valueAt(i).ensureNumber(pos).asInt() }
             val p = bd.indexFromPosition(posList)
@@ -716,10 +719,25 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
 
 class TakeArrayValue(val selection: IntArray, val source: APLValue, val pos: Position? = null) : APLArray() {
     override val dimensions = Dimensions(selection.map { v -> v.absoluteValue }.toIntArray())
+    private val multipliers = dimensions.multipliers()
     private val sourceDimensions = source.dimensions
+    private val sourceMultipliers = sourceDimensions.multipliers()
+
+    private fun sourceOrDefaultWithPosition(p: IntArray): APLValue {
+        var curr = 0
+        for (i in p.indices) {
+            val pi = p[i]
+            val di = sourceDimensions[i]
+            if (pi < 0 || pi >= di) {
+                return source.defaultValue()
+            }
+            curr += pi * sourceMultipliers[i]
+        }
+        return source.valueAt(curr)
+    }
 
     override fun valueAt(p: Int): APLValue {
-        val coords = dimensions.positionFromIndex(p)
+        val coords = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
         val adjusted = IntArray(coords.size) { i ->
             val d = selection[i]
             val v = coords[i]
@@ -729,7 +747,7 @@ class TakeArrayValue(val selection: IntArray, val source: APLValue, val pos: Pos
                 sourceDimensions[i] + d + v
             }
         }
-        return source.valueAt(sourceDimensions.indexFromPosition(adjusted, null, pos))
+        return sourceOrDefaultWithPosition(adjusted)
     }
 }
 
@@ -747,9 +765,7 @@ class TakeAPLFunction : APLFunctionDescriptor {
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val aDimensions = a.dimensions
-            if (!((aDimensions.size == 0 && b.rank == 1) ||
-                        (aDimensions.size == 1 && aDimensions[0] == b.rank))
-            ) {
+            if (!((aDimensions.size == 0 && b.rank == 1) || (aDimensions.size == 1 && aDimensions[0] == b.rank))) {
                 throwAPLException(InvalidDimensionsException("Size of A must match the rank of B", pos))
             }
             return TakeArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b, pos)
@@ -1348,14 +1364,14 @@ class UniqueFunction : APLFunctionDescriptor {
     class UniqueFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val a1 = a.arrayify().collapse()
-            if(a1.rank != 1) {
+            if (a1.rank != 1) {
                 throwAPLException(InvalidDimensionsException("Argument to unique must be a scalar or a 1-dimensional array", pos))
             }
             val map = HashSet<APLValue.APLValueKey>()
             val result = ArrayList<APLValue>()
             a1.iterateMembers { v ->
                 val key = v.makeKey()
-                if(!map.contains(key)) {
+                if (!map.contains(key)) {
                     result.add(v)
                     map.add(key)
                 }
