@@ -96,7 +96,34 @@ class FlowControlTest : APLTest() {
         assertSimpleNumber(20, result1)
     }
 
-    @Ignore
+    @Test
+    fun testIfWithArrayArgument() {
+        parseAPLExpression("if (,1) { 10 } else { 20 }", true).let { result ->
+            assertSimpleNumber(10, result)
+        }
+    }
+
+    @Test
+    fun testIfWithArrayArgumentFalse() {
+        parseAPLExpression("if (,0) { 10 } else { 20 }", true).let { result ->
+            assertSimpleNumber(20, result)
+        }
+    }
+
+    @Test
+    fun testIfWithArrayArgumentMultiValue() {
+        parseAPLExpression("if (1 1 1 1) { 10 } else { 20 }", true).let { result ->
+            assertSimpleNumber(20, result)
+        }
+    }
+
+    @Test
+    fun testIfWithArrayArgumentMultiValueFalse() {
+        parseAPLExpression("if (0 0 0 0 0 0 0) { 10 } else { 20 }", true).let { result ->
+            assertSimpleNumber(20, result)
+        }
+    }
+
     @Test
     fun recursionTest() {
         val (result, out) = parseAPLExpressionWithOutput(

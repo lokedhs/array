@@ -1,7 +1,7 @@
 namespace("kap")
 
 defsyntax if (:value cond :nfunction thenStatement :optional (:constant else :nfunction elseStatement)) {
-  ⍞((cond ≡ 1) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
+  ⍞(((cond ≡ 1) ∨ ((1=≢cond) ∧ (↑cond) ≡ 1)) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
 }
 
 export(if else)

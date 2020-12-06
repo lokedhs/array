@@ -403,7 +403,10 @@ class Engine {
         }
     }
 
-    inline fun <T> withCallStackElement(context: RuntimeContext, name: String, pos: Position, fn: () -> T): T {
+    inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
+        if(callStack.size >= 100) {
+            throwAPLException(APLEvalException("Stack overflow", pos))
+        }
         val callStackElement = CallStackElement(name, pos)
         callStack.add(callStackElement)
         val prevSize = callStack.size
@@ -522,7 +525,7 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     }
 
     inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
-        return engine.withCallStackElement(this, name, pos, fn)
+        return engine.withCallStackElement(name, pos, fn)
     }
 }
 

@@ -1,5 +1,6 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -151,6 +152,15 @@ class OuterJoinTest : APLTest() {
                     11000, 13500, 16000, 18500,
                     21000, 23500, 26000, 28500
                 ), result)
+        }
+    }
+
+    @Ignore
+    @Test
+    fun innerJoinWithLength1Arg() {
+        parseAPLExpression("(4 1 ⍴ 20 30 40 50) +.× (1 1 ⍴ 9)").let { result ->
+            assertDimension(dimensionsOfSize(4, 1), result)
+            assertArrayContent(arrayOf(180, 270, 360, 450), result)
         }
     }
 }
