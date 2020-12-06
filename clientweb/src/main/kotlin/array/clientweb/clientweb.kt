@@ -20,7 +20,8 @@ fun loadLibraries() {
         "standard-lib/standard-lib.kap",
         "standard-lib/structure.kap",
         "standard-lib/output.kap",
-        "standard-lib/time.kap")
+        "standard-lib/time.kap",
+        "standard-lib/math.kap")
 }
 
 private fun loadLibFiles(vararg names: String) {
