@@ -137,16 +137,16 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
         }
     }
 
-    open fun combine1Arg(a: APLSingleValue): APLValue = throw Unimplemented1ArgException(pos)
-    open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = throw Unimplemented2ArgException(pos)
+    open fun combine1Arg(a: APLSingleValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
+    open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
 }
 
 abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
     override fun combine1Arg(a: APLSingleValue): APLValue = numberCombine1Arg(a.ensureNumber(pos))
     override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(pos), b.ensureNumber())
 
-    open fun numberCombine1Arg(a: APLNumber): APLValue = throw Unimplemented1ArgException(pos)
-    open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = throw Unimplemented2ArgException(pos)
+    open fun numberCombine1Arg(a: APLNumber): APLValue = throwAPLException(Unimplemented1ArgException(pos))
+    open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = throwAPLException(Unimplemented2ArgException(pos))
 }
 
 class AddAPLFunction : APLFunctionDescriptor {
@@ -301,7 +301,7 @@ class NotAPLFunction : APLFunctionDescriptor {
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
             if (axis != null) {
-                throw AxisNotSupported(pos)
+                throwAPLException(AxisNotSupported(pos))
             }
             val a1 = a.arrayify()
             if (a1.dimensions.size != 1) {

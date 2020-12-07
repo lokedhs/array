@@ -20,7 +20,7 @@ class ConstantSyntaxRule(val symbolName: Symbol) : SyntaxRule {
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (sym, pos) = parser.tokeniser.nextTokenAndPosWithType<Symbol>()
         if (sym !== symbolName) {
-            throwAPLException(SyntaxRuleMismatch(symbolName, sym, pos))
+            throw SyntaxRuleMismatch(symbolName, sym, pos)
         }
     }
 }
@@ -49,7 +49,7 @@ abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : Sy
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         val (token, pos) = parser.tokeniser.nextTokenWithPosition()
         if (token != startToken()) {
-            throwAPLException(UnexpectedToken(token, pos))
+            throw UnexpectedToken(token, pos)
         }
         val fnDefinition = parser.parseFnDefinition(endToken = endToken(), allocateEnvironment = allocateEnvironment())
         syntaxRuleBindings.add(
@@ -66,7 +66,7 @@ abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : Sy
 /**
  * Syntax rule that describes a function delimited by braces and which allocates a new environment.
  */
-class BFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+class BFunctionSyntaxRule(variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenFnDef
     override fun endToken() = CloseFnDef
     override fun allocateEnvironment() = true
@@ -75,7 +75,7 @@ class BFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule
 /**
  * Syntax rule that describes a function delimited by braces and does not allocate a new environment.
  */
-class NFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+class NFunctionSyntaxRule(variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenFnDef
     override fun endToken() = CloseFnDef
     override fun allocateEnvironment() = false
@@ -84,7 +84,7 @@ class NFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule
 /**
  * Syntax rule that describes a function delimited by parentheses and which allocates a new environment.
  */
-class ExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+class ExprFunctionSyntaxRule(variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenParen
     override fun endToken() = CloseParen
     override fun allocateEnvironment() = true
@@ -93,7 +93,7 @@ class ExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxR
 /**
  * Syntax rule that describes a function delimited by parentheses and does not allocate a new environment
  */
-class NExprFunctionSyntaxRule(val variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
+class NExprFunctionSyntaxRule(variable: EnvironmentBinding) : FunctionSyntaxRule(variable) {
     override fun startToken() = OpenParen
     override fun endToken() = CloseParen
     override fun allocateEnvironment() = false
@@ -130,7 +130,7 @@ class CallWithVarInstruction(
 private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token: Symbol, pos: Position) {
     val tokeniser = parser.tokeniser
     if (token.namespace !== tokeniser.engine.keywordNamespace) {
-        throwAPLException(ParseException("Tag is not a keyword: ${token.nameWithNamespace()}", pos))
+        throw ParseException("Tag is not a keyword: ${token.nameWithNamespace()}", pos)
     }
     when (token.symbolName) {
         "constant" -> curr.add(ConstantSyntaxRule(tokeniser.nextTokenWithType()))
@@ -149,7 +149,7 @@ private fun processPairs(parser: APLParser): ArrayList<SyntaxRule> {
     parser.tokeniser.iterateUntilToken(CloseParen) { token, pos ->
         when (token) {
             is Symbol -> processPair(parser, rulesList, token, pos)
-            else -> throwAPLException(UnexpectedToken(token, pos))
+            else -> throw UnexpectedToken(token, pos)
         }
     }
     return rulesList

@@ -15,7 +15,7 @@ import javafx.stage.Stage
 import javafx.util.Callback
 import java.util.*
 
-class FunctionListWindow private constructor(val renderContext: ClientRenderContext, val engine: Engine) {
+class FunctionListWindow private constructor(val renderContext: ClientRenderContext, engine: Engine) {
     private val stage = Stage()
     private var functionListPanel: FunctionListPanel
 

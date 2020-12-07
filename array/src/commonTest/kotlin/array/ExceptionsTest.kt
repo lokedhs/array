@@ -56,7 +56,7 @@ class ExceptionsTest : APLTest() {
             """.trimMargin()
             )
             assertTrue(false, "Exception was expected")
-        } catch(ex: APLGenericException) {
+        } catch (ex: APLEvalException) {
             val callStack = ex.callStack
             assertNotNull(callStack)
             assertEquals(2, callStack.size)

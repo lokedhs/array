@@ -17,7 +17,7 @@ abstract class APLNumber : APLSingleValue() {
         return if (l >= Int.MIN_VALUE && l <= Int.MAX_VALUE) {
             l.toInt()
         } else {
-            throw IncompatibleTypeException("Value does not fit in an int: $l")
+            throwAPLException(IncompatibleTypeException("Value does not fit in an int: $l"))
         }
     }
 
@@ -108,14 +108,14 @@ class APLComplex(val value: Complex) : APLNumber() {
 
     override fun asDouble(): Double {
         if (value.imaginary != 0.0) {
-            throw NumberComplexException(value)
+            throwAPLException(NumberComplexException(value))
         }
         return value.real
     }
 
     override fun asLong(): Long {
         if (value.imaginary != 0.0) {
-            throw NumberComplexException(value)
+            throwAPLException(NumberComplexException(value))
         }
         return value.real.toLong()
     }

@@ -7,9 +7,9 @@ interface APLFunctionDescriptor {
 }
 
 abstract class APLFunction(val pos: Position) {
-    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throw Unimplemented1ArgException(pos)
+    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throwAPLException(Unimplemented1ArgException(pos))
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue =
-        throw Unimplemented2ArgException(pos)
+        throwAPLException(Unimplemented2ArgException(pos))
 
     open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
 }
@@ -17,22 +17,22 @@ abstract class APLFunction(val pos: Position) {
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
         if (axis != null) {
-            throw AxisNotSupported(pos)
+            throwAPLException(AxisNotSupported(pos))
         }
         return eval1Arg(context, a)
     }
 
-    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throw Unimplemented1ArgException(pos)
+    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
 
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         if (axis != null) {
-            throw AxisNotSupported(pos)
+            throwAPLException(AxisNotSupported(pos))
         }
         return eval2Arg(context, a, b)
     }
 
-    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throw Unimplemented2ArgException(pos)
+    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
 }
 
 /**
@@ -104,7 +104,7 @@ interface APLOperatorTwoArg : APLOperator {
         val (token, pos) = aplParser.tokeniser.nextTokenWithPosition()
         val rightFn = when (token) {
             is Symbol -> {
-                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throwAPLException(ParseException("Symbol is not a function", pos))
+                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
                 fn.make(pos)
             }
             is OpenFnDef -> {
@@ -113,11 +113,11 @@ interface APLOperatorTwoArg : APLOperator {
             is OpenParen -> {
                 val holder = aplParser.parseExprToplevel(CloseParen)
                 if (holder !is ParseResultHolder.FnParseResult) {
-                    throwAPLException(ParseException("Expected function", pos))
+                    throw ParseException("Expected function", pos)
                 }
                 holder.fn
             }
-            else -> throwAPLException(ParseException("Expected function, got: ${token}", pos))
+            else -> throw ParseException("Expected function, got: ${token}", pos)
         }
         return combineFunction(currentFn, rightFn, axis, opPos).make(opPos)
     }
@@ -152,7 +152,7 @@ private const val DEFAULT_NAMESPACE_NAME = "default"
 
 val threadLocalEngineRef = makeMPThreadLocal(Engine::class)
 
-class CallStackElement(val name: String, val pos: Position) {
+class CallStackElement(val name: String, val pos: Position?) {
     fun copy() = CallStackElement(name, pos)
 }
 
@@ -430,9 +430,9 @@ class Engine {
     }
 }
 
-fun throwAPLException(ex: APLGenericException): Nothing {
+fun throwAPLException(ex: APLEvalException): Nothing {
     val engine = threadLocalEngineRef.value
-    if(engine != null) {
+    if (engine != null) {
         ex.callStack = engine.callStack.map { e -> e.copy() }
     }
     throw ex

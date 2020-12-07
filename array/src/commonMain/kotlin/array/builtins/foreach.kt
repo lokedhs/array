@@ -72,7 +72,7 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
 class ForEachOp : APLOperatorOneArg {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
-            throw AxisNotSupported(pos)
+            throwAPLException(AxisNotSupported(pos))
         }
         return ForEachFunctionDescriptor(fn)
     }

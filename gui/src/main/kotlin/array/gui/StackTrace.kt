@@ -1,6 +1,7 @@
 package array.gui
 
-import array.*
+import array.APLEvalException
+import array.CallStackElement
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
@@ -14,7 +15,6 @@ import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
 import javafx.stage.Stage
 import javafx.util.Callback
-import java.beans.EventHandler
 
 class StackTrace {
     @FXML
@@ -30,18 +30,14 @@ class StackTrace {
     var stackTraceNameColumn: TableColumn<StackTraceRow, String>? = null
 
     companion object {
-        fun makeStackTraceWindow(client: Client, ex: APLGenericException) {
+        fun makeStackTraceWindow(client: Client, ex: APLEvalException) {
             val loader = FXMLLoader(StackTrace::class.java.getResource("stack.fxml"))
             val root = loader.load<Parent>()
             val controller = loader.getController<StackTrace>()
-            println("controller = ${controller}, root=${root}, stt=${controller.stackTraceTable}")
-
-            val exceptionPos = ex.pos
-            assertx(exceptionPos != null)
             val rows = ArrayList<StackTraceRow>().apply {
-                add(StackTraceRow(0, CallStackElement(ex.formattedError(), exceptionPos), ex.formattedError()))
+                add(StackTraceRow(0, CallStackElement(ex.formattedError(), ex.pos), ex.formattedError()))
                 ex.callStack?.let { callStack ->
-                    callStack.asReversed().forEachIndexed{ i, element ->
+                    callStack.asReversed().forEachIndexed { i, element ->
                         add(StackTraceRow(i + 1, element, null))
                     }
                 }
@@ -55,8 +51,12 @@ class StackTrace {
                 cellValueFactory = StackTraceNameCellValueFactory()
                 cellFactory = StackTraceNameCellFactory()
             }
+            @Suppress("UNUSED_ANONYMOUS_PARAMETER")
             val listener = ChangeListener<StackTraceRow> { observable, oldValue, newValue ->
-                client.highlightSourceLocation(newValue.entry.pos, newValue.message)
+                val entryPos = newValue.entry.pos
+                if (entryPos != null) {
+                    client.highlightSourceLocation(entryPos, newValue.message)
+                }
             }
             controller.stackTraceTable!!.selectionModel.selectedItemProperty().addListener(listener)
 

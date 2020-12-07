@@ -2,7 +2,7 @@ package array.csv
 
 import array.*
 
-class CsvParseException(msg: String, val line: Int, val col: Int) : APLGenericException("Error at ${line + 1}:${col + 1}: $msg")
+class CsvParseException(msg: String, val line: Int, val col: Int) : APLEvalException("Error at ${line + 1}:${col + 1}: $msg")
 
 fun readCsv(source: CharacterProvider): APLValue {
     val rows = ArrayList<List<APLValue>>()

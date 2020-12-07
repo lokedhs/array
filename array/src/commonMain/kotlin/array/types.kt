@@ -210,9 +210,9 @@ fun APLValue.membersSequence(): Sequence<APLValue> {
 
 abstract class APLSingleValue : APLValue {
     override val dimensions get() = emptyDimensions()
-    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Reading index ${p} from scalar")
+    override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Reading index ${p} from scalar"))
     override fun valueAtWithScalarCheck(p: Int) =
-        if (p == 0) this else throw APLIndexOutOfBoundsException("Reading at non-zero index ${p} from scalar")
+        if (p == 0) this else throwAPLException(APLIndexOutOfBoundsException("Reading at non-zero index ${p} from scalar"))
 
     override val size get() = 1
     override val rank get() = 0
@@ -574,7 +574,7 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
 
     override fun valueAt(p: Int): APLValue {
         if (p != 0) {
-            throw APLIndexOutOfBoundsException("Attempt to read from a non-zero index ")
+            throwAPLException(APLIndexOutOfBoundsException("Attempt to read from a non-zero index "))
         }
         return value
     }
@@ -619,7 +619,7 @@ private val NULL_DIMENSIONS = dimensionsOfSize(0)
 
 class APLNullValue : APLArray() {
     override val dimensions get() = NULL_DIMENSIONS
-    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
+    override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Attempt to read a value from the null value"))
 }
 
 /**
@@ -629,7 +629,7 @@ class APLNullValue : APLArray() {
  */
 class APLEmpty : APLArray() {
     override val dimensions get() = NULL_DIMENSIONS
-    override fun valueAt(p: Int) = throw APLIndexOutOfBoundsException("Attempt to read a value from the null value")
+    override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Attempt to read a value from the null value"))
 }
 
 abstract class DeferredResultArray : APLArray() {

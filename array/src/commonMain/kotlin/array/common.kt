@@ -5,8 +5,6 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause) {
-    var callStack: List<CallStackElement>? = null
-
     fun formattedError(): String {
         val exceptionText = message ?: "no message"
         return if (pos != null) {
@@ -19,7 +17,10 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
     override fun toString() = formattedError()
 }
 
-open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos)
+open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos) {
+    var callStack: List<CallStackElement>? = null
+}
+
 open class IncompatibleTypeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 class InvalidDimensionsException(message: String, pos: Position? = null) : APLEvalException(message, pos) {
     constructor(aDimensions: Dimensions, bDimensions: Dimensions, pos: Position)
@@ -190,9 +191,10 @@ fun stringIntersperse(list: Sequence<String>, separator: String): String {
 
 fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: Int, pos: Position?) {
     if (posAlongAxis < 0 || posAlongAxis >= dimensions[axis]) {
-        throw APLIndexOutOfBoundsException(
-            "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
-            pos)
+        throwAPLException(
+            APLIndexOutOfBoundsException(
+                "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
+                pos))
     }
 }
 

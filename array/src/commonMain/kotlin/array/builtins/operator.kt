@@ -11,7 +11,7 @@ class PowerAPLOperator : APLOperatorTwoArg {
         opPos: Position
     ): APLFunctionDescriptor {
         if (operatorAxis != null) {
-            throw AxisNotSupported(opPos)
+            throwAPLException(AxisNotSupported(opPos))
         }
         return PowerAPLFunctionDescriptor(fn1, fn2)
     }

@@ -5,7 +5,7 @@ import array.*
 class CommuteOp : APLOperatorOneArg {
     override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
-            throw AxisNotSupported(pos)
+            throwAPLException(AxisNotSupported(pos))
         }
         return CommuteFunctionDescriptor(fn)
     }

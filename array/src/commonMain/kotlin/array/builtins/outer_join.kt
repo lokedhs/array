@@ -94,7 +94,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
         opPos: Position,
     ): APLFunctionDescriptor {
         if (operatorAxis != null) {
-            throw AxisNotSupported(opPos)
+            throwAPLException(AxisNotSupported(opPos))
         }
         return if (fn1 is NullFunction.NullFunctionImpl) {
             OuterJoinFunctionDescriptor(fn2)
@@ -114,7 +114,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     axis: APLValue?
                 ): APLValue {
                     if (axis != null) {
-                        throw AxisNotSupported(pos)
+                        throwAPLException(AxisNotSupported(pos))
                     }
                     return OuterJoinResult(context, a, b, fn, pos)
                 }

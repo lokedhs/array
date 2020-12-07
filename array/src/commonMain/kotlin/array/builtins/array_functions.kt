@@ -27,7 +27,7 @@ class IotaArrayOld(private val numElements: Int, private val start: Int = 0) : A
 
     override fun valueAt(p: Int): APLValue {
         if (p < 0 || p >= size) {
-            throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}")
+            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}"))
         }
         return (p + start).makeAPLNumber()
     }
@@ -45,7 +45,7 @@ class IotaArray(val indexes: IntArray) : APLArray() {
     override fun valueAt(p: Int): APLValue {
         return if (indexes.size == 1) {
             if (p < 0 || p >= indexes[0]) {
-                throw APLIndexOutOfBoundsException("Position in array: ${p}, size: ${indexes.size}")
+                throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${indexes.size}"))
             }
             p.makeAPLNumber()
         } else {
@@ -331,7 +331,7 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
         private fun makeAxisIntArray(axis: APLValue, maxAxis: Int): IntArray {
             val axisArray = axis.arrayify()
             if (axisArray.dimensions.size != 1) {
-                throw APLIllegalArgumentException("Axis specifier must be a scalar or a rank-1 array")
+                throwAPLException(APLIllegalArgumentException("Axis specifier must be a scalar or a rank-1 array", pos))
             }
             val v0 = axisArray.toIntArray(pos)
             return when {
@@ -343,7 +343,7 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
             if (axis != null) {
-                throw AxisNotSupported(pos)
+                throwAPLException(AxisNotSupported(pos))
             }
             if (a.dimensions.size !in 0..1) {
                 throwAPLException(InvalidDimensionsException("Left argument to pick should be rank 0 or 1", pos))
@@ -1271,8 +1271,9 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
         val axisInt = if (axis == null) defaultAxis(bFixed) else axis.ensureNumber(pos).asInt()
         ensureValidAxis(axisInt, bDimensions, pos)
         if (!(aDimensions.size == 0 || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))) {
-            throw InvalidDimensionsException(
-                "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.", pos)
+            throwAPLException(
+                InvalidDimensionsException(
+                    "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.", pos))
         }
         val selectIndexes = if (a.isScalar()) {
             a.ensureNumber(pos).asInt().let { v ->
@@ -1349,7 +1350,7 @@ class WhereAPLFunction : APLFunctionDescriptor {
                             result.add(index)
                         }
                     } else if (n < 0) {
-                        throw APLIncompatibleDomainsException("Negative value found in right argument")
+                        throwAPLException(APLIncompatibleDomainsException("Negative value found in right argument", pos))
                     }
                 }
                 APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())

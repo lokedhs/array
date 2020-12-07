@@ -58,9 +58,10 @@ class MapGetAPLFunction : APLFunctionDescriptor {
 
 private fun ensureKeyValuesArray(a: APLValue, pos: Position): APLValue {
     fun raiseDimensionError() {
-        throw APLIllegalArgumentException(
-            "Right argument to map should be either a rank-1 array with 2 elements or a rank-2 array with 2 columns",
-            pos)
+        throwAPLException(
+            APLIllegalArgumentException(
+                "Right argument to map should be either a rank-1 array with 2 elements or a rank-2 array with 2 columns",
+                pos))
     }
 
     return if (a.dimensions.size == 1) {

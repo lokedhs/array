@@ -144,25 +144,15 @@ class Client(val application: ClientApplication, val stage: Stage) {
                 val ex = result.value
                 resultList.addExceptionResult(ex)
                 if (ex is APLGenericException) {
-                    if(ex.pos != null) {
+                    if (ex.pos != null) {
+                        val pos = ex.pos
+                        if (pos != null) {
+                            highlightSourceLocation(pos, ex.message ?: "no error message")
+                        }
+                    }
+                    if (ex is APLEvalException) {
                         StackTrace.makeStackTraceWindow(this, ex)
                     }
-                    val pos = ex.pos
-                    if(pos != null) {
-                        highlightSourceLocation(pos, ex.message ?: "no error message")
-                    }
-//                    if (pos != null) {
-//                        val sourceLocation = pos.source
-//                        if (sourceLocation is SourceEditor.EditorSourceLocation) {
-//                            sourceLocation.editor?.let { editor ->
-//                                sourceEditors.forEach { e ->
-//                                    if (e === editor) {
-//                                        editor.highlightError(ex.message ?: "no error message", pos)
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
                 }
             }
         }
