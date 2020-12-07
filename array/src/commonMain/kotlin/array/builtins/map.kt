@@ -68,7 +68,7 @@ private fun ensureKeyValuesArray(a: APLValue, pos: Position): APLValue {
         unless(a.dimensions[0] == 2) {
             raiseDimensionError()
         }
-        ResizedArray(dimensionsOfSize(1, 2), a)
+        ResizedArray.makeResizedArray(dimensionsOfSize(1, 2), a)
     } else {
         unless(a.dimensions.size == 2 && a.dimensions[1] == 2) {
             raiseDimensionError()
