@@ -182,4 +182,40 @@ class CustomFunctionTest : APLTest() {
         assertDimension(dimensionsOfSize(2), result)
         assertArrayContent(arrayOf(1001, 4), result)
     }
+
+    /**
+     * This test verifies that after redefining a function, the new definition is used
+     * from code which was previously parsed when the old definition was in place.
+     */
+    @Test
+    fun functionRedefinition() {
+        val engine = Engine()
+        engine.parseAndEval(StringSourceLocation("∇ foo (x) { x+1 }"), false).collapse()
+        engine.parseAndEval(StringSourceLocation("foo 100"), false).let { result ->
+            assertSimpleNumber(101, result.collapse())
+        }
+        engine.parseAndEval(StringSourceLocation("∇ bar (x) { foo x + 2 }"), false).collapse()
+        engine.parseAndEval(StringSourceLocation("bar 210"), false).let { result ->
+            assertSimpleNumber(213, result.collapse())
+        }
+        // Redefine foo and call bar again to confirm that bar now has the new definition
+        engine.parseAndEval(StringSourceLocation("∇ foo (x) { x + 5 }"), false).collapse()
+        engine.parseAndEval(StringSourceLocation("foo 310"), false).let { result ->
+            assertSimpleNumber(315, result.collapse())
+        }
+        // This should use the new definition of foo
+        engine.parseAndEval(StringSourceLocation("bar 410"), false).let { result ->
+            assertSimpleNumber(417, result.collapse())
+        }
+    }
+
+    /**
+     * Test to ensure that native functions cannot be redefined.
+     */
+    @Test
+    fun nativeFunctionRedefinition() {
+        assertFailsWith<InvalidFunctionRedefinition> {
+            parseAPLExpression("∇ + (x) { 1 + x }")
+        }
+    }
 }

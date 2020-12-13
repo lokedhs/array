@@ -170,10 +170,10 @@ class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruct
 
 class UserFunction(
     private val name: Symbol,
-    private val leftFnArgs: List<EnvironmentBinding>,
-    private val rightFnArgs: List<EnvironmentBinding>,
+    private var leftFnArgs: List<EnvironmentBinding>,
+    private var rightFnArgs: List<EnvironmentBinding>,
     var instr: Instruction,
-    private val env: Environment
+    private var env: Environment
 ) : APLFunctionDescriptor {
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
@@ -197,4 +197,12 @@ class UserFunction(
     }
 
     override fun make(pos: Position) = UserFunctionImpl(pos)
+
+    fun replaceFunctionDefinition(newFn: UserFunction) {
+        assertx(newFn.name === name)
+        leftFnArgs = newFn.leftFnArgs
+        rightFnArgs = newFn.rightFnArgs
+        instr = newFn.instr
+        env = newFn.env
+    }
 }

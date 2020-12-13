@@ -52,6 +52,9 @@ class IllegalContextForFunction(pos: Position? = null) : ParseException("Illegal
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
     ParseException("In custom syntax rule: Expected: ${expectedSymbol.symbolName}. Found: ${foundSymbol.symbolName}", pos)
 
+class InvalidFunctionRedefinition(name: Symbol, pos: Position? = null) :
+    ParseException("Function cannot be redefined: ${name.nameWithNamespace()}", pos)
+
 @OptIn(ExperimentalContracts::class)
 inline fun unless(cond: Boolean, fn: () -> Unit) {
     contract { callsInPlace(fn, InvocationKind.AT_MOST_ONCE) }

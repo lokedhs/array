@@ -270,6 +270,12 @@ class APLParser(val tokeniser: TokenGenerator) {
     }
 
     private fun registerDefinedUserFunction(definedUserFunction: DefinedUserFunction) {
+        val engine = tokeniser.engine
+        when (val oldDefinition = engine.getFunction(definedUserFunction.name)) {
+            null -> engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
+            is UserFunction -> oldDefinition.replaceFunctionDefinition(definedUserFunction.fn)
+            else -> throw InvalidFunctionRedefinition(definedUserFunction.name, definedUserFunction.pos)
+        }
         tokeniser.engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
     }
 
