@@ -1,6 +1,7 @@
 package array
 
 import array.builtins.*
+import array.syntax.CustomSyntax
 
 interface APLFunctionDescriptor {
     fun make(pos: Position): APLFunction
@@ -162,6 +163,7 @@ class Engine {
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
     private val functionAliases = HashMap<Symbol, Symbol>()
     private val namespaces = HashMap<String, Namespace>()
+    private val customSyntaxSubEntries = HashMap<Symbol, CustomSyntax>()
     private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
     private val librarySearchPaths = ArrayList<String>()
     private val modules = ArrayList<KapModule>()
@@ -387,11 +389,19 @@ class Engine {
     fun isSelfEvaluatingSymbol(name: Symbol) = name.namespace === keywordNamespace
 
     fun registerCustomSyntax(customSyntax: CustomSyntax) {
-        customSyntaxEntries[customSyntax.triggerSymbol] = customSyntax
+        customSyntaxEntries[customSyntax.name] = customSyntax
     }
 
     fun syntaxRulesForSymbol(name: Symbol): CustomSyntax? {
         return customSyntaxEntries[name]
+    }
+
+    fun registerCustomSyntaxSub(customSyntax: CustomSyntax) {
+        customSyntaxSubEntries[customSyntax.name] = customSyntax
+    }
+
+    fun customSyntaxSubRulesForSymbol(name: Symbol): CustomSyntax? {
+        return customSyntaxSubEntries[name]
     }
 
     inline fun <T> withSavedNamespace(fn: () -> T): T {

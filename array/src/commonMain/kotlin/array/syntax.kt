@@ -1,7 +1,9 @@
-package array
+package array.syntax
+
+import array.*
 
 class CustomSyntax(
-    val triggerSymbol: Symbol,
+    val name: Symbol,
     val environment: Environment,
     val rulesList: List<SyntaxRule>,
     val instr: Instruction,
@@ -112,18 +114,29 @@ class OptionalSyntaxRule(val initialRule: SyntaxRule, val rest: List<SyntaxRule>
     }
 }
 
-class CallWithVarInstruction(
-    val instr: Instruction,
-    val env: Environment,
-    val bindings: List<Pair<EnvironmentBinding, Instruction>>,
-    pos: Position
-) : Instruction(pos) {
+class MultiResultInstr(val instructionList: List<Instruction>, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        val newContext = context.link(env)
-        bindings.forEach { (envBinding, instr) ->
-            newContext.setVar(envBinding, instr.evalWithContext(context))
+        val valueList = Array(instructionList.size) { i ->
+            instructionList[i].evalWithContext(context)
         }
-        return instr.evalWithContext(newContext)
+        return APLArrayImpl(dimensionsOfSize(valueList.size), valueList)
+    }
+}
+
+class RepeatSyntaxRule(val name: EnvironmentBinding, val customSyntax: CustomSyntax) : SyntaxRule {
+    override fun isValid(token: Token) = customSyntax.rulesList.first().isValid(token)
+
+    override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
+        val tokeniser = parser.tokeniser
+        val instructions = ArrayList<Instruction>()
+        while (customSyntax.rulesList.first().isValid(tokeniser.peekToken())) {
+//            val innerBindings = ArrayList<SyntaxRuleVariableBinding>()
+//            initialRule.processRule(parser, innerBindings)
+//            rest.forEach { it.processRule(parser, innerBindings) }
+//            instructions.add()
+            instructions.add(processCustomSyntax(parser, customSyntax))
+        }
+        syntaxRuleBindings.add(SyntaxRuleVariableBinding(name, MultiResultInstr(instructions, customSyntax.pos)))
     }
 }
 
@@ -140,11 +153,13 @@ private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token:
         "exprfunction" -> curr.add(ExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "nexprfunction" -> curr.add(NExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "optional" -> curr.add(processOptional(parser))
+        "repeat" -> curr.add(processRepeat(parser))
         else -> throw ParseException("Unexpected tag: ${token.nameWithNamespace()}")
     }
 }
 
 private fun processPairs(parser: APLParser): ArrayList<SyntaxRule> {
+    parser.tokeniser.nextTokenWithType<OpenParen>()
     val rulesList = ArrayList<SyntaxRule>()
     parser.tokeniser.iterateUntilToken(CloseParen) { token, pos ->
         when (token) {
@@ -164,18 +179,52 @@ private fun processOptional(parser: APLParser): OptionalSyntaxRule {
     return OptionalSyntaxRule(rulesList[0], rulesList.drop(1))
 }
 
+private fun processRepeat(parser: APLParser): SyntaxRule {
+    val tokeniser = parser.tokeniser
+    tokeniser.nextTokenWithType<OpenParen>()
+    val name = parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())
+    val (subName, subNamePos) = tokeniser.nextTokenAndPosWithType<Symbol>()
+    tokeniser.nextTokenWithType<CloseParen>()
+
+    val subRules = tokeniser.engine.customSyntaxSubRulesForSymbol(subName) ?: throw SyntaxSubRuleNotFound(subName, subNamePos)
+    return RepeatSyntaxRule(name, subRules)
+}
+
+fun processDefsyntaxSub(parser: APLParser, pos: Position) {
+    parser.withEnvironment {
+        val tokeniser = parser.tokeniser
+        val name = tokeniser.nextTokenWithType<Symbol>()
+        val rulesList = processPairs(parser)
+        tokeniser.nextTokenWithType<OpenFnDef>()
+        val instr = parser.parseValueToplevel(CloseFnDef)
+        tokeniser.engine.registerCustomSyntaxSub(CustomSyntax(name, parser.currentEnvironment(), rulesList, instr, pos))
+    }
+}
+
 fun processDefsyntax(parser: APLParser, pos: Position): Instruction {
     parser.withEnvironment {
         val tokeniser = parser.tokeniser
         val triggerSymbol = tokeniser.nextTokenWithType<Symbol>()
-        tokeniser.nextTokenWithType<OpenParen>()
-
         val rulesList = processPairs(parser)
-
         tokeniser.nextTokenWithType<OpenFnDef>()
         val instr = parser.parseValueToplevel(CloseFnDef)
         tokeniser.engine.registerCustomSyntax(CustomSyntax(triggerSymbol, parser.currentEnvironment(), rulesList, instr, pos))
         return LiteralSymbol(triggerSymbol, pos)
+    }
+}
+
+class CallWithVarInstruction(
+    val instr: Instruction,
+    val env: Environment,
+    val bindings: List<Pair<EnvironmentBinding, Instruction>>,
+    pos: Position
+) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue {
+        val newContext = context.link(env)
+        bindings.forEach { (envBinding, instr) ->
+            newContext.setVar(envBinding, instr.evalWithContext(context))
+        }
+        return instr.evalWithContext(newContext)
     }
 }
 

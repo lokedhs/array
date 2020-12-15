@@ -1,5 +1,9 @@
 package array
 
+import array.syntax.processCustomSyntax
+import array.syntax.processDefsyntax
+import array.syntax.processDefsyntaxSub
+
 //data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 sealed class ParseResultHolder(val lastToken: Token, val pos: Position) {
     class InstrParseResult(val instr: Instruction, lastToken: Token, pos: Position) : ParseResultHolder(lastToken, pos)
@@ -375,6 +379,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is NamespaceToken -> processNamespace()
                 is ImportToken -> processImport()
                 is ExportToken -> processExport()
+                is DefsyntaxSubToken -> processDefsyntaxSub(this, pos)
                 is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
                 is IncludeToken -> leftArgs.add(processInclude(pos))
                 is LocalToken -> processLocal()

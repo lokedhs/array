@@ -160,4 +160,21 @@ class SyntaxText : APLTest() {
         assertSimpleNumber(28, result)
         assertEquals("99", out)
     }
+
+    @Test
+    fun defsyntaxRepeat() {
+        val result = parseAPLExpression(
+            """
+            |defsyntaxsub bar (:constant ab :value x) {
+            |  x + 1
+            |}
+            |
+            |defsyntax foo (:repeat (y bar)) {
+            |  +/y
+            |}
+            |
+            |foo ab (10) ab (20)
+            """.trimMargin())
+        assertSimpleNumber(32, result)
+    }
 }
