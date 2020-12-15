@@ -57,6 +57,31 @@ class SyntaxText : APLTest() {
     }
 
     @Test
+    fun optionalTest0() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:value a :optional (:value b)) {
+            |  a+b
+            |}
+            |foo (1) (2)
+            """.trimMargin())
+        assertSimpleNumber(3, result)
+    }
+
+    @Test
+    fun optionalTest1() {
+        val result = parseAPLExpression(
+            """
+            |defsyntax foo (:value a :optional (:value b)) {
+            |  100+a
+            |}
+            |foo (10) , 200
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(110, 200), result)
+    }
+
+    @Test
     fun ifTestWithOptionalElse() {
         val result = parseAPLExpression(
             """
@@ -176,5 +201,32 @@ class SyntaxText : APLTest() {
             |foo ab (10) ab (20)
             """.trimMargin())
         assertSimpleNumber(32, result)
+    }
+
+    @Test
+    fun customSingleCharSymbols() {
+        val result = parseAPLExpression(
+            """
+            |declare(:singleChar "a")
+            |a←1
+            |b←2
+            |bb←3
+            |aaaa bb
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(5), result)
+        assertArrayContent(arrayOf(1, 1, 1, 1, 3), result)
+    }
+
+    @Test
+    fun unknownDeclarationShouldFail() {
+        assertFailsWith<IllegalDeclaration> {
+            parseAPLExpression(
+                """
+                |declare(:foo 1)
+                |'a
+                """.trimMargin()
+            )
+
+        }
     }
 }

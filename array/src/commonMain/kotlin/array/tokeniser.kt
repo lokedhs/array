@@ -32,6 +32,7 @@ object DefsyntaxSubToken : Token()
 object DefsyntaxToken : Token()
 object IncludeToken : Token()
 object LocalToken : Token()
+object DeclareToken : Token()
 
 class Namespace(val name: String) {
     private val symbols = HashMap<String, NamespaceEntry>()
@@ -130,7 +131,7 @@ class Position(val source: SourceLocation, val line: Int, val col: Int)
 
 class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private val content = PushBackCharacterProvider(contentArg)
-    private val singleCharFunctions: Set<String>
+    private val singleCharFunctions: MutableSet<String>
     private val pushBackQueue = ArrayList<Token>()
 
     private val charToTokenMap = hashMapOf(
@@ -157,7 +158,8 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "defsyntaxsub" to DefsyntaxSubToken,
         "defsyntax" to DefsyntaxToken,
         "use" to IncludeToken,
-        "local" to LocalToken
+        "local" to LocalToken,
+        "declare" to DeclareToken
     )
 
     init {
@@ -169,6 +171,11 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             "⍨", "⍪", "⍫", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
             "○", "$", "¥", "χ", "\\", "."
         )
+    }
+
+    fun registerSingleCharFunction(name: String) {
+        assertx(name.asCodepointList().size == 1)
+        singleCharFunctions.add(name)
     }
 
     fun peekToken(): Token {
@@ -322,9 +329,9 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             buf.addCodepoint(ch)
         }
         val name = buf.toString()
-        val coreResult = "^:([^:]+)$".toRegex().matchEntire(name)
-        if (coreResult != null) {
-            return engine.makeNamespace("core").internSymbol(coreResult.groups.get(1)!!.value)
+        val keywordResult = "^:([^:]+)$".toRegex().matchEntire(name)
+        if (keywordResult != null) {
+            return engine.keywordNamespace.internSymbol(keywordResult.groups.get(1)!!.value)
         } else {
             val result =
                 "^(?:([^:]+):)?([^:]+)$".toRegex().matchEntire(name) ?: throw ParseException("Malformed symbol: '${name}'", posBeforeParse)

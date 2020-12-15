@@ -24,9 +24,9 @@ class SymbolTest : APLTest() {
     }
 
     @Test
-    fun coreSymbol() {
+    fun keywordSymbol() {
         val engine = Engine()
         val result = engine.parseAndEval(StringSourceLocation(":foo"), false)
-        assertSame(engine.makeNamespace("core").internSymbol("foo"), result.ensureSymbol().value)
+        assertSame(engine.makeNamespace("keyword").internSymbol("foo"), result.ensureSymbol().value)
     }
 }

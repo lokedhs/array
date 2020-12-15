@@ -51,8 +51,8 @@ class IllegalNumberFormat(message: String, pos: Position? = null) : ParseExcepti
 class IllegalContextForFunction(pos: Position? = null) : ParseException("Illegal function call", pos)
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
     ParseException("In custom syntax rule: Expected: ${expectedSymbol.symbolName}. Found: ${foundSymbol.symbolName}", pos)
-
 class SyntaxSubRuleNotFound(name: Symbol, pos: Position? = null) : ParseException("Syntax sub rule does not exist. Name: ${name}", pos)
+class IllegalDeclaration(message: String, pos: Position? = null) : ParseException("Illegal declaration: ${message}", pos)
 
 class InvalidFunctionRedefinition(name: Symbol, pos: Position? = null) :
     ParseException("Function cannot be redefined: ${name.nameWithNamespace()}", pos)

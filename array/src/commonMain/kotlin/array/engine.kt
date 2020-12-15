@@ -148,7 +148,7 @@ interface APLOperatorValueRightArg : APLOperator {
 }
 
 private const val CORE_NAMESPACE_NAME = "kap"
-private const val KEYWORD_NAMESPACE_NAME = "core"
+private const val KEYWORD_NAMESPACE_NAME = "keyword"
 private const val DEFAULT_NAMESPACE_NAME = "default"
 
 val threadLocalEngineRef = makeMPThreadLocal(Engine::class)

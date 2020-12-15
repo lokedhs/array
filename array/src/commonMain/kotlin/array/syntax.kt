@@ -102,7 +102,7 @@ class NExprFunctionSyntaxRule(variable: EnvironmentBinding) : FunctionSyntaxRule
 }
 
 class OptionalSyntaxRule(val initialRule: SyntaxRule, val rest: List<SyntaxRule>) : SyntaxRule {
-    override fun isValid(token: Token) = initialRule.isValid(token)
+    override fun isValid(token: Token) = true
 
     override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
         if (initialRule.isValid(parser.tokeniser.peekToken())) {
@@ -171,7 +171,6 @@ private fun processPairs(parser: APLParser): ArrayList<SyntaxRule> {
 }
 
 private fun processOptional(parser: APLParser): OptionalSyntaxRule {
-    parser.tokeniser.nextTokenWithType<OpenParen>()
     val rulesList = processPairs(parser)
     if (rulesList.isEmpty()) {
         throw ParseException("Optional syntax rules must have at least one rule")
