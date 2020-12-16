@@ -313,6 +313,22 @@ class TokenGeneratorTest {
         assertSame(EndOfFile, gen.nextToken())
     }
 
+    @Test
+    fun continuationCharacterIllegalPosition() {
+        val gen = makeGenerator(
+            """
+            |1 `4 5
+            |6
+            """.trimMargin())
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedLong)
+            assertEquals(1, token.value)
+        }
+        assertFailsWith<ParseException> {
+            gen.nextToken()
+        }
+    }
+
     private fun makeGenerator(content: String): TokenGenerator {
         val engine = Engine()
         return TokenGenerator(engine, StringSourceLocation(content))
