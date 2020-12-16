@@ -286,6 +286,33 @@ class TokenGeneratorTest {
         assertSame(EndOfFile, gen.nextToken())
     }
 
+    @Test
+    fun continuationCharacter() {
+        val gen = makeGenerator(
+            """
+            |1 2 `
+            |3 `
+            |4
+            """.trimMargin())
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedLong)
+            assertEquals(1, token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedLong)
+            assertEquals(2, token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedLong)
+            assertEquals(3, token.value)
+        }
+        gen.nextToken().let { token ->
+            assertTrue(token is ParsedLong)
+            assertEquals(4, token.value)
+        }
+        assertSame(EndOfFile, gen.nextToken())
+    }
+
     private fun makeGenerator(content: String): TokenGenerator {
         val engine = Engine()
         return TokenGenerator(engine, StringSourceLocation(content))

@@ -239,6 +239,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 isQuoteChar(ch) -> collectString()
                 isCommentChar(ch) -> skipUntilNewline()
                 isQuotePrefixChar(ch) -> QuotePrefix
+                isBackquote(ch) -> skipNextNewline()
                 else -> throw UnexpectedSymbol(ch, posBeforeParse)
             }
         )
@@ -259,6 +260,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private fun isCharQuote(ch: Int) = ch == '@'.toInt()
     private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
     private fun isNewline(ch: Int) = ch == '\n'.toInt()
+    private fun isBackquote(ch: Int) = ch == '`'.toInt()
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
@@ -268,6 +270,17 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             }
         }
         return Whitespace
+    }
+
+    private fun skipNextNewline(): Whitespace {
+        while (true) {
+            val (ch, pos) = content.nextCodepointWithPos()
+            when {
+                ch == null -> throw ParseException("End of file after continuation character", pos)
+                isNewline(ch) -> return Whitespace
+                !isWhitespace(ch) -> throw ParseException("Non-whitespace characters after continuation character", pos)
+            }
+        }
     }
 
     private fun collectChar(): ParsedCharacter {
