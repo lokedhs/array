@@ -229,6 +229,8 @@ class Engine {
         registerNativeFunction("⍕", FormatAPLFunction())
         registerNativeFunction("⍸", WhereAPLFunction())
         registerNativeFunction("∪", UniqueFunction())
+        registerNativeFunction("⍲", NandAPLFunction())
+        registerNativeFunction("⍱", NorAPLFunction())
 
         // hash tables
         registerNativeFunction("map", MapAPLFunction())

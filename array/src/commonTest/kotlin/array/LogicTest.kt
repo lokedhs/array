@@ -168,4 +168,46 @@ class LogicTest : APLTest() {
     fun removeFromScalarMatch() {
         assertAPLNull(parseAPLExpression("2 ~ 2"))
     }
+
+    @Test
+    fun nandTest() {
+        assertSimpleNumber(1, parseAPLExpression("0⍲0"))
+        assertSimpleNumber(1, parseAPLExpression("0⍲1"))
+        assertSimpleNumber(1, parseAPLExpression("1⍲0"))
+        assertSimpleNumber(0, parseAPLExpression("1⍲1"))
+    }
+
+    @Test
+    fun errorWithNandIllegalArgument() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("3⍲0")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("0⍲3")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("¯1⍲1")
+        }
+    }
+
+    @Test
+    fun norTest() {
+        assertSimpleNumber(1, parseAPLExpression("0⍱0"))
+        assertSimpleNumber(0, parseAPLExpression("0⍱1"))
+        assertSimpleNumber(0, parseAPLExpression("1⍱0"))
+        assertSimpleNumber(0, parseAPLExpression("1⍱1"))
+    }
+
+    @Test
+    fun errorWithNorIllegalArgument() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("3⍱0")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("0⍱3")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("¯1⍱0")
+        }
+    }
 }

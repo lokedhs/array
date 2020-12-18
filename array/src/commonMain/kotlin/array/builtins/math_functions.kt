@@ -44,7 +44,10 @@ class ArraySum2Args(
 
     init {
         unless(aRank == 0 || bRank == 0 || a.dimensions.compareEquals(b.dimensions)) {
-            throwAPLException(InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos))
+            throwAPLException(
+                InvalidDimensionsException(
+                    "Arguments must be of the same dimension, or one of the arguments must be a scalar",
+                    pos))
         }
         a0 = a.unwrapDeferredValue()
         b0 = b.unwrapDeferredValue()
@@ -107,7 +110,10 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             fun computeTransformation(baseVal: APLValue, d1: Dimensions, d2: Dimensions): APLValue {
                 ensureValidAxis(axisInt, d2, pos)
                 if (d1[0] != d2[axisInt]) {
-                    throwAPLException(InvalidDimensionsException("Dimensions of A does not match dimensions of B across axis ${axisInt}", pos))
+                    throwAPLException(
+                        InvalidDimensionsException(
+                            "Dimensions of A does not match dimensions of B across axis ${axisInt}",
+                            pos))
                 }
                 val d = d2.remove(axisInt).insert(d2.size - 1, d2[axisInt])
                 val transposeAxis = IntArray(d2.size) { i ->
@@ -590,6 +596,83 @@ class AndAPLFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = AndAPLFunctionImpl(pos)
+}
+
+class NandAPLFunction : APLFunctionDescriptor {
+    class NandAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(pos,
+                a,
+                b,
+                { x, y ->
+                    when {
+                        x == 0L && y == 0L -> APLLONG_1
+                        x == 0L && y == 1L -> APLLONG_1
+                        x == 1L && y == 0L -> APLLONG_1
+                        x == 1L && y == 1L -> APLLONG_0
+                        else -> throwIllegalArgument()
+                    }
+                },
+                { x, y ->
+                    val x0 = x.toLong()
+                    val y0 = y.toLong()
+                    when {
+                        x0 == 0L && y0 == 0L -> APLLONG_1
+                        x0 == 0L && y0 == 1L -> APLLONG_1
+                        x0 == 1L && y0 == 0L -> APLLONG_1
+                        x0 == 1L && y0 == 1L -> APLLONG_0
+                        else -> throwIllegalArgument()
+                    }
+                },
+                { _, _ -> throwIllegalArgument() }
+            )
+        }
+
+        private fun throwIllegalArgument(): Nothing {
+            throwAPLException(APLIllegalArgumentException("Arguments to nand must be 0 or 1", pos))
+        }
+    }
+
+    override fun make(pos: Position) = NandAPLFunctionImpl(pos)
+}
+
+class NorAPLFunction : APLFunctionDescriptor {
+    class NorAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
+            return numericRelationOperation(
+                pos,
+                a,
+                b,
+                { x, y ->
+                    when {
+                        x == 0L && y == 0L -> APLLONG_1
+                        x == 0L && y == 1L -> APLLONG_0
+                        x == 1L && y == 0L -> APLLONG_0
+                        x == 1L && y == 1L -> APLLONG_0
+                        else -> throwIllegalArgument()
+                    }
+                },
+                { x, y ->
+                    val x0 = x.toLong()
+                    val y0 = y.toLong()
+                    when {
+                        x0 == 0L && y0 == 0L -> APLLONG_1
+                        x0 == 0L && y0 == 1L -> APLLONG_0
+                        x0 == 1L && y0 == 0L -> APLLONG_0
+                        x0 == 1L && y0 == 1L -> APLLONG_0
+                        else -> throwIllegalArgument()
+                    }
+                },
+                { _, _ -> throwIllegalArgument() }
+            )
+        }
+
+        private fun throwIllegalArgument(): Nothing {
+            throwAPLException(APLIllegalArgumentException("Arguments to nor must be 0 or 1", pos))
+        }
+    }
+
+    override fun make(pos: Position) = NorAPLFunctionImpl(pos)
 }
 
 fun integerGcd(m: Long, n: Long): Long {
