@@ -58,7 +58,6 @@ class APLParser(val tokeniser: TokenGenerator) {
         return env
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun popEnvironment(): Environment {
         val env = environments.removeLast()
         assertx(environments.size > 0)

@@ -50,7 +50,6 @@ interface CharacterProvider : NativeCloseable {
     }
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 class PushBackCharacterProvider(val sourceLocation: SourceLocation) : CharacterProvider {
     private class CharWithPosition(val character: Int, val line: Int, val col: Int)
 

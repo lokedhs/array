@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-@ExperimentalStdlibApi
 class IoTest {
     @Test
     fun testBinaryFile() {
