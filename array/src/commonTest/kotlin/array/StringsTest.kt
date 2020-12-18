@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 class StringsTest : APLTest() {
     @Test
     fun testPrint() {
-        parseAPLExpressionWithOutput("print 200").let { (result, out) ->
+        parseAPLExpressionWithOutput("io:print 200").let { (result, out) ->
             assertSimpleNumber(200, result)
             assertEquals("200", out)
         }
@@ -16,7 +16,7 @@ class StringsTest : APLTest() {
 
     @Test
     fun testPrintPretty() {
-        parseAPLExpressionWithOutput("'pretty print \"a\"").let { (result, out) ->
+        parseAPLExpressionWithOutput("'pretty io:print \"a\"").let { (result, out) ->
             assertString("a", result)
             assertEquals("\"a\"", out)
         }
@@ -24,7 +24,7 @@ class StringsTest : APLTest() {
 
     @Test
     fun testPrintString() {
-        parseAPLExpressionWithOutput("print \"a\"").let { (result, out) ->
+        parseAPLExpressionWithOutput("io:print \"a\"").let { (result, out) ->
             assertString("a", result)
             assertEquals("a", out)
         }
@@ -32,7 +32,7 @@ class StringsTest : APLTest() {
 
     @Test
     fun readableNumber() {
-        parseAPLExpressionWithOutput("'read print 1").let { (result, out) ->
+        parseAPLExpressionWithOutput("'read io:print 1").let { (result, out) ->
             assertSimpleNumber(1, result)
             assertEquals("1", out)
         }
@@ -40,7 +40,7 @@ class StringsTest : APLTest() {
 
     @Test
     fun readableString() {
-        parseAPLExpressionWithOutput("'read print \"foo\"").let { (result, out) ->
+        parseAPLExpressionWithOutput("'read io:print \"foo\"").let { (result, out) ->
             assertString("foo", result)
             assertEquals("\"foo\"", out)
         }
@@ -48,7 +48,7 @@ class StringsTest : APLTest() {
 
     @Test
     fun readableComplex() {
-        parseAPLExpressionWithOutput("'read print 1J2").let { (result, out) ->
+        parseAPLExpressionWithOutput("'read io:print 1J2").let { (result, out) ->
             assertEquals(Complex(1.0, 2.0), result.ensureNumber().asComplex())
             assertEquals("1.0J2.0", out)
         }

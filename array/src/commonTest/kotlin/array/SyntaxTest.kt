@@ -129,7 +129,7 @@ class SyntaxText : APLTest() {
             |defsyntax xif (:value cond :function thenStatement :constant xelse :function elseStatement) {
             |  ⍞((cond ≡ 1) ⌷ elseStatement thenStatement) cond
             |}
-            |xif (1) { print "aa" ◊ 10 } xelse { print "bb" ◊ 11 }  
+            |xif (1) { io:print "aa" ◊ 10 } xelse { io:print "bb" ◊ 11 }  
             """.trimMargin())
         assertSimpleNumber(10, result)
         assertEquals("aa", output)
@@ -180,7 +180,7 @@ class SyntaxText : APLTest() {
         val (result, out) = parseAPLExpressionWithOutput(
             """
             |defsyntax foo (:value x :optional (:exprfunction a)) { x+(⍞a 0)+(⍞a 0) }
-            |foo (10) (print 9)
+            |foo (10) (io:print 9)
             """.trimMargin())
         assertSimpleNumber(28, result)
         assertEquals("99", out)

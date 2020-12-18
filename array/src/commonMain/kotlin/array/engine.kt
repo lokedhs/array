@@ -286,9 +286,6 @@ class Engine {
         platformInit(this)
 
         addModule(UnicodeModule())
-
-        // Temporarily add a default import of io here until we change all the tests
-        currentNamespace.addImport(makeNamespace("io"))
     }
 
     fun addModule(module: KapModule) {

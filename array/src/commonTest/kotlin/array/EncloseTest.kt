@@ -29,7 +29,7 @@ class EncloseTest : APLTest() {
 
     @Test
     fun printEnclosedValue() {
-        parseAPLExpression("print ⊂1 2 3 4").let { result ->
+        parseAPLExpression("io:print ⊂1 2 3 4").let { result ->
             assertTrue(result.isScalar())
             assertDimension(emptyDimensions(), result)
             assertEquals(1, result.size)

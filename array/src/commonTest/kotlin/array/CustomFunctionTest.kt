@@ -40,7 +40,7 @@ class CustomFunctionTest : APLTest() {
         val engine = Engine()
         val output = StringBuilderOutput()
         engine.standardOutput = output
-        val result = engine.parseAndEval(StringSourceLocation("∇ foo (A) { print A ◊ A+10 } ◊ foo(1000) "), false)
+        val result = engine.parseAndEval(StringSourceLocation("∇ foo (A) { io:print A ◊ A+10 } ◊ foo(1000) "), false)
         assertSimpleNumber(1010, result)
         assertEquals("1000", output.buf.toString())
     }

@@ -40,11 +40,11 @@ class FlowControlTest : APLTest() {
 
     @Test
     fun testSideEffectsInIf() {
-        parseAPLExpressionWithOutput("print 10 ◊ if (1) { print 2 } ◊ print 3 ◊ 100", true).let { (result, s) ->
+        parseAPLExpressionWithOutput("io:print 10 ◊ if (1) { io:print 2 } ◊ io:print 3 ◊ 100", true).let { (result, s) ->
             assertSimpleNumber(100, result)
             assertEquals("1023", s)
         }
-        parseAPLExpressionWithOutput("print 10 ◊ if (0) { print 2 } ◊ print 3 ◊ 100", true).let { (result, s) ->
+        parseAPLExpressionWithOutput("io:print 10 ◊ if (0) { io:print 2 } ◊ io:print 3 ◊ 100", true).let { (result, s) ->
             assertSimpleNumber(100, result)
             assertEquals("103", s)
         }
@@ -52,11 +52,15 @@ class FlowControlTest : APLTest() {
 
     @Test
     fun testSideEffectsInIfElse() {
-        parseAPLExpressionWithOutput("print 10 ◊ if (1) { print 2 } else { print 4 } ◊ print 3 ◊ 100", true).let { (result, s) ->
+        parseAPLExpressionWithOutput(
+            "io:print 10 ◊ if (1) { io:print 2 } else { io:print 4 } ◊ io:print 3 ◊ 100",
+            true).let { (result, s) ->
             assertSimpleNumber(100, result)
             assertEquals("1023", s)
         }
-        parseAPLExpressionWithOutput("print 10 ◊ if (0) { print 2 } else { print 4 } ◊ print 3 ◊ 100", true).let { (result, s) ->
+        parseAPLExpressionWithOutput(
+            "io:print 10 ◊ if (0) { io:print 2 } else { io:print 4 } ◊ io:print 3 ◊ 100",
+            true).let { (result, s) ->
             assertSimpleNumber(100, result)
             assertEquals("1043", s)
         }
@@ -128,7 +132,7 @@ class FlowControlTest : APLTest() {
     fun recursionTest() {
         val (result, out) = parseAPLExpressionWithOutput(
             """
-            |∇ foo (x) { if (x>0) { print x ◊ foo x-1 } else { 123 } }
+            |∇ foo (x) { if (x>0) { io:print x ◊ foo x-1 } else { 123 } }
             |foo 10
             """.trimMargin(), true)
         assertSimpleNumber(123, result)
@@ -139,7 +143,7 @@ class FlowControlTest : APLTest() {
     fun lambdaRecursionTest() {
         val (result, out) = parseAPLExpressionWithOutput(
             """
-            |foo ← λ{ x←⍵ ◊ if(x>0) { print x ◊ ⍞foo x-1 } else { 123 } }
+            |foo ← λ{ x←⍵ ◊ if(x>0) { io:print x ◊ ⍞foo x-1 } else { 123 } }
             |⍞foo 10
             """.trimMargin(), true)
         assertSimpleNumber(123, result)
@@ -207,7 +211,7 @@ class FlowControlTest : APLTest() {
 
     @Test
     fun whileLoopTest() {
-        parseAPLExpressionWithOutput("i←0 ◊ while (i<10) {print i ◊ prev←i ◊ i←i+1 ◊ prev+5}", true).let { (result, out) ->
+        parseAPLExpressionWithOutput("i←0 ◊ while (i<10) {io:print i ◊ prev←i ◊ i←i+1 ◊ prev+5}", true).let { (result, out) ->
             assertSimpleNumber(1, result) // The return value should really be 14 here, the last value from the body
             assertEquals("0123456789", out)
         }
@@ -218,7 +222,7 @@ class FlowControlTest : APLTest() {
      */
     @Test
     fun defsyntaxScope() {
-        parseAPLExpressionWithOutput("{ if(⍵<10) { print ⍵+100 ◊ 3 } } 4", true).let { (result, out) ->
+        parseAPLExpressionWithOutput("{ if(⍵<10) { io:print ⍵+100 ◊ 3 } } 4", true).let { (result, out) ->
             assertEquals("104", out)
             assertSimpleNumber(3, result)
         }

@@ -128,7 +128,7 @@ class ComplexExpressionsTest : APLTest() {
     fun multilineExpression() {
         parseAPLExpressionWithOutput(
             """
-            |print 3
+            |io:print 3
             |2
         """.trimMargin()).let { (result, output) ->
             assertSimpleNumber(2, result)
@@ -140,7 +140,7 @@ class ComplexExpressionsTest : APLTest() {
     fun multilineExpressionWithBlankLines() {
         parseAPLExpressionWithOutput(
             """
-            |print 3
+            |io:print 3
             |
             |2
             |
