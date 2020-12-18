@@ -43,6 +43,8 @@ class Unimplemented2ArgException(pos: Position? = null) : APLEvalException("Func
 class IllegalArgumentNumException(expectedCount: Int, receivedCount: Int, pos: Position? = null) :
     APLEvalException("Expected a list of ${expectedCount} values. Actual elements: ${receivedCount}", pos)
 
+class BitwiseNotSupported(pos: Position? = null) : APLEvalException("Function cannot handle bitwise operations", pos)
+
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 class UnexpectedSymbol(ch: Int, pos: Position? = null) : ParseException("Unexpected symbol: '${charToString(ch)}' (${ch})", pos)
 class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Unexpected token: ${token.formatted()}", pos)

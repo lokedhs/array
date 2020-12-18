@@ -156,7 +156,6 @@ abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunc
 }
 
 class AddAPLFunction : APLFunctionDescriptor {
-
     class AddAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
@@ -180,6 +179,8 @@ class AddAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
+
+        override fun deriveBitwise() = BitwiseXorFunction()
     }
 
     override fun make(pos: Position) = AddAPLFunctionImpl(pos)
@@ -209,6 +210,8 @@ class SubAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
+
+        override fun deriveBitwise() = BitwiseXorFunction()
     }
 
     override fun make(pos: Position) = SubAPLFunctionImpl(pos)
@@ -238,6 +241,8 @@ class MulAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_1
+
+        override fun deriveBitwise() = BitwiseAndFunction()
     }
 
     override fun make(pos: Position) = MulAPLFunctionImpl(pos)
@@ -326,6 +331,8 @@ class NotAPLFunction : APLFunctionDescriptor {
             }
             return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
         }
+
+        override fun deriveBitwise() = BitwiseNotFunction()
     }
 
     override fun make(pos: Position): APLFunction {
@@ -592,6 +599,8 @@ class AndAPLFunction : APLFunctionDescriptor {
                 { x, y -> (y * (x / complexGcd(x, y))).nearestGaussian().makeAPLNumber() })
         }
 
+        override fun deriveBitwise() = BitwiseAndFunction()
+
         override fun identityValue() = APLLONG_1
     }
 
@@ -627,6 +636,8 @@ class NandAPLFunction : APLFunctionDescriptor {
                 { _, _ -> throwIllegalArgument() }
             )
         }
+
+        override fun deriveBitwise() = BitwiseNandFunction()
 
         private fun throwIllegalArgument(): Nothing {
             throwAPLException(APLIllegalArgumentException("Arguments to nand must be 0 or 1", pos))
@@ -666,6 +677,8 @@ class NorAPLFunction : APLFunctionDescriptor {
                 { _, _ -> throwIllegalArgument() }
             )
         }
+
+        override fun deriveBitwise() = BitwiseNorFunction()
 
         private fun throwIllegalArgument(): Nothing {
             throwAPLException(APLIllegalArgumentException("Arguments to nor must be 0 or 1", pos))
@@ -762,6 +775,8 @@ class OrAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
+
+        override fun deriveBitwise() = BitwiseOrFunction()
     }
 
     override fun make(pos: Position) = OrAPLFunctionImpl(pos)

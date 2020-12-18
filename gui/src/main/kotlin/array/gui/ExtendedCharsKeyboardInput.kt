@@ -39,7 +39,7 @@ class ExtendedCharsKeyboardInput {
             makeKeyDescriptor("\\") to "⊢", makeKeyDescriptor("|", Flag.SHIFT) to "⊣",
             // Third row
             makeKeyDescriptor("a") to "⍺", makeKeyDescriptor("A", Flag.SHIFT) to "⍶",
-            makeKeyDescriptor("s") to "⌈",
+            makeKeyDescriptor("s") to "⌈", makeKeyDescriptor("S", Flag.SHIFT) to "∵",
             makeKeyDescriptor("d") to "⌊",
             makeKeyDescriptor("f") to "_", makeKeyDescriptor("F", Flag.SHIFT) to "⍫",
             makeKeyDescriptor("g") to "∇",

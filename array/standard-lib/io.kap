@@ -1,4 +1,4 @@
-namespace("file")
+namespace("io")
 
 ∇ println (v) {
   print v

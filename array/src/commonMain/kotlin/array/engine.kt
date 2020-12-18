@@ -13,6 +13,7 @@ abstract class APLFunction(val pos: Position) {
         throwAPLException(Unimplemented2ArgException(pos))
 
     open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
+    open fun deriveBitwise(): APLFunctionDescriptor? = null
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
@@ -239,7 +240,7 @@ class Engine {
         registerNativeFunction("mapRemove", MapRemoveAPLFunction())
 
         // io functions
-        registerNativeFunction("print", PrintAPLFunction())
+        registerNativeFunction("print", PrintAPLFunction(), "io")
         registerNativeFunction("readCsvFile", ReadCSVFunction())
         registerNativeFunction("load", LoadFunction())
         registerNativeFunction("httpRequest", HttpRequestFunction())
@@ -276,6 +277,7 @@ class Engine {
         registerNativeOperator("\\", ScanLastAxisOp())
         registerNativeOperator("⍀", ScanFirstAxisOp())
         registerNativeOperator("⍤", RankOperator())
+        registerNativeOperator("∵", BitwiseOp())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
@@ -284,6 +286,9 @@ class Engine {
         platformInit(this)
 
         addModule(UnicodeModule())
+
+        // Temporarily add a default import of io here until we change all the tests
+        currentNamespace.addImport(makeNamespace("io"))
     }
 
     fun addModule(module: KapModule) {

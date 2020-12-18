@@ -46,6 +46,8 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
+
+        override fun deriveBitwise() = BitwiseXorFunction()
     }
 
     override fun make(pos: Position) = NotEqualsAPLFunctionImpl(pos)
