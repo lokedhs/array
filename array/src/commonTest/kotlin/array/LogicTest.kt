@@ -191,11 +191,60 @@ class LogicTest : APLTest() {
     }
 
     @Test
+    fun nandArrayRightArgument() {
+        parseAPLExpression("1 ⍲ 0 1 1 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 0, 0, 1), result)
+        }
+        parseAPLExpression("0 ⍲ 0 1 1 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 1, 1, 1), result)
+        }
+    }
+
+    @Test
+    fun nandArrayLeftArgument() {
+        parseAPLExpression("1 1 0 0 ⍲ 1").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(0, 0, 1, 1), result)
+        }
+        parseAPLExpression("1 1 0 0 ⍲ 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 1, 1, 1), result)
+        }
+    }
+
+
+    @Test
     fun norTest() {
         assertSimpleNumber(1, parseAPLExpression("0⍱0"))
         assertSimpleNumber(0, parseAPLExpression("0⍱1"))
         assertSimpleNumber(0, parseAPLExpression("1⍱0"))
         assertSimpleNumber(0, parseAPLExpression("1⍱1"))
+    }
+
+    @Test
+    fun norArrayRightArgument() {
+        parseAPLExpression("1 ⍱ 0 1 1 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(0, 0, 0, 0), result)
+        }
+        parseAPLExpression("0 ⍱ 0 1 1 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 0, 0, 1), result)
+        }
+    }
+
+    @Test
+    fun norArrayLeftArgument() {
+        parseAPLExpression("1 1 0 0 ⍱ 1").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(0, 0, 0, 0), result)
+        }
+        parseAPLExpression("1 1 0 0 ⍱ 0").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(0, 0, 1, 1), result)
+        }
     }
 
     @Test
