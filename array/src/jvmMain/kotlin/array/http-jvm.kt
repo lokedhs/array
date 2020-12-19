@@ -11,7 +11,7 @@ class HttpResultJvm(
     override val content: String
 ) : HttpResult
 
-actual fun httpRequest(url: String, method: HttpMethod, headers: Map<String, String>?): HttpResult {
+actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
     val httpClient = HttpClient.newBuilder()
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
@@ -19,7 +19,11 @@ actual fun httpRequest(url: String, method: HttpMethod, headers: Map<String, Str
         .uri(URI(url))
         .timeout(Duration.ofMinutes(1))
         .GET()
-        .build()
+        .also { m ->
+            headers?.forEach { (k, v) ->
+                m.header(k, v)
+            }
+        }.build()
     val result = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
     return HttpResultJvm(result.statusCode().toLong(), result.body())
 }

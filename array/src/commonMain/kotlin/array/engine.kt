@@ -243,7 +243,7 @@ class Engine {
         registerNativeFunction("print", PrintAPLFunction(), "io")
         registerNativeFunction("readCsvFile", ReadCSVFunction())
         registerNativeFunction("load", LoadFunction())
-        registerNativeFunction("httpRequest", HttpRequestFunction())
+        registerNativeFunction("httpRequest", HttpRequestFunction(), "io")
         registerNativeFunction("readdir", ReaddirFunction())
 
         // misc functions

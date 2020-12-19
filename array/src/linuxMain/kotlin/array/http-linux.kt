@@ -42,7 +42,7 @@ class CurlTask {
 }
 
 @OptIn(ExperimentalUnsignedTypes::class)
-actual fun httpRequest(url: String, method: HttpMethod, headers: Map<String, String>?): HttpResult {
+actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
     val task = CurlTask()
     return task.httpRequest(url)
 }
