@@ -51,12 +51,22 @@ class ForEachTest : APLTest() {
     }
 
     @Test
-    fun scalarForEachWithListResult() {
+    fun scalarForEachTwoArgsWithVectorResult() {
         parseAPLExpression("1,¨1").let { result ->
             assertDimension(emptyDimensions(), result)
             val inner = result.valueAt(0)
             assertDimension(dimensionsOfSize(2), inner)
             assertArrayContent(arrayOf(1, 1), inner)
+        }
+    }
+
+    @Test
+    fun scalarForEachOneArgWithVectorResult() {
+        parseAPLExpression(",¨1").let { result ->
+            assertDimension(emptyDimensions(), result)
+            val inner = result.valueAt(0)
+            assertDimension(dimensionsOfSize(1), inner)
+            assertArrayContent(arrayOf(1), inner)
         }
     }
 }

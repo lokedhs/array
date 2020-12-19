@@ -42,7 +42,12 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
         return object : APLFunction(pos) {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 return if (a.isScalar()) {
-                    fn.eval1Arg(context, a, null)
+                    val result = fn.eval1Arg(context, a, null)
+                    return if (result is APLSingleValue) {
+                        result
+                    } else {
+                        EnclosedAPLValue(result)
+                    }
                 } else {
                     ForEachResult1Arg(context, fn, a, axis, pos)
                 }
