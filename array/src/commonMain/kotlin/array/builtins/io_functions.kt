@@ -11,9 +11,10 @@ class PrintAPLFunction : APLFunctionDescriptor {
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val plainSym = context.engine.internSymbol("plain")
-            val prettySym = context.engine.internSymbol("pretty")
-            val readSym = context.engine.internSymbol("read")
+            val engine = context.engine
+            val plainSym = engine.internSymbol("plain", engine.keywordNamespace)
+            val prettySym = engine.internSymbol("pretty", engine.keywordNamespace)
+            val readSym = engine.internSymbol("read", engine.keywordNamespace)
 
             val style = when (val styleName = a.ensureSymbol().value) {
                 plainSym -> FormatStyle.PLAIN
