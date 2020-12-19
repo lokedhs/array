@@ -37,7 +37,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
 class ReadCSVFunction : APLFunctionDescriptor {
     class ReadCSVFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val source = openCharFile(arrayAsStringValue(a, pos))
+            val source = openCharFile(a.toStringValue(pos))
             try {
                 return readCsv(source)
             } finally {
@@ -52,7 +52,7 @@ class ReadCSVFunction : APLFunctionDescriptor {
 class LoadFunction : APLFunctionDescriptor {
     class LoadFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val requestedFile = arrayAsStringValue(a, pos)
+            val requestedFile = a.toStringValue(pos)
             val file = context.engine.resolveLibraryFile(requestedFile) ?: requestedFile
             val engine = context.engine
             engine.withSavedNamespace {
@@ -67,13 +67,31 @@ class LoadFunction : APLFunctionDescriptor {
 class HttpRequestFunction : APLFunctionDescriptor {
     class HttpRequestFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val url = arrayAsStringValue(a, pos)
+            val url = a.toStringValue(pos)
             val result = httpRequest(url)
-            return makeAPLString(result.content)
+            return APLString.make(result.content)
         }
     }
 
     override fun make(pos: Position) = HttpRequestFunctionImpl(pos)
+}
+
+class HttpPostFunction : APLFunctionDescriptor {
+    class HttpPostFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val args = a.listify()
+            val url = args.listElement(0).toStringValue(pos)
+            val data = when (args.listSize()) {
+                1 -> APLString.make("")
+                2 -> args.listElement(1)
+                else -> throwAPLException(APLIllegalArgumentException("Function requires one or two arguments", pos))
+            }
+            val result = httpPost(url, data.asByteArray())
+            return APLString.make(result.content)
+        }
+    }
+
+    override fun make(pos: Position) = HttpPostFunctionImpl(pos)
 }
 
 class ReaddirFunction : APLFunctionDescriptor {
@@ -87,7 +105,7 @@ class ReaddirFunction : APLFunctionDescriptor {
         }
 
         private fun loadContent(context: RuntimeContext, file: APLValue, selectors: List<OutputType>): APLValue {
-            val content = readDirectoryContent(arrayAsStringValue(file))
+            val content = readDirectoryContent(file.toStringValue())
             val numCols = 1 + selectors.size
             val d = dimensionsOfSize(content.size, numCols)
             val valueList = Array(d.contentSize()) { i ->
@@ -95,7 +113,7 @@ class ReaddirFunction : APLFunctionDescriptor {
                 val col = i % numCols
                 val pathEntry = content[row]
                 if (col == 0) {
-                    makeAPLString(pathEntry.name)
+                    APLString.make(pathEntry.name)
                 } else {
                     when (selectors[col - 1]) {
                         OutputType.SIZE -> pathEntry.size.makeAPLNumber()

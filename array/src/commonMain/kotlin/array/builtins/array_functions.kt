@@ -1325,7 +1325,7 @@ class SelectElementsLastAxisFunction : APLFunctionDescriptor {
 class FormatAPLFunction : APLFunctionDescriptor {
     class FormatAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            return makeAPLString(a.formatted(FormatStyle.PLAIN))
+            return APLString.make(a.formatted(FormatStyle.PLAIN))
         }
     }
 

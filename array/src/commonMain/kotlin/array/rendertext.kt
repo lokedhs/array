@@ -370,7 +370,7 @@ fun encloseInBox(value: APLValue, style: FormatStyle): String {
         value is APLSingleValue -> value.formatted(style)
         value.isScalar() -> encloseString(String2D(value.valueAt(0).formatted(style)))
         isNullValue(value) -> renderNullValue(style)
-        isStringValue(value) -> renderStringValue(value, style)
+        value.isStringValue() -> renderStringValue(value, style)
         else -> encloseNDim(value)
     }
 }

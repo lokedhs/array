@@ -11,10 +11,13 @@ class HttpResultJvm(
     override val content: String
 ) : HttpResult
 
-actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
-    val httpClient = HttpClient.newBuilder()
+private fun makeHttpClient(): HttpClient {
+    return HttpClient.newBuilder()
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
+}
+
+actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
     val httpRequest = HttpRequest.newBuilder()
         .uri(URI(url))
         .timeout(Duration.ofMinutes(1))
@@ -24,6 +27,20 @@ actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
                 m.header(k, v)
             }
         }.build()
-    val result = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
+    val result = makeHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString())
+    return HttpResultJvm(result.statusCode().toLong(), result.body())
+}
+
+actual fun httpPost(url: String, content: ByteArray, headers: Map<String, String>?): HttpResult {
+    val httpRequest = HttpRequest.newBuilder()
+        .uri(URI(url))
+        .timeout(Duration.ofMinutes(1))
+        .POST(HttpRequest.BodyPublishers.ofByteArray(content))
+        .also { m ->
+            headers?.forEach { (k, v) ->
+                m.header(k, v)
+            }
+        }.build()
+    val result = makeHttpClient().send(httpRequest, HttpResponse.BodyHandlers.ofString())
     return HttpResultJvm(result.statusCode().toLong(), result.body())
 }

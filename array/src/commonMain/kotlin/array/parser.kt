@@ -377,11 +377,9 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is ApplyToken -> return processFn(parseApplyDefinition().make(pos), leftArgs)
                 is NamespaceToken -> processNamespace()
                 is ImportToken -> processImport()
-                is ExportToken -> processExport()
                 is DefsyntaxSubToken -> processDefsyntaxSub(this, pos)
                 is DefsyntaxToken -> leftArgs.add(processDefsyntax(this, pos))
                 is IncludeToken -> leftArgs.add(processInclude(pos))
-                is LocalToken -> processLocal()
                 is DeclareToken -> processDeclare()
                 is OpenBracket -> processIndex(pos)
                 else -> throw UnexpectedToken(token, pos)
@@ -430,38 +428,47 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.engine.currentNamespace.addImport(namespace)
     }
 
-    private fun parseSymbolList(fn: (Symbol) -> Unit) {
-        tokeniser.nextTokenWithType<OpenParen>()
-        while (true) {
-            val (token, pos) = tokeniser.nextTokenWithPosition()
-            when (token) {
-                is Symbol -> fn(token)
-                is CloseParen -> break
-                else -> throw UnexpectedToken(token, pos)
+    private fun parseSymbolOrSymbolList(fn: (Symbol) -> Unit) {
+        val (firstToken, firstTokenPos) = tokeniser.nextTokenWithPosition()
+        when (firstToken) {
+            is Symbol -> fn(firstToken)
+            is OpenParen -> {
+                while (true) {
+                    val (token, pos) = tokeniser.nextTokenWithPosition()
+                    when (token) {
+                        is Symbol -> fn(token)
+                        is CloseParen -> break
+                        else -> throw UnexpectedToken(token, pos)
+                    }
+                }
             }
+            !is CloseParen -> throw UnexpectedToken(firstToken, firstTokenPos)
         }
     }
 
     private fun processExport() {
-        parseSymbolList { sym ->
+        parseSymbolOrSymbolList { sym ->
             exportSymbolIfInterned(sym)
         }
     }
 
 
     private fun processLocal() {
-        parseSymbolList { sym ->
+        parseSymbolOrSymbolList { sym ->
             currentEnvironment().bindLocal(sym)
         }
     }
 
-    private fun processSingleCharDeclaration() {
+    private fun processSingleCharDeclaration(exported: Boolean) {
         val (stringToken, stringPos) = tokeniser.nextTokenAndPosWithType<StringToken>()
         val codepointList = stringToken.value.asCodepointList()
         if (codepointList.size != 1) {
             throw IllegalDeclaration("singleChar declaration argument must be a string of length 1", stringPos)
         }
         tokeniser.registerSingleCharFunction(stringToken.value)
+        if (exported) {
+            tokeniser.engine.registerExportedSingleCharFunction(stringToken.value)
+        }
     }
 
     private fun processDeclare() {
@@ -472,7 +479,10 @@ class APLParser(val tokeniser: TokenGenerator) {
             throw IllegalDeclaration("Declaration name must be a keyword", symPosition)
         }
         when (sym.symbolName) {
-            "singleChar" -> processSingleCharDeclaration()
+            "singleChar" -> processSingleCharDeclaration(false)
+            "singleCharExported" -> processSingleCharDeclaration(true)
+            "export" -> processExport()
+            "local" -> processLocal()
             else -> throw IllegalDeclaration("Unknown declaration name: ${sym.nameWithNamespace()}")
         }
         tokeniser.nextTokenWithType<CloseParen>()

@@ -168,6 +168,7 @@ class Engine {
     private val customSyntaxEntries = HashMap<Symbol, CustomSyntax>()
     private val librarySearchPaths = ArrayList<String>()
     private val modules = ArrayList<KapModule>()
+    private val exportedSingleCharFunctions = HashSet<String>()
 
     val rootContext = RuntimeContext(this, Environment())
     var standardOutput: CharacterOutput = NullCharacterOutput()
@@ -244,6 +245,7 @@ class Engine {
         registerNativeFunction("readCsvFile", ReadCSVFunction())
         registerNativeFunction("load", LoadFunction())
         registerNativeFunction("httpRequest", HttpRequestFunction(), "io")
+        registerNativeFunction("httpPost", HttpPostFunction(), "io")
         registerNativeFunction("readdir", ReaddirFunction())
 
         // misc functions
@@ -361,7 +363,11 @@ class Engine {
 
     fun parseAndEval(source: SourceLocation, newContext: Boolean): APLValue {
         withThreadLocalAssigned {
-            val parser = APLParser(TokenGenerator(this, source))
+            val tokeniser = TokenGenerator(this, source)
+            exportedSingleCharFunctions.forEach { token ->
+                tokeniser.registerSingleCharFunction(token)
+            }
+            val parser = APLParser(tokeniser)
             return if (newContext) {
                 withSavedNamespace {
                     val instr = parser.parseValueToplevel(EndOfFile)
@@ -441,6 +447,10 @@ class Engine {
         } finally {
             threadLocalEngineRef.value = oldThreadLocal
         }
+    }
+
+    fun registerExportedSingleCharFunction(name: String) {
+        exportedSingleCharFunctions.add(name)
     }
 }
 

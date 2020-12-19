@@ -97,7 +97,7 @@ open class APLTest {
 
     fun assertString(expected: String, value: APLValue) {
         assertEquals(1, value.dimensions.size)
-        assertEquals(expected, arrayAsStringValue(value))
+        assertEquals(expected, value.toStringValue())
     }
 
     fun assertAPLNull(value: APLValue) {

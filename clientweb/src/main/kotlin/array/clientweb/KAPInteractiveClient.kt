@@ -125,7 +125,7 @@ class KAPInteractiveClient(props: ClientProps) : RComponent<ClientProps, ClientS
         val d = value.dimensions
         when {
             value is APLSingleValue -> +value.formatted(FormatStyle.PRETTY)
-            isStringValue(value) -> +value.formatted(FormatStyle.PRETTY)
+            value.isStringValue() -> +value.formatted(FormatStyle.PRETTY)
             d.size == 0 -> genericTableRender(1, 1, { _, _ -> value.valueAt(0) })
             d.size == 1 -> genericTableRender(1, d[0], { _, col -> value.valueAt(col) })
             d.size == 2 -> renderTableValue2D(value)

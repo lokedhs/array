@@ -3,14 +3,6 @@
 
 namespace("kap")
 
-∇ p (title ; value) {
-  file:println title
-  file:println value
-  file:println "shape: "
-  file:println ⍴value
-  file:println "--end--"
-}
-
 ∇ norm (B) {
   (B+.×+B)*0.5
 }
@@ -73,4 +65,4 @@ namespace("kap")
   }
 }
 
-export(⌹)
+declare(:export ⌹)

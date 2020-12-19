@@ -125,7 +125,7 @@ class LabelsFunction : APLFunctionDescriptor {
                             if (value.dimensions.size != 1) {
                                 throwAPLException(InvalidDimensionsException("Label should be a single-dimensional array", pos))
                             }
-                            labelsList.add(if (value.dimensions[0] == 0) null else AxisLabel(arrayAsStringValue(value)))
+                            labelsList.add(if (value.dimensions[0] == 0) null else AxisLabel(value.toStringValue()))
                         }
                         labelsList
                     } else {

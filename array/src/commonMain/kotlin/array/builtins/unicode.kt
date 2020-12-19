@@ -57,7 +57,7 @@ class MakeCharsFromCodepoints : APLFunctionDescriptor {
 class GraphemesFunction : APLFunctionDescriptor {
     class GraphemesFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val graphemeList = arrayAsStringValue(a, pos).asGraphemeList()
+            val graphemeList = a.toStringValue(pos).asGraphemeList()
             return APLArrayImpl(dimensionsOfSize(graphemeList.size), Array(graphemeList.size) { i ->
                 APLString(graphemeList[i])
             })

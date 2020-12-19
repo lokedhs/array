@@ -4,10 +4,18 @@ defsyntax if (:value cond :nfunction thenStatement :optional (:constant else :nf
   ⍞(((cond ≡ 1) ∨ ((1=≢cond) ∧ (↑cond) ≡ 1)) ⌷ (⍞((isLocallyBound 'elseStatement) ⌷ λ{λ{⍬}} λ{elseStatement}) ⍬) thenStatement) cond
 }
 
-export(if else)
+declare(:export (if else))
 
 defsyntax while (:nexprfunction cond :nfunction body) {
   {if (⍞cond 0) { ⍞body 0 ◊ 0 } else { 1 }} ⍣ {⍵} 0
 }
 
-export(while)
+declare(:export while)
+
+declare(:singleCharExported "⊇")
+
+∇ (A) ⊇ (B) {
+  {(⊂⍵)⊃B}¨A
+}
+
+declare(:export ⊇)

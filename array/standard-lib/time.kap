@@ -4,7 +4,7 @@ namespace("time")
   startTime ← time:timeMillis 0
   result ← ⍞fn 0
   endTime ← time:timeMillis 0
-  file:println "Total time: ",(⍕(endTime - startTime)÷1000)
+  io:println "Total time: ",(⍕(endTime - startTime)÷1000)
   result
 }
 
@@ -12,4 +12,4 @@ defsyntax measureTime (:nfunction fn) {
   measureTimeInternal fn
 }
 
-export(measureTime)
+declare(:export measureTime)

@@ -6,4 +6,4 @@ namespace("io")
   v
 }
 
-export(println)
+declare(:export println)

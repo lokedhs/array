@@ -156,7 +156,7 @@ class EmptyValueMarker(pos: Position) : Instruction(pos) {
 }
 
 class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = makeAPLString(s)
+    override fun evalWithContext(context: RuntimeContext) = APLString.make(s)
 }
 
 class AssignmentInstruction(val binding: EnvironmentBinding, val instr: Instruction, pos: Position) : Instruction(pos) {

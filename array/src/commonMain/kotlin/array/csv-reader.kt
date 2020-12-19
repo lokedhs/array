@@ -96,10 +96,10 @@ private fun readRow(line: String, lineNumber: Int): List<APLValue>? {
         skipWhitespace()
         if (atEol()) break
         val field = when (val ch = line[pos++]) {
-            '"' -> makeAPLString(readQuotedField())
+            '"' -> APLString.make(readQuotedField())
             ',' -> {
                 pos--
-                makeAPLString("")
+                APLString.make("")
             }
             else -> stringToAplValue(readUnquotedField(ch))
         }
@@ -125,6 +125,6 @@ private fun stringToAplValue(string: String): APLValue {
         PATTERN_INTEGER.matches(string) -> string.toLong().makeAPLNumber()
         PATTERN_FLOAT1.matches(string) -> string.toDouble().makeAPLNumber()
         PATTERN_FLOAT2.matches(string) -> string.toDouble().makeAPLNumber()
-        else -> makeAPLString(string)
+        else -> APLString.make(string)
     }
 }

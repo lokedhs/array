@@ -41,10 +41,13 @@ class CurlTask {
     }
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
 actual fun httpRequest(url: String, headers: Map<String, String>?): HttpResult {
     val task = CurlTask()
     return task.httpRequest(url)
+}
+
+actual fun httpPost(url: String, content: ByteArray, headers: Map<String, String>?): HttpResult {
+    TODO("not implemented")
 }
 
 @OptIn(ExperimentalUnsignedTypes::class)

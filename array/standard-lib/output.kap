@@ -59,4 +59,4 @@ namespace("output")
   0
 }
 
-export(prettyPrint)
+declare(:export prettyPrint)

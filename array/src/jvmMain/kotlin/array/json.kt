@@ -5,7 +5,7 @@ import array.json.parseJsonToAPL
 class ReadJsonAPLFunction : APLFunctionDescriptor {
     class ReadJsonAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val filename = arrayAsStringValue(a, pos)
+            val filename = a.toStringValue(pos)
             val json = openCharFile(filename).use { input ->
                 parseJsonToAPL(input)
             }
@@ -19,7 +19,7 @@ class ReadJsonAPLFunction : APLFunctionDescriptor {
 class ReadStringJsonAPLFunction : APLFunctionDescriptor {
     class ReadStringJsonAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val content = arrayAsStringValue(a, pos)
+            val content = a.toStringValue(pos)
             return parseJsonToAPL(StringCharacterProvider(content))
         }
     }

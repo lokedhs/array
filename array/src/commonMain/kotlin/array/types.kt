@@ -181,6 +181,44 @@ fun APLValue.listify(): APLList {
     }
 }
 
+/**
+ * Converts the content of this value to a byte array according to the following rules:
+ *
+ *   - If the array is not a scalar or vector, throw an exception
+ *   - If the size of the array is zero, return a zero-length [ByteArray]
+ *   - If each value in the array is an integer in the range 0-255, create a byte array with the corresponding values
+ *   - If each value in the array is a character, encode the string as UTF-8
+ *   - Otherwise, throw an exception
+ */
+fun APLValue.asByteArray(pos: Position? = null): ByteArray {
+    val v = this.collapse().arrayify()
+    if (v.dimensions.size != 1) {
+        throwAPLException(InvalidDimensionsException("Value must be a scalar or a one-dimensional array"))
+    }
+    val size = v.dimensions[0]
+    if (size == 0) {
+        return byteArrayOf()
+    } else {
+        return when (val firstValue = v.valueAt(0)) {
+            is APLNumber -> {
+                ByteArray(size) { i ->
+                    val valueInt = (if (i == 0) firstValue else v.valueAt(i)).ensureNumber(pos).asInt()
+                    if (valueInt < 0 || valueInt > 255) {
+                        throwAPLException(APLEvalException("Element at index ${i} in array is not a byte: ${valueInt}", pos))
+                    }
+                    valueInt.toByte()
+                }
+            }
+            is APLChar -> {
+                v.toStringValue(pos).encodeToByteArray()
+            }
+            else -> {
+                throwAPLException(APLEvalException("Value cannot be converted to byte array", pos))
+            }
+        }
+    }
+}
+
 inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
     if (rank == 0) {
         fn(this)
@@ -474,7 +512,7 @@ class ComparableList<T> : MutableList<T> by ArrayList<T>() {
 
 private fun arrayToAPLFormat(value: APLArray): String {
     val v = value.collapse()
-    return if (isStringValue(v)) {
+    return if (v.isStringValue()) {
         renderStringValue(v, FormatStyle.READABLE)
     } else {
         arrayToAPLFormatStandard(v as APLArray)
@@ -515,11 +553,11 @@ fun isNullValue(value: APLValue): Boolean {
     return dimensions.size == 1 && dimensions[0] == 0
 }
 
-fun isStringValue(value: APLValue): Boolean {
-    val dimensions = value.dimensions
+fun APLValue.isStringValue(): Boolean {
+    val dimensions = this.dimensions
     if (dimensions.size == 1) {
-        for (i in 0 until value.size) {
-            val v = value.valueAt(i)
+        for (i in 0 until this.size) {
+            val v = this.valueAt(i)
             if (v !is APLChar) {
                 return false
             }
@@ -530,15 +568,15 @@ fun isStringValue(value: APLValue): Boolean {
     }
 }
 
-fun arrayAsStringValue(array: APLValue, pos: Position? = null): String {
-    val dimensions = array.dimensions
+fun APLValue.toStringValue(pos: Position? = null): String {
+    val dimensions = this.dimensions
     if (dimensions.size != 1) {
         throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
     }
 
     val buf = StringBuilder()
-    for (i in 0 until array.size) {
-        val v = array.valueAt(i)
+    for (i in 0 until this.size) {
+        val v = this.valueAt(i)
         if (v !is APLChar) {
             throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
         }
@@ -613,8 +651,6 @@ class APLChar(val value: Int) : APLSingleValue() {
     override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
 }
 
-fun makeAPLString(s: String) = APLString(s)
-
 class APLString(val content: IntArray) : APLArray() {
     constructor(string: String) : this(string.asCodepointList().toIntArray())
 
@@ -622,6 +658,10 @@ class APLString(val content: IntArray) : APLArray() {
     override fun valueAt(p: Int) = APLChar(content[p])
 
     override fun collapseInt() = this
+
+    companion object {
+        fun make(s: String) = APLString(s)
+    }
 }
 
 private val NULL_DIMENSIONS = dimensionsOfSize(0)
@@ -662,7 +702,10 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
         if (reference is APLSymbol) {
             return value.compareTo(reference.value)
         } else {
-            throwAPLException(IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}", pos))
+            throwAPLException(
+                IncompatibleTypeException(
+                    "Symbols can't be compared to values with type: ${reference.aplValueType.typeName}",
+                    pos))
         }
     }
 

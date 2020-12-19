@@ -27,11 +27,9 @@ object ListSeparator : Token()
 object Newline : Token()
 object NamespaceToken : Token()
 object ImportToken : Token()
-object ExportToken : Token()
 object DefsyntaxSubToken : Token()
 object DefsyntaxToken : Token()
 object IncludeToken : Token()
-object LocalToken : Token()
 object DeclareToken : Token()
 
 class Namespace(val name: String) {
@@ -154,11 +152,9 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private val stringToKeywordMap = hashMapOf(
         "namespace" to NamespaceToken,
         "import" to ImportToken,
-        "export" to ExportToken,
         "defsyntaxsub" to DefsyntaxSubToken,
         "defsyntax" to DefsyntaxToken,
         "use" to IncludeToken,
-        "local" to LocalToken,
         "declare" to DeclareToken
     )
 
