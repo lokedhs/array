@@ -55,7 +55,12 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
                 axis: APLValue?
             ): APLValue {
                 if (a.isScalar() && b.isScalar()) {
-                    return fn.eval2Arg(context, a, b, axis)
+                    val result = fn.eval2Arg(context, a, b, axis).unwrapDeferredValue()
+                    return if (result is APLSingleValue) {
+                        result
+                    } else {
+                        EnclosedAPLValue(result)
+                    }
                 }
                 val a1 = if (a.isScalar()) {
                     ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))

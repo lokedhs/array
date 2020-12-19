@@ -49,4 +49,14 @@ class ForEachTest : APLTest() {
         )
         assertSimpleNumber(2, result)
     }
+
+    @Test
+    fun scalarForEachWithListResult() {
+        parseAPLExpression("1,¨1").let { result ->
+            assertDimension(emptyDimensions(), result)
+            val inner = result.valueAt(0)
+            assertDimension(dimensionsOfSize(2), inner)
+            assertArrayContent(arrayOf(1, 1), inner)
+        }
+    }
 }

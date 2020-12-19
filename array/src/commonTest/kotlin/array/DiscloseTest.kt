@@ -1,5 +1,6 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -249,5 +250,11 @@ class DiscloseTest : APLTest() {
     @Test
     fun pickScalar() {
         assertSimpleNumber(99, parseAPLExpression("⍬⊃99"))
+    }
+
+    @Ignore
+    @Test
+    fun discloseEnclosedNull() {
+        assertSimpleNumber(2, parseAPLExpression("(⊂\"\")⊃2"))
     }
 }
