@@ -36,7 +36,7 @@ class ArgParser(vararg options: Option) {
             val buf = StringBuilder()
             buf.append("  --")
             buf.append(option.name)
-            if(description != null) {
+            if (description != null) {
                 buf.append(" ")
                 buf.append(description)
             }

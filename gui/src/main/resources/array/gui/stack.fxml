@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.*?>
-
-
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="array.gui.StackTrace">
-   <children>
-      <TableView id="stackTraceTable" fx:id="stackTraceTable" layoutX="634.0" layoutY="-86.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <columns>
-          <TableColumn fx:id="stackTraceLevelColumn" editable="false" prefWidth="75.0" sortable="false" text="Level" />
-          <TableColumn fx:id="stackTraceNameColumn" editable="false" prefWidth="600.0" sortable="false" text="Name" />
-        </columns>
-      </TableView>
-   </children>
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="array.gui.StackTrace">
+    <children>
+        <TableView id="stackTraceTable" fx:id="stackTraceTable" layoutX="634.0" layoutY="-86.0" prefHeight="200.0" prefWidth="200.0"
+                   AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <columns>
+                <TableColumn fx:id="stackTraceLevelColumn" editable="false" prefWidth="75.0" sortable="false" text="Level"/>
+                <TableColumn fx:id="stackTraceNameColumn" editable="false" prefWidth="600.0" sortable="false" text="Name"/>
+            </columns>
+        </TableView>
+    </children>
 </AnchorPane>

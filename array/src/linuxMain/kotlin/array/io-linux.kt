@@ -125,7 +125,7 @@ actual fun fileType(path: String): FileNameType? {
     memScoped {
         val statInfo = alloc<stat>()
         val result = stat(path, statInfo.ptr)
-        if(result != 0) {
+        if (result != 0) {
             return null
         }
         val m = statInfo.st_mode and S_IFMT.toUInt()

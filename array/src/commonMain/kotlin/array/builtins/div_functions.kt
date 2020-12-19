@@ -75,7 +75,10 @@ class CatchOperator : APLOperatorOneArg {
                 override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                     val dimensions = a.dimensions
                     unless(dimensions.size == 2 && dimensions[1] == 2) {
-                        throwAPLException(APLIllegalArgumentException("Catch argument must be a two-dimensional array with two columns", pos))
+                        throwAPLException(
+                            APLIllegalArgumentException(
+                                "Catch argument must be a two-dimensional array with two columns",
+                                pos))
                     }
                     try {
                         return fn.eval1Arg(context, APLNullValue(), null)
@@ -88,7 +91,10 @@ class CatchOperator : APLOperatorOneArg {
                                 val handlerFunction =
                                     a.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, 1), multipliers)).unwrapDeferredValue()
                                 if (handlerFunction !is LambdaValue) {
-                                    throwAPLException(APLIllegalArgumentException("The handler is not callable, this is currently an error.", pos))
+                                    throwAPLException(
+                                        APLIllegalArgumentException(
+                                            "The handler is not callable, this is currently an error.",
+                                            pos))
                                 }
                                 return handlerFunction.makeClosure().eval2Arg(context, e.data, sentTag, null)
                             }

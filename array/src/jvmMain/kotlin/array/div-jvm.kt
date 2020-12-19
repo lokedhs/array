@@ -1,6 +1,5 @@
 package array
 
-import java.lang.IllegalStateException
 import java.util.concurrent.atomic.AtomicReferenceArray
 import kotlin.reflect.KClass
 

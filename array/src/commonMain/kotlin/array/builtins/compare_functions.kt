@@ -140,7 +140,12 @@ inline fun numericRelationOperation(
     fnLong: (al: Long, bl: Long) -> APLValue,
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
-    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ -> throwAPLException(IncompatibleTypeException("Incompatible argument types", pos)) },
+    fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ ->
+        throwAPLException(
+            IncompatibleTypeException(
+                "Incompatible argument types",
+                pos))
+    },
     fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue) = { _, _ ->
         throwAPLException(IncompatibleTypeException("Incompatible argument types", pos))
     }

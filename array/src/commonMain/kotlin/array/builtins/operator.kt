@@ -106,7 +106,10 @@ class RankOperator : APLOperatorValueRightArg {
                 val opArg = instr.evalWithContext(context)
                 val opArgDimension = opArg.dimensions
                 unless(opArgDimension.size == 0 || (opArgDimension.size == 1 && opArgDimension[0] <= 2)) {
-                    throwAPLException(InvalidDimensionsException("Operator argument must be scalar or an array with at most 3 elements", pos))
+                    throwAPLException(
+                        InvalidDimensionsException(
+                            "Operator argument must be scalar or an array with at most 3 elements",
+                            pos))
                 }
                 return opArg
             }

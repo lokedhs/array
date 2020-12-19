@@ -424,7 +424,7 @@ class Engine {
     }
 
     inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
-        if(callStack.size >= 100) {
+        if (callStack.size >= 100) {
             throwAPLException(APLEvalException("Stack overflow", pos))
         }
         val callStackElement = CallStackElement(name, pos)
@@ -532,7 +532,10 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {
             if (expectedLength != actualLength) {
-                throwAPLException(APLIllegalArgumentException("Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}", pos))
+                throwAPLException(
+                    APLIllegalArgumentException(
+                        "Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}",
+                        pos))
             }
         }
 

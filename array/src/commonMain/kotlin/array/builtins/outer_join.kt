@@ -144,8 +144,7 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                         scalarOrVector(aDimensions) && scalarOrVector(bDimensions) -> b.arrayify()
                         scalarOrVector(bDimensions) -> ConstantArray(
                             dimensionsOfSize(aDimensions[aDimensions.size - 1]),
-                            b.singleValueOrError()
-                        )
+                            b.singleValueOrError())
                         else -> b
                     }
                     val a1Dimensions = a1.dimensions

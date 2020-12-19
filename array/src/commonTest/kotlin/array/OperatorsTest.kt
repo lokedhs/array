@@ -96,7 +96,7 @@ class OperatorsTest : APLTest() {
     fun twoArgOperatorPrecedence() {
         parseAPLExpression("1 2+.×¨4 5").let { result ->
             assertDimension(dimensionsOfSize(2), result)
-            assertArrayContent(arrayOf(4,10), result)
+            assertArrayContent(arrayOf(4, 10), result)
         }
     }
 
