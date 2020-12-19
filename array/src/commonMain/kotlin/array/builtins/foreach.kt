@@ -41,7 +41,11 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
     override fun make(pos: Position): APLFunction {
         return object : APLFunction(pos) {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                return ForEachResult1Arg(context, fn, a, axis, pos)
+                return if (a.isScalar()) {
+                    fn.eval1Arg(context, a, null)
+                } else {
+                    ForEachResult1Arg(context, fn, a, axis, pos)
+                }
             }
 
             override fun eval2Arg(

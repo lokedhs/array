@@ -29,4 +29,24 @@ class ForEachTest : APLTest() {
             assertSimpleNumber(12, result)
         }
     }
+
+    @Test
+    fun scalarForEachOneArg() {
+        parseAPLExpression("+¨1").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
+
+    @Test
+    fun scalarForEachOneArgCustomFunction() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo (X) {
+            |  X + 1
+            |}
+            |foo¨ 1
+            """.trimMargin()
+        )
+        assertSimpleNumber(2, result)
+    }
 }
