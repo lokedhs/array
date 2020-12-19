@@ -70,11 +70,22 @@ private class IndexedArrayValue(val content: APLValue, indexValue: Array<Either<
 class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val indexValue = indexInstr.evalWithContext(context)
-        val contentValue = content.evalWithContext(context)
+        val contentValue = content.evalWithContext(context).unwrapDeferredValue()
 
         val aDimensions = contentValue.dimensions
 
-        val indexAsList = convertToList(indexValue)
+        return if (contentValue is APLMap) {
+            contentValue.lookupValue(indexValue)
+        } else {
+            lookupFromArray(indexValue, contentValue, aDimensions)
+        }
+    }
+
+    private fun lookupFromArray(
+        indexValue: APLValue,
+        contentValue: APLValue,
+        aDimensions: Dimensions): IndexedArrayValue {
+        val indexAsList = indexValue.listify()
         if (indexAsList.listSize() != contentValue.dimensions.size) {
             throwAPLException(
                 InvalidDimensionsException(
@@ -103,14 +114,5 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
         }
 
         return IndexedArrayValue(contentValue, axis)
-    }
-
-    private fun convertToList(value: APLValue): APLList {
-        val v = value.unwrapDeferredValue()
-        return if (v is APLList) {
-            v
-        } else {
-            APLList(listOf(v))
-        }
     }
 }

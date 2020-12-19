@@ -172,6 +172,15 @@ interface APLValue {
     }
 }
 
+fun APLValue.listify(): APLList {
+    val v = unwrapDeferredValue()
+    return if (v is APLList) {
+        v
+    } else {
+        APLList(listOf(v))
+    }
+}
+
 inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
     if (rank == 0) {
         fn(this)

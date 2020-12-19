@@ -127,4 +127,24 @@ class MapTest : APLTest() {
         assertString("added2", result.valueAt(1))
         assertString("added3", result.valueAt(2))
     }
+
+    @Test
+    fun mapArraySyntaxGetSimple() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |a["foo"]
+            """.trimMargin())
+        assertString("abc", result)
+    }
+
+    @Test
+    fun mapArraySyntaxNotFound() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ "foo" "abc" "bar" "bcd"
+            |a["abcde"]
+            """.trimMargin())
+        assertAPLNull(result)
+    }
 }
