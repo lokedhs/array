@@ -137,6 +137,8 @@ class Client(val application: ClientApplication, val stage: Stage) {
         }
     }
 
+    val stackTraceWindow by lazy { StackTrace.makeStackTraceWindow(this) }
+
     private fun displayResult(result: Either<APLValue, Exception>) {
         when (result) {
             is Either.Left -> resultList.addResult(result.value)
@@ -151,7 +153,8 @@ class Client(val application: ClientApplication, val stage: Stage) {
                         }
                     }
                     if (ex is APLEvalException) {
-                        StackTrace.makeStackTraceWindow(this, ex)
+                        stackTraceWindow.updateException(ex)
+                        stackTraceWindow.show()
                     }
                 }
             }
