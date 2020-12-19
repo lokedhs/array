@@ -4,4 +4,4 @@ namespace("foo")
     x + 1
 }
 
-export(a)
+declare(:export a)

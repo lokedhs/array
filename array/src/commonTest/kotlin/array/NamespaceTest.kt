@@ -114,7 +114,7 @@ class NamespaceTest : APLTest() {
         val result = parseAPLExpression(
             """
             |namespace("foo")
-            |export(a)
+            |declare(:export a)
             |a ← 'cc
             |namespace("bar")
             |import("foo")
@@ -134,7 +134,7 @@ class NamespaceTest : APLTest() {
     fun kapNamespaceIsAlwaysImported() {
         val result = parseAPLExpression(
             """
-            |export(kap:foo)
+            |declare(:export kap:foo)
             |kap:foo ← 3
             |namespace("bar")
             |foo + 100
@@ -147,7 +147,7 @@ class NamespaceTest : APLTest() {
         val result = parseAPLExpression(
             """
             |namespace("foo")
-            |export(x y)
+            |declare(:export (x y))
             |x ← 1
             |y ← 100
             |namespace("bar")
@@ -161,7 +161,7 @@ class NamespaceTest : APLTest() {
         val result = parseAPLExpression(
             """
             |namespace("foo")
-            |export()
+            |declare(:export ())
             |x ← 1
             |y ← 100
             |namespace("bar")

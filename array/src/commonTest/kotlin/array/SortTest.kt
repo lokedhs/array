@@ -120,7 +120,7 @@ class SortTest : APLTest() {
     fun tokenSymbolComparison() {
         val engine = Engine()
         val sym = APLSymbol(engine.internSymbol("foo"))
-        val str = makeAPLString("bar")
+        val str = APLString.make("bar")
         assertFailsWith<APLEvalException> {
             sym.compare(str)
         }

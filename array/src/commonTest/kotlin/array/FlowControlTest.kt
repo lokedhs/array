@@ -195,7 +195,7 @@ class FlowControlTest : APLTest() {
     fun scopeTestExplicitLocal() {
         val result = parseAPLExpression(
             """
-            |foo ← λ{ x ← 1 + ⍵ ◊ y ← { local(x) x ← 2 ◊ x+50+⍵ } 190 ◊ y+x }
+            |foo ← λ{ x ← 1 + ⍵ ◊ y ← { declare(:local x) x ← 2 ◊ x+50+⍵ } 190 ◊ y+x }
             |⍞foo 60
             """.trimMargin())
         assertSimpleNumber(303, result)
