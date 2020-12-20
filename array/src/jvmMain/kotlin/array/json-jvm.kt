@@ -24,7 +24,7 @@ private fun parseEntry(jsonReader: JsonReader): APLValue {
 }
 
 private fun parseObject(reader: JsonReader): APLMap {
-    val content = ArrayList<Pair<Any, APLValue>>()
+    val content = ArrayList<Pair<APLValue.APLValueKey, APLValue>>()
     reader.beginObject()
     while (true) {
         if (reader.peek() == JsonToken.END_OBJECT) {

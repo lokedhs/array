@@ -365,7 +365,7 @@ class LabelledArray(val value: APLValue, override val labels: DimensionLabels) :
     }
 }
 
-class APLMap(val content: ImmutableMap2<Any, APLValue>) : APLSingleValue() {
+class APLMap(val content: ImmutableMap2<APLValue.APLValueKey, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 

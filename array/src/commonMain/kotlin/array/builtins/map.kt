@@ -6,7 +6,7 @@ class MapAPLFunction : APLFunctionDescriptor {
     class MapAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val a1 = ensureKeyValuesArray(a, pos)
-            val content = ArrayList<Pair<Any, APLValue>>()
+            val content = ArrayList<Pair<APLValue.APLValueKey, APLValue>>()
             repeat(a1.dimensions[0]) { i ->
                 val key = a1.valueAt(i * 2).collapse()
                 val value = a1.valueAt(i * 2 + 1).collapse()

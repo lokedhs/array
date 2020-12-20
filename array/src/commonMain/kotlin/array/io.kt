@@ -186,6 +186,16 @@ class NullCharacterOutput : CharacterOutput {
     override fun writeString(s: String) = Unit
 }
 
+class StringBuilderOutput : CharacterOutput {
+    val buf = StringBuilder()
+    var curr = ""
+
+    override fun writeString(s: String) {
+        buf.append(s)
+        curr = curr + s
+    }
+}
+
 fun fileExists(path: String) = fileType(path) != null
 
 expect fun fileType(path: String): FileNameType?
