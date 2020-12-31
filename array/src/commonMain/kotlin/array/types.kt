@@ -115,7 +115,7 @@ interface APLValue {
 
     fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
-        if (v == this) {
+        if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a numeric value (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureNumber(pos)
@@ -124,7 +124,7 @@ interface APLValue {
 
     fun ensureSymbol(pos: Position? = null): APLSymbol {
         val v = unwrapDeferredValue()
-        if (v == this) {
+        if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a symbol (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureSymbol(pos)
@@ -133,10 +133,19 @@ interface APLValue {
 
     fun ensureList(pos: Position? = null): APLList {
         val v = unwrapDeferredValue()
-        if (v == this) {
+        if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos))
         } else {
             return v.ensureList(pos)
+        }
+    }
+
+    fun ensureMap(pos: Position): APLMap {
+        val v = unwrapDeferredValue()
+        if (v === this) {
+            throwAPLException(IncompatibleTypeException("Value $this is not a map (type=${aplValueType.typeName})", pos))
+        } else {
+            return v.ensureMap(pos)
         }
     }
 
@@ -193,7 +202,7 @@ fun APLValue.listify(): APLList {
 fun APLValue.asByteArray(pos: Position? = null): ByteArray {
     val v = this.collapse().arrayify()
     if (v.dimensions.size != 1) {
-        throwAPLException(InvalidDimensionsException("Value must be a scalar or a one-dimensional array"))
+        throwAPLException(InvalidDimensionsException("Value must be a scalar or a one-dimensional array", pos))
     }
     val size = v.dimensions[0]
     if (size == 0) {
@@ -391,6 +400,10 @@ class APLMap(val content: ImmutableMap2<APLValue.APLValueKey, APLValue>) : APLSi
 
     override fun makeKey(): APLValue.APLValueKey {
         return APLValue.APLValueKeyImpl(this, content)
+    }
+
+    override fun ensureMap(pos: Position): APLMap {
+        return this
     }
 
     fun lookupValue(key: APLValue): APLValue {

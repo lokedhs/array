@@ -48,17 +48,17 @@ class SleepFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = SleepFunctionImpl(pos)
 }
 
-class TagCatch(val tag: APLValue, val data: APLValue) : RuntimeException()
+class TagCatch(val tag: APLValue, val data: APLValue, pos: Position? = null) : APLEvalException(data.formatted(FormatStyle.PLAIN), pos)
 
 class ThrowFunction : APLFunctionDescriptor {
     class ThrowFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val engine = context.engine
-            throw TagCatch(APLSymbol(engine.internSymbol("error", engine.coreNamespace)), a)
+            throwAPLException(TagCatch(APLSymbol(engine.internSymbol("error", engine.coreNamespace)), a, pos))
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            throw TagCatch(a, b)
+            throwAPLException(TagCatch(a, b, pos))
         }
     }
 

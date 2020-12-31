@@ -240,6 +240,7 @@ class Engine {
         registerNativeFunction("mapGet", MapGetAPLFunction())
         registerNativeFunction("mapPut", MapPutAPLFunction())
         registerNativeFunction("mapRemove", MapRemoveAPLFunction())
+        registerNativeFunction("mapToArray", MapKeyValuesFunction())
 
         // io functions
         registerNativeFunction("print", PrintAPLFunction(), "io")

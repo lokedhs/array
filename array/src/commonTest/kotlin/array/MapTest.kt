@@ -3,6 +3,7 @@ package array
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class MapTest : APLTest() {
     @Test
@@ -146,5 +147,26 @@ class MapTest : APLTest() {
             |a["abcde"]
             """.trimMargin())
         assertAPLNull(result)
+    }
+
+    @Test
+    fun readKeyValues() {
+        parseAPLExpression("a ← map 2 2 ⍴ \"foo\" \"abc\" \"bar\" \"bcd\" ◊ mapToArray a").let { result ->
+            fun findKeyAndValue(v: APLValue, findKey: String, findValue: String) {
+                for (i in 0 until v.dimensions[0]) {
+                    val key = v.valueAt(v.dimensions.indexFromPosition(intArrayOf(i, 0))).toStringValue()
+                    val value = v.valueAt(v.dimensions.indexFromPosition(intArrayOf(i, 1))).toStringValue()
+                    if (key == findKey) {
+                        assertEquals(findValue, value, "Value for key does not match")
+                        return
+                    }
+                }
+                fail("Could not find key: '${findKey}'")
+            }
+
+            assertDimension(dimensionsOfSize(2, 2), result)
+            findKeyAndValue(result, "foo", "abc")
+            findKeyAndValue(result, "bar", "bcd")
+        }
     }
 }
