@@ -1,6 +1,7 @@
 package array
 
 import array.builtins.*
+import array.json.JsonAPLModule
 import array.syntax.CustomSyntax
 
 interface APLFunctionDescriptor {
@@ -288,6 +289,7 @@ class Engine {
         platformInit(this)
 
         addModule(UnicodeModule())
+        addModule(JsonAPLModule())
     }
 
     fun addModule(module: KapModule) {

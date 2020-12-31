@@ -53,7 +53,7 @@ class SourceEditor(val client: Client) {
 
         vbox.children.add(messageArea)
 
-        stage.scene = Scene(vbox, 400.0, 600.0)
+        stage.scene = Scene(vbox, 1000.0, 900.0)
 
         client.sourceEditors.add(this)
         stage.onCloseRequest = EventHandler { client.sourceEditors.remove(this) }

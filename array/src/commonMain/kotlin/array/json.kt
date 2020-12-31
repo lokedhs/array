@@ -3,8 +3,22 @@ package array.json
 import array.*
 
 class JsonEncodeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
+class JsonDecodeException(message: String, pos: Position? = null) : APLEvalException(message, pos)
+
+class JsonParseException : Exception {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
+}
 
 expect fun parseJsonToAPL(input: CharacterProvider): APLValue
+
+fun parseJsonToAPLWithExceptions(input: CharacterProvider, pos: Position? = null): APLValue {
+    try {
+        return parseJsonToAPL(input)
+    } catch (e: JsonParseException) {
+        throwAPLException(JsonDecodeException("Error parsing JSON: ${e.message}", pos))
+    }
+}
 
 fun parseAPLToJson(engine: Engine, input: APLValue, output: CharacterOutput, pos: Position?) {
     val v = input.collapse()
@@ -93,6 +107,7 @@ private fun jsonEscape(s: String): String {
     s.forEach { ch ->
         when {
             ch == '\\' -> buf.append("\\\\")
+            ch == '"' -> buf.append("\\\"")
             isPrintable(ch) -> buf.append(ch)
             else -> {
                 buf.append("\\u")
@@ -112,4 +127,54 @@ private fun isPrintable(ch: Char): Boolean {
     return (ch in 'a'..'z') ||
             (ch in 'A'..'Z') ||
             (ch in 0x20.toChar()..0x3f.toChar())
+}
+
+class ReadJsonAPLFunction : APLFunctionDescriptor {
+    class ReadJsonAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val filename = a.toStringValue(pos)
+            val json = openCharFile(filename).use { input ->
+                parseJsonToAPLWithExceptions(input, pos)
+            }
+            return json
+        }
+    }
+
+    override fun make(pos: Position) = ReadJsonAPLFunctionImpl(pos)
+}
+
+class ReadStringJsonAPLFunction : APLFunctionDescriptor {
+    class ReadStringJsonAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val content = a.toStringValue(pos)
+            return parseJsonToAPLWithExceptions(StringCharacterProvider(content), pos)
+        }
+    }
+
+    override fun make(pos: Position) = ReadStringJsonAPLFunctionImpl(pos)
+}
+
+class WriteStringJsonAPLFunction : APLFunctionDescriptor {
+    class WriteStringJsonAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val out = StringBuilderOutput()
+            parseAPLToJson(context.engine, a, out, pos)
+            return APLString.make(out.buf.toString())
+        }
+    }
+
+    override fun make(pos: Position) = WriteStringJsonAPLFunctionImpl(pos)
+}
+
+
+class JsonAPLModule : KapModule {
+    override val name: String
+        get() = "json"
+
+    override fun init(engine: Engine) {
+        val namespace = engine.makeNamespace("json")
+        engine.registerFunction(namespace.internAndExport("read"), ReadJsonAPLFunction())
+        engine.registerFunction(namespace.internAndExport("readString"), ReadStringJsonAPLFunction())
+        engine.registerFunction(namespace.internAndExport("writeString"), WriteStringJsonAPLFunction())
+    }
 }

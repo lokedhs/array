@@ -4,11 +4,19 @@ import array.*
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
+import com.google.gson.stream.MalformedJsonException
+import java.io.IOException
 
 actual fun parseJsonToAPL(input: CharacterProvider): APLValue {
     val gson = Gson()
-    val jsonReader = gson.newJsonReader(CharacterProviderReaderWrapper(input))
-    return parseEntry(jsonReader)
+    try {
+        val jsonReader = gson.newJsonReader(CharacterProviderReaderWrapper(input))
+        return parseEntry(jsonReader)
+    } catch (e: MalformedJsonException) {
+        throw JsonParseException("Parse error in JSON: ${e.message}", e)
+    } catch (e: IOException) {
+        throw JsonParseException("IO Error while parsing JSON: ${e.message}", e)
+    }
 }
 
 private fun parseEntry(jsonReader: JsonReader): APLValue {

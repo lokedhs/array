@@ -66,6 +66,15 @@ class JsonTest : APLTest() {
     }
 
     @Test
+    fun escapeStringOutput() {
+        val output = StringBuilderOutput()
+        val (result, engine) = parseAPLExpression2("\"abc\\\"a\"")
+        parseAPLToJson(engine, result, output, null)
+        val jsonResult = Gson().fromJson(output.buf.toString(), String::class.java)
+        assertEquals("abc\"a", jsonResult)
+    }
+
+    @Test
     fun encodeSingleDouble() {
         val output = StringBuilderOutput()
         val (result, engine) = parseAPLExpression2("2.1")
