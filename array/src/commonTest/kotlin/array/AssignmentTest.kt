@@ -64,6 +64,20 @@ class AssignmentTest : APLTest() {
     }
 
     @Test
+    fun incompleteAssignment0() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("10←")
+        }
+    }
+
+    @Test
+    fun incompleteAssignment1() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("←20")
+        }
+    }
+
+    @Test
     fun assignmentToList() {
         assertFailsWith<ParseException> {
             parseAPLExpression("foo bar←10")
@@ -103,6 +117,13 @@ class AssignmentTest : APLTest() {
     fun destructuringAssignmentSingleValue() {
         parseAPLExpression("(a) ← 1").let { result ->
             assertSimpleNumber(1, result)
+        }
+    }
+
+    @Test
+    fun destructuringAssignmentWithWrongType() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("(a 1) ← 1 2")
         }
     }
 }
