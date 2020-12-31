@@ -13,6 +13,15 @@ fun parseAPLToJson(engine: Engine, input: APLValue, output: CharacterOutput, pos
         throwAPLException(JsonEncodeException("Value cannot be encoded to JSON: ${v.formatted(FormatStyle.PLAIN)}", pos))
     }
 
+    fun writeKeyValuePair(key: APLValue, value: APLValue) {
+        unless(key.isStringValue()) {
+            throwAPLException(JsonEncodeException("Key is not a string: ${key.formatted(FormatStyle.PLAIN)}", pos))
+        }
+        val escapedKey = jsonEscape(key.toStringValue())
+        output.writeString("\"${escapedKey}\":")
+        parseAPLToJson(engine, value, output, pos)
+    }
+
     when {
         v is APLMap -> {
             output.writeString("{")
@@ -23,13 +32,7 @@ fun parseAPLToJson(engine: Engine, input: APLValue, output: CharacterOutput, pos
                 } else {
                     output.writeString(",")
                 }
-                val key0 = key.value
-                unless(key0.isStringValue()) {
-                    throwAPLException(JsonEncodeException("Key is not a string: ${key0.formatted(FormatStyle.PLAIN)}", pos))
-                }
-                val escapedKey = jsonEscape(key0.toStringValue())
-                output.writeString("\"${escapedKey}\":")
-                parseAPLToJson(engine, value, output, pos)
+                writeKeyValuePair(key.value, value)
             }
             output.writeString("}")
         }
@@ -75,14 +78,7 @@ fun parseAPLToJson(engine: Engine, input: APLValue, output: CharacterOutput, pos
                 if (i > 0) {
                     output.writeString(",")
                 }
-                val key = v.valueAt(i * 2)
-                val value = v.valueAt(i * 2 + 1)
-                unless(key.isStringValue()) {
-                    throwAPLException(JsonEncodeException("Key is not a string: ${key.formatted(FormatStyle.PLAIN)}", pos))
-                }
-                val escapedKey = jsonEscape(key.toStringValue())
-                output.writeString("\"${escapedKey}\":")
-                parseAPLToJson(engine, value, output, pos)
+                writeKeyValuePair(v.valueAt(i * 2), v.valueAt(i * 2 + 1))
             }
             output.writeString("}")
         }

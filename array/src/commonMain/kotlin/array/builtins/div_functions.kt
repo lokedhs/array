@@ -52,8 +52,13 @@ class TagCatch(val tag: APLValue, val data: APLValue) : RuntimeException()
 
 class ThrowFunction : APLFunctionDescriptor {
     class ThrowFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val engine = context.engine
+            throw TagCatch(APLSymbol(engine.internSymbol("error", engine.coreNamespace)), a)
+        }
+
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            throw TagCatch(b, a)
+            throw TagCatch(a, b)
         }
     }
 
