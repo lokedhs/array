@@ -16,13 +16,9 @@ namespace("kap")
     m ← ⌈n÷2
     a0 ← ((1↑⍴B),m) ↑ B
     a1 ← (0,m) ↓ B
-    t ← QR a0
-    q0 ← ↑t[0]
-    r0 ← ↑t[1]
+    (q0 r0) ← QR a0
     c ← (+⍉q0) +.× a1
-    tx ← QR a1-q0+.×c
-    q1 ← ↑tx[0]
-    r1 ← ↑tx[1]
+    (q1 r1) ← QR a1-q0+.×c
     (q0,q1) ((r0,c)⍪((⌊n÷2),-n)↑r1)
   }
 }
@@ -56,9 +52,7 @@ namespace("kap")
         if ((2 ≠ rankB) ∨ (0∊≥/⍴B)) {
           →"error"
         }
-        t ← QR B
-        Q ← ↑t[0]
-        R ← ↑t[1]
+        (Q R) ← QR B
         (Rinv R) +.× +⍉Q
       }
     }
