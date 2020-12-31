@@ -69,4 +69,40 @@ class AssignmentTest : APLTest() {
             parseAPLExpression("foo bar←10")
         }
     }
+
+    @Test
+    fun destructuringAssignment() {
+        parseAPLExpression("(a b) ← 1 11 ◊ a b").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 11), result)
+        }
+    }
+
+    @Test
+    fun destructuringAssignmentTooManyValues() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("(a b) ← 10 20 30")
+        }
+    }
+
+    @Test
+    fun destructuringAssignmentTooFewValues() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("(a b c) ← 10 20")
+        }
+    }
+
+    @Test
+    fun destructuringAssignmentWrongDimensions() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("(a b c d e f) ← 3 2 ⍴ 10 20 30 40 50 50")
+        }
+    }
+
+    @Test
+    fun destructuringAssignmentSingleValue() {
+        parseAPLExpression("(a) ← 1").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
 }

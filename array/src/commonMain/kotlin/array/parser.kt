@@ -219,13 +219,28 @@ class APLParser(val tokeniser: TokenGenerator) {
             throw IncompatibleTypeParseException("Can only assign to a single variable", pos)
         }
         val dest = leftArgs[0]
-        if (dest !is VariableRef) {
-            throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable", pos)
+        val varList = when {
+            dest is VariableRef -> arrayOf(dest.binding)
+            dest is Literal1DArray -> Array<EnvironmentBinding>(dest.values.size) { i ->
+                val instr = dest.values[i]
+                if (instr !is VariableRef) {
+                    throw IncompatibleTypeParseException("Destructuring variable list must only contain variable names", pos)
+                }
+                instr.binding
+            }
+            dest is LiteralScalarValue -> {
+                val instr = dest.value
+                if (instr !is VariableRef) {
+                    throw IncompatibleTypeParseException("Destructuring variable list must only contain variable names", pos)
+                }
+                arrayOf(instr.binding)
+            }
+            else -> throw IncompatibleTypeParseException("Attempt to assign to a type which is not a variable or variable list", pos)
         }
         return when (val holder = parseValue()) {
             is ParseResultHolder.InstrParseResult -> ParseResultHolder.InstrParseResult(
                 AssignmentInstruction(
-                    dest.binding,
+                    varList,
                     holder.instr,
                     pos), holder.lastToken, pos)
             is ParseResultHolder.FnParseResult -> throw IllegalContextForFunction(holder.pos)
