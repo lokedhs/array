@@ -186,6 +186,11 @@ class Engine {
             coreNamespace.internAndExport(aplValueType.typeName)
         }
 
+        // Other symbols also needs exporting
+        for (name in listOf("⍵", "⍺", "⍹", "⍶")) {
+            coreNamespace.internAndExport(name)
+        }
+
         // core functions
         registerNativeFunction("+", AddAPLFunction())
         registerNativeFunction("-", SubAPLFunction())

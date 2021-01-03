@@ -5,6 +5,8 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 open class APLGenericException(message: String, val pos: Position? = null, cause: Throwable? = null) : Exception(message, cause) {
+    var extendedDescription: String? = null
+
     fun formattedError(): String {
         val exceptionText = message ?: "no message"
         return if (pos != null) {
@@ -16,6 +18,15 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
 
     override fun toString() = formattedError()
 }
+
+fun <T : APLGenericException> T.details(description: String): T {
+    if (extendedDescription != null) {
+        throw IllegalStateException("Extended description already set")
+    }
+    extendedDescription = description
+    return this
+}
+
 
 open class APLEvalException(message: String, pos: Position? = null) : APLGenericException(message, pos) {
     var callStack: List<CallStackElement>? = null

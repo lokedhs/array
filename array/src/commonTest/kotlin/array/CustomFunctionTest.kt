@@ -125,9 +125,16 @@ class CustomFunctionTest : APLTest() {
     }
 
     @Test
-    fun duplicatedArgumentsTest() {
+    fun duplicatedArgumentsTest0() {
         assertFailsWith<ParseException> {
-            parseAPLExpression("∇ (A;A) { A }")
+            parseAPLExpression("∇ foo (A;A) { A }")
+        }
+    }
+
+    @Test
+    fun duplicatedArgumentsTest1() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (A;A) foo (B) { A+B }")
         }
     }
 
@@ -216,6 +223,85 @@ class CustomFunctionTest : APLTest() {
     fun nativeFunctionRedefinition() {
         assertFailsWith<InvalidFunctionRedefinition> {
             parseAPLExpression("∇ + (x) { 1 + x }")
+        }
+    }
+
+    @Test
+    fun assignedFunction() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo { 1 + ⍵ }
+            |200 + foo 100
+            """.trimMargin())
+        assertSimpleNumber(301, result)
+    }
+
+    @Test
+    fun assignedFunctionTwoArg() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo { 1 + ⍵ + ⍺ }
+            |200 + 5 foo 100
+            """.trimMargin())
+        assertSimpleNumber(306, result)
+    }
+
+    @Test
+    fun assignedFunctionTwoArgWithOneArgShouldFail() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |∇ foo { 1 + ⍵ + ⍺ }
+                |200 + foo 100
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun assignedFunctionMultiline() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo {
+            |  x ← 300
+            |  1 + ⍵ + x
+            |}
+            |200 + foo 100
+            """.trimMargin())
+        assertSimpleNumber(601, result)
+    }
+
+    @Test
+    fun localFunctionScope0() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo {
+            |  30 + ⍵
+            |}
+            |∇ bar { 
+            |  ∇ foo {
+            |    x ← 300
+            |    1 + ⍵ + x
+            |  }
+            |  200 + foo ⍵
+            |}
+            |(foo 1) + bar 100 
+            """.trimMargin())
+        assertSimpleNumber(632, result)
+    }
+
+    @Test
+    fun localFunctionScope1() {
+        assertFailsWith<VariableNotAssigned> {
+            parseAPLExpression(
+                """
+                |∇ bar { 
+                |  ∇ foo {
+                |    1 + ⍵
+                |  }
+                |  100 + foo ⍵
+                |}
+                |foo 10 
+                """.trimMargin())
         }
     }
 }

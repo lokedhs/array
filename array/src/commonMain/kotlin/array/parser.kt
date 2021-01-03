@@ -19,7 +19,7 @@ class EnvironmentBinding(val environment: Environment, val name: Symbol) {
 
 class Environment {
     private val bindings = HashMap<Symbol, EnvironmentBinding>()
-    private val localFunctions = HashMap<Symbol, UserFunction>()
+    private val localFunctions = HashMap<Symbol, APLFunctionDescriptor>()
 
     fun findBinding(sym: Symbol) = bindings[sym]
 
@@ -33,7 +33,7 @@ class Environment {
         return bindings.values
     }
 
-    fun registerLocalFunction(name: Symbol, userFn: UserFunction) {
+    fun registerLocalFunction(name: Symbol, userFn: APLFunctionDescriptor) {
         localFunctions[name] = userFn
     }
 
@@ -214,14 +214,14 @@ class APLParser(val tokeniser: TokenGenerator) {
     }
 
     private fun processAssignment(pos: Position, leftArgs: List<Instruction>): ParseResultHolder.InstrParseResult {
-        // Ensure that the left argument to leftarrow is a single symbol
+        // Ensure that the left argument to leftarrow is a single value (either a symbol or a list of symbols)
         unless(leftArgs.size == 1) {
             throw IncompatibleTypeParseException("Can only assign to a single variable", pos)
         }
         val dest = leftArgs[0]
         val varList = when {
             dest is VariableRef -> arrayOf(dest.binding)
-            dest is Literal1DArray -> Array<EnvironmentBinding>(dest.values.size) { i ->
+            dest is Literal1DArray -> Array(dest.values.size) { i ->
                 val instr = dest.values[i]
                 if (instr !is VariableRef) {
                     throw IncompatibleTypeParseException("Destructuring variable list must only contain variable names", pos)
@@ -248,11 +248,26 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun parseFnArgs(): List<Symbol> {
+    class RelocalisedFunctionDescriptor(val function: APLFunction) : APLFunctionDescriptor {
+        inner class RelocalisedFunctionImpl(pos: Position) : APLFunction(pos) {
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) = function.eval1Arg(context, a, axis)
+            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) =
+                function.eval2Arg(context, a, b, axis)
+
+            override fun identityValue() = function.identityValue()
+            override fun deriveBitwise() = function.deriveBitwise()
+        }
+
+        override fun make(pos: Position): APLFunction {
+            return RelocalisedFunctionImpl(pos)
+        }
+    }
+
+    private fun parseFnArgs(): List<Symbol>? {
         val initial = tokeniser.nextToken()
         if (initial != OpenParen) {
             tokeniser.pushBackToken(initial)
-            return emptyList()
+            return null
         }
 
         val result = ArrayList<Symbol>()
@@ -282,9 +297,8 @@ class APLParser(val tokeniser: TokenGenerator) {
         if (leftArgs.isNotEmpty()) {
             throw ParseException("Function definition with non-null left argument", pos)
         }
-        val definedUserFunction = parseUserDefinedFn(pos)
-        registerDefinedUserFunction(definedUserFunction)
-        return LiteralSymbol(definedUserFunction.name, definedUserFunction.pos)
+        parseAndDefineUserDefinedFn(pos)
+        return LiteralAPLNullValue(pos)
     }
 
     private fun registerDefinedUserFunction(definedUserFunction: DefinedUserFunction) {
@@ -297,10 +311,24 @@ class APLParser(val tokeniser: TokenGenerator) {
         tokeniser.engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
     }
 
-    private fun parseUserDefinedFn(pos: Position): DefinedUserFunction {
+    private fun parseAndDefineUserDefinedFn(pos: Position) {
         val leftFnArgs = parseFnArgs()
         val name = tokeniser.nextTokenWithType<Symbol>()
         val rightFnArgs = parseFnArgs()
+
+        tokeniser.nextTokenWithType<OpenFnDef>()
+
+        val (leftFnArgs0, rightFnArgs0, localDefinition) = when {
+            leftFnArgs == null && rightFnArgs == null -> {
+                val engine = tokeniser.engine
+                Triple(
+                    listOf(engine.internSymbol("⍺", engine.coreNamespace)),
+                    listOf(engine.internSymbol("⍵", engine.coreNamespace)),
+                    true)
+            }
+            else ->
+                Triple(leftFnArgs ?: emptyList(), rightFnArgs ?: emptyList(), false)
+        }
 
         // Ensure that no arguments are duplicated
         fun checkArgs(list: List<Symbol>) {
@@ -309,20 +337,22 @@ class APLParser(val tokeniser: TokenGenerator) {
                 throw ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos)
             }
         }
-        checkArgs(leftFnArgs)
-        checkArgs(rightFnArgs)
+        checkArgs(leftFnArgs0 + rightFnArgs0)
 
-        // Read the opening brace
-        tokeniser.nextTokenWithType<OpenFnDef>()
         // Parse like a normal function definition
-        withEnvironment {
-            val leftFnArgs1 = leftFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
-            val rightFnArgs1 = rightFnArgs.map { sym -> currentEnvironment().bindLocal(sym) }
-            val inProcessUserFunction = UserFunction(name, leftFnArgs1, rightFnArgs1, DummyInstr(pos), currentEnvironment())
+        val definedUserFunction = withEnvironment {
+            val leftFnBindings = leftFnArgs0.map { sym -> currentEnvironment().bindLocal(sym) }
+            val rightFnBindings = rightFnArgs0.map { sym -> currentEnvironment().bindLocal(sym) }
+            val inProcessUserFunction = UserFunction(name, leftFnBindings, rightFnBindings, DummyInstr(pos), currentEnvironment())
             currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
             val instr = parseValueToplevel(CloseFnDef)
             inProcessUserFunction.instr = instr
-            return DefinedUserFunction(inProcessUserFunction, name, pos)
+            DefinedUserFunction(inProcessUserFunction, name, pos)
+        }
+        if (localDefinition) {
+            currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
+        } else {
+            registerDefinedUserFunction(definedUserFunction)
         }
     }
 
