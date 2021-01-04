@@ -1,0 +1,135 @@
+= Introduction to KAP
+
+KAP is an array-based language based on https://aplwiki.com/[APL].
+This document explains the basics of APL as implemented by KAP.
+
+== Datatypes
+
+The following is a list of the main datatypes KAP supports:
+
+- Integer
+- Floating point
+- Character
+- Array
+- Hash table
+- Function
+- Symbol
+
+A number of specialised datatypes also exist.
+Please see the respective section for description of these types.
+
+- List
+- Graphical output device
+
+== Calling functions
+
+=== Monadic calls
+
+There are two ways a function can be called: monadic and dyadic. A monadic function call has the form:
+
+----
+name args
+----
+
+In other words, the function name comes first, followed by the arguments. For example, the function `⍳`
+when call monadically with an integer N, returns an array of numbers from 0 to N-1:
+
+----
+> ⍳ 10
+┏━━━━━━━━━━━━━━━━━━━┓
+┃0 1 2 3 4 5 6 7 8 9┃
+┗━━━━━━━━━━━━━━━━━━━┛
+----
+
+=== Dyadic calls
+
+A dyadic function invocation takes arguments on both sides of the function name:
+
+----
+leftargs name rightargs
+----
+
+An obvious example is the function `+` which adds the two arguments:
+
+----
+> 1 + 2
+3
+----
+
+== Evaluating expressions
+
+The following expression computes the sum of the numbers 10 and 22:
+
+----
+> 10 + 22
+34
+----
+
+Evaluation happens from right-to-left, which is different from most other programming languages. For example,
+the following expression: `3×2+4` returns `18`. This expression is evaluated in the following order:
+
+- `2+4` is evaluated to 6
+- `6` is multiplied with 3 to yield `18`
+
+Parentheses can be used to control evaluation order like most other languages. Consider the following
+expression: `(2+3)×4+10`:
+
+- `4+10` is computed, resulting in `40`
+- `2+3` is computed, resulting in `5`
+- `5×40` gives the final value of `70`
+
+=== Inputting arrays
+
+Multiple value separated by space are parsed as a single-dimensional array:
+
+----
+> 1 2 3 4
+┏━━━━━━━┓
+┃1 2 3 4┃
+┗━━━━━━━┛
+----
+
+The values are rendered using box-drawing characters to indicate that they are part of an array.
+
+The function `⍴` (rho) can be used to determine the dimensions of an array:
+
+----
+> ⍴ 1 2 3 4
+┏━┓
+┃4┃
+┗━┛
+----
+
+This tells us that the array `1 2 3 4` is a one-dimensional array, where the single dimension has size 4.
+
+To explain in more detail, `⍴` is a regular function which, when called with a single argument, returns
+an array containing the size of the argument. Calling a function in this way, with a single argument on the
+right side of the function name is called "monadic".
+
+The second way an APL function can be called is called "dyadic". When a function is called this way, two
+arguments are passed to the function: one on the left side of the function name and the other on the right.
+When `⍴` is called dyadically, it takes the argument to the right and reshapes it according to the argument
+to the left.
+
+An example will make this more clear. Let's say we want to create a two-dimensional array consisting of the
+numbers 1 to 6. The resulting array should have 2 rows and three columns.
+
+----
+> 2 3 ⍴ 1 2 3 4 5 6
+┏━━━━━┓
+┃1 2 3┃
+┃4 5 6┃
+┗━━━━━┛
+----
+
+We can then call `⍴` monadically on the result to see the dimensions:
+
+----
+> ⍴ 2 3 ⍴ 1 2 3 4 5 6
+┏━━━┓
+┃2 3┃
+┗━━━┛
+----
+
+As we can see, a monadic invocation of `⍴` returns the dimensions of its argument in the same form
+as was used to create it.

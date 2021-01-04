@@ -312,47 +312,125 @@ class APLParser(val tokeniser: TokenGenerator) {
     }
 
     private fun parseAndDefineUserDefinedFn(pos: Position) {
-        val leftFnArgs = parseFnArgs()
-        val name = tokeniser.nextTokenWithType<Symbol>()
-        val rightFnArgs = parseFnArgs()
+        class FnArgComponent(val symbols: List<Symbol>, val semicolonSeparated: Boolean)
 
-        tokeniser.nextTokenWithType<OpenFnDef>()
-
-        val (leftFnArgs0, rightFnArgs0, localDefinition) = when {
-            leftFnArgs == null && rightFnArgs == null -> {
-                val engine = tokeniser.engine
-                Triple(
-                    listOf(engine.internSymbol("⍺", engine.coreNamespace)),
-                    listOf(engine.internSymbol("⍵", engine.coreNamespace)),
-                    true)
+        fun collectTokenList(list: MutableList<Symbol>) {
+            while (true) {
+                val (token, innerPos) = tokeniser.nextTokenWithPosition()
+                when (token) {
+                    is Symbol -> list.add(token)
+                    is CloseParen -> return
+                    else -> throw UnexpectedToken(token, innerPos)
+                }
             }
-            else ->
-                Triple(leftFnArgs ?: emptyList(), rightFnArgs ?: emptyList(), false)
         }
 
-        // Ensure that no arguments are duplicated
-        fun checkArgs(list: List<Symbol>) {
-            val duplicated = list.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
+        fun collectSemicolonSeparatedList(list: MutableList<Symbol>) {
+            while (true) {
+                list.add(tokeniser.nextTokenWithType())
+                val (token, innerPos) = tokeniser.nextTokenWithPosition()
+                when (token) {
+                    is CloseParen -> return
+                    !is ListSeparator -> throw UnexpectedToken(token, innerPos)
+                }
+            }
+        }
+
+        fun parseSymbolList(): FnArgComponent {
+            val list = ArrayList<Symbol>()
+            list.add(tokeniser.nextTokenWithType())
+            val (token, innerPos) = tokeniser.nextTokenWithPosition()
+            return when (token) {
+                is ListSeparator -> {
+                    collectSemicolonSeparatedList(list)
+                    FnArgComponent(list, true)
+                }
+                is Symbol -> {
+                    list.add(token)
+                    collectTokenList(list)
+                    FnArgComponent(list, false)
+                }
+                is CloseParen -> FnArgComponent(list, false)
+                else -> throw UnexpectedToken(token, innerPos)
+            }
+        }
+
+        fun parseComponent(): FnArgComponent? {
+            val (token, innerPos) = tokeniser.nextTokenWithPosition()
+            return when (token) {
+                is OpenFnDef -> null
+                is Symbol -> FnArgComponent(listOf(token), false)
+                is OpenParen -> parseSymbolList()
+                else -> throw UnexpectedToken(token, innerPos)
+            }
+        }
+
+        fun mkArg(args: FnArgComponent?): List<Symbol> {
+            return when {
+                args == null -> emptyList()
+                args.symbols.size > 1 && !args.semicolonSeparated -> throw ParseException(
+                    "Argument list element must be separated by semicolons", pos)
+                else -> args.symbols
+            }
+        }
+
+        fun processFnWithArg(nameComponent: FnArgComponent, leftArgsComponent: FnArgComponent?, rightArgsComponent: FnArgComponent?) {
+            val engine = tokeniser.engine
+
+            if (nameComponent.symbols.size != 1) {
+                throw ParseException("Function name must be a single symbol", pos)
+            }
+            val name = nameComponent.symbols[0]
+            val leftAndRightArgsIsEmpty = leftArgsComponent == null && rightArgsComponent == null
+            val (leftArgs, rightArgs) = if (leftAndRightArgsIsEmpty) {
+                Pair(listOf(engine.internSymbol("⍺", engine.coreNamespace)), listOf(engine.internSymbol("⍵", engine.coreNamespace)))
+            } else {
+                Pair(mkArg(leftArgsComponent), mkArg(rightArgsComponent))
+            }
+            if (rightArgs.isEmpty()) {
+                throw ParseException("Right argument list is empty", pos)
+            }
+            val combined = leftArgs + rightArgs
+            val duplicated = combined.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
             if (duplicated.isNotEmpty()) {
                 throw ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos)
             }
-        }
-        checkArgs(leftFnArgs0 + rightFnArgs0)
 
-        // Parse like a normal function definition
-        val definedUserFunction = withEnvironment {
-            val leftFnBindings = leftFnArgs0.map { sym -> currentEnvironment().bindLocal(sym) }
-            val rightFnBindings = rightFnArgs0.map { sym -> currentEnvironment().bindLocal(sym) }
-            val inProcessUserFunction = UserFunction(name, leftFnBindings, rightFnBindings, DummyInstr(pos), currentEnvironment())
-            currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
-            val instr = parseValueToplevel(CloseFnDef)
-            inProcessUserFunction.instr = instr
-            DefinedUserFunction(inProcessUserFunction, name, pos)
+            // Parse like a normal function definition
+            val definedUserFunction = withEnvironment {
+                val leftFnBindings = leftArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                val rightFnBindings = rightArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                val inProcessUserFunction = UserFunction(name, leftFnBindings, rightFnBindings, DummyInstr(pos), currentEnvironment())
+                currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
+                val instr = parseValueToplevel(CloseFnDef)
+                inProcessUserFunction.instr = instr
+                DefinedUserFunction(inProcessUserFunction, name, pos)
+            }
+            if (leftAndRightArgsIsEmpty) {
+                currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
+            } else {
+                registerDefinedUserFunction(definedUserFunction)
+            }
         }
-        if (localDefinition) {
-            currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
-        } else {
-            registerDefinedUserFunction(definedUserFunction)
+
+        val componentList = ArrayList<FnArgComponent>()
+        while (true) {
+            val component = parseComponent() ?: break
+            componentList.add(component)
+        }
+
+        return when {
+            componentList.isEmpty() -> throw ParseException("No function name specified", pos)
+            componentList.size == 1 -> {
+                processFnWithArg(componentList[0], null, null)
+            }
+            componentList.size == 2 -> {
+                processFnWithArg(componentList[0], null, componentList[1])
+            }
+            componentList.size == 3 -> {
+                processFnWithArg(componentList[1], componentList[0], componentList[2])
+            }
+            else -> throw ParseException("Invalid function definition format", pos)
         }
     }
 

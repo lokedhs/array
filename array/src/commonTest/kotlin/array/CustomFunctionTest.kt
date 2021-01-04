@@ -304,4 +304,164 @@ class CustomFunctionTest : APLTest() {
                 """.trimMargin())
         }
     }
+
+    /*
+Monadic single argument      ∇             foo x           {
+Destructuring                ∇             foo (x0;x1)     {
+Dyadic single argument       ∇           x foo y           {
+Destructuring                ∇     (x0;y0) foo (x1;y1)     {
+Monadic op, monadic arg      ∇         (fn foo) x          {
+Monadic op, dyadic arg       ∇       x (fn foo) y          {
+Dyadic op, monadic arg       ∇         (f0 foo f1) x       {
+Dyadic op, dyadic arg        ∇       x (f0 foo f1) y       {
+Destructuring                ∇ (x0;x1) (f0 foo f1) (y0;y1) {
+Fn parens optional:
+Monadic single arg:          ∇            (foo) x          {
+                             ∇            (foo) (x)        {
+                             ∇        (y) (foo) (x)        {
+                             ∇          y (foo) x          {
+     */
+
+// Testing the different formats of function definitions
+
+    @Test
+    fun monadicSingleArgument() {
+        parseAPLExpression("∇ foo x { x+1 } ◊ foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun monadicDestructuring() {
+        parseAPLExpression("∇ foo (x0;x1) { x0+x1+1 } ◊ foo (1;2)").let { result ->
+            assertSimpleNumber(4, result)
+        }
+    }
+
+    @Test
+    fun dyadicSingleArgument() {
+        parseAPLExpression("∇ x foo y { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun dyadicDestructuring() {
+        parseAPLExpression("∇ (x0;x1) foo (y0;y1) { x0+x1+y0+y1+3 } ◊ (10;11) foo (1;2)").let { result ->
+            assertSimpleNumber(27, result)
+        }
+    }
+
+    @Test
+    fun dyadicDestructuringNoSemicolonBoth() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (x0 x1) foo (y0 y1) { x0+x1+y0+y1+3 } ◊ (10;11) foo (1;2)")
+        }
+    }
+
+    @Test
+    fun dyadicDestructuringNoSemicolonLeft() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (x0 x1) foo (y0;y1) { x0+x1+y0+y1+3 } ◊ (10;11) foo (1;2)")
+        }
+    }
+
+    @Test
+    fun parenMonadicSingleArgument() {
+        parseAPLExpression("∇ (foo) x { x+1 } ◊ foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenMonadicDestructuring() {
+        parseAPLExpression("∇ (foo) (x0;x1) { x0+x1+1 } ◊ foo (1;2)").let { result ->
+            assertSimpleNumber(4, result)
+        }
+    }
+
+    @Test
+    fun parenMonadicDestructuringNoSemicolon() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (foo) (x0 x1) { x0+x1+1 } ◊ foo (1;2)")
+        }
+    }
+
+    @Test
+    fun parenDyadicSingleArgument() {
+        parseAPLExpression("∇ x (foo) y { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenLeftArgDyadicSingleArgument() {
+        parseAPLExpression("∇ (x) foo y { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenRightArgDyadicSingleArgument() {
+        parseAPLExpression("∇ x foo (y) { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenDyadicDestructuring() {
+        parseAPLExpression("∇ (x0;x1) (foo) (y0;y1) { x0+x1+y0+y1+3 } ◊ (10;11) foo (1;2)").let { result ->
+            assertSimpleNumber(27, result)
+        }
+    }
+
+    @Test
+    fun parenArgMonadicSingleArgument() {
+        parseAPLExpression("∇ foo (x) { x+1 } ◊ foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenArgDyadicSingleArgument() {
+        parseAPLExpression("∇ (x) foo (y) { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenFnAndArgumentMonadicSingleArgument() {
+        parseAPLExpression("∇ foo x { x+1 } ◊ foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenFnAndArgDyadicSingleArgument() {
+        parseAPLExpression("∇ (x) (foo) (y) { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenFnAndLeftArgdyadicSingleArgument() {
+        parseAPLExpression("∇ (x) (foo) y { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun parenFnAndRightArgDyadicSingleArgument() {
+        parseAPLExpression("∇ x (foo) (y) { x+y } ◊ 1 foo 2").let { result ->
+            assertSimpleNumber(3, result)
+        }
+    }
+
+    @Test
+    fun emptyFunctionName() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (a;b) () (c;d) { a+b+c+d }")
+
+        }
+    }
 }

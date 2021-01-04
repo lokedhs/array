@@ -1,6 +1,9 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
     <option name="RIGHT_MARGIN" value="140" />
+    <AsciiDocCodeStyleSettings>
+      <option name="ONE_SENTENCE_PER_LINE" value="false" />
+    </AsciiDocCodeStyleSettings>
     <JSON>
       <option name="ARRAY_WRAPPING" value="1" />
     </JSON>
