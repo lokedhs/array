@@ -522,7 +522,7 @@ Monadic single arg:          ∇            (foo) x          {
     @Test
     fun twoArgOperator1() {
         parseAPLExpression("∇ a (x foo y) b { 100 ⍞y a ⍞x b } ◊ 10 -foo+ 2").let { result ->
-            assertSimpleNumber(87, result)
+            assertSimpleNumber(108, result)
         }
     }
 
@@ -557,7 +557,7 @@ Monadic single arg:          ∇            (foo) x          {
             |  } else {
             |    y + b
             |  }
-            |  c ⍞ a
+            |  c ⍞x a
             |}
             |(10 (×foo-) 20) (10 (×foo 20) 30)
             """.trimMargin(), true)

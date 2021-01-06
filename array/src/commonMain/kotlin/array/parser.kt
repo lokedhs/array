@@ -649,7 +649,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         symbol.namespace.exportIfInterned(symbol)
     }
 
-    private fun parseApplyDefinition(): APLFunctionDescriptor {
+    fun parseApplyDefinition(): APLFunctionDescriptor {
         val (token, firstPos) = tokeniser.nextTokenWithPosition()
         val ref = when (token) {
             is Symbol -> makeVariableRef(token, firstPos)

@@ -106,4 +106,34 @@ class OperatorsTest : APLTest() {
             assertSimpleNumber(14, result)
         }
     }
+
+    @Test
+    fun twoArgWithApplyWithoutParen() {
+        val result = parseAPLExpression(
+            """
+            |f0 ← λ{⍺+⍵}
+            |20 200 -.⍞f0 1 2
+            """.trimMargin())
+        assertSimpleNumber(-181, result)
+    }
+
+    @Test
+    fun twoArgWithApplyWithParen() {
+        val result = parseAPLExpression(
+            """
+            |f0 ← λ{⍺+⍵}
+            |20 200 (-.⍞f0) 1 2
+            """.trimMargin())
+        assertSimpleNumber(-181, result)
+    }
+
+    @Test
+    fun twoArgWithApplyWithDoubleParen() {
+        val result = parseAPLExpression(
+            """
+            |f0 ← λ{⍺+⍵}
+            |20 200 (-.(⍞f0)) 1 2
+            """.trimMargin())
+        assertSimpleNumber(-181, result)
+    }
 }

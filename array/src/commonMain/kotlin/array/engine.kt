@@ -88,67 +88,6 @@ class DeclaredNonBoundFunction(val instruction: Instruction, val env: Environmen
     override fun make(pos: Position) = DeclaredNonBoundFunctionImpl(pos)
 }
 
-interface APLOperator {
-    fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction
-}
-
-interface APLOperatorOneArg : APLOperator {
-    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
-        val axis = aplParser.parseAxis()
-        return combineFunction(currentFn, axis, opPos).make(opPos)
-    }
-
-    fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor
-}
-
-interface APLOperatorTwoArg : APLOperator {
-    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
-        val axis = aplParser.parseAxis()
-        val (token, pos) = aplParser.tokeniser.nextTokenWithPosition()
-        val rightFn = when (token) {
-            is Symbol -> {
-                val fn = aplParser.tokeniser.engine.getFunction(token) ?: throw ParseException("Symbol is not a function", pos)
-                fn.make(pos)
-            }
-            is OpenFnDef -> {
-                aplParser.parseFnDefinition().make(pos)
-            }
-            is OpenParen -> {
-                val holder = aplParser.parseExprToplevel(CloseParen)
-                if (holder !is ParseResultHolder.FnParseResult) {
-                    throw ParseException("Expected function", pos)
-                }
-                holder.fn
-            }
-            else -> throw ParseException("Expected function, got: ${token}", pos)
-        }
-        return combineFunction(currentFn, rightFn, axis, opPos).make(opPos)
-    }
-
-    fun combineFunction(
-        fn1: APLFunction,
-        fn2: APLFunction,
-        operatorAxis: Instruction?,
-        opPos: Position): APLFunctionDescriptor
-}
-
-interface APLOperatorValueRightArg : APLOperator {
-    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
-        val axis = aplParser.parseAxis()
-        if (axis != null) {
-            throw ParseException("Axis argument not supported", opPos)
-        }
-        val rightArg = aplParser.parseValue()
-        if (rightArg !is ParseResultHolder.InstrParseResult) {
-            throw ParseException("Right argument is not a value", rightArg.pos)
-        }
-        aplParser.tokeniser.pushBackToken(rightArg.lastToken)
-        return combineFunction(currentFn, rightArg.instr, opPos)
-    }
-
-    fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction
-}
-
 private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "keyword"
 private const val DEFAULT_NAMESPACE_NAME = "default"
