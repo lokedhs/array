@@ -514,8 +514,8 @@ Monadic single arg:          ∇            (foo) x          {
 
     @Test
     fun twoArgOperator0() {
-        parseAPLExpression("∇ (x foo y) a { 100 ⍞y 10 ⍞x a } ◊ (-foo+) 3").let { result ->
-            assertSimpleNumber(87, result)
+        parseAPLExpression("∇ (x foo y) a { 100 ⍞y 10 ⍞x a } ◊ -foo+ 3").let { result ->
+            assertSimpleNumber(107, result)
         }
     }
 
@@ -545,5 +545,70 @@ Monadic single arg:          ∇            (foo) x          {
         assertFailsWith<ParseException> {
             parseAPLExpression("∇ (a0;a1) (z x foo y) b { 100 ⍞y a0 ⍞x a1 ⍞x b } ◊ (10;11) -foo+ 4")
         }
+    }
+
+    @Test
+    fun twoArgOperatorMultiDatatype() {
+        val result = parseAPLExpression(
+            """
+            |∇ a (x foo y) b {
+            |  c ← if('function ≡ typeof(y)) {
+            |    b ⍞y 1
+            |  } else {
+            |    y + b
+            |  }
+            |  c ⍞ a
+            |}
+            |(10 (×foo-) 20) (10 (×foo 20) 30)
+            """.trimMargin(), true)
+        assertArrayContent(arrayOf(190, 500), result)
+    }
+
+    @Test
+    fun operatorWithLambdaFunctionLeftArg() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo x {
+            |  x+100
+            |}
+            |∇ (x bar) y {
+            |  2 + ⍞x y
+            |}
+            |f0 ← λfoo
+            |⍞f0 bar 10
+            """.trimMargin())
+        assertSimpleNumber(112, result)
+    }
+
+    @Test
+    fun operatorWithLambdaFunctionRightArgWithParen() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo x {
+            |  x+30
+            |}
+            |∇ (x bar y) a {
+            |  ⍞y 200 ⍞x a
+            |}
+            |f0 ← λfoo
+            |(-bar ⍞f0) 10  
+            """.trimMargin())
+        assertSimpleNumber(220, result)
+    }
+
+    @Test
+    fun operatorWithLambdaFunctionRightArgWithoutParen() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo x {
+            |  x+100
+            |}
+            |∇ (x bar y) a {
+            |  ⍞y 200 ⍞x a
+            |}
+            |f0 ← λfoo
+            |-bar ⍞f0 10                    
+            """.trimMargin())
+        assertSimpleNumber(290, result)
     }
 }
