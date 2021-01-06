@@ -377,9 +377,6 @@ class APLParser(val tokeniser: TokenGenerator) {
         fun processFnWithArg(nameComponent: FnArgComponent, leftArgsComponent: FnArgComponent?, rightArgsComponent: FnArgComponent?) {
             val engine = tokeniser.engine
 
-            if (nameComponent.symbols.size != 1) {
-                throw ParseException("Function name must be a single symbol", pos)
-            }
             val name = nameComponent.symbols[0]
             val leftAndRightArgsIsEmpty = leftArgsComponent == null && rightArgsComponent == null
             val (leftArgs, rightArgs) = if (leftAndRightArgsIsEmpty) {
@@ -396,20 +393,57 @@ class APLParser(val tokeniser: TokenGenerator) {
                 throw ParseException("Symbols in multiple position: ${duplicated.joinToString(separator = " ") { it.symbolName }}", pos)
             }
 
-            // Parse like a normal function definition
-            val definedUserFunction = withEnvironment {
-                val leftFnBindings = leftArgs.map { sym -> currentEnvironment().bindLocal(sym) }
-                val rightFnBindings = rightArgs.map { sym -> currentEnvironment().bindLocal(sym) }
-                val inProcessUserFunction = UserFunction(name, leftFnBindings, rightFnBindings, DummyInstr(pos), currentEnvironment())
-                currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
-                val instr = parseValueToplevel(CloseFnDef)
-                inProcessUserFunction.instr = instr
-                DefinedUserFunction(inProcessUserFunction, name, pos)
-            }
-            if (leftAndRightArgsIsEmpty) {
-                currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
-            } else {
-                registerDefinedUserFunction(definedUserFunction)
+            val nameSymbols = nameComponent.symbols
+            when (nameSymbols.size) {
+                1 -> {
+                    // Parse like a normal function definition
+                    val definedUserFunction = withEnvironment {
+                        val leftFnBindings = leftArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val rightFnBindings = rightArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val inProcessUserFunction =
+                            UserFunction(name, leftFnBindings, rightFnBindings, DummyInstr(pos), currentEnvironment())
+                        currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
+                        val instr = parseValueToplevel(CloseFnDef)
+                        inProcessUserFunction.instr = instr
+                        DefinedUserFunction(inProcessUserFunction, name, pos)
+                    }
+                    if (leftAndRightArgsIsEmpty) {
+                        currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
+                    } else {
+                        registerDefinedUserFunction(definedUserFunction)
+                    }
+                }
+                2 -> {
+                    if (nameComponent.semicolonSeparated) throw ParseException("Invalid function name", pos)
+                    val op = withEnvironment {
+                        val leftFnBindings = leftArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val rightFnBindings = rightArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val opBinding = currentEnvironment().bindLocal(nameSymbols[0])
+                        val instr = parseValueToplevel(CloseFnDef)
+                        UserDefinedOperatorOneArg(nameSymbols[1], opBinding, leftFnBindings, rightFnBindings, instr, currentEnvironment())
+                    }
+                    engine.registerOperator(op.name, op)
+                }
+                3 -> {
+                    if (nameComponent.semicolonSeparated) throw ParseException("Invalid function name", pos)
+                    val op = withEnvironment {
+                        val leftFnBindings = leftArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val rightFnBindings = rightArgs.map { sym -> currentEnvironment().bindLocal(sym) }
+                        val leftOpBinding = currentEnvironment().bindLocal(nameSymbols[0])
+                        val rightOpBinding = currentEnvironment().bindLocal(nameSymbols[2])
+                        val instr = parseValueToplevel(CloseFnDef)
+                        UserDefinedOperatorTwoArg(
+                            nameSymbols[1],
+                            leftOpBinding,
+                            rightOpBinding,
+                            leftFnBindings,
+                            rightFnBindings,
+                            instr,
+                            currentEnvironment())
+                    }
+                    engine.registerOperator(op.name, op)
+                }
+                else -> throw ParseException("Invalid name specifier", pos)
             }
         }
 

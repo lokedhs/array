@@ -540,10 +540,7 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {
             if (expectedLength != actualLength) {
-                throwAPLException(
-                    APLIllegalArgumentException(
-                        "Argument mismatch. Expected: ${expectedLength}, actual length: ${actualLength}",
-                        pos))
+                throwAPLException(IllegalArgumentNumException(expectedLength, actualLength, pos))
             }
         }
 

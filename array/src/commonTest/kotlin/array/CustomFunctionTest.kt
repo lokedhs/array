@@ -444,7 +444,7 @@ Monadic single arg:          ∇            (foo) x          {
     }
 
     @Test
-    fun parenFnAndLeftArgdyadicSingleArgument() {
+    fun parenFnAndLeftArgDyadicSingleArgument() {
         parseAPLExpression("∇ (x) (foo) y { x+y } ◊ 1 foo 2").let { result ->
             assertSimpleNumber(3, result)
         }
@@ -462,6 +462,88 @@ Monadic single arg:          ∇            (foo) x          {
         assertFailsWith<ParseException> {
             parseAPLExpression("∇ (a;b) () (c;d) { a+b+c+d }")
 
+        }
+    }
+
+    @Test
+    fun tooManyFunctionArgs() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (a;b) foo (c;d) x { a+b+c+d }")
+
+        }
+    }
+
+    /////////////////////////////////////////////////////////
+    // Operators
+    /////////////////////////////////////////////////////////
+
+    @Test
+    fun oneArgOperator0() {
+        parseAPLExpression("∇ (x foo) a { 10 ⍞x a } ◊ +foo 2").let { result ->
+            assertSimpleNumber(12, result)
+        }
+    }
+
+    @Test
+    fun oneArgOperator1() {
+        parseAPLExpression("∇ a (x foo) b { a ⍞x b } ◊ 10 +foo 2").let { result ->
+            assertSimpleNumber(12, result)
+        }
+    }
+
+    @Test
+    fun oneArgOperator2() {
+        parseAPLExpression("∇ (x foo) (a0;a1;a2;a3) { 10 ⍞x (a0×a1×a2 ⍞x a3) } ◊ +foo (2;2;3;1)").let { result ->
+            assertSimpleNumber(26, result)
+        }
+    }
+
+    @Test
+    fun oneArgOperatorSemicolon() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (x;foo) (a0;a1;a2;a3) { 10 ⍞x (a0×a1×a2 ⍞x a3) } ◊ +foo 2 2 3 1")
+        }
+    }
+
+    @Test
+    fun oneArgOperatorSemicolonTooManyArgs() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (x;foo;y;z) (a0;a1;a2;a3) { 10 ⍞x (a0×a1×a2 ⍞x a3) } ◊ +foo 2 2 3 1")
+        }
+    }
+
+    @Test
+    fun twoArgOperator0() {
+        parseAPLExpression("∇ (x foo y) a { 100 ⍞y 10 ⍞x a } ◊ (-foo+) 3").let { result ->
+            assertSimpleNumber(87, result)
+        }
+    }
+
+    @Test
+    fun twoArgOperator1() {
+        parseAPLExpression("∇ a (x foo y) b { 100 ⍞y a ⍞x b } ◊ 10 -foo+ 2").let { result ->
+            assertSimpleNumber(87, result)
+        }
+    }
+
+    @Test
+    fun twoArgOperator2() {
+        parseAPLExpression("∇ (a0;a1) (x foo y) b { 100 ⍞y a0 ⍞x a1 ⍞x b } ◊ (10;11) -foo+ 4").let { result ->
+            assertSimpleNumber(103, result)
+        }
+    }
+
+    @Test
+    fun twoArgOperatorSemicolonNames() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (a0;a1) (x;foo;y) b { 100 ⍞y a0 ⍞x a1 ⍞x b } ◊ (10;11) -foo+ 4")
+        }
+    }
+
+    @Test
+    fun tooManyOperatorArguments() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("∇ (a0;a1) (z x foo y) b { 100 ⍞y a0 ⍞x a1 ⍞x b } ◊ (10;11) -foo+ 4")
         }
     }
 }

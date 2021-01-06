@@ -218,3 +218,96 @@ class UserFunction(
         env = newFn.env
     }
 }
+
+class UserDefinedOperatorOneArg(
+    val name: Symbol,
+    val opBinding: EnvironmentBinding,
+    val leftArgs: List<EnvironmentBinding>,
+    val rightArgs: List<EnvironmentBinding>,
+    val instr: Instruction,
+    val env: Environment
+) : APLOperatorOneArg {
+    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+        return object : APLFunctionDescriptor {
+            override fun make(pos: Position): APLFunction {
+                return UserDefinedOperatorFn(fn, pos)
+            }
+        }
+    }
+
+    inner class UserDefinedOperatorFn(val opFn: APLFunction, pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val inner = context.link(env).apply {
+                assignArgs(rightArgs, a, pos)
+                setVar(opBinding, LambdaValue(opFn, context))
+            }
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+                instr.evalWithContext(inner)
+            }
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val inner = context.link(env).apply {
+                assignArgs(leftArgs, a, pos)
+                assignArgs(rightArgs, b, pos)
+                setVar(opBinding, LambdaValue(opFn, context))
+            }
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+                instr.evalWithContext(inner)
+            }
+        }
+    }
+}
+
+class UserDefinedOperatorTwoArg(
+    val name: Symbol,
+    val leftOpBinding: EnvironmentBinding,
+    val rightOpBinding: EnvironmentBinding,
+    val leftArgs: List<EnvironmentBinding>,
+    val rightArgs: List<EnvironmentBinding>,
+    val instr: Instruction,
+    val env: Environment) : APLOperator {
+    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+        val axis = aplParser.parseAxis()
+        if (axis != null) {
+            throw ParseException("Axis argument not supported", opPos)
+        }
+        val rightArg = aplParser.parseValue()
+        val handlerFn = when (rightArg) {
+            is ParseResultHolder.FnParseResult -> OperatorFn(currentFn, rightArg.fn, opPos)
+            is ParseResultHolder.InstrParseResult -> ValueFn(currentFn, rightArg.instr, opPos)
+            is ParseResultHolder.EmptyParseResult -> throw ParseException("No right argument given", opPos)
+        }
+        aplParser.tokeniser.pushBackToken(rightArg.lastToken)
+        return handlerFn
+    }
+
+    inner class OperatorFn(val leftFn: APLFunction, val rightFn: APLFunction, pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val inner = context.link(env).apply {
+                assignArgs(rightArgs, a, pos)
+                setVar(leftOpBinding, LambdaValue(leftFn, context))
+                setVar(rightOpBinding, LambdaValue(rightFn, context))
+            }
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+                instr.evalWithContext(inner)
+            }
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val inner = context.link(env).apply {
+                assignArgs(leftArgs, a, pos)
+                assignArgs(rightArgs, b, pos)
+                setVar(leftOpBinding, LambdaValue(leftFn, context))
+                setVar(rightOpBinding, LambdaValue(rightFn, context))
+            }
+            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+                instr.evalWithContext(inner)
+            }
+        }
+    }
+
+    inner class ValueFn(leftFn: APLFunction, argInstr: Instruction, pos: Position) : NoAxisAPLFunction(pos) {
+
+    }
+}
