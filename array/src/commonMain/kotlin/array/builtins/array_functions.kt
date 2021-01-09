@@ -130,7 +130,10 @@ class RhoAPLFunction : APLFunctionDescriptor {
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             if (a.dimensions.size > 1) {
-                throwAPLException(InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array", pos))
+                throwAPLException(
+                    InvalidDimensionsException(
+                        "Left side of rho must be scalar or a one-dimensional array",
+                        pos))
             }
 
             val v = a.unwrapDeferredValue()
@@ -202,6 +205,33 @@ class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
     }
 }
 
+class AxisMultiDimensionEnclosedValue(val value: APLValue, numDimensions: Int) : APLArray() {
+    override val dimensions: Dimensions
+
+    private val aDimensions = value.dimensions
+    private val multipliers: IntArray
+    private val highValFactor: Int
+    private val lowDimensions: Dimensions
+
+    init {
+        dimensions = Dimensions(IntArray(aDimensions.size - numDimensions) { i -> aDimensions[i] })
+        multipliers = aDimensions.multipliers()
+        highValFactor = if (numDimensions == aDimensions.size) {
+            aDimensions.contentSize()
+        } else {
+            multipliers[aDimensions.size - numDimensions - 1]
+        }
+        lowDimensions = Dimensions(IntArray(numDimensions) { i -> aDimensions[aDimensions.size - numDimensions + i] })
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        val high = p * highValFactor
+        return APLArrayImpl(lowDimensions, Array(lowDimensions.contentSize()) { i ->
+            value.valueAt(high + i)
+        })
+    }
+}
+
 class EncloseAPLFunction : APLFunctionDescriptor {
     class EncloseAPLFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
@@ -209,10 +239,61 @@ class EncloseAPLFunction : APLFunctionDescriptor {
             return if (axis == null) {
                 if (v is APLSingleValue) v else EnclosedAPLValue(v)
             } else {
-                val axisInt = axis.ensureNumber(pos).asInt()
-                ensureValidAxis(axisInt, v.dimensions, pos)
-                AxisEnclosedValue(v, axisInt)
+                val axis0 = axis.arrayify()
+                when {
+                    axis0.dimensions.size != 1 -> {
+                        throwAPLException(APLIllegalArgumentException("Illegal dimensions of axis argument", pos))
+                    }
+                    axis0.dimensions[0] == 1 -> {
+                        val axisInt = axis0.valueAt(0).ensureNumber(pos).asInt()
+                        ensureValidAxis(axisInt, v.dimensions, pos)
+                        AxisEnclosedValue(v, axisInt)
+                    }
+                    axis0.dimensions[0] > 1 -> {
+                        val axisIntArray = axis0.toIntArray(pos)
+                        // Check for the base case
+                        if (isAxisOrdered(a, axisIntArray)) {
+                            AxisMultiDimensionEnclosedValue(a, axisIntArray.size)
+                        } else {
+                            val orig = IntArray(a.rank) { it }.toMutableList()
+                            axisIntArray.forEach { selectedAxis ->
+                                val index = orig.indexOf(selectedAxis)
+                                if (index == -1) {
+                                    throwAPLException(APLIllegalArgumentException("Invalid axis argument", pos))
+                                } else {
+                                    orig.removeAt(index)
+                                }
+                            }
+                            val transposeAxis = IntArray(orig.size + axisIntArray.size) { i ->
+                                val indexFromOrig = orig.indexOf(i)
+                                if (indexFromOrig == -1) {
+                                    val indexFromAxisInt = axisIntArray.indexOf(i)
+                                    if (indexFromAxisInt == -1) {
+                                        throw IllegalStateException("Error when creating lookup array: index: ${i}, orig = ${orig.joinToString()}, axisIntArray = ${axisIntArray.joinToString()}}")
+                                    } else {
+                                        indexFromAxisInt + orig.size
+                                    }
+                                } else {
+                                    indexFromOrig
+                                }
+                            }
+                            val transposedArgument = TransposedAPLValue(transposeAxis, a, pos)
+                            AxisMultiDimensionEnclosedValue(transposedArgument, axisIntArray.size)
+                        }
+                    }
+                    else -> throwAPLException(APLIllegalArgumentException("Empty array in axis argument", pos))
+                }
             }
+        }
+
+        private fun isAxisOrdered(a: APLValue, axis: IntArray): Boolean {
+            val axisDiff = (a.rank - axis.size)
+            for (i in axis.indices) {
+                if (axis[i] != i + axisDiff) {
+                    return false
+                }
+            }
+            return true
         }
     }
 
@@ -275,7 +356,10 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
                 elements = IntArray(dimensions.size) { i -> dimensions[i] }
             } else {
                 if (dimensions.size != elements!!.size) {
-                    throwAPLException(InvalidDimensionsException("Not all elements in array have the same dimensions", pos))
+                    throwAPLException(
+                        InvalidDimensionsException(
+                            "Not all elements in array have the same dimensions",
+                            pos))
                 }
                 for (i in 0 until elements!!.size) {
                     if (elements!![i] < dimensions[i]) {
@@ -342,7 +426,10 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
             return when {
                 v0.size == maxAxis -> v0
                 v0.size < maxAxis -> IntArray(maxAxis) { i -> if (i < v0.size) v0[i] else v0[v0.size - 1] + i - v0.size + 1 }
-                else -> throwAPLException(IllegalAxisException("Too many axis specifiers. Max allowed: ${maxAxis}. Got ${v0.size}.", pos))
+                else -> throwAPLException(
+                    IllegalAxisException(
+                        "Too many axis specifiers. Max allowed: ${maxAxis}. Got ${v0.size}.",
+                        pos))
             }
         }
 
@@ -485,7 +572,10 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
         }
         val aDimensions = a1.dimensions
         if (axis < 0 || axis > aDimensions.size) {
-            throwAPLException(IllegalAxisException("Axis must be between 0 and ${aDimensions.size} inclusive. Found: ${axis}", pos))
+            throwAPLException(
+                IllegalAxisException(
+                    "Axis must be between 0 and ${aDimensions.size} inclusive. Found: ${axis}",
+                    pos))
         }
         val bDimensions = b1.dimensions
         if (!aDimensions.compareEquals(bDimensions)) {
@@ -514,14 +604,18 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
         val a1 = if (a.rank == 0) {
             val bDimensions = b.dimensions
-            ConstantArray(Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }), a.disclose())
+            ConstantArray(
+                Dimensions(IntArray(bDimensions.size) { index -> if (index == axis) 1 else bDimensions[index] }),
+                a.disclose())
         } else {
             a
         }
 
         val b1 = if (b.rank == 0) {
             val aDimensions = a.dimensions
-            ConstantArray(Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }), b.disclose())
+            ConstantArray(
+                Dimensions(IntArray(aDimensions.size) { index -> if (index == axis) 1 else aDimensions[index] }),
+                b.disclose())
         } else {
             b
         }
@@ -548,7 +642,10 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
         for (i in da.indices) {
             if (i != axis && da[i] != db[i]) {
-                throwAPLException(InvalidDimensionsException("Dimensions at axis $axis does not match: $da compared to $db", pos))
+                throwAPLException(
+                    InvalidDimensionsException(
+                        "Dimensions at axis $axis does not match: $da compared to $db",
+                        pos))
             }
         }
 
@@ -773,7 +870,9 @@ class TakeAPLFunction : APLFunctionDescriptor {
             if (!((aDimensions.size == 0 && b.rank == 1) || (aDimensions.size == 1 && aDimensions[0] == b.rank))) {
                 throwAPLException(InvalidDimensionsException("Size of A must match the rank of B", pos))
             }
-            return TakeArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b, pos)
+            return TakeArrayValue(
+                if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(
+                    pos), b, pos)
         }
     }
 
@@ -786,7 +885,8 @@ class DropArrayValue(val selection: IntArray, val source: APLValue) : APLArray()
 
     init {
         sourceDimensions = source.dimensions
-        dimensions = Dimensions(selection.mapIndexed { index, v -> sourceDimensions[index] - v.absoluteValue }.toIntArray())
+        dimensions =
+            Dimensions(selection.mapIndexed { index, v -> sourceDimensions[index] - v.absoluteValue }.toIntArray())
     }
 
     override fun valueAt(p: Int): APLValue {
@@ -831,7 +931,9 @@ class DropAPLFunction : APLFunctionDescriptor {
             ) {
                 throwAPLException(InvalidDimensionsException("Size of A must match the rank of B", pos))
             }
-            return DropArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b)
+            return DropArrayValue(
+                if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(
+                    pos), b)
         }
     }
 
@@ -859,7 +961,10 @@ class RandomAPLFunction : APLFunctionDescriptor {
                 throwAPLException(APLIncompatibleDomainsException("B should not be negative, was: ${aInt}", pos))
             }
             if (aInt > bLong) {
-                throwAPLException(APLIncompatibleDomainsException("A should not be greater than B. A: ${aInt}, B: ${bLong}", pos))
+                throwAPLException(
+                    APLIncompatibleDomainsException(
+                        "A should not be greater than B. A: ${aInt}, B: ${bLong}",
+                        pos))
             }
 
             // TODO: We don't have a tree set available in Kotlin Native, so we're using two sets here. Very much suboptimal.
@@ -917,7 +1022,7 @@ class MultiRotationRotatedAPLValue(
     val axis: Int,
     val selectionMultipliers: IntArray,
     val selection: IntArray
-) : APLArray() {
+                                  ) : APLArray() {
     override val dimensions = source.dimensions
 
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
@@ -999,7 +1104,11 @@ abstract class RotateFunction(pos: Position) : APLFunction(pos) {
                     throwAPLException(InvalidDimensionsException("Invalid dimension", pos))
                 }
             }
-            return MultiRotationRotatedAPLValue(b, axisInt, aCollapsed.dimensions.multipliers(), aCollapsed.toIntArray(pos))
+            return MultiRotationRotatedAPLValue(
+                b,
+                axisInt,
+                aCollapsed.dimensions.multipliers(),
+                aCollapsed.toIntArray(pos))
         }
     }
 
@@ -1026,13 +1135,12 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
     override val dimensions: Dimensions
     private val multipliers: IntArray
     private val bDimensions: Dimensions
-    private val inverseTransposedAxis: IntArray
 
     override val labels by lazy { resolveLabels() }
 
     init {
         bDimensions = b.dimensions
-        inverseTransposedAxis = IntArray(bDimensions.size) { index ->
+        val inverseTransposedAxis = IntArray(bDimensions.size) { index ->
             var res = -1
             for (i in transposeAxis.indices) {
                 if (transposeAxis[i] == index) {
@@ -1090,7 +1198,10 @@ class TransposeFunction : APLFunctionDescriptor {
                 if (aDimensions[0] == 0) {
                     return b
                 } else {
-                    throwAPLException(InvalidDimensionsException("Transpose of scalar values requires empty left argument", pos))
+                    throwAPLException(
+                        InvalidDimensionsException(
+                            "Transpose of scalar values requires empty left argument",
+                            pos))
                 }
             }
 
@@ -1278,7 +1389,8 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
         if (!(aDimensions.size == 0 || (aDimensions.size == 1 && aDimensions[0] == bDimensions[axisInt]))) {
             throwAPLException(
                 InvalidDimensionsException(
-                    "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.", pos))
+                    "A must be a single-dimensional array of the same size as the dimension of B along the selected axis.",
+                    pos))
         }
         val selectIndexes = if (a.isScalar()) {
             a.ensureNumber(pos).asInt().let { v ->
@@ -1348,14 +1460,18 @@ class WhereAPLFunction : APLFunctionDescriptor {
                             i.makeAPLNumber()
                         } else {
                             val positionIndex = Dimensions.positionFromIndexWithMultipliers(i, multipliers)
-                            val valueArray = Array<APLValue>(positionIndex.size) { v -> positionIndex[v].makeAPLNumber() }
+                            val valueArray =
+                                Array<APLValue>(positionIndex.size) { v -> positionIndex[v].makeAPLNumber() }
                             APLArrayImpl(dimensionsOfSize(valueArray.size), valueArray)
                         }
                         repeat(n) {
                             result.add(index)
                         }
                     } else if (n < 0) {
-                        throwAPLException(APLIncompatibleDomainsException("Negative value found in right argument", pos))
+                        throwAPLException(
+                            APLIncompatibleDomainsException(
+                                "Negative value found in right argument",
+                                pos))
                     }
                 }
                 APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
@@ -1371,7 +1487,10 @@ class UniqueFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val a1 = a.arrayify().collapse()
             if (a1.rank != 1) {
-                throwAPLException(InvalidDimensionsException("Argument to unique must be a scalar or a 1-dimensional array", pos))
+                throwAPLException(
+                    InvalidDimensionsException(
+                        "Argument to unique must be a scalar or a 1-dimensional array",
+                        pos))
             }
             val map = HashSet<APLValue.APLValueKey>()
             val result = ArrayList<APLValue>()

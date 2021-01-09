@@ -106,6 +106,27 @@ class EncloseTest : APLTest() {
         }
     }
 
+    @Suppress("UNUSED_CHANGED_VALUE")
+    @Test
+    fun encloseWithAxis3() {
+        parseAPLExpression("⊂[,1] 2 3 2 ⍴ 300+⍳1000").let { result ->
+            assertDimension(dimensionsOfSize(2, 2), result)
+
+            fun assertValue(index: Int, vararg args: Int) {
+                result.valueAt(index).let { v ->
+                    assertDimension(dimensionsOfSize(v.size), v)
+                    assertArrayContent(args.toTypedArray(), v)
+                }
+            }
+
+            var i = 0
+            assertValue(i++, 300, 302, 304)
+            assertValue(i++, 301, 303, 305)
+            assertValue(i++, 306, 308, 310)
+            assertValue(i++, 307, 309, 311)
+        }
+    }
+
     @Test
     fun illegalAxis() {
         assertFailsWith<IllegalAxisException> {
@@ -117,6 +138,117 @@ class EncloseTest : APLTest() {
     fun illegalAxis2() {
         assertFailsWith<IllegalAxisException> {
             parseAPLExpression("⊂[0] 1")
+        }
+    }
+
+    //////////////////////////////////////////////////
+    // Enclose with axis
+    //////////////////////////////////////////////////
+
+    @Test
+    fun encloseWithMultiArgAxis0() {
+        parseAPLExpression("⊂[0 1] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(0, 2, 4, 6), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(1, 3, 5, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis1() {
+        parseAPLExpression("⊂[1 0] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(0, 4, 2, 6), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(1, 5, 3, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis2() {
+        parseAPLExpression("⊂[2 0] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(0, 4, 1, 5), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(2, 6, 3, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis3() {
+        parseAPLExpression("⊂[0 1 2] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(emptyDimensions(), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2, 2), v)
+                assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis4() {
+        parseAPLExpression("⊂[2 1 0] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(emptyDimensions(), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2, 2), v)
+                assertArrayContent(arrayOf(0, 4, 2, 6, 1, 5, 3, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis5() {
+        parseAPLExpression("⊂[0 1 2] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(emptyDimensions(), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2, 2), v)
+                assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxis6() {
+        parseAPLExpression("⊂[1 2] 2 2 2 ⍴ ⍳100").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(0, 1, 2, 3), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(2, 2), v)
+                assertArrayContent(arrayOf(4, 5, 6, 7), v)
+            }
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxisOutOfRange1() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⊂[3 0]2 2 2⍴⍳100")
+        }
+    }
+
+    @Test
+    fun encloseWithMultiArgAxisDuplicated() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⊂[0 0]2 2 2⍴⍳100")
         }
     }
 }
