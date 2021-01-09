@@ -89,17 +89,7 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample10() {
-//        val res = parseAPLExpression("(⊂⍤ 9 2) 1 2 3⍴⍳6")
-        val res = parseAPLExpression("({99,⍵,99}⍤ 9 2) 1 2 3⍴⍳6")
-        println("res:\n${res.formatted(FormatStyle.PRETTY)}")
-        val res2 = res.collapse()
-        println("res2:\n${res2.formatted(FormatStyle.PRETTY)}")
-        println("dim=${res2.dimensions}")
-        println("dim0=${res2.valueAt(0).dimensions}")
-        println("dim1=${res2.valueAt(0).valueAt(0).dimensions}")
-        if (false) {
             assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤ 9 2) 1 2 3⍴⍳6"))
-        }
     }
 
     @Test

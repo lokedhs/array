@@ -45,7 +45,13 @@ Implementation note:
 From my presentation at the Dyalog '19 user meeting, (f⍤k)x ←→ ↑f¨⊂[(-k)↑⍳≢⍴x]x. Slides to download here.
 For two ranks, you have to find which ranks correspond to which arguments, then use the ⊂[…] thing on each argument separately.
 It also assumes a positive rank; to convert a negative rank to positive I think the formula is k←0⌊(≢⍴x)+k.
-There's also the reference implementation in BQN, which has the same functionality as APL (it supports leading axis agreement, but only because Each does)
+There's also the reference implementation in BQN, which has the same functionality
+as APL (it supports leading axis agreement, but only because Each does)
+
+once you have the monadic case working, the dyadic one is basically free (maybe after extracting some stuff to functions,
+and changing laziness behavior)
+@dzaima (in fact, {a b c←⌽3⍴⌽⍵⍵ ⋄ ↑(⊂⍤b⊢⍺) ⍺⍺¨ ⊂⍤c⊢⍵} is an impl ofthe dyadic case from
+the monadic one (with Dyalog's ↑ meaning))
  */
 
 class RankOperator : APLOperatorValueRightArg {
@@ -53,66 +59,45 @@ class RankOperator : APLOperatorValueRightArg {
         return object : APLFunction(opPos) {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 val aInt = a.collapseFirstLevel()
-                val opArg = findAndCheckOpArg(context)
                 val aDimensions = aInt.dimensions
-                val newRank = computeRankFromOpArg(opArg).let { v ->
-                    v.ensureNumber().asInt().let { index ->
-                        min(if (index < 0) -index else aDimensions.size - index, aDimensions.size)
-                    }
-                }
-                val newDimensions = Dimensions(IntArray(newRank) { i ->
-                    aDimensions[i]
-                })
-                val innerDimensions = Dimensions(IntArray(aDimensions.size - newRank) { i ->
-                    aDimensions[newRank + i]
-                })
-                val m = aDimensions.multipliers()[aDimensions.size - innerDimensions.size - 1]
-                val resultArray = APLArrayImpl(newDimensions, Array(newDimensions.contentSize()) { i ->
-                    val offset = i * m
-                    val a1 = APLArrayImpl(innerDimensions, Array(innerDimensions.contentSize()) { i2 ->
-                        aInt.valueAt(offset + i2)
-                    })
-                    fn.eval1Arg(context, a1, null)
-                })
-                return DisclosedArrayValue(resultArray, pos)
+                val index = computeRankFromOpArg(context)
+                val k = if (index < 0) -index else min(aDimensions.size + index, 0)
+                val enclosedResult = AxisMultiDimensionEnclosedValue(aInt, aDimensions.size - k)
+                val applyRes = ForEachResult1Arg(context, fn, enclosedResult, null, opPos)
+                return applyRes.valueAt(0)
             }
 
-            private fun computeRankFromOpArg(opArg: APLValue): APLValue {
+            private fun computeRankFromOpArg(context: RuntimeContext): Int {
                 fun raiseError(): Nothing {
                     throwAPLException(APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos))
                 }
 
+                val opArg = instr.evalWithContext(context)
+
                 val d = opArg.dimensions
-                if (d.size > 1) {
-                    raiseError()
-                }
-                return if (d.size == 1) {
-                    when (d[0]) {
-                        1 -> opArg.valueAt(0)
-                        2 -> opArg.valueAt(1)
-                        3 -> opArg.valueAt(0)
-                        else -> raiseError()
+                val res = when (d.size) {
+                    0 -> {
+                        opArg
                     }
-                } else {
-                    raiseError()
+                    1 -> {
+                        when (d[0]) {
+                            1 -> opArg.valueAt(0)
+                            2 -> opArg.valueAt(1)
+                            3 -> opArg.valueAt(0)
+                            else -> raiseError()
+                        }
+                    }
+                    else -> {
+                        raiseError()
+                    }
                 }
+                return res.ensureNumber(pos).asInt()
             }
 
             override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
                 TODO("Not implemented")
             }
 
-            private fun findAndCheckOpArg(context: RuntimeContext): APLValue {
-                val opArg = instr.evalWithContext(context)
-                val opArgDimension = opArg.dimensions
-                unless(opArgDimension.size == 0 || (opArgDimension.size == 1 && opArgDimension[0] <= 2)) {
-                    throwAPLException(
-                        InvalidDimensionsException(
-                            "Operator argument must be scalar or an array with at most 3 elements",
-                            pos))
-                }
-                return opArg
-            }
         }
     }
 }
