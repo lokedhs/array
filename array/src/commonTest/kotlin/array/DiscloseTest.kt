@@ -165,6 +165,14 @@ class DiscloseTest : APLTest() {
         }
     }
 
+    @Test
+    fun discloseWithNullMember() {
+        parseAPLExpression("⊃(⍬ (,1 2 3))").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertArrayContent(arrayOf(0, 0, 0, 1, 2, 3), result)
+        }
+    }
+
     /////////////////////////////
     // Tests for pick
     /////////////////////////////

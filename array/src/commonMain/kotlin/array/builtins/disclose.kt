@@ -176,7 +176,11 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
 
         val innerIndex = p % cutoffMultiplier
         return if (innerIndex == 0) {
-            if (v is APLSingleValue) v else v.valueAt(0)
+            when {
+                v is APLSingleValue -> v
+                v.dimensions.contentSize() == 0 -> v.defaultValue()
+                else -> v.valueAt(0)
+            }
         } else {
             val d = v.dimensions
             val position = Dimensions.positionFromIndexWithMultipliers(innerIndex, newDimensionsMultipliers)
