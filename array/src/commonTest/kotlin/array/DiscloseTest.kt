@@ -1,9 +1,6 @@
 package array
 
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
+import kotlin.test.*
 
 class DiscloseTest : APLTest() {
     @Test
@@ -256,5 +253,26 @@ class DiscloseTest : APLTest() {
     @Test
     fun discloseEnclosedNull() {
         assertSimpleNumber(2, parseAPLExpression("(⊂\"\")⊃2"))
+    }
+
+    @Test
+    fun discloseSingleElementArray0() {
+        parseAPLExpression("⊃⊂⊂1 2").let { result ->
+            assertDimension(emptyDimensions(), result)
+            assertTrue(result !is APLSingleValue)
+            val v = result.valueAt(0)
+            assertDimension(dimensionsOfSize(2), v)
+            assertArrayContent(arrayOf(1, 2), v)
+        }
+    }
+
+    @Test
+    fun discloseSingleElementArray1() {
+        parseAPLExpression("⊃,⊂⊂1 2").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            val v = result.valueAt(0)
+            assertDimension(dimensionsOfSize(2), v)
+            assertArrayContent(arrayOf(1, 2), v)
+        }
     }
 }

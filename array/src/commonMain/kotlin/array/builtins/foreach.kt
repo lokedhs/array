@@ -59,26 +59,32 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
                 b: APLValue,
                 axis: APLValue?
             ): APLValue {
-                if (a.isScalar() && b.isScalar()) {
-                    val result = fn.eval2Arg(context, a, b, axis).unwrapDeferredValue()
-                    return if (result is APLSingleValue) {
-                        result
-                    } else {
-                        EnclosedAPLValue(result)
-                    }
-                }
-                val a1 = if (a.isScalar()) {
-                    ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
-                } else {
-                    a
-                }
-                val b1 = if (b.isScalar()) {
-                    ConstantArray(a.dimensions, b.valueAtWithScalarCheck(0))
-                } else {
-                    b
-                }
-                return ForEachResult2Arg(context, fn, a1, b1, axis, pos)
+                return compute2Arg(context, fn, a, b, axis, pos)
             }
+        }
+    }
+
+    companion object {
+        fun compute2Arg(context: RuntimeContext, fn: APLFunction, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
+            if (a.isScalar() && b.isScalar()) {
+                val result = fn.eval2Arg(context, a, b, axis).unwrapDeferredValue()
+                return if (result is APLSingleValue) {
+                    result
+                } else {
+                    EnclosedAPLValue(result)
+                }
+            }
+            val a1 = if (a.isScalar()) {
+                ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
+            } else {
+                a
+            }
+            val b1 = if (b.isScalar()) {
+                ConstantArray(a.dimensions, b.valueAtWithScalarCheck(0))
+            } else {
+                b
+            }
+            return ForEachResult2Arg(context, fn, a1, b1, axis, pos)
         }
     }
 }

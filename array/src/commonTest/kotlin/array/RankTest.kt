@@ -1,9 +1,7 @@
 package array
 
-import kotlin.test.Ignore
 import kotlin.test.Test
 
-@Ignore
 class RankTest : APLTest() {
     @Test
     fun rank0Test() {
@@ -39,12 +37,12 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample0() {
-        assertSimpleNumber(1, parseAPLExpression("(1 2⍴(1 2 3)(4 5 6))≡(⊂⍤1) 1 2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(1 2⍴(0 1 2)(3 4 5))≡(⊂⍤1) 1 2 3⍴⍳6"))
     }
 
     @Test
     fun aplContribExample1() {
-        assertSimpleNumber(1, parseAPLExpression("(1 2⍴(1 2 3)(4 5 6))≡(⊂⍤¯2)1 2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(1 2⍴(0 1 2)(3 4 5))≡(⊂⍤¯2)1 2 3⍴⍳6"))
     }
 
     @Test
@@ -59,37 +57,37 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample4() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴(⍳4)(⍳3)(4 5 6 7)(3 4 5))≡(2 4⍴⍳8) ({⍺⍵}⍤¯1) 2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴(⍳4)(⍳3)(4 5 6 7)(3 4 5))≡(2 4⍴⍳8) ({⍺ ⍵}⍤¯1) 2 3⍴⍳6"))
     }
 
     @Test
     fun aplContribExample5() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴(⍳4)0(4 5 6 7)1) ≡ (2 4⍴⍳8) ({⍺⍵}⍤¯1) ⍳2"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴(⍳4)0(4 5 6 7)1) ≡ (2 4⍴⍳8) ({⍺ ⍵}⍤¯1) ⍳2"))
     }
 
     @Test
     fun aplContribExample6() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺⍵}⍤¯1)⍨ ⍳2"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺ ⍵}⍤¯1)⍨ ⍳2"))
     }
 
     @Test
     fun aplContribExample7() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺⍵}⍤   0 1)⍨ ⍳2"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺ ⍵}⍤0 1)⍨ ⍳2"))
     }
 
     @Test
     fun aplContribExample8() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺⍵}⍤ 9 0 1)⍨ ⍳2"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺ ⍵}⍤ 9 0 1)⍨ ⍳2"))
     }
 
     @Test
     fun aplContribExample9() {
-        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺⍵}⍤¯9 0 1)⍨ ⍳2"))
+        assertSimpleNumber(1, parseAPLExpression("(2 2⍴0(⍳4)1(4 5 6 7)) ≡ (2 4⍴⍳8) ({⍺ ⍵}⍤¯9 0 1)⍨ ⍳2"))
     }
 
     @Test
     fun aplContribExample10() {
-            assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤ 9 2) 1 2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤ 9 2) 1 2 3⍴⍳6"))
     }
 
     @Test
@@ -99,7 +97,7 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample12() {
-        assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤2  9  9) 1 2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(,⊂2 3⍴⍳6)≡(⊂⍤2 9 9) 1 2 3⍴⍳6"))
     }
 
     @Test
@@ -114,7 +112,7 @@ class RankTest : APLTest() {
 
     @Test
     fun aplContribExample15() {
-        assertSimpleNumber(1, parseAPLExpression("(2 3⍴0 1 2 7 8 9)≡0 4(+⍤   0 1)2 3⍴⍳6"))
+        assertSimpleNumber(1, parseAPLExpression("(2 3⍴0 1 2 7 8 9)≡0 4(+⍤0 1)2 3⍴⍳6"))
     }
 
     @Test

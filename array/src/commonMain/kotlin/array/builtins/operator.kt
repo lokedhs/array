@@ -1,7 +1,7 @@
 package array.builtins
 
 import array.*
-import kotlin.math.min
+import kotlin.math.max
 
 class PowerAPLOperator : APLOperatorTwoArg {
     override fun combineFunction(
@@ -58,20 +58,21 @@ class RankOperator : APLOperatorValueRightArg {
     override fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction {
         return object : APLFunction(opPos) {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-                val aInt = a.collapseFirstLevel()
-                val aDimensions = aInt.dimensions
+                val aReduced = a.collapseFirstLevel()
+                val aDimensions = aReduced.dimensions
                 val index = computeRankFromOpArg(context)
-                val k = if (index < 0) -index else min(aDimensions.size + index, 0)
-                val enclosedResult = AxisMultiDimensionEnclosedValue(aInt, aDimensions.size - k)
-                val applyRes = ForEachResult1Arg(context, fn, enclosedResult, null, opPos)
-                return applyRes.valueAt(0)
+                val k = max(0, if (index < 0) aDimensions.size + index else index)
+                val enclosedResult = AxisMultiDimensionEnclosedValue(aReduced, k)
+                val applyRes = ForEachResult1Arg(context, fn, enclosedResult, null, pos)
+                val v = DiscloseAPLFunction.discloseValue(applyRes, pos)
+                return v
+            }
+
+            private fun raiseArgumentException(): Nothing {
+                throwAPLException(APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos))
             }
 
             private fun computeRankFromOpArg(context: RuntimeContext): Int {
-                fun raiseError(): Nothing {
-                    throwAPLException(APLIllegalArgumentException("Operator argument must be scalar or an array of 1 to 3 elements", pos))
-                }
-
                 val opArg = instr.evalWithContext(context)
 
                 val d = opArg.dimensions
@@ -84,18 +85,61 @@ class RankOperator : APLOperatorValueRightArg {
                             1 -> opArg.valueAt(0)
                             2 -> opArg.valueAt(1)
                             3 -> opArg.valueAt(0)
-                            else -> raiseError()
+                            else -> raiseArgumentException()
                         }
                     }
                     else -> {
-                        raiseError()
+                        raiseArgumentException()
                     }
                 }
                 return res.ensureNumber(pos).asInt()
             }
 
             override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-                TODO("Not implemented")
+                val aReduced = a.collapseFirstLevel()
+                val aDimensions = aReduced.dimensions
+
+                val bReduced = b.collapseFirstLevel()
+                val bDimensions = bReduced.dimensions
+
+                val opArg = instr.evalWithContext(context)
+                val d = opArg.dimensions
+                val index0: Int
+                val index1: Int
+                when (d.size) {
+                    0 -> {
+                        opArg.ensureNumber(pos).asInt().let { v ->
+                            index0 = v
+                            index1 = v
+                        }
+                    }
+                    1 ->
+                        when (d[0]) {
+                            1 -> opArg.valueAt(0).ensureNumber(pos).asInt().let { v ->
+                                index0 = v
+                                index1 = v
+                            }
+                            2 -> {
+                                index0 = opArg.valueAt(0).ensureNumber(pos).asInt()
+                                index1 = opArg.valueAt(1).ensureNumber(pos).asInt()
+                            }
+                            3 -> {
+                                index0 = opArg.valueAt(1).ensureNumber(pos).asInt()
+                                index1 = opArg.valueAt(2).ensureNumber(pos).asInt()
+                            }
+                            else -> raiseArgumentException()
+                        }
+                    else -> raiseArgumentException()
+                }
+                val k0 = max(0, if (index0 < 0) aDimensions.size + index0 else index0)
+                val enclosedResult0 = AxisMultiDimensionEnclosedValue(aReduced, k0)
+
+                val k1 = max(0, if (index1 < 0) bDimensions.size + index1 else index1)
+                val enclosedResult1 = AxisMultiDimensionEnclosedValue(bReduced, k1)
+
+                val applyRes = ForEachFunctionDescriptor.compute2Arg(context, fn, enclosedResult0, enclosedResult1, null, pos)
+                val v = DiscloseAPLFunction.discloseValue(applyRes, pos)
+                return v
             }
 
         }
