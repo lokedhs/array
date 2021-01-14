@@ -9,6 +9,7 @@ import javafx.scene.control.Button
 import javafx.scene.control.TableCell
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
+import javafx.scene.control.cell.CheckBoxTableCell
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
@@ -62,8 +63,13 @@ class FunctionListPanel(engine: Engine) : TableView<FunctionRow>() {
         engine.addFunctionDefinitionListener(listener)
 
         columns.add(TableColumn<FunctionRow, APLSymbolWrapper>().apply {
-            cellValueFactory = FunctionNameCellValueFactory()
-            cellFactory = FunctionNameCellFactory()
+            cellValueFactory = SymbolValueFactory()
+            cellFactory = Callback { NamespaceNameCell() }
+            text = "Namespace"
+        })
+        columns.add(TableColumn<FunctionRow, APLSymbolWrapper>().apply {
+            cellValueFactory = SymbolValueFactory()
+            cellFactory = Callback { FunctionNameCell() }
             text = "Name"
         })
     }
@@ -90,16 +96,21 @@ class FunctionListPanel(engine: Engine) : TableView<FunctionRow>() {
     }
 }
 
-class FunctionNameCellFactory : Callback<TableColumn<FunctionRow, APLSymbolWrapper>, TableCell<FunctionRow, APLSymbolWrapper>> {
-    override fun call(param: TableColumn<FunctionRow, APLSymbolWrapper>?): TableCell<FunctionRow, APLSymbolWrapper> {
-        return FunctionNameCell()
+class NamespaceNameCell() : TableCell<FunctionRow, APLSymbolWrapper>() {
+    override fun updateItem(item: APLSymbolWrapper?, empty: Boolean) {
+        super.updateItem(item, empty)
+        if (empty || item == null) {
+            text = null
+            graphic = null
+        } else {
+            text = item.symbol.namespace.name
+        }
     }
 }
 
 class FunctionNameCell : TableCell<FunctionRow, APLSymbolWrapper>() {
     override fun updateItem(item: APLSymbolWrapper?, empty: Boolean) {
         super.updateItem(item, empty)
-
         if (empty || item == null) {
             text = null
             graphic = null
@@ -109,7 +120,7 @@ class FunctionNameCell : TableCell<FunctionRow, APLSymbolWrapper>() {
     }
 }
 
-class FunctionNameCellValueFactory :
+class SymbolValueFactory :
     Callback<TableColumn.CellDataFeatures<FunctionRow, APLSymbolWrapper>, ObservableValue<APLSymbolWrapper>> {
     override fun call(param: TableColumn.CellDataFeatures<FunctionRow, APLSymbolWrapper>): ObservableValue<APLSymbolWrapper> {
         return SimpleObjectProperty(APLSymbolWrapper(param.value.name))
