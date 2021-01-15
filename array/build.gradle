@@ -145,6 +145,8 @@ kotlin {
                 implementation kotlin('stdlib-jdk8')
                 implementation "org.apache.poi:poi-ooxml:4.1.2"
                 implementation 'com.google.code.gson:gson:2.8.6'
+                implementation 'org.apache.derby:derby:10.15.2.0'
+                implementation 'org.xerial:sqlite-jdbc:3.34.0'
             }
         }
         jvmTest {
