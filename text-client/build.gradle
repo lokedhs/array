@@ -1,0 +1,45 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    maven { url 'https://kotlin.bintray.com/kotlinx' }
+}
+
+kotlin {
+    linuxX64("linux") {
+        binaries {
+            executable {
+                // Change to specify fully qualified name of your application's entry point:
+                entryPoint = 'array.textclient.main'
+                // Specify command-line arguments, if necessary:
+                runTask?.args('')
+//                linkerOpts = ["-licui18n", "-licuuc", "-licudata"]
+            }
+        }
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation kotlin('stdlib-common')
+                implementation project(':array')
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation kotlin('test-common')
+                implementation kotlin('test-annotations-common')
+            }
+        }
+        linuxMain {
+        }
+        linuxTest {
+        }
+        all {
+            languageSettings.enableLanguageFeature("InlineClasses")
+        }
+    }
+}

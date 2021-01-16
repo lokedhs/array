@@ -211,19 +211,6 @@ class ComplexExpressionsTest : APLTest() {
         }
     }
 
-    // Test ignored since it's not clear how the parser is supposed to handle this case at the moment
-    @Test
-    @Ignore
-    fun multilineExpressionsShouldFail() {
-        assertFailsWith<ParseException> {
-            val v = parseAPLExpression("1 2 (\n4\n)").collapse()
-            println("v = ${v}")
-        }
-        assertFailsWith<ParseException> {
-            parseAPLExpression("1 2 (4\n)").collapse()
-        }
-    }
-
     @Test
     fun forEachWithEnclose() {
         parseAPLExpression("(-⍳5) ⌽¨ ⊂10 20 30 40 50").let { result ->

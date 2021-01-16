@@ -11,4 +11,5 @@ rootProject.name = 'array_test'
 include ":array"
 include ":gui"
 include ":clientweb"
+include ":text-client"
 include ":website"
