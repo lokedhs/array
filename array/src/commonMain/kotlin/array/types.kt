@@ -581,7 +581,7 @@ fun APLValue.isStringValue(): Boolean {
     }
 }
 
-fun APLValue.toStringValueOrNull(pos: Position? = null): String? {
+fun APLValue.toStringValueOrNull(): String? {
     val dimensions = this.dimensions
     if (dimensions.size != 1) {
         return null
@@ -600,7 +600,7 @@ fun APLValue.toStringValueOrNull(pos: Position? = null): String? {
 }
 
 fun APLValue.toStringValue(pos: Position? = null): String {
-    return this.toStringValueOrNull(pos) ?: throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
+    return this.toStringValueOrNull() ?: throwAPLException(IncompatibleTypeException("Argument is not a string", pos))
 }
 
 fun arrayAsString(array: APLValue, style: FormatStyle): String {
