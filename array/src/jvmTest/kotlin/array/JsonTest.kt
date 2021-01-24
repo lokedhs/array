@@ -122,9 +122,7 @@ class JsonTest : APLTest() {
             |map 3 2 ⍴ "foo" 1 "bar" 12 "xyz" ("test" "content" "asd")
             """.trimMargin())
         parseAPLToJson(engine, result, output, null)
-        val x = output.buf.toString()
-        println("res: +${x}+")
-        val jsonResult = Gson().fromJson(x, Map::class.java)
+        val jsonResult = Gson().fromJson(output.buf.toString(), Map::class.java)
         assertEquals(3, jsonResult.size)
         jsonResult["foo"].let { entry ->
             assertEquals(1.0, entry)
