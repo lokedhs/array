@@ -114,15 +114,6 @@ kotlin {
 //            freeCompilerArgs = ["-linker-options", findIcuLibs()]
             freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
         }
-        binaries {
-            executable {
-                // Change to specify fully qualified name of your application's entry point:
-                entryPoint = 'array.main'
-                // Specify command-line arguments, if necessary:
-                runTask?.args('')
-//                linkerOpts = ["-licui18n", "-licuuc", "-licudata"]
-            }
-        }
     }
 
     sourceSets {
