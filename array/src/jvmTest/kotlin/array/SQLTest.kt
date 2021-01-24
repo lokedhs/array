@@ -44,7 +44,7 @@ class SQLTest : APLTest() {
             |statement sql:updatePrepared 2 "bar"
             |statement sql:updatePrepared 3 "test message"
             |result ← c sql:query "select * from foo order by a"
-            |close statement
+            |sql:closePreparedStatement statement
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(3, 2), result)
@@ -65,7 +65,7 @@ class SQLTest : APLTest() {
             |statement ← c sql:prepare "insert into foo values (?, ?)"
             |statement sql:updatePrepared 3 2 ⍴ 1 "foo" 2 "bar" 3 "test message"
             |result ← c sql:query "select * from foo order by a"
-            |close statement
+            |sql:closePreparedStatement statement
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(3, 2), result)
@@ -90,7 +90,7 @@ class SQLTest : APLTest() {
             |c sql:update "insert into foo values (5,'testing-found')"
             |statement ← c sql:prepare "select a, b from foo where a = ?"
             |result ← statement sql:queryPrepared ,5
-            |close statement
+            |sql:closePreparedStatement statement
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(1, 2), result)

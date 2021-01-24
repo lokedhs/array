@@ -17,17 +17,7 @@ class SQLModule : KapModule {
         engine.registerFunction(ns.internAndExport("prepare"), SQLPrepareFunction())
         engine.registerFunction(ns.internAndExport("updatePrepared"), SQLPreparedUpdateFunction())
         engine.registerFunction(ns.internAndExport("queryPrepared"), SQLPreparedQueryFunction())
-
-        engine.registerClosableHandler(object : ClosableHandler<SQLConnectionValue> {
-            override fun close(value: SQLConnectionValue) {
-                value.conn.close()
-            }
-        })
-        engine.registerClosableHandler(object : ClosableHandler<SQLPreparedStatementValue> {
-            override fun close(value: SQLPreparedStatementValue) {
-                value.statement.close()
-            }
-        })
+        engine.registerFunction(ns.internAndExport("closePreparedStatement"), SQLClosePreparedStatementFunction())
     }
 }
 
@@ -204,4 +194,20 @@ class SQLPreparedQueryFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = SQLPreparedQueryFunctionImpl(pos)
+}
+
+
+class SQLClosePreparedStatementFunction : APLFunctionDescriptor {
+    class SQLClosePreparedStatementFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val v = a.collapse()
+            if (v !is SQLPreparedStatementValue) {
+                throw SQLAPLException("Argument is not a prepared statement", pos)
+            }
+            v.statement.close()
+            return APLNullValue()
+        }
+    }
+
+    override fun make(pos: Position) = SQLClosePreparedStatementFunctionImpl(pos)
 }

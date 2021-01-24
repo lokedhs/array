@@ -3,7 +3,6 @@ package array
 import array.builtins.*
 import array.json.JsonAPLModule
 import array.syntax.CustomSyntax
-import kotlin.reflect.KClass
 
 interface APLFunctionDescriptor {
     fun make(pos: Position): APLFunction
@@ -99,17 +98,6 @@ class CallStackElement(val name: String, val pos: Position?) {
     fun copy() = CallStackElement(name, pos)
 }
 
-/**
- * A handler that is registered by [Engine.registerClosableHandler] which is responsible for implementing
- * the backend for the `close` KAP function.
- */
-interface ClosableHandler<T : APLValue> {
-    /**
-     * Close the underlying object.
-     */
-    fun close(value: T)
-}
-
 class Engine {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
@@ -128,7 +116,6 @@ class Engine {
     val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
     val initialNamespace = makeNamespace(DEFAULT_NAMESPACE_NAME)
     var currentNamespace = initialNamespace
-    val closableHandlers = HashMap<KClass<out APLValue>, ClosableHandler<*>>()
     val callStack = ArrayList<CallStackElement>()
 
     init {
@@ -206,7 +193,6 @@ class Engine {
         registerNativeFunction("httpRequest", HttpRequestFunction(), "io")
         registerNativeFunction("httpPost", HttpPostFunction(), "io")
         registerNativeFunction("readdir", ReaddirFunction())
-        registerNativeFunction("close", CloseAPLFunction())
 
         // misc functions
         registerNativeFunction("sleep", SleepFunction(), "time")
@@ -413,32 +399,6 @@ class Engine {
     fun registerExportedSingleCharFunction(name: String) {
         exportedSingleCharFunctions.add(name)
     }
-
-    inline fun <reified T : APLValue> registerClosableHandler(handler: ClosableHandler<T>) {
-        if (closableHandlers.containsKey(T::class)) {
-            throw IllegalStateException("Closable handler for class ${T::class.simpleName} already added")
-        }
-        closableHandlers[T::class] = handler
-    }
-
-    inline fun <reified T : APLValue> callClosableHandler(value: T, pos: Position) {
-        val handler =
-            closableHandlers[value::class] ?: throw APLEvalException("Value cannot be closed: ${value.formatted(FormatStyle.PLAIN)}", pos)
-        @Suppress("UNCHECKED_CAST")
-        (handler as ClosableHandler<T>).close(value)
-    }
-}
-
-class CloseAPLFunction : APLFunctionDescriptor {
-    class CloseAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val value = a.collapseFirstLevel()
-            context.engine.callClosableHandler(value, pos)
-            return value
-        }
-    }
-
-    override fun make(pos: Position) = CloseAPLFunctionImpl(pos)
 }
 
 fun throwAPLException(ex: APLEvalException): Nothing {
