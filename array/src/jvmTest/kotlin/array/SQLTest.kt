@@ -22,7 +22,9 @@ class SQLTest : APLTest() {
             |c sql:update "insert into foo values (1,'foo')"
             |c sql:update "insert into foo values (2,'testing')"
             |c sql:update "insert into foo values (3,'xx')"
-            |c sql:query "select * from foo order by a"
+            |result ← c sql:query "select * from foo order by a"
+            |close c
+            |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(3, 2), result)
         assertSimpleNumber(1, result.valueAt(0))
@@ -45,6 +47,7 @@ class SQLTest : APLTest() {
             |statement sql:updatePrepared 3 "test message"
             |result ← c sql:query "select * from foo order by a"
             |close statement
+            |close c
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(3, 2), result)
@@ -66,6 +69,7 @@ class SQLTest : APLTest() {
             |statement sql:updatePrepared 3 2 ⍴ 1 "foo" 2 "bar" 3 "test message"
             |result ← c sql:query "select * from foo order by a"
             |close statement
+            |close c
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(3, 2), result)
@@ -91,6 +95,7 @@ class SQLTest : APLTest() {
             |statement ← c sql:prepare "select a, b from foo where a = ?"
             |result ← statement sql:queryPrepared ,5
             |close statement
+            |close c
             |result
             """.trimMargin())
         assertDimension(dimensionsOfSize(1, 2), result)
@@ -127,7 +132,8 @@ class SQLTest : APLTest() {
             |c sql:update "insert into foo values (5,'testing-found')"
             |statement ← c sql:prepare "select a, b from foo where a = ?"
             |result ← statement sql:queryPrepared 5
-            |sql:closePreparedStatement statement
+            |close statement
+            |close c
             |result
             """.trimMargin())
         }
