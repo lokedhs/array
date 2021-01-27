@@ -118,10 +118,10 @@ class SQLQueryFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val query = b.toStringValue(pos)
             val conn = ensureSQLConnectionValue(a, pos).conn
-            withOpenTransaction(conn) {
+            return withOpenTransaction(conn) {
                 conn.createStatement().use { statement ->
                     statement.executeQuery(query).use { result ->
-                        return resultSetToValue(result, pos)
+                        resultSetToValue(result, pos)
                     }
                 }
             }
@@ -136,10 +136,10 @@ class SQLUpdateFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val query = b.toStringValue(pos)
             val conn = ensureSQLConnectionValue(a, pos).conn
-            withOpenTransaction(conn) {
+            return withOpenTransaction(conn) {
                 conn.createStatement().use { statement ->
                     val result = statement.executeUpdate(query)
-                    return result.makeAPLNumber()
+                    result.makeAPLNumber()
                 }
             }
         }
