@@ -98,11 +98,26 @@ class SQLTest : APLTest() {
         assertString("testing-found", result.valueAt(1))
     }
 
+    // p ← db sql:prepare "insert into foo values (?,?,?)"
+    // p sql:updatePrepared (⍪100+⍳n) , (⍪{"foo",⍕⍵}¨⍳n) , ?n⍴10000
+
+    // db ← sql:connect "jdbc:sqlite:/home/elias/foo.db"
+    //Connection(url=jdbc:sqlite:/home/elias/foo.db)
+    //n ← 500
+    //500
+    //p ← db sql:prepare "insert into foo values (?,?,?)"
+    //PreparedStatement(insert into foo values (?,?,?)
+    // parameters=null)
+    //p sql:updatePrepared (⍪80000+⍳n) , (⍪{"foo",⍕⍵}¨⍳n) , ?n⍴10000
+    //⍬
+    //time:measureTime { p sql:updatePrepared (⍪90000+⍳n) , (⍪{"foo",⍕⍵}¨⍳n) , ?n⍴10000 }
+    //Total time: 11.57
+
     @Test
     fun preparedQueryFailWithIncorrectDimension() {
         assertFailsWith<SQLAPLException> {
             parseAPLExpression(
-            """
+                """
             |c ← sql:connect "jdbc:sqlite::memory:"
             |c sql:update "create table foo (a int primary key, b varchar(10))"
             |c sql:update "insert into foo values (1,'foo')"

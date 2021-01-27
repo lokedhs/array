@@ -6,6 +6,21 @@ import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+private inline fun <T> withOpenTransaction(conn: Connection, fn: () -> T): T {
+    var finished = false
+    try {
+        val res = fn()
+        finished = true
+        return res
+    } finally {
+        if (finished) {
+            conn.commit()
+        } else {
+            conn.rollback()
+        }
+    }
+}
+
 class SQLModule : KapModule {
     override val name get() = "sql"
 
@@ -66,6 +81,7 @@ class SQLConnectFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val connectionUrl = a.toStringValue(pos)
             val conn = DriverManager.getConnection(connectionUrl)
+            conn.autoCommit = false
             return SQLConnectionValue(conn, "url=${connectionUrl}")
         }
     }
@@ -101,9 +117,12 @@ class SQLQueryFunction : APLFunctionDescriptor {
     class SQLQueryFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val query = b.toStringValue(pos)
-            ensureSQLConnectionValue(a, pos).conn.createStatement().use { statement ->
-                statement.executeQuery(query).use { result ->
-                    return resultSetToValue(result, pos)
+            val conn = ensureSQLConnectionValue(a, pos).conn
+            withOpenTransaction(conn) {
+                conn.createStatement().use { statement ->
+                    statement.executeQuery(query).use { result ->
+                        return resultSetToValue(result, pos)
+                    }
                 }
             }
         }
@@ -116,9 +135,12 @@ class SQLUpdateFunction : APLFunctionDescriptor {
     class SQLUpdateFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val query = b.toStringValue(pos)
-            ensureSQLConnectionValue(a, pos).conn.createStatement().use { statement ->
-                val result = statement.executeUpdate(query)
-                return result.makeAPLNumber()
+            val conn = ensureSQLConnectionValue(a, pos).conn
+            withOpenTransaction(conn) {
+                conn.createStatement().use { statement ->
+                    val result = statement.executeUpdate(query)
+                    return result.makeAPLNumber()
+                }
             }
         }
     }
@@ -156,26 +178,29 @@ class SQLPreparedUpdateFunction : APLFunctionDescriptor {
     class SQLPreparedUpdateFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val statement = ensurePreparedStatementValue(a, pos).statement
-            val bDimensions = b.dimensions
-            val multipliers = bDimensions.multipliers()
-            when (bDimensions.size) {
-                1 -> {
-                    repeat(bDimensions[0]) { colIndex ->
-                        updatePreparedStatementCol(statement, colIndex + 1, b.valueAt(colIndex), pos)
-                    }
-                    statement.executeUpdate()
-                }
-                2 -> {
-                    repeat(bDimensions[0]) { rowIndex ->
-                        repeat(bDimensions[1]) { colIndex ->
-                            updatePreparedStatementCol(
-                                statement,
-                                colIndex + 1,
-                                b.valueAt(bDimensions.indexFromPosition(intArrayOf(rowIndex, colIndex), multipliers, pos)),
-                                pos)
+            withOpenTransaction(statement.connection) {
+                val bDimensions = b.dimensions
+                val multipliers = bDimensions.multipliers()
+                when (bDimensions.size) {
+                    1 -> {
+                        repeat(bDimensions[0]) { colIndex ->
+                            updatePreparedStatementCol(statement, colIndex + 1, b.valueAt(colIndex), pos)
                         }
                         statement.executeUpdate()
                     }
+                    2 -> {
+                        repeat(bDimensions[0]) { rowIndex ->
+                            repeat(bDimensions[1]) { colIndex ->
+                                updatePreparedStatementCol(
+                                    statement,
+                                    colIndex + 1,
+                                    b.valueAt(bDimensions.indexFromPosition(intArrayOf(rowIndex, colIndex), multipliers, pos)),
+                                    pos)
+                            }
+                            statement.executeUpdate()
+                        }
+                    }
+                    else -> throw SQLAPLException("Right value must rank 1 or 2", pos)
                 }
             }
             return APLNullValue()
@@ -189,16 +214,18 @@ class SQLPreparedQueryFunction : APLFunctionDescriptor {
     class SQLPreparedQueryFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val statement = ensurePreparedStatementValue(a, pos).statement
-            val bCollapsed = b.collapse()
-            val bDimensions = bCollapsed.dimensions
-            if (bDimensions.size != 1) {
-                throw SQLAPLException("Right argument to function must be a rank-1 array")
-            }
-            repeat(bDimensions[0]) { colIndex ->
-                updatePreparedStatementCol(statement, colIndex + 1, bCollapsed.valueAt(colIndex), pos)
-            }
-            statement.executeQuery().use { result ->
-                return resultSetToValue(result, pos)
+            withOpenTransaction(statement.connection) {
+                val bCollapsed = b.collapse()
+                val bDimensions = bCollapsed.dimensions
+                if (bDimensions.size != 1) {
+                    throw SQLAPLException("Right argument to function must be a rank-1 array")
+                }
+                repeat(bDimensions[0]) { colIndex ->
+                    updatePreparedStatementCol(statement, colIndex + 1, bCollapsed.valueAt(colIndex), pos)
+                }
+                statement.executeQuery().use { result ->
+                    return resultSetToValue(result, pos)
+                }
             }
         }
     }
