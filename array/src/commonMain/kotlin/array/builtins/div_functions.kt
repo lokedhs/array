@@ -37,15 +37,28 @@ class CompFunction : APLFunctionDescriptor {
 }
 
 /**
- * This value represents the result of a function call which will only be performed
+ * This value represents the result of a 1-arg function call which will only be performed
  * after the value is actually needed.
  */
-class DeferredAPLValue(val fn: APLFunction, val context: RuntimeContext, val a: APLValue) : APLArray() {
+class DeferredAPLValue1Arg(val fn: APLFunction, val context: RuntimeContext, val a: APLValue) : APLArray() {
     override val dimensions get() = a.dimensions
     override fun valueAt(p: Int) = fn.eval1Arg(context, a, null).valueAt(p)
 
     override fun unwrapDeferredValue(): APLValue {
         return fn.eval1Arg(context, a, null).unwrapDeferredValue()
+    }
+}
+
+/**
+ * This value represents the result of a 2-arg function call which will only be performed
+ * after the value is actually needed.
+ */
+class DeferredAPLValue2Arg(val fn: APLFunction, val context: RuntimeContext, val a: APLValue, val b: APLValue) : APLArray() {
+    override val dimensions get() = a.dimensions
+    override fun valueAt(p: Int) = fn.eval2Arg(context, a, b, null).valueAt(p)
+
+    override fun unwrapDeferredValue(): APLValue {
+        return fn.eval2Arg(context, a, b, null).unwrapDeferredValue()
     }
 }
 
@@ -58,7 +71,11 @@ class DeferAPLOperator : APLOperatorOneArg {
         override fun make(pos: Position): APLFunction {
             return object : NoAxisAPLFunction(pos) {
                 override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-                    return DeferredAPLValue(fn, context, a)
+                    return DeferredAPLValue1Arg(fn, context, a)
+                }
+
+                override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+                    return DeferredAPLValue2Arg(fn, context, a, b)
                 }
             }
         }
