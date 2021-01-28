@@ -30,7 +30,7 @@ open class APLTest {
         val output = StringBuilderOutput()
         engine.standardOutput = output
         val result = engine.parseAndEval(StringSourceLocation(expr), false)
-        return Pair(result, output.buf.toString())
+        return Pair(result.collapse(), output.buf.toString())
     }
 
     fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {

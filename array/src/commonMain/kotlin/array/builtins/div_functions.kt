@@ -36,6 +36,36 @@ class CompFunction : APLFunctionDescriptor {
     }
 }
 
+/**
+ * This value represents the result of a function call which will only be performed
+ * after the value is actually needed.
+ */
+class DeferredAPLValue(val fn: APLFunction, val context: RuntimeContext, val a: APLValue) : APLArray() {
+    override val dimensions get() = a.dimensions
+    override fun valueAt(p: Int) = fn.eval1Arg(context, a, null).valueAt(p)
+
+    override fun unwrapDeferredValue(): APLValue {
+        return fn.eval1Arg(context, a, null).unwrapDeferredValue()
+    }
+}
+
+class DeferAPLOperator : APLOperatorOneArg {
+    override fun combineFunction(fn: APLFunction, operatorAxis: Instruction?, pos: Position): APLFunctionDescriptor {
+        return DeferAPLFunction(fn)
+    }
+
+    class DeferAPLFunction(val fn: APLFunction) : APLFunctionDescriptor {
+        override fun make(pos: Position): APLFunction {
+            return object : NoAxisAPLFunction(pos) {
+                override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+                    return DeferredAPLValue(fn, context, a)
+                }
+            }
+        }
+
+    }
+}
+
 class SleepFunction : APLFunctionDescriptor {
     class SleepFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
