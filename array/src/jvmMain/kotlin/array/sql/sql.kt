@@ -1,10 +1,7 @@
 package array.sql
 
 import array.*
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.sql.*
 
 private inline fun <T> withOpenTransaction(conn: Connection, fn: () -> T): T {
     var finished = false
@@ -18,6 +15,14 @@ private inline fun <T> withOpenTransaction(conn: Connection, fn: () -> T): T {
         } else {
             conn.rollback()
         }
+    }
+}
+
+private inline fun <T> withSQLExceptions(pos: Position, fn: () -> T): T {
+    try {
+        return fn()
+    } catch (e: SQLException) {
+        throw SQLAPLException("Exception from database engine", pos).initCause(e)
     }
 }
 

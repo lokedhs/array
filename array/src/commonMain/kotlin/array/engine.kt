@@ -214,6 +214,8 @@ class Engine {
         registerNativeOperator("catch", CatchOperator())
         registerNativeFunction("labels", LabelsFunction())
         registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
+        registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
+        registerNativeOperator("defer", DeferAPLOperator())
 
         // maths
         registerNativeFunction("sin", SinAPLFunction(), "math")
@@ -240,7 +242,6 @@ class Engine {
         registerNativeOperator("⍀", ScanFirstAxisOp())
         registerNativeOperator("⍤", RankOperator())
         registerNativeOperator("∵", BitwiseOp())
-        registerNativeOperator("defer", DeferAPLOperator())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
@@ -304,8 +305,9 @@ class Engine {
         functionDefinitionListeners.forEach { it.operatorDefined(name, fn) }
     }
 
-    private fun registerNativeOperator(name: String, fn: APLOperator) {
-        val sym = coreNamespace.internAndExport(name)
+    private fun registerNativeOperator(name: String, fn: APLOperator, namespaceName: String? = null) {
+        val namespace = if (namespaceName == null) coreNamespace else makeNamespace(namespaceName)
+        val sym = namespace.internAndExport(name)
         registerOperator(sym, fn)
     }
 

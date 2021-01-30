@@ -227,4 +227,24 @@ class FlowControlTest : APLTest() {
             assertSimpleNumber(3, result)
         }
     }
+
+    @Test
+    fun unwindTest() {
+        val engine = Engine()
+        val output = StringBuilderOutput()
+        engine.standardOutput = output
+        assertFailsWith<APLEvalException> {
+            engine.parseAndEval(
+                StringSourceLocation("int:unwindProtect λ{io:print \"bar\" ◊ b ◊ io:print \"foo\"} λ{io:print \"qwe\"}"),
+                true)
+        }
+        assertEquals("barqwe", output.buf.toString())
+    }
+
+    @Test
+    fun unwindWithNoErrorTest() {
+        val (result, out) = parseAPLExpressionWithOutput("int:unwindProtect λ{io:print \"bar\" ◊ io:print \"foo\" ◊ 9} λ{io:print \"qwe\"}")
+        assertSimpleNumber(9, result)
+        assertEquals("barfooqwe", out)
+    }
 }

@@ -97,6 +97,39 @@ class SleepFunction : APLFunctionDescriptor {
 
 class TagCatch(val tag: APLValue, val data: APLValue, pos: Position? = null) : APLEvalException(data.formatted(FormatStyle.PLAIN), pos)
 
+class UnwindProtectAPLFunction : APLFunctionDescriptor {
+    class UnwindProtectAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val aDimensions = a.dimensions
+            if (aDimensions.size != 1 || aDimensions[0] != 2) {
+                throw APLEvalException("Invalid dimensions in unwindProtect call", pos)
+            }
+            val fn = a.valueAt(0).collapseFirstLevel()
+            if (fn !is LambdaValue) {
+                throw APLEvalException("Handler function is not a lambda", pos)
+            }
+            val finallyHandler = a.valueAt(1).collapseFirstLevel()
+            if (finallyHandler !is LambdaValue) {
+                throw APLEvalException("Unwind handler is not a lambda", pos)
+            }
+            var thrownException: APLEvalException? = null
+            var result: APLValue? = null
+            try {
+                result = fn.makeClosure().eval1Arg(context, APLNullValue(), null)
+            } catch (e: APLEvalException) {
+                thrownException = e
+            }
+            finallyHandler.makeClosure().eval1Arg(context, APLNullValue(), null)
+            if (thrownException != null) {
+                throw thrownException
+            }
+            return result!!
+        }
+    }
+
+    override fun make(pos: Position) = UnwindProtectAPLFunctionImpl(pos)
+}
+
 class ThrowFunction : APLFunctionDescriptor {
     class ThrowFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {

@@ -156,6 +156,24 @@ class SyntaxText : APLTest() {
     }
 
     @Test
+    fun bindingFunctionEnsureLocal() {
+        val engine = Engine()
+        val out = StringBuilderOutput()
+        engine.standardOutput = out
+        val sourceLocation = StringSourceLocation(
+            """
+            |defsyntax foo (:function a) { (⍞a 0) + 30 }
+            |x ← foo { b ← 20 ◊ 10 }
+            |io:print x
+            |b
+            """.trimMargin())
+        assertFailsWith<VariableNotAssigned> {
+            engine.parseAndEval(sourceLocation, true).collapse()
+        }
+        assertEquals("40", out.buf.toString())
+    }
+
+    @Test
     fun bindingDefinedFunctionWithArg() {
         val result = parseAPLExpression(
             """

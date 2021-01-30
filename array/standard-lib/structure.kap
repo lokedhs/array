@@ -12,6 +12,12 @@ defsyntax while (:nexprfunction cond :nfunction body) {
 
 declare(:export while)
 
+defsyntax unwindProtect (:function statement :function handler) {
+  int:unwindProtect statement handler
+}
+
+declare(:export unwindProtect)
+
 declare(:singleCharExported "⊇")
 
 ∇ (A) ⊇ (B) {
