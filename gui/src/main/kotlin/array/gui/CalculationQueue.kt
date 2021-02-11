@@ -15,12 +15,11 @@ class CalculationQueue(val engine: Engine) {
         try {
             while (!Thread.interrupted()) {
                 val request = queue.take()
-                var queueResult: Either<APLValue, Exception>
-                try {
+                val queueResult = try {
                     val result = engine.parseAndEval(request.source, request.linkNewContext).collapse()
-                    queueResult = Either.Left(result)
+                    Either.Left(result)
                 } catch (e: Exception) {
-                    queueResult = Either.Right(e)
+                    Either.Right(e)
                 }
                 request.callback(queueResult)
             }

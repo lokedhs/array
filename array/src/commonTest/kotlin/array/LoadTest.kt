@@ -6,7 +6,7 @@ class LoadTest : APLTest() {
     @Test
     fun loadSimpleSource() {
         val engine = Engine()
-        val res0 = engine.parseAndEval(StringSourceLocation("load \"test-data/test-source.kap\""), false)
+        val res0 = engine.parseAndEval(StringSourceLocation("io:load \"test-data/test-source.kap\""), false)
         assertSimpleNumber(10, res0)
         val res1 = engine.parseAndEval(StringSourceLocation("foo:bar 1"), false)
         assertSimpleNumber(101, res1)
@@ -15,7 +15,7 @@ class LoadTest : APLTest() {
     @Test
     fun ensureLoadPreservesOldNamespace() {
         val engine = Engine()
-        val res0 = engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/test-source.kap\""), false)
+        val res0 = engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ io:load \"test-data/test-source.kap\""), false)
         assertSimpleNumber(10, res0)
         val res1 = engine.parseAndEval(StringSourceLocation("foo:bar 1"), false)
         assertSimpleNumber(101, res1)
@@ -27,7 +27,7 @@ class LoadTest : APLTest() {
     fun ensureLoadPreservesOldNamespaceOnError() {
         val engine = Engine()
         try {
-            engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ load \"test-data/parse-error.kap\""), false)
+            engine.parseAndEval(StringSourceLocation("namespace(\"a\") x←1 ◊ io:load \"test-data/parse-error.kap\""), false)
         } catch (e: ParseException) {
             // expected
         }

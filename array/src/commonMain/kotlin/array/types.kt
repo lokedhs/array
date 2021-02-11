@@ -632,6 +632,11 @@ class APLArrayImpl(
     }
 }
 
+class APLArrayList(override val dimensions: Dimensions, private val values: List<APLValue>) : APLArray() {
+    override fun valueAt(p: Int) = values[p]
+    override fun toString() = values.toString()
+}
+
 class EnclosedAPLValue(val value: APLValue) : APLArray() {
     override val dimensions: Dimensions
         get() = emptyDimensions()

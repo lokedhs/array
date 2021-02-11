@@ -200,12 +200,13 @@ class Engine {
         registerNativeFunction("mapToArray", MapKeyValuesFunction())
 
         // io functions
+        registerNativeFunction("read", ReadFunction(), "io")
         registerNativeFunction("print", PrintAPLFunction(), "io")
-        registerNativeFunction("readCsvFile", ReadCSVFunction())
-        registerNativeFunction("load", LoadFunction())
+        registerNativeFunction("readCsvFile", ReadCSVFunction(), "io")
+        registerNativeFunction("load", LoadFunction(), "io")
         registerNativeFunction("httpRequest", HttpRequestFunction(), "io")
         registerNativeFunction("httpPost", HttpPostFunction(), "io")
-        registerNativeFunction("readdir", ReaddirFunction())
+        registerNativeFunction("readdir", ReaddirFunction(), "io")
         registerNativeFunction("close", CloseAPLFunction())
 
         // misc functions

@@ -48,6 +48,8 @@ interface CharacterProvider : NativeCloseable {
             buf.addCodepoint(ch)
         }
     }
+
+    fun lines() = generateSequence { nextLine() }
 }
 
 class PushBackCharacterProvider(val sourceLocation: SourceLocation) : CharacterProvider {

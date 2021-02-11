@@ -2,6 +2,7 @@ package array
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class IoTest {
@@ -57,6 +58,26 @@ class IoTest {
         openCharFile("test-data/plain.txt").use { input ->
             assertEquals("abcbar", input.nextLine())
             assertNull(input.nextCodepoint())
+        }
+    }
+
+    @Test
+    fun characterProviderLines() {
+        openCharFile("test-data/multi.txt").use { input ->
+            val expected = listOf("foo", "bar", "test", "abcdef", "testtest", "  testline", "", "aa", "ab", "ac", "ad")
+            val res = ArrayList<String>()
+            input.lines().forEach { s ->
+                res.add(s)
+            }
+            assertEquals(expected, res)
+        }
+    }
+
+    @Test
+    fun fileNotFoundError() {
+        assertFailsWith<MPFileException> {
+            openCharFile("test-data/this-file-should-not-be-found")
+
         }
     }
 

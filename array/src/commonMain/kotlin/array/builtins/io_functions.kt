@@ -3,6 +3,24 @@ package array.builtins
 import array.*
 import array.csv.readCsv
 
+class ReadFunction : APLFunctionDescriptor {
+    class ReadFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val file = a.toStringValue(pos)
+            val result = ArrayList<APLValue>()
+            openCharFile(file).use { provider ->
+                provider.lines().forEach { s ->
+                    result.add(APLString(s))
+                }
+            }
+            return APLArrayList(dimensionsOfSize(result.size), result)
+        }
+    }
+
+    override fun make(pos: Position) = ReadFunctionImpl(pos)
+}
+
+
 class PrintAPLFunction : APLFunctionDescriptor {
     class PrintAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
@@ -86,7 +104,7 @@ class HttpPostFunction : APLFunctionDescriptor {
                 2 -> args.listElement(1)
                 else -> throwAPLException(APLIllegalArgumentException("Function requires one or two arguments", pos))
             }
-            val result = httpPost(url, data.asByteArray())
+            val result = httpPost(url, data.asByteArray(pos))
             return APLString.make(result.content)
         }
     }
@@ -105,7 +123,7 @@ class ReaddirFunction : APLFunctionDescriptor {
         }
 
         private fun loadContent(context: RuntimeContext, file: APLValue, selectors: List<OutputType>): APLValue {
-            val content = readDirectoryContent(file.toStringValue())
+            val content = readDirectoryContent(file.toStringValue(pos))
             val numCols = 1 + selectors.size
             val d = dimensionsOfSize(content.size, numCols)
             val valueList = Array(d.contentSize()) { i ->
