@@ -205,7 +205,7 @@ class EncloseAPLFunction : APLFunctionDescriptor {
                         result.add(prevIndex)
                         result.add(i)
                     }
-                    prevIndex = i
+                    prevIndex = if (curr == 0) -1 else i
                 }
             }
             if (prevIndex >= 0) {

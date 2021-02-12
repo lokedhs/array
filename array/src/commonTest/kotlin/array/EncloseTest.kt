@@ -324,4 +324,12 @@ class EncloseTest : APLTest() {
             parseAPLExpression("1 1 0 1 2 3 1 ⊂[4] 7 3 ⍴ \"abcdefghijk\"")
         }
     }
+
+    @Test
+    fun twoArgEncloseWithInitialZeroes() {
+        parseAPLExpression("0 0 1 1 1⊂\"Hello\"").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            assertString("llo", result.valueAt(0))
+        }
+    }
 }
