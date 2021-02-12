@@ -182,6 +182,20 @@ class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : A
         return if (p >= aSize) b.valueAt(p - aSize) else a.valueAt(p)
     }
 
+    override fun collapseInt(): APLValue {
+        return if (a is APLString && b is APLString) {
+            APLString(IntArray(dimensions[0]) { i ->
+                if (i < aSize) {
+                    a.content[i]
+                } else {
+                    b.content[i - aSize]
+                }
+            })
+        } else {
+            super.collapseInt()
+        }
+    }
+
     private fun resolveLabels(): DimensionLabels? {
         val aLabels = a.labels
         val bLabels = b.labels
@@ -723,7 +737,7 @@ class MultiRotationRotatedAPLValue(
     val axis: Int,
     val selectionMultipliers: IntArray,
     val selection: IntArray
-                                  ) : APLArray() {
+) : APLArray() {
     override val dimensions = source.dimensions
 
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
