@@ -1,7 +1,10 @@
 package array
 
+import array.builtins.TagCatch
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.fail
 
 class IOAPLTest : APLTest() {
     @Test
@@ -33,6 +36,18 @@ class IOAPLTest : APLTest() {
             for (i in expected.indices) {
                 assertEquals(expected[i], result.valueAt(i).toStringValue())
             }
+        }
+    }
+
+    @Test
+    fun readMissingFile() {
+        val engine = Engine()
+        try {
+            engine.parseAndEval(StringSourceLocation("io:read \"test-data/this-file-should-not-be-found-as-well\""), true).collapse()
+            fail("Read should not succeed")
+        } catch (e: TagCatch) {
+            val tag = e.tag.ensureSymbol().value
+            assertSame(engine.internSymbol("fileNotFound", engine.keywordNamespace), tag)
         }
     }
 }

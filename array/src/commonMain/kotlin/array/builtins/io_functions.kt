@@ -8,12 +8,19 @@ class ReadFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val file = a.toStringValue(pos)
             val result = ArrayList<APLValue>()
-            openCharFile(file).use { provider ->
-                provider.lines().forEach { s ->
-                    result.add(APLString(s))
+            try {
+                openCharFile(file).use { provider ->
+                    provider.lines().forEach { s ->
+                        result.add(APLString(s))
+                    }
                 }
+                return APLArrayList(dimensionsOfSize(result.size), result)
+            } catch (e: MPFileNotFoundException) {
+                throwAPLException(
+                    TagCatch(
+                        APLSymbol(context.engine.internSymbol("fileNotFound", context.engine.keywordNamespace)),
+                        APLString(file)))
             }
-            return APLArrayList(dimensionsOfSize(result.size), result)
         }
     }
 

@@ -1,6 +1,7 @@
 package array
 
-class MPFileException(message: String, cause: Exception? = null) : Exception(message, cause)
+open class MPFileException(message: String, cause: Exception? = null) : Exception(message, cause)
+open class MPFileNotFoundException(message: String, cause: Exception? = null) : MPFileException(message, cause)
 
 interface NativeCloseable {
     fun close()

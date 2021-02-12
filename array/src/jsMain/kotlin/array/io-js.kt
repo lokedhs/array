@@ -114,7 +114,7 @@ sealed class RegisteredEntry(val name: String) {
 val registeredFilesRoot = RegisteredEntry.Directory("/")
 
 actual fun openFile(name: String): ByteProvider {
-    val found = registeredFilesRoot.find(name) ?: throw MPFileException("File not found: ${name}")
+    val found = registeredFilesRoot.find(name) ?: throw MPFileNotFoundException("File not found: ${name}")
     if (found !is RegisteredEntry.File) {
         throw MPFileException("Pathname is not a file file: ${name}")
     }

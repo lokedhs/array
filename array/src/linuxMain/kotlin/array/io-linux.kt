@@ -63,11 +63,7 @@ actual fun makeKeyboardInput(): KeyboardInput {
 }
 
 actual fun openCharFile(name: String): CharacterProvider {
-    val fd = open(name, O_RDONLY)
-    if (fd == -1) {
-        throw MPFileException(nativeErrorString())
-    }
-    return ByteToCharacterProvider(LinuxByteProvider(fd, name))
+    return ByteToCharacterProvider(LinuxByteProvider(openFileWithTranslatedExceptions(name), name))
 }
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -109,11 +105,19 @@ class LinuxByteProvider(val fd: Int, val name: String) : ByteProvider {
 }
 
 actual fun openFile(name: String): ByteProvider {
+    return LinuxByteProvider(openFileWithTranslatedExceptions(name), name)
+}
+
+private fun openFileWithTranslatedExceptions(name: String): Int {
     val fd = open(name, O_RDONLY)
     if (fd == -1) {
-        throw MPFileException(nativeErrorString())
+        if (errno == ENOENT) {
+            throw MPFileNotFoundException(nativeErrorString())
+        } else {
+            throw MPFileException(nativeErrorString())
+        }
     }
-    return LinuxByteProvider(fd, name)
+    return fd
 }
 
 private fun nativeErrorString(): String {

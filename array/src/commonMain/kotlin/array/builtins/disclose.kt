@@ -184,7 +184,7 @@ class EncloseAPLFunction : APLFunctionDescriptor {
             }
             if (partitionArgs.size != bDimensions[axisInt]) {
                 throw InvalidDimensionsException(
-                    "Size of A must be the same size as the dimension of B along the selected axis (size of A: ${partitionArgs.size}, size of axis in B: ${bDimensions[axisInt]}",
+                    "Size of A must be the same size as the dimension of B along the selected axis (size of A: ${partitionArgs.size}, size of axis in B: ${bDimensions[axisInt]})",
                     pos)
             }
             val partitionIndexes = computePartitionIndexes(partitionArgs)
@@ -197,8 +197,8 @@ class EncloseAPLFunction : APLFunctionDescriptor {
             for (i in partitionArgs.indices) {
                 val curr = partitionArgs[i]
                 if (prevIndex >= 0 && curr == 0) {
-                    result.add(prevIndex);
-                    result.add(i);
+                    result.add(prevIndex)
+                    result.add(i)
                     prevIndex = -1
                 } else if (i == 0 || (partitionArgs[i - 1] < curr && curr != 0)) {
                     if (prevIndex >= 0) {

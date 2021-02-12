@@ -178,6 +178,8 @@ actual fun openFile(name: String): ByteProvider {
 private inline fun <T> transformIOException(fn: () -> T): T {
     try {
         return fn()
+    } catch (e: FileNotFoundException) {
+        throw MPFileNotFoundException(e.toString(), e)
     } catch (e: IOException) {
         throw MPFileException(e.toString(), e)
     }
