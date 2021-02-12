@@ -251,4 +251,77 @@ class EncloseTest : APLTest() {
             parseAPLExpression("⊂[0 0]2 2 2⍴⍳100")
         }
     }
+
+    // Two-arg enclose
+
+    @Test
+    fun simpleTwoArgEnclose() {
+        parseAPLExpression("s ← \"foo,bar,test,abcd\" ◊ (∼s=@,) ⊂ s").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertString("foo", result.valueAt(0))
+            assertString("bar", result.valueAt(1))
+            assertString("test", result.valueAt(2))
+            assertString("abcd", result.valueAt(3))
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithOneResult() {
+        parseAPLExpression("1 1 1 1 ⊂ \"abcd\"").let { result ->
+            assertDimension(dimensionsOfSize(1), result)
+            assertString("abcd", result.valueAt(0))
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithIncreasngAndDecreasingIndex() {
+        parseAPLExpression("1 3 2 1 ⊂ \"abcd\"").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertString("a", result.valueAt(0))
+            assertString("bcd", result.valueAt(1))
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithMultipleZeroes() {
+        parseAPLExpression("1 0 0 1 1 1 1 ⊂ \"abcdefg\"").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertString("a", result.valueAt(0))
+            assertString("defg", result.valueAt(1))
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithMultiDimensionalArgument() {
+        parseAPLExpression("99 88 0 0 0 2 1 2 2 ⊂ 3 9 ⍴ \"abcdefghijk\"").let { result ->
+            assertDimension(dimensionsOfSize(3, 3), result)
+            assertString("ab", result.valueAt(0))
+            assertString("fg", result.valueAt(1))
+            assertString("hi", result.valueAt(2))
+            assertString("jk", result.valueAt(3))
+            assertString("de", result.valueAt(4))
+            assertString("fg", result.valueAt(5))
+            assertString("hi", result.valueAt(6))
+            assertString("bc", result.valueAt(7))
+            assertString("de", result.valueAt(8))
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithAxis() {
+        parseAPLExpression("1 1 0 1 2 3 1 ⊂[0] 7 3 ⍴ \"abcdefghijk\"").let { result ->
+            assertDimension(dimensionsOfSize(4, 3), result)
+            val expected = listOf("ad", "be", "cf", "j", "k", "a", "b", "c", "d", "eh", "fi", "gj")
+            for (i in expected.indices) {
+                assertString(expected[i], result.valueAt(i))
+            }
+        }
+    }
+
+    @Test
+    fun twoArgEncloseWithIllegalAxis() {
+        assertFailsWith<IllegalAxisException> {
+            parseAPLExpression("1 1 0 1 2 3 1 ⊂[4] 7 3 ⍴ \"abcdefghijk\"")
+        }
+    }
 }

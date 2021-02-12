@@ -76,6 +76,42 @@ class AxisMultiDimensionEnclosedValue(val value: APLValue, numDimensions: Int) :
     }
 }
 
+class PartitionedValue(val b: APLValue, val axis: Int, val partitionIndexes: List<Int>) : APLArray() {
+    override val dimensions: Dimensions
+    private val multipliers: IntArray
+    private val bDimensions: Dimensions
+    private val bMult: IntArray
+
+    init {
+        bDimensions = b.dimensions
+        dimensions = Dimensions(IntArray(bDimensions.size) { i ->
+            if (i == axis) {
+                partitionIndexes.size / 2
+            } else {
+                bDimensions[i]
+            }
+        })
+        multipliers = dimensions.multipliers()
+        bMult = bDimensions.multipliers()
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        val indexes = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
+        val start = partitionIndexes[indexes[axis] * 2]
+        val end = partitionIndexes[indexes[axis] * 2 + 1]
+        return APLArrayImpl(dimensionsOfSize(end - start), Array(end - start) { i ->
+            val newPosition = IntArray(bDimensions.size) { bIndex ->
+                if (bIndex == axis) {
+                    start + i
+                } else {
+                    indexes[bIndex]
+                }
+            }
+            b.valueAt(bDimensions.indexFromPosition(newPosition, bMult))
+        })
+    }
+}
+
 class EncloseAPLFunction : APLFunctionDescriptor {
     class EncloseAPLFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
@@ -128,6 +164,55 @@ class EncloseAPLFunction : APLFunctionDescriptor {
                     else -> throwAPLException(APLIllegalArgumentException("Empty array in axis argument", pos))
                 }
             }
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            val bDimensions = b.dimensions
+            val axisInt = if (axis == null) {
+                bDimensions.lastAxis()
+            } else {
+                axis.ensureNumber(pos).asInt()
+            }
+            if (axisInt < 0 || axisInt >= bDimensions.size) {
+                throw IllegalAxisException(axisInt, bDimensions, pos)
+            }
+            val aDimensions = a.dimensions
+            val partitionArgs = when (aDimensions.size) {
+                0 -> intArrayOf(a.ensureNumber(pos).asInt())
+                1 -> a.toIntArray(pos)
+                else -> throw APLIllegalArgumentException("Left argument to partition must be a scalar or a on-dimensional array")
+            }
+            if (partitionArgs.size != bDimensions[axisInt]) {
+                throw InvalidDimensionsException(
+                    "Size of A must be the same size as the dimension of B along the selected axis (size of A: ${partitionArgs.size}, size of axis in B: ${bDimensions[axisInt]}",
+                    pos)
+            }
+            val partitionIndexes = computePartitionIndexes(partitionArgs)
+            return PartitionedValue(b, axisInt, partitionIndexes)
+        }
+
+        private fun computePartitionIndexes(partitionArgs: IntArray): List<Int> {
+            val result = ArrayList<Int>()
+            var prevIndex = -1
+            for (i in partitionArgs.indices) {
+                val curr = partitionArgs[i]
+                if (prevIndex >= 0 && curr == 0) {
+                    result.add(prevIndex);
+                    result.add(i);
+                    prevIndex = -1
+                } else if (i == 0 || (partitionArgs[i - 1] < curr && curr != 0)) {
+                    if (prevIndex >= 0) {
+                        result.add(prevIndex)
+                        result.add(i)
+                    }
+                    prevIndex = i
+                }
+            }
+            if (prevIndex >= 0) {
+                result.add(prevIndex)
+                result.add(partitionArgs.size)
+            }
+            return result
         }
 
         private fun isAxisOrdered(a: APLValue, axis: IntArray): Boolean {
