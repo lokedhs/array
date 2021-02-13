@@ -106,13 +106,30 @@ class HttpPostFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val args = a.listify()
             val url = args.listElement(0).toStringValue(pos)
-            val data = when (args.listSize()) {
-                1 -> APLString.make("")
-                2 -> args.listElement(1)
-                else -> throwAPLException(APLIllegalArgumentException("Function requires one or two arguments", pos))
+            val (data, headers) = when (args.listSize()) {
+                1 -> Pair(APLString.make(""), emptyMap())
+                2 -> Pair(args.listElement(1), emptyMap())
+                3 -> Pair(args.listElement(1), ensureHeaderArray(args.listElement(2), pos))
+                else -> throwAPLException(
+                    APLIllegalArgumentException(
+                        "Function requires 1-3 arguments, ${args.listSize()} arguments were passed.",
+                        pos))
             }
-            val result = httpPost(url, data.asByteArray(pos))
+            val result = httpPost(url, data.asByteArray(pos), headers)
             return APLString.make(result.content)
+        }
+
+        private fun ensureHeaderArray(headerArg: APLValue, pos: Position): Map<String, String> {
+            if (headerArg.rank != 2 || headerArg.dimensions[1] != 2) {
+                throw APLIllegalArgumentException("Headers list should be a rank-2 array with 2 columns")
+            }
+            val result = HashMap<String, String>()
+            for (i in 0 until headerArg.dimensions[0]) {
+                val key = headerArg.valueAt(i * 2).toStringValue(pos)
+                val value = headerArg.valueAt(i * 2 + 1).toStringValue(pos)
+                result[key] = value
+            }
+            return result
         }
     }
 
