@@ -19,7 +19,7 @@ class ArgParser(vararg options: Option) {
         }
     }
 
-    fun parse(args: Array<String>): HashMap<String, String?> {
+    fun parse(args: Array<String>): Map<String, String?> {
         val parseResults = HashMap<String, String?>()
         args.forEach { arg ->
             val option = matchOption(arg)
