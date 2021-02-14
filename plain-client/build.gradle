@@ -28,4 +28,15 @@ dependencies {
     implementation project(':array')
 }
 
+distributions {
+    main {
+        distributionBaseName = 'kap-plain'
+        contents {
+            from('../array/standard-lib') {
+                into 'standard-lib'
+            }
+        }
+    }
+}
+
 mainClassName = 'array.plainclient.Repl'
