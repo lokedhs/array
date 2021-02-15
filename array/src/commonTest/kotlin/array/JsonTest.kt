@@ -5,7 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class JsonTestX : APLTest() {
+class JsonTest : APLTest() {
     @Test
     fun readJson() {
         unless(backendSupportsJson) { return }
