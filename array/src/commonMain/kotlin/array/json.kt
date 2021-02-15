@@ -10,6 +10,7 @@ class JsonParseException : Exception {
     constructor(message: String, cause: Throwable) : super(message, cause)
 }
 
+expect val backendSupportsJson: Boolean
 expect fun parseJsonToAPL(input: CharacterProvider): APLValue
 
 fun parseJsonToAPLWithExceptions(input: CharacterProvider, pos: Position? = null): APLValue {

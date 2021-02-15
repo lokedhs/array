@@ -7,6 +7,8 @@ import com.google.gson.stream.JsonToken
 import com.google.gson.stream.MalformedJsonException
 import java.io.IOException
 
+actual val backendSupportsJson = true
+
 actual fun parseJsonToAPL(input: CharacterProvider): APLValue {
     val gson = Gson()
     try {
@@ -70,7 +72,7 @@ private fun parseString(reader: JsonReader): APLArray {
 }
 
 private fun parseBoolean(reader: JsonReader): APLNumber {
-    return if (reader.nextBoolean()) 1.makeAPLNumber() else 0.makeAPLNumber()
+    return if (reader.nextBoolean()) APLLONG_1 else APLLONG_0
 }
 
 private fun parseNull(reader: JsonReader): APLNullValue {

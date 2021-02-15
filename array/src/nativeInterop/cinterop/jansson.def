@@ -1,0 +1,11 @@
+headers = jansson.h
+
+compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
+linkerOpts.osx = -ljansson
+linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -ljansson
+
+---
+
+static inline json_type jsonTypeof(json_t *json) {
+    return json_typeof(json);
+}

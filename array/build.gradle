@@ -106,6 +106,7 @@ kotlin {
         compilations.main.cinterops {
             icu
             libcurl
+            jansson
         }
         compilations.main.kotlinOptions {
             freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
