@@ -51,18 +51,16 @@ class DeclaredFunction(
 ) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            val localContext = context.link(env)
-            localContext.setVar(rightArgName, a)
-            return localContext.withCallStackElement("declaredFunction1", pos) {
+            return context.withLinkedContext(env, "declaredFunction1", pos) { localContext ->
+                localContext.setVar(rightArgName, a)
                 instruction.evalWithContext(localContext)
             }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            val localContext = context.link(env)
-            localContext.setVar(leftArgName, a)
-            localContext.setVar(rightArgName, b)
-            return localContext.withCallStackElement("declaredFunction2", pos) {
+            return context.withLinkedContext(env, "declaredFunction2", pos) { localContext ->
+                localContext.setVar(leftArgName, a)
+                localContext.setVar(rightArgName, b)
                 instruction.evalWithContext(localContext)
             }
         }
@@ -518,7 +516,12 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
 
     fun getVar(binding: EnvironmentBinding): APLValue? = findOrThrow(binding).value
 
-    fun link(env: Environment): RuntimeContext = RuntimeContext(engine, env, this)
+    inline fun <T> withLinkedContext(env: Environment, name: String, pos: Position, fn: (RuntimeContext) -> T): T {
+        val newContext = RuntimeContext(engine, env, this)
+        return withCallStackElement(name, pos) {
+            fn(newContext)
+        }
+    }
 
     fun assignArgs(args: List<EnvironmentBinding>, a: APLValue, pos: Position? = null) {
         fun checkLength(expectedLength: Int, actualLength: Int) {

@@ -189,20 +189,16 @@ class UserFunction(
 ) : APLFunctionDescriptor {
     inner class UserFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(rightFnArgs, a, pos)
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(rightFnArgs, a, pos)
                 instr.evalWithContext(inner)
             }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(leftFnArgs, a, pos)
-                assignArgs(rightFnArgs, b, pos)
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(leftFnArgs, a, pos)
+                inner.assignArgs(rightFnArgs, b, pos)
                 instr.evalWithContext(inner)
             }
         }

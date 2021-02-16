@@ -213,17 +213,19 @@ fun processDefsyntax(parser: APLParser, pos: Position): Instruction {
 }
 
 class CallWithVarInstruction(
+    val name: String,
     val instr: Instruction,
     val env: Environment,
     val bindings: List<Pair<EnvironmentBinding, Instruction>>,
     pos: Position
 ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
-        val newContext = context.link(env)
-        bindings.forEach { (envBinding, instr) ->
-            newContext.setVar(envBinding, instr.evalWithContext(context))
+        return context.withLinkedContext(env, name, pos) { newContext ->
+            bindings.forEach { (envBinding, instr) ->
+                newContext.setVar(envBinding, instr.evalWithContext(context))
+            }
+            instr.evalWithContext(newContext)
         }
-        return instr.evalWithContext(newContext)
     }
 }
 
@@ -233,5 +235,10 @@ fun processCustomSyntax(parser: APLParser, customSyntax: CustomSyntax): Instruct
         rule.processRule(parser, bindings)
     }
     val envBindings = bindings.map { b -> Pair(b.name, b.value) }
-    return CallWithVarInstruction(customSyntax.instr, customSyntax.environment, envBindings, customSyntax.pos)
+    return CallWithVarInstruction(
+        "CustomSyntax: ${customSyntax.name.nameWithNamespace()}",
+        customSyntax.instr,
+        customSyntax.environment,
+        envBindings,
+        customSyntax.pos)
 }

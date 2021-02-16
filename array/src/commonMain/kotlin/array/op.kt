@@ -97,22 +97,18 @@ class UserDefinedOperatorOneArg(
 
     inner class UserDefinedOperatorFn(val opFn: APLFunction, pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(rightArgs, a, pos)
-                setVar(opBinding, LambdaValue(opFn, context))
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(rightArgs, a, pos)
+                inner.setVar(opBinding, LambdaValue(opFn, context))
                 instr.evalWithContext(inner)
             }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(leftArgs, a, pos)
-                assignArgs(rightArgs, b, pos)
-                setVar(opBinding, LambdaValue(opFn, context))
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(leftArgs, a, pos)
+                inner.assignArgs(rightArgs, b, pos)
+                inner.setVar(opBinding, LambdaValue(opFn, context))
                 instr.evalWithContext(inner)
             }
         }
@@ -148,24 +144,20 @@ class UserDefinedOperatorTwoArg(
 
     abstract inner class APLUserDefinedOperatorFunction(val leftFn: APLFunction, pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(rightArgs, a, pos)
-                setVar(leftOpBinding, LambdaValue(leftFn, context))
-                setVar(rightOpBinding, mkArg(context))
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(rightArgs, a, pos)
+                inner.setVar(leftOpBinding, LambdaValue(leftFn, context))
+                inner.setVar(rightOpBinding, mkArg(context))
                 instr.evalWithContext(inner)
             }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val inner = context.link(env).apply {
-                assignArgs(leftArgs, a, pos)
-                assignArgs(rightArgs, b, pos)
-                setVar(leftOpBinding, LambdaValue(leftFn, context))
-                setVar(rightOpBinding, mkArg(context))
-            }
-            return inner.withCallStackElement(name.nameWithNamespace(), pos) {
+            return context.withLinkedContext(env, name.nameWithNamespace(), pos) { inner ->
+                inner.assignArgs(leftArgs, a, pos)
+                inner.assignArgs(rightArgs, b, pos)
+                inner.setVar(leftOpBinding, LambdaValue(leftFn, context))
+                inner.setVar(rightOpBinding, mkArg(context))
                 instr.evalWithContext(inner)
             }
         }
