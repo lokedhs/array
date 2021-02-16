@@ -149,7 +149,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
 
 abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
     override fun combine1Arg(a: APLSingleValue): APLValue = numberCombine1Arg(a.ensureNumber(pos))
-    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(pos), b.ensureNumber())
+    override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = numberCombine2Arg(a.ensureNumber(pos), b.ensureNumber(pos))
 
     open fun numberCombine1Arg(a: APLNumber): APLValue = throwAPLException(Unimplemented1ArgException(pos))
     open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = throwAPLException(Unimplemented2ArgException(pos))
