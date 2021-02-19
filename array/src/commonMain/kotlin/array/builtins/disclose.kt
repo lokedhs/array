@@ -125,7 +125,7 @@ class EncloseAPLFunction : APLFunctionDescriptor {
                         throwAPLException(APLIllegalArgumentException("Illegal dimensions of axis argument", pos))
                     }
                     axis0.dimensions[0] == 1 -> {
-                        val axisInt = axis0.valueAt(0).ensureNumber(pos).asInt()
+                        val axisInt = axis0.valueAtInt(0, pos)
                         ensureValidAxis(axisInt, v.dimensions, pos)
                         AxisEnclosedValue(v, axisInt)
                     }

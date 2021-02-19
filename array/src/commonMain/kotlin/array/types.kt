@@ -56,6 +56,12 @@ class DimensionLabels(val labels: List<List<AxisLabel?>?>) {
     }
 }
 
+enum class ArrayMemberType {
+    LONG,
+    DOUBLE,
+    GENERIC
+}
+
 interface APLValue {
     val aplValueType: APLValueType
 
@@ -63,8 +69,20 @@ interface APLValue {
     val rank: Int
         get() = dimensions.size
 
+    val specialisedType: ArrayMemberType get() = ArrayMemberType.GENERIC
+
     fun valueAt(p: Int): APLValue
     fun valueAtWithScalarCheck(p: Int): APLValue = valueAt(p)
+    fun valueAtLong(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asLong()
+    fun valueAtDouble(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asDouble()
+    fun valueAtInt(p: Int, pos: Position?): Int {
+        val l = valueAtLong(p, pos)
+        if(l < Int.MIN_VALUE || l > Int.MAX_VALUE) {
+            throw IntMagnitudeException(l, pos)
+        }
+        return l.toInt()
+    }
+
     val size: Int
         get() = dimensions.contentSize()
 
@@ -150,15 +168,11 @@ interface APLValue {
     }
 
     fun toIntArray(pos: Position): IntArray {
-        return IntArray(size) { i ->
-            valueAt(i).ensureNumber(pos).asInt()
-        }
+        return IntArray(size) { i -> valueAtInt(i, pos) }
     }
 
     fun toDoubleArray(pos: Position): DoubleArray {
-        return DoubleArray(size) { i ->
-            valueAt(i).ensureNumber(pos).asDouble()
-        }
+        return DoubleArray(size) { i -> valueAtDouble(i, pos) }
     }
 
     fun asBoolean(): Boolean {
@@ -239,10 +253,11 @@ inline fun APLValue.iterateMembers(fn: (APLValue) -> Unit) {
 }
 
 inline fun APLValue.iterateMembersWithPosition(fn: (APLValue, Int) -> Unit) {
-    if (rank == 0) {
-        fn(this, 0)
-    } else {
-        for (i in 0 until size) {
+    val v = unwrapDeferredValue()
+    when {
+        v is APLSingleValue -> fn(v, 0)
+        v.rank == 0 -> fn(valueAt(0), 0)
+        else -> (0 until v.size).forEach { i ->
             fn(valueAt(i), i)
         }
     }
@@ -790,9 +805,7 @@ class IntArrayValue private constructor(
                 src
             } else {
                 val dimensions = src.dimensions
-                val values = IntArray(dimensions.contentSize()) { i ->
-                    src.valueAt(i).ensureNumber(pos).asInt()
-                }
+                val values = IntArray(dimensions.contentSize()) { i -> src.valueAtInt(i, pos) }
                 IntArrayValue(dimensions, values)
             }
         }

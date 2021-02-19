@@ -246,3 +246,17 @@ class TimeMillisFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = TimeMillisFunctionImpl(pos)
 }
+
+class ForcedElementTypeArray(val inner: APLValue, overrideType: ArrayMemberType) : APLValue by inner {
+    override val specialisedType = overrideType
+}
+
+class EnsureTypeFunction(val overrideType: ArrayMemberType) : APLFunctionDescriptor {
+    inner class EnsureGenericImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return ForcedElementTypeArray(a, overrideType)
+        }
+    }
+
+    override fun make(pos: Position) = EnsureGenericImpl(pos)
+}

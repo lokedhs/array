@@ -55,6 +55,7 @@ class IllegalArgumentNumException(expectedCount: Int, receivedCount: Int, pos: P
     APLEvalException("Expected a list of ${expectedCount} values. Actual elements: ${receivedCount}", pos)
 
 class BitwiseNotSupported(pos: Position? = null) : APLEvalException("Function cannot handle bitwise operations", pos)
+class IntMagnitudeException(value: Long, pos: Position? = null) : APLEvalException("Value does not fit in an int: ${value}", pos)
 
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
 class UnexpectedSymbol(ch: Int, pos: Position? = null) : ParseException("Unexpected symbol: '${charToString(ch)}' (${ch})", pos)

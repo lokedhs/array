@@ -115,17 +115,17 @@ class RankOperator : APLOperatorValueRightArg {
                     }
                     1 ->
                         when (d[0]) {
-                            1 -> opArg.valueAt(0).ensureNumber(pos).asInt().let { v ->
+                            1 -> opArg.valueAtInt(0, pos).let { v ->
                                 index0 = v
                                 index1 = v
                             }
                             2 -> {
-                                index0 = opArg.valueAt(0).ensureNumber(pos).asInt()
-                                index1 = opArg.valueAt(1).ensureNumber(pos).asInt()
+                                index0 = opArg.valueAtInt(0, pos)
+                                index1 = opArg.valueAtInt(1, pos)
                             }
                             3 -> {
-                                index0 = opArg.valueAt(1).ensureNumber(pos).asInt()
-                                index1 = opArg.valueAt(2).ensureNumber(pos).asInt()
+                                index0 = opArg.valueAtInt(1, pos)
+                                index1 = opArg.valueAtInt(2, pos)
                             }
                             else -> raiseArgumentException()
                         }

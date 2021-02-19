@@ -55,6 +55,28 @@ class IotaArray(val indexes: IntArray) : APLArray() {
     }
 }
 
+class IotaArrayLong(val length: Int) : APLArray() {
+    override val dimensions = dimensionsOfSize(length)
+
+    override val specialisedType: ArrayMemberType
+        get() = ArrayMemberType.LONG
+
+    override fun valueAtInt(p: Int, pos: Position?): Int {
+        if (p < 0 || p >= length) {
+            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}"))
+        }
+        return p
+    }
+
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return valueAtInt(p, pos).toLong()
+    }
+
+    override fun valueAt(p: Int): APLValue {
+        return valueAtLong(p, null).makeAPLNumber()
+    }
+}
+
 class FindIndexArray(val a: APLValue, val b: APLValue, val context: RuntimeContext) : APLArray() {
     override val dimensions = b.dimensions
 
@@ -87,12 +109,11 @@ class IotaAPLFunction : APLFunctionDescriptor {
     class IotaAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val aDimensions = a.dimensions
-            val indexes = when (aDimensions.size) {
-                0 -> IntArray(1) { a.ensureNumber(pos).asInt() }
-                1 -> IntArray(aDimensions[0]) { i -> a.valueAt(i).ensureNumber(pos).asInt() }
+            return when (aDimensions.size) {
+                0 -> IotaArrayLong(a.ensureNumber(pos).asInt())
+                1 -> IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
                 else -> throwAPLException(InvalidDimensionsException("Right argument must be rank 0 or 1", pos))
             }
-            return IotaArray(indexes)
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
@@ -140,7 +161,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
             val d1 = if (v.isScalar()) {
                 dimensionsOfSize(v.ensureNumber(pos).asInt())
             } else {
-                Dimensions(IntArray(v.size) { v.valueAt(it).ensureNumber(pos).asInt() })
+                Dimensions(IntArray(v.size) { v.valueAtInt(it, pos) })
             }
             return ResizedArray.makeResizedArray(d1, b)
         }
@@ -525,7 +546,7 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
                         "Number of values in position argument must match the number of dimensions",
                         pos))
             }
-            val posList = IntArray(ad[0]) { i -> aFixed.valueAt(i).ensureNumber(pos).asInt() }
+            val posList = IntArray(ad[0]) { i -> aFixed.valueAtInt(i, pos) }
             val p = bd.indexFromPosition(posList)
             return b.valueAt(p)
         }
@@ -920,7 +941,7 @@ class TransposeFunction : APLFunctionDescriptor {
                 }
             }
 
-            val transposeAxis = IntArray(aDimensions[0]) { index -> a1.valueAt(index).ensureNumber(pos).asInt() }
+            val transposeAxis = IntArray(aDimensions[0]) { index -> a1.valueAtInt(index, pos) }
             return TransposedAPLValue(transposeAxis, b, pos)
         }
     }

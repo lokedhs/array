@@ -215,6 +215,9 @@ class Engine {
         registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
         registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
         registerNativeOperator("defer", DeferAPLOperator())
+        registerNativeFunction("ensureGeneric", EnsureTypeFunction(ArrayMemberType.GENERIC), "internal")
+        registerNativeFunction("ensureLong", EnsureTypeFunction(ArrayMemberType.LONG), "internal")
+        registerNativeFunction("ensureDouble", EnsureTypeFunction(ArrayMemberType.DOUBLE), "internal")
 
         // maths
         registerNativeFunction("sin", SinAPLFunction(), "math")

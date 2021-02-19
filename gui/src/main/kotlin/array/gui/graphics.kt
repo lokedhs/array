@@ -35,8 +35,8 @@ class MakeGraphicFunction : APLFunctionDescriptor {
             if (aDimensions.size != 1 || aDimensions[0] != 2) {
                 throw InvalidDimensionsException("Argument must be a two-element vector")
             }
-            val width = a.valueAt(0).ensureNumber(pos).asInt()
-            val height = a.valueAt(1).ensureNumber(pos).asInt()
+            val width = a.valueAtInt(0, pos)
+            val height = a.valueAtInt(1, pos)
             return GraphicWindowAPLValue(width, height)
         }
     }
