@@ -179,7 +179,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
 
     open fun combine1Arg(a: APLSingleValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
     open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
-    open fun combine2ArgLong(a: Long, b: Long): Long = throw IllegalStateException("Attempt to combine long values for unsupported function")
+    open fun combine2ArgLong(a: Long, b: Long): Long = throwAPLException(Unimplemented2ArgException(pos))
 }
 
 abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
@@ -214,10 +214,16 @@ class AddAPLFunction : APLFunctionDescriptor {
         }
 
         override fun combine2ArgLong(a: Long, b: Long) = a + b
-
         override fun identityValue() = APLLONG_0
-
         override fun deriveBitwise() = BitwiseXorFunction()
+
+        override fun optimised2ArgIntInt(): Boolean {
+            return true
+        }
+
+        override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long {
+            return a + b
+        }
     }
 
     override fun make(pos: Position) = AddAPLFunctionImpl(pos)
@@ -247,7 +253,6 @@ class SubAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
-
         override fun deriveBitwise() = BitwiseXorFunction()
     }
 
@@ -276,6 +281,8 @@ class MulAPLFunction : APLFunctionDescriptor {
                 { x, y -> (x * y).makeAPLNumber() }
             )
         }
+
+        override fun combine2ArgLong(a: Long, b: Long) = a * b
 
         override fun identityValue() = APLLONG_1
 

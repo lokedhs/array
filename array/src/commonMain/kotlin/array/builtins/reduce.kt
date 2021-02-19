@@ -9,7 +9,7 @@ class ReduceResult1Arg(
     val fnAxis: APLValue?,
     val arg: APLValue,
     axis: Int,
-    pos: Position
+    val pos: Position
 ) : APLArray() {
     override val dimensions: Dimensions
     private val stepLength: Int
@@ -41,11 +41,23 @@ class ReduceResult1Arg(
             val lowPosition = p % fromSourceMul
             val posInSrc = highPosition * toDestMul + lowPosition
 
-            var curr = arg.valueAt(posInSrc)
-            for (i in 1 until sizeAlongAxis) {
-                curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), fnAxis).collapse()
+            val specialisedType = arg.specialisedType
+            when {
+                specialisedType === ArrayMemberType.LONG && fn.optimised2ArgIntInt() -> {
+                    var curr = arg.valueAtLong(posInSrc, pos)
+                    for (i in 1 until sizeAlongAxis) {
+                        curr = fn.eval2ArgLongLong(context, curr, arg.valueAtLong(i * stepLength + posInSrc, pos), fnAxis)
+                    }
+                    curr.makeAPLNumber()
+                }
+                else -> {
+                    var curr = arg.valueAt(posInSrc)
+                    for (i in 1 until sizeAlongAxis) {
+                        curr = fn.eval2Arg(context, curr, arg.valueAt(i * stepLength + posInSrc), fnAxis).collapse()
+                    }
+                    curr
+                }
             }
-            curr
         }
     }
 

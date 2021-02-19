@@ -16,6 +16,10 @@ abstract class APLFunction(val pos: Position) {
 
     open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
     open fun deriveBitwise(): APLFunctionDescriptor? = null
+
+    open fun optimised2ArgIntInt(): Boolean = false
+    open fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long =
+        throw IllegalStateException("Illegal call to specialised function")
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {

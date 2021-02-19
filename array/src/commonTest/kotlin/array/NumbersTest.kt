@@ -127,4 +127,18 @@ class NumbersTest : APLTest() {
             value.toString()
         }
     }
+
+    @Test
+    fun optimisedAdd() {
+        runExprTest("(internal:ensureLong 1 2 3 4) + (internal:ensureLong 11 12 13 14)") { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(12, 14, 16, 18), result)
+        }
+    }
+
+    fun runExprTest(expr: String, withStandardLib: Boolean = false, fn: (APLValue) -> Unit) {
+        parseAPLExpression(expr, withStandardLib).let { result ->
+            fn(result)
+        }
+    }
 }

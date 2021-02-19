@@ -247,16 +247,29 @@ class TimeMillisFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = TimeMillisFunctionImpl(pos)
 }
 
-class ForcedElementTypeArray(val inner: APLValue, overrideType: ArrayMemberType) : APLValue by inner {
-    override val specialisedType = overrideType
+class ForcedElementTypeArray(val inner: APLValue, val overrideType: ArrayMemberType) : APLValue by inner {
+    override val specialisedType get() = overrideType
+
+    private fun maybeWrapValue(value: APLValue): APLValue {
+        return if (value.specialisedType === overrideType) {
+            value
+        } else {
+            object : APLValue by value {
+                override val specialisedType get() = overrideType
+            }
+        }
+    }
+
+    override fun collapseInt() = maybeWrapValue(inner.collapseInt())
+    override fun unwrapDeferredValue() = maybeWrapValue(inner.unwrapDeferredValue())
 }
 
 class EnsureTypeFunction(val overrideType: ArrayMemberType) : APLFunctionDescriptor {
-    inner class EnsureGenericImpl(pos: Position) : NoAxisAPLFunction(pos) {
+    inner class EnsureTypeFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             return ForcedElementTypeArray(a, overrideType)
         }
     }
 
-    override fun make(pos: Position) = EnsureGenericImpl(pos)
+    override fun make(pos: Position) = EnsureTypeFunctionImpl(pos)
 }
