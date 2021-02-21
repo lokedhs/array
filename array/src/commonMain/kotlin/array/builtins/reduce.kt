@@ -43,10 +43,17 @@ class ReduceResult1Arg(
 
             val specialisedType = arg.specialisedType
             when {
-                specialisedType === ArrayMemberType.LONG && fn.optimised2ArgIntInt() -> {
+                specialisedType === ArrayMemberType.LONG && fn.optimisationEnableLongLong() -> {
                     var curr = arg.valueAtLong(posInSrc, pos)
                     for (i in 1 until sizeAlongAxis) {
                         curr = fn.eval2ArgLongLong(context, curr, arg.valueAtLong(i * stepLength + posInSrc, pos), fnAxis)
+                    }
+                    curr.makeAPLNumber()
+                }
+                specialisedType == ArrayMemberType.DOUBLE && fn.optimisationEnableDoubleDouble() -> {
+                    var curr = arg.valueAtDouble(posInSrc, pos)
+                    for (i in 1 until sizeAlongAxis) {
+                        curr = fn.eval2ArgDoubleDouble(context, curr, arg.valueAtDouble(i * stepLength + posInSrc, pos), fnAxis)
                     }
                     curr.makeAPLNumber()
                 }

@@ -77,7 +77,7 @@ interface APLValue {
     fun valueAtDouble(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asDouble()
     fun valueAtInt(p: Int, pos: Position?): Int {
         val l = valueAtLong(p, pos)
-        if(l < Int.MIN_VALUE || l > Int.MAX_VALUE) {
+        if (l < Int.MIN_VALUE || l > Int.MAX_VALUE) {
             throw IntMagnitudeException(l, pos)
         }
         return l.toInt()
@@ -301,7 +301,7 @@ abstract class APLArray : APLValue {
         return when {
             v is APLSingleValue -> v
             v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapseInt())
-            else -> APLArrayImpl.make(v.dimensions) { i -> v.valueAt(i).collapseInt() }
+            else -> CollapsedArrayImpl.make(v)
         }
     }
 
@@ -631,7 +631,7 @@ class ConstantArray(
     override fun valueAt(p: Int) = value
 }
 
-class APLArrayImpl(
+open class APLArrayImpl(
     override val dimensions: Dimensions,
     private val values: Array<APLValue>
 ) : APLArray() {
@@ -643,6 +643,18 @@ class APLArrayImpl(
         inline fun make(dimensions: Dimensions, fn: (index: Int) -> APLValue): APLArrayImpl {
             val content = Array(dimensions.contentSize()) { index -> fn(index) }
             return APLArrayImpl(dimensions, content)
+        }
+    }
+}
+
+class CollapsedArrayImpl(dimensions: Dimensions, values: Array<APLValue>) : APLArrayImpl(dimensions, values) {
+    override fun collapseInt() = this
+
+    companion object {
+        fun make(orig: APLValue): CollapsedArrayImpl {
+            val d = orig.dimensions
+            val content = Array(d.contentSize()) { index -> orig.valueAt(index).collapseInt() }
+            return CollapsedArrayImpl(d, content)
         }
     }
 }

@@ -17,9 +17,29 @@ abstract class APLFunction(val pos: Position) {
     open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
     open fun deriveBitwise(): APLFunctionDescriptor? = null
 
-    open fun optimised2ArgIntInt(): Boolean = false
+    open val optimisationFlags: Int = 0
+
+    open fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long =
+        throw IllegalStateException("Illegal call to specialised function")
+
+    open fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Long =
+        throw IllegalStateException("Illegal call to specialised function")
+
     open fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long =
         throw IllegalStateException("Illegal call to specialised function")
+
+    open fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double =
+        throw IllegalStateException("Illegal call to specialised function")
+
+    fun optimisationEnableLongLong() = (optimisationFlags and OPTIMISATION_FLAG_2ARG_LONG_LONG) != 0
+    fun optimisationEnableDoubleDouble() = (optimisationFlags and OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE) != 0
+
+    companion object {
+        const val OPTIMISATION_FLAG_1ARG_LONG = 0x1
+        const val OPTIMISATION_FLAG_1ARG_DOUBLE = 0x2
+        const val OPTIMISATION_FLAG_2ARG_LONG_LONG = 0x4
+        const val OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE = 0x8
+    }
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
