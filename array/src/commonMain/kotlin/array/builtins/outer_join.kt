@@ -2,15 +2,15 @@ package array.builtins
 
 import array.*
 
-class OuterJoinResult(
+open class OuterJoinResult(
     val context: RuntimeContext,
     val a: APLValue,
     val b: APLValue,
     val fn: APLFunction,
     val pos: Position
 ) : APLArray() {
-    override val dimensions: Dimensions
-    private val divisor: Int
+    final override val dimensions: Dimensions
+    protected val divisor: Int
 
     init {
         val aDimensions = a.dimensions
@@ -26,6 +26,38 @@ class OuterJoinResult(
         val aPosition = p / divisor
         val bPosition = p % divisor
         return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null)
+    }
+}
+
+class OuterJoinResultLong(
+    context: RuntimeContext,
+    a: APLValue,
+    b: APLValue,
+    fn: APLFunction,
+    pos: Position
+) : OuterJoinResult(context, a, b, fn, pos) {
+    override val specialisedType get() = ArrayMemberType.LONG
+
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        val aPosition = p / divisor
+        val bPosition = p % divisor
+        return fn.eval2ArgLongLong(context, a.valueAtLong(aPosition, pos), b.valueAtLong(bPosition, pos), null)
+    }
+}
+
+class OuterJoinResultDouble(
+    context: RuntimeContext,
+    a: APLValue,
+    b: APLValue,
+    fn: APLFunction,
+    pos: Position
+) : OuterJoinResult(context, a, b, fn, pos) {
+    override val specialisedType get() = ArrayMemberType.DOUBLE
+
+    override fun valueAtDouble(p: Int, pos: Position?): Double {
+        val aPosition = p / divisor
+        val bPosition = p % divisor
+        return fn.eval2ArgDoubleDouble(context, a.valueAtDouble(aPosition, pos), b.valueAtDouble(bPosition, pos), null)
     }
 }
 
@@ -116,7 +148,17 @@ class OuterInnerJoinOp : APLOperatorTwoArg {
                     if (axis != null) {
                         throwAPLException(AxisNotSupported(pos))
                     }
-                    return OuterJoinResult(context, a, b, fn, pos)
+                    val sta = a.specialisedType
+                    val stb = b.specialisedType
+                    return when {
+                        sta === ArrayMemberType.LONG && stb === ArrayMemberType.LONG && fn.optimisationFlags.is2ALongLong -> {
+                            OuterJoinResultLong(context, a, b, fn, pos)
+                        }
+                        sta === ArrayMemberType.DOUBLE && stb === ArrayMemberType.DOUBLE && fn.optimisationFlags.is2ADoubleDouble -> {
+                            OuterJoinResultDouble(context, a, b, fn, pos)
+                        }
+                        else -> OuterJoinResult(context, a, b, fn, pos)
+                    }
                 }
             }
         }

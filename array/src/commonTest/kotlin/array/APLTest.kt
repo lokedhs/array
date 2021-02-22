@@ -69,8 +69,8 @@ open class APLTest {
         val v = value.unwrapDeferredValue()
         assertTrue(v is APLNumber)
         val num = value.ensureNumber().asDouble()
-        assertTrue(expected.first <= num)
-        assertTrue(expected.second >= num)
+        assertTrue(expected.first <= num, "Comparison is not true: ${expected.first} <= ${num}")
+        assertTrue(expected.second >= num, "Comparison is not true: ${expected.second} >= ${num}")
     }
 
     fun assertSimpleDouble(expected: Double, value: APLValue) {

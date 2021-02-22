@@ -797,17 +797,15 @@ class LambdaValue(private val fn: APLFunction, private val previousContext: Runt
     }
 }
 
-class IntArrayValue private constructor(
+class IntArrayValue(
     srcDimensions: Dimensions,
     val values: IntArray
 ) : APLArray() {
 
-    constructor(srcDimensions: IntArray, initFn: (Int) -> Int) :
-            this(Dimensions(srcDimensions), IntArray(srcDimensions.reduce { a, b -> a * b }, initFn))
-
+    override val specialisedType get() = ArrayMemberType.LONG
     override val dimensions = srcDimensions
-
     override fun valueAt(p: Int) = values[p].makeAPLNumber()
+    override fun valueAtLong(p: Int, pos: Position?) = values[p].toLong()
 
     fun intValueAt(p: Int) = values[p]
 
@@ -822,4 +820,14 @@ class IntArrayValue private constructor(
             }
         }
     }
+}
+
+class LongArrayValue(
+    srcDimensions: Dimensions,
+    val values: LongArray
+) : APLArray() {
+    override val specialisedType get() = ArrayMemberType.LONG
+    override val dimensions = srcDimensions
+    override fun valueAt(p: Int) = values[p].makeAPLNumber()
+    override fun valueAtLong(p: Int, pos: Position?) = values[p]
 }

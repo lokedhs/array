@@ -1,6 +1,8 @@
 package array.builtins
 
 import array.*
+import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_LONG_LONG
 import array.complex.*
 import kotlin.math.*
 
@@ -189,10 +191,10 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
         val aType = a.specialisedType
         val bType = b.specialisedType
         val fn = when {
-            aType === ArrayMemberType.LONG && bType === ArrayMemberType.LONG && (opt and OPTIMISATION_FLAG_2ARG_LONG_LONG) != 0 -> {
+            aType === ArrayMemberType.LONG && bType === ArrayMemberType.LONG && opt.is2ALongLong -> {
                 LongCSF2A()
             }
-            aType === ArrayMemberType.DOUBLE && bType === ArrayMemberType.DOUBLE && (opt and OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE) != 0 -> {
+            aType === ArrayMemberType.DOUBLE && bType === ArrayMemberType.DOUBLE && opt.is2ADoubleDouble -> {
                 DoubleCSF2A()
             }
             else -> DefaultCSF2A()
@@ -286,7 +288,7 @@ class AddAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_0
         override fun deriveBitwise() = BitwiseXorFunction()
 
-        override val optimisationFlags get() = OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
         override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?) = a + b
         override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?) = a + b
     }
@@ -353,7 +355,7 @@ class MulAPLFunction : APLFunctionDescriptor {
         override fun combine2ArgLong(a: Long, b: Long) = a * b
         override fun combine2ArgDouble(a: Double, b: Double) = a * b
 
-        override val optimisationFlags get() = OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
         override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?) = a * b
         override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?) = a * b
     }

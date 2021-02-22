@@ -128,7 +128,10 @@ class IotaAPLFunction : APLFunctionDescriptor {
 }
 
 class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
+    override val specialisedType = value.specialisedType
     override fun valueAt(p: Int) = if (value is APLSingleValue) value else value.valueAt(p % value.size)
+    override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)
+    override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
 
     companion object {
         fun makeResizedArray(dimensions: Dimensions, value: APLValue): APLValue {
@@ -681,9 +684,9 @@ class RandomAPLFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val v = a.unwrapDeferredValue()
             return if (v is APLSingleValue) {
-                makeRandom(v.ensureNumber(pos))
+                makeRandom(v.ensureNumber(pos).asLong()).makeAPLNumber()
             } else {
-                APLArrayImpl.make(v.dimensions) { index -> makeRandom(v.valueAt(index).ensureNumber(pos)) }
+                LongArrayValue(v.dimensions, LongArray(v.dimensions.contentSize()) { index -> makeRandom(v.valueAtLong(index, pos)) })
             }
         }
 
@@ -720,9 +723,8 @@ class RandomAPLFunction : APLFunctionDescriptor {
             return APLArrayImpl.make(dimensionsOfSize(result.size)) { index -> result[index].makeAPLNumber() }
         }
 
-        private fun makeRandom(limit: APLNumber): APLNumber {
-            val limitLong = limit.asLong()
-            return ((0 until limitLong).random()).makeAPLNumber()
+        private fun makeRandom(limit: Long): Long {
+            return (0 until limit).random()
         }
     }
 

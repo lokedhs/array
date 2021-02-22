@@ -103,6 +103,38 @@ class ScalarTest : APLTest() {
     }
 
     @Test
+    fun multiFunctionPlus() {
+        parseAPLExpression("0 1 2 + 10 11 12 + 20 21 22").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(30, 33, 36), result)
+        }
+    }
+
+    @Test
+    fun multiFunctionPlusWithSpecialisedArray() {
+        parseAPLExpression("(internal:ensureLong 0 1 2) + (internal:ensureLong 10 11 12) + (internal:ensureLong 20 21 22)").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(30, 33, 36), result)
+        }
+    }
+
+    @Test
+    fun multiFunctionPlusAndMinus() {
+        parseAPLExpression("20 21 22 - 0 1 2 + 10 11 12").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(10, 9, 8), result)
+        }
+    }
+
+    @Test
+    fun multiFunctionPlusAndMinusSpecialised() {
+        parseAPLExpression("(internal:ensureLong 20 21 22) - (internal:ensureLong 0 1 2) + (internal:ensureLong 10 11 12)").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(10, 9, 8), result)
+        }
+    }
+
+    @Test
     fun failWithWrongRank() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("(2 3 ⍴ ⍳6) +[0] 2 3 4 ⍴ ⍳24")

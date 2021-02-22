@@ -43,14 +43,14 @@ class ReduceResult1Arg(
 
             val specialisedType = arg.specialisedType
             when {
-                specialisedType === ArrayMemberType.LONG && fn.optimisationEnableLongLong() -> {
+                specialisedType === ArrayMemberType.LONG && fn.optimisationFlags.is2ALongLong -> {
                     var curr = arg.valueAtLong(posInSrc, pos)
                     for (i in 1 until sizeAlongAxis) {
                         curr = fn.eval2ArgLongLong(context, curr, arg.valueAtLong(i * stepLength + posInSrc, pos), fnAxis)
                     }
                     curr.makeAPLNumber()
                 }
-                specialisedType == ArrayMemberType.DOUBLE && fn.optimisationEnableDoubleDouble() -> {
+                specialisedType === ArrayMemberType.DOUBLE && fn.optimisationFlags.is2ADoubleDouble -> {
                     var curr = arg.valueAtDouble(posInSrc, pos)
                     for (i in 1 until sizeAlongAxis) {
                         curr = fn.eval2ArgDoubleDouble(context, curr, arg.valueAtDouble(i * stepLength + posInSrc, pos), fnAxis)
@@ -105,7 +105,8 @@ class ReduceNWiseResultValue(
     val axis: APLValue?,
     val reductionSize: Int,
     val b: APLValue,
-    operatorAxis: Int) : APLArray() {
+    operatorAxis: Int
+) : APLArray() {
     override val dimensions: Dimensions
 
     private val axisActionFactors: AxisActionFactors
