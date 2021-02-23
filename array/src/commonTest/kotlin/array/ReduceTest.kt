@@ -46,6 +46,11 @@ class ReduceTest : APLTest() {
     }
 
     @Test
+    fun reduceWithEqualsAndOptimisedLong() {
+        assertSimpleNumber(0, parseAPLExpression("=/⍳5"))
+    }
+
+    @Test
     fun reduceWithNonScalarCells() {
         val result = parseAPLExpression("+/ (1 2 3 4) (6 7 8 9)")
         assertDimension(emptyDimensions(), result)
@@ -269,7 +274,7 @@ class ReduceTest : APLTest() {
 
     @Test
     fun twoDimensionalNWise() {
-        parseAPLExpression("2+/ 3 4 ⍴ ⍳10").let { result ->
+        parseAPLExpression("2+/3 4 ⍴ ⍳10").let { result ->
             assertDimension(dimensionsOfSize(3, 3), result)
             assertArrayContent(arrayOf(1, 3, 5, 9, 11, 13, 17, 9, 1), result)
         }

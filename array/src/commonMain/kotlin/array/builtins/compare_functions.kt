@@ -25,12 +25,8 @@ class EqualsAPLFunction : APLFunctionDescriptor {
 
         override fun identityValue() = APLLONG_1
         override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
-
-        override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long {
-            return if (a == b) 1L else 0L
-        }
-
-        override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?) = if (a == b) 1.0 else 0.0
+        override fun combine2ArgLong(a: Long, b: Long) = if (a == b) 1L else 0L
+        override fun combine2ArgDouble(a: Double, b: Double) = if (a == b) 1.0 else 0.0
     }
 
     override fun make(pos: Position) = EqualsAPLFunctionImpl(pos)

@@ -44,16 +44,16 @@ abstract class APLFunction(val pos: Position) {
     open val optimisationFlags: OptimisationFlags get() = OptimisationFlags(0)
 
     open fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long =
-        throw IllegalStateException("Illegal call to specialised function")
+        throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 
     open fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Long =
-        throw IllegalStateException("Illegal call to specialised function")
+        throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 
     open fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long =
-        throw IllegalStateException("Illegal call to specialised function")
+        throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 
     open fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double =
-        throw IllegalStateException("Illegal call to specialised function")
+        throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
