@@ -10,21 +10,6 @@ interface CellSumFunction1Arg {
     fun combine(a: APLSingleValue): APLValue
 }
 
-interface CellSumFunction2Args {
-    fun combineValues(a: APLSingleValue, b: APLSingleValue): APLValue
-
-    fun combineValuesLong(a: Long, b: Long): Long {
-        throw IllegalStateException("Attempt to call specialised combiner on generic value")
-    }
-
-    fun combineValuesDouble(a: Double, b: Double): Double {
-        throw IllegalStateException("Attempt to call specialised combiner on generic value")
-    }
-
-    fun make(v1: APLValue, v2: APLValue, pos: Position): APLValue
-}
-
-
 class ArraySum1Arg(
     private val fn: CellSumFunction1Arg,
     private val a: APLValue

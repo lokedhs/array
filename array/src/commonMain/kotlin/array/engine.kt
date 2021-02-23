@@ -568,17 +568,6 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
         }
     }
 
-//    fun lookupVar(name: Symbol, localOnly: Boolean = false): APLValue? {
-//        val result = localVariables[name]
-//        if (result != null) {
-//            return result.value
-//        }
-//        if (!localOnly && parent != null) {
-//            return parent.lookupVar(name)
-//        }
-//        return null
-//    }
-
     fun isLocallyBound(sym: Symbol): Boolean {
         // TODO: This hack is needed for the KAP function isLocallyBound to work. A better strategy is needed.
         val holder = localVariables.entries.find { it.key.name === sym } ?: return false

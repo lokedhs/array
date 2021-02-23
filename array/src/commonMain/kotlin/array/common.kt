@@ -144,7 +144,7 @@ class Arrays {
         fun toString(values: Array<*>): String {
             val buf = StringBuilder()
             buf.append("[")
-            buf.append(stringIntersperse(values.asSequence().map { it.toString() }, ", "))
+            buf.append(values.asSequence().joinToString(", "))
             buf.append("]")
             return buf.toString()
         }
@@ -193,20 +193,6 @@ inline fun IntArray.reduceWithInitial(initial: Int, fn: (Int, Int) -> Int): Int 
         curr = fn(curr, element)
     }
     return curr
-}
-
-fun stringIntersperse(list: Sequence<String>, separator: String): String {
-    val buf = StringBuilder()
-    var first = true
-    for (v in list) {
-        if (first) {
-            first = false
-        } else {
-            buf.append(separator)
-        }
-        buf.append(v)
-    }
-    return buf.toString()
 }
 
 fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: Int, pos: Position?) {
