@@ -29,14 +29,7 @@ class MapLookupResult(val map: APLMap, val indexes: APLValue) : APLArray() {
 
 
     override fun unwrapDeferredValue(): APLValue {
-        // This is copied from reduce. The same concerns as described in that comment are applicable in this function.
-        if (dimensions.isEmpty()) {
-            val v = valueAt(0).unwrapDeferredValue()
-            if (v is APLSingleValue) {
-                return v
-            }
-        }
-        return this
+        return unwrapEnclosedSingleValue(this)
     }
 }
 

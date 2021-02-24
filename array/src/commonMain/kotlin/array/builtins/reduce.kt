@@ -89,13 +89,16 @@ class ReduceResult1Arg(
         //
         // Thus, we break consistency here by adopting the APL style, while still allowing enclosed
         // numbers.
-        if (dimensions.isEmpty()) {
-            val v = valueAt(0).unwrapDeferredValue()
-            if (v is APLSingleValue) {
-                return v
-            }
-        }
-        return this
+        return unwrapEnclosedSingleValue(this)
+    }
+}
+
+fun unwrapEnclosedSingleValue(value: APLValue): APLValue {
+    return if (value.dimensions.isEmpty()) {
+        val v = value.valueAt(0).unwrapDeferredValue()
+        if (v is APLSingleValue) v else EnclosedAPLValue(v)
+    } else {
+        value
     }
 }
 

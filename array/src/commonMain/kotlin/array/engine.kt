@@ -606,7 +606,7 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
             }
         } else {
             checkLength(args.size, 1)
-            setVar(args[0], a)
+            setVar(args[0], v)
         }
     }
 
