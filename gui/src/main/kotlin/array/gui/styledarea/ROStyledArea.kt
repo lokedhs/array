@@ -3,6 +3,7 @@ package array.gui.styledarea
 import array.gui.ExtendedCharsKeyboardInput
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCombination
 import javafx.scene.text.TextFlow
 import org.fxmisc.richtext.model.*
 import org.fxmisc.wellbehaved.event.EventPattern
@@ -39,6 +40,7 @@ class ROStyledArea(
 
     override fun addInputMappings(entries: MutableList<InputMap<*>>) {
         entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), { sendCurrentContent() }))
+        entries.add(InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN), { insertNewline() }))
 
         // History navigation
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
@@ -92,6 +94,10 @@ class ROStyledArea(
 
     fun addHistoryListener(historyListener: HistoryListener) {
         historyListeners.add(historyListener)
+    }
+
+    private fun insertNewline() {
+        insertText(caretPosition, "\n")
     }
 
     private fun prevHistory() {
