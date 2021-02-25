@@ -247,14 +247,14 @@ class TimeMillisFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = TimeMillisFunctionImpl(pos)
 }
 
-class ForcedElementTypeArray(val inner: APLValue, val overrideType: ArrayMemberType) : APLValue by inner {
+class ForcedElementTypeArray(val inner: APLValue, val overrideType: ArrayMemberType) : DelegatedValue(inner) {
     override val specialisedType get() = overrideType
 
     private fun maybeWrapValue(value: APLValue): APLValue {
         return if (value.specialisedType === overrideType) {
             value
         } else {
-            object : APLValue by value {
+            object : DelegatedValue(value) {
                 override val specialisedType get() = overrideType
             }
         }

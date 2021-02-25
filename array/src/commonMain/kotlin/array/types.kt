@@ -62,20 +62,19 @@ enum class ArrayMemberType {
     GENERIC
 }
 
-interface APLValue {
-    val aplValueType: APLValueType
+abstract class APLValue {
+    abstract val aplValueType: APLValueType
 
-    val dimensions: Dimensions
-    val rank: Int
-        get() = dimensions.size
+    abstract val dimensions: Dimensions
+    open val rank: Int get() = dimensions.size
 
-    val specialisedType: ArrayMemberType get() = ArrayMemberType.GENERIC
+    open val specialisedType: ArrayMemberType get() = ArrayMemberType.GENERIC
 
-    fun valueAt(p: Int): APLValue
-    fun valueAtWithScalarCheck(p: Int): APLValue = valueAt(p)
-    fun valueAtLong(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asLong()
-    fun valueAtDouble(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asDouble()
-    fun valueAtInt(p: Int, pos: Position?): Int {
+    abstract fun valueAt(p: Int): APLValue
+    open fun valueAtWithScalarCheck(p: Int): APLValue = valueAt(p)
+    open fun valueAtLong(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asLong()
+    open fun valueAtDouble(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asDouble()
+    open fun valueAtInt(p: Int, pos: Position?): Int {
         val l = valueAtLong(p, pos)
         if (l < Int.MIN_VALUE || l > Int.MAX_VALUE) {
             throw IntMagnitudeException(l, pos)
@@ -83,23 +82,23 @@ interface APLValue {
         return l.toInt()
     }
 
-    val size: Int
-        get() = dimensions.contentSize()
+    open val size: Int get() = dimensions.contentSize()
 
-    fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
-    fun collapseInt(): APLValue
-    fun collapseFirstLevel(): APLValue
+    abstract fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
+    abstract fun collapseInt(): APLValue
+    abstract fun collapseFirstLevel(): APLValue
     fun isScalar(): Boolean = rank == 0
-    fun defaultValue(): APLValue = APLLONG_0
-    fun arrayify(): APLValue
-    fun unwrapDeferredValue(): APLValue = this
-    fun compareEquals(reference: APLValue): Boolean
-    fun compare(reference: APLValue, pos: Position? = null): Int =
+    open fun defaultValue(): APLValue = APLLONG_0
+    abstract fun arrayify(): APLValue
+    open fun unwrapDeferredValue(): APLValue = this
+
+    abstract fun compareEquals(reference: APLValue): Boolean
+    open fun compare(reference: APLValue, pos: Position? = null): Int =
         throwAPLException(IncompatibleTypeException("Comparison not implemented for objects of type ${this.aplValueType.typeName}", pos))
 
-    fun disclose(): APLValue
+    abstract fun disclose(): APLValue
 
-    val labels: DimensionLabels? get() = null
+    open val labels: DimensionLabels? get() = null
 
     fun collapse(): APLValue {
         val l = labels
@@ -121,7 +120,7 @@ interface APLValue {
      * In other words, if two instances of [APLValue] are to be considered equivalent, then the objects returned
      * by this method should be the same when compared using [equals] and return the same value from [hashCode].
      */
-    fun makeKey(): APLValueKey
+    abstract fun makeKey(): APLValueKey
 
     fun singleValueOrError(): APLValue {
         return when {
@@ -131,7 +130,7 @@ interface APLValue {
         }
     }
 
-    fun ensureNumber(pos: Position? = null): APLNumber {
+    open fun ensureNumber(pos: Position? = null): APLNumber {
         val v = unwrapDeferredValue()
         if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a numeric value (type=${aplValueType.typeName})", pos))
@@ -140,7 +139,7 @@ interface APLValue {
         }
     }
 
-    fun ensureSymbol(pos: Position? = null): APLSymbol {
+    open fun ensureSymbol(pos: Position? = null): APLSymbol {
         val v = unwrapDeferredValue()
         if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a symbol (type=${aplValueType.typeName})", pos))
@@ -149,7 +148,7 @@ interface APLValue {
         }
     }
 
-    fun ensureList(pos: Position? = null): APLList {
+    open fun ensureList(pos: Position? = null): APLList {
         val v = unwrapDeferredValue()
         if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a list (type=${aplValueType.typeName})", pos))
@@ -158,7 +157,7 @@ interface APLValue {
         }
     }
 
-    fun ensureMap(pos: Position): APLMap {
+    open fun ensureMap(pos: Position): APLMap {
         val v = unwrapDeferredValue()
         if (v === this) {
             throwAPLException(IncompatibleTypeException("Value $this is not a map (type=${aplValueType.typeName})", pos))
@@ -175,7 +174,7 @@ interface APLValue {
         return DoubleArray(size) { i -> valueAtDouble(i, pos) }
     }
 
-    fun asBoolean(): Boolean {
+    open fun asBoolean(): Boolean {
         val v = unwrapDeferredValue()
         return if (v == this) {
             true
@@ -279,7 +278,7 @@ fun APLValue.membersSequence(): Sequence<APLValue> {
     }
 }
 
-abstract class APLSingleValue : APLValue {
+abstract class APLSingleValue : APLValue() {
     override val dimensions get() = emptyDimensions()
     override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Reading index ${p} from scalar"))
     override fun valueAtWithScalarCheck(p: Int) =
@@ -293,7 +292,7 @@ abstract class APLSingleValue : APLValue {
     override fun disclose() = this
 }
 
-abstract class APLArray : APLValue {
+abstract class APLArray : APLValue() {
     override val aplValueType: APLValueType get() = APLValueType.ARRAY
 
     override fun collapseInt(): APLValue {
@@ -360,7 +359,7 @@ abstract class APLArray : APLValue {
 
     override fun disclose() = if (dimensions.size == 0) valueAt(0) else this
 
-    override fun makeKey() = object : APLValue.APLValueKey(this) {
+    override fun makeKey() = object : APLValueKey(this) {
         override fun hashCode(): Int {
             var curr = 0
             dimensions.dimensions.forEach { dim ->
@@ -389,7 +388,7 @@ class LabelledArray(val value: APLValue, override val labels: DimensionLabels) :
     }
 }
 
-class APLMap(val content: ImmutableMap2<APLValue.APLValueKey, APLValue>) : APLSingleValue() {
+class APLMap(val content: ImmutableMap2<APLValueKey, APLValue>) : APLSingleValue() {
     override val aplValueType get() = APLValueType.MAP
     override val dimensions = emptyDimensions()
 
@@ -413,8 +412,8 @@ class APLMap(val content: ImmutableMap2<APLValue.APLValueKey, APLValue>) : APLSi
         return true
     }
 
-    override fun makeKey(): APLValue.APLValueKey {
-        return APLValue.APLValueKeyImpl(this, content)
+    override fun makeKey(): APLValueKey {
+        return APLValueKeyImpl(this, content)
     }
 
     override fun ensureMap(pos: Position): APLMap {
@@ -488,8 +487,8 @@ class APLList(val elements: List<APLValue>) : APLSingleValue() {
         return true
     }
 
-    override fun makeKey(): APLValue.APLValueKey {
-        return APLValue.APLValueKeyImpl(this, ComparableList<Any>().apply { addAll(elements.map(APLValue::makeKey)) })
+    override fun makeKey(): APLValueKey {
+        return APLValueKeyImpl(this, ComparableList<Any>().apply { addAll(elements.map(APLValue::makeKey)) })
     }
 
     fun listSize() = elements.size
@@ -697,7 +696,7 @@ class APLChar(val value: Int) : APLSingleValue() {
 
     override fun toString() = "APLChar['${asString()}' 0x${value.toString(16)}]"
 
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
+    override fun makeKey() = APLValueKeyImpl(this, value)
 }
 
 class APLString(val content: IntArray) : APLArray() {
@@ -760,7 +759,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
 
     override fun ensureSymbol(pos: Position?) = this
 
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
+    override fun makeKey() = APLValueKeyImpl(this, value)
 }
 
 /**
@@ -780,7 +779,7 @@ class LambdaValue(private val fn: APLFunction, private val previousContext: Runt
 
     override fun compareEquals(reference: APLValue) = this === reference
 
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, fn)
+    override fun makeKey() = APLValueKeyImpl(this, fn)
 
     fun makeClosure(): APLFunction {
         return object : APLFunction(fn.pos) {
@@ -830,4 +829,32 @@ class LongArrayValue(
     override val dimensions = srcDimensions
     override fun valueAt(p: Int) = values[p].makeAPLNumber()
     override fun valueAtLong(p: Int, pos: Position?) = values[p]
+}
+
+open class DelegatedValue(val value: APLValue) : APLValue() {
+    override val aplValueType: APLValueType get() = value.aplValueType
+    override val dimensions: Dimensions get() = value.dimensions
+    override val rank: Int get() = value.rank
+    override val specialisedType: ArrayMemberType get() = value.specialisedType
+    override fun valueAt(p: Int) = value.valueAt(p)
+    override fun valueAtWithScalarCheck(p: Int) = value.valueAtWithScalarCheck(p)
+    override fun valueAtLong(p: Int, pos: Position?) = value.valueAtLong(p, pos)
+    override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
+    override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)
+    override val size: Int get() = value.size
+    override fun formatted(style: FormatStyle) = value.formatted(style)
+    override fun collapseInt() = value.collapseInt()
+    override fun collapseFirstLevel() = value.collapseFirstLevel()
+    override fun defaultValue() = value.defaultValue()
+    override fun arrayify() = value.arrayify()
+    override fun unwrapDeferredValue() = value.unwrapDeferredValue()
+    override fun compareEquals(reference: APLValue) = value.compareEquals(reference)
+    override fun compare(reference: APLValue, pos: Position?) = value.compare(reference, pos)
+    override fun disclose() = value.disclose()
+    override val labels: DimensionLabels? get() = value.labels
+    override fun makeKey() = value.makeKey()
+    override fun ensureSymbol(pos: Position?) = value.ensureSymbol(pos)
+    override fun ensureList(pos: Position?) = value.ensureList(pos)
+    override fun ensureMap(pos: Position) = value.ensureMap(pos)
+    override fun asBoolean() = value.asBoolean()
 }
