@@ -49,9 +49,7 @@ class APLLong(val value: Long) : APLNumber() {
     }
 
     override fun toString() = "APLLong(${formatted(FormatStyle.PRETTY)})"
-
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
-
+    override fun makeKey() = APLValueKeyImpl(this, value)
     override fun asBoolean() = value != 0L
 }
 
@@ -95,9 +93,7 @@ class APLDouble(val value: Double) : APLNumber() {
     }
 
     override fun toString() = "APLDouble(${formatted(FormatStyle.PRETTY)})"
-
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
-
+    override fun makeKey() = APLValueKeyImpl(this, value)
     override fun asBoolean() = value != 0.0
 }
 
@@ -134,7 +130,7 @@ class APLComplex(val value: Complex) : APLNumber() {
 
     private fun formatToAPL() = "${value.real.formatDouble()}J${value.imaginary.formatDouble()}"
 
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, value)
+    override fun makeKey() = APLValueKeyImpl(this, value)
 
     override fun asBoolean() = value != Complex.ZERO
 }
