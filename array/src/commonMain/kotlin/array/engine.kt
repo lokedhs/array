@@ -25,6 +25,8 @@ inline class OptimisationFlags(val flags: Int) {
         return "OptimisationFlags(flags=0x${flags.toString(16)}, values: ${flagsString})"
     }
 
+    fun combineWith(other: OptimisationFlags) = OptimisationFlags(flags and other.flags)
+
     companion object {
         const val OPTIMISATION_FLAG_1ARG_LONG = 0x1
         const val OPTIMISATION_FLAG_1ARG_DOUBLE = 0x2
@@ -54,7 +56,7 @@ abstract class APLFunction(val pos: Position) {
 
     open fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double =
         throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
-}
+    }
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
@@ -320,6 +322,7 @@ class Engine {
         registerNativeOperator("⍀", ScanFirstAxisOp())
         registerNativeOperator("⍤", RankOperator())
         registerNativeOperator("∵", BitwiseOp())
+        registerNativeOperator("∘", ComposeOp())
 
         // function aliases
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
