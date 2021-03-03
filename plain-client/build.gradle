@@ -13,6 +13,7 @@ compileKotlin {
     kotlinOptions {
         jvmTarget = "11"
         freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        useIR = true
     }
 }
 
@@ -20,6 +21,7 @@ compileTestKotlin {
     kotlinOptions {
         jvmTarget = "11"
         freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        useIR = true
     }
 }
 

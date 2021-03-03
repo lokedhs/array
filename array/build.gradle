@@ -83,10 +83,12 @@ kotlin {
         compilations.main.kotlinOptions {
             jvmTarget = "11"
             freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+            useIR = true
         }
         compilations.test.kotlinOptions {
             jvmTarget = "11"
             freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+            useIR = true
         }
     }
     js {
