@@ -25,13 +25,20 @@ inline class OptimisationFlags(val flags: Int) {
         return "OptimisationFlags(flags=0x${flags.toString(16)}, values: ${flagsString})"
     }
 
-    fun combineWith(other: OptimisationFlags) = OptimisationFlags(flags and other.flags)
+    fun andWith(other: OptimisationFlags) = OptimisationFlags(flags and other.flags)
+    fun orWith(other: OptimisationFlags) = OptimisationFlags(flags or other.flags)
+
+    val masked1Arg get() = OptimisationFlags(flags and OPTIMISATION_FLAGS_1ARG_MASK)
+    val masked2Arg get() = OptimisationFlags(flags and OPTIMISATION_FLAGS_2ARG_MASK)
 
     companion object {
         const val OPTIMISATION_FLAG_1ARG_LONG = 0x1
         const val OPTIMISATION_FLAG_1ARG_DOUBLE = 0x2
         const val OPTIMISATION_FLAG_2ARG_LONG_LONG = 0x4
         const val OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE = 0x8
+
+        const val OPTIMISATION_FLAGS_1ARG_MASK = OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE
+        const val OPTIMISATION_FLAGS_2ARG_MASK = OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
     }
 }
 
@@ -48,7 +55,7 @@ abstract class APLFunction(val pos: Position) {
     open fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long =
         throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 
-    open fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Long =
+    open fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Double =
         throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
 
     open fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long =
@@ -67,7 +74,6 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     }
 
     open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
-
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         if (axis != null) {
@@ -119,7 +125,7 @@ class DeclaredFunction(
             }
         }
 
-        override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Long {
+        override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Double {
             if (instruction is FunctionCall1Arg) {
                 return instruction.fn.eval1ArgDouble(context, a, axis)
             } else {

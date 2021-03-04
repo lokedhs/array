@@ -624,10 +624,18 @@ fun arrayAsString(array: APLValue, style: FormatStyle): String {
 
 class ConstantArray(
     override val dimensions: Dimensions,
-    private val value: APLValue
+    value: APLValue
 ) : APLArray() {
 
-    override fun valueAt(p: Int) = value
+    private val valueInternal = value.unwrapDeferredValue()
+
+    override val specialisedType = when (valueInternal) {
+        is APLLong -> ArrayMemberType.LONG
+        is APLDouble -> ArrayMemberType.DOUBLE
+        else -> ArrayMemberType.GENERIC
+    }
+
+    override fun valueAt(p: Int) = valueInternal
 }
 
 open class APLArrayImpl(

@@ -5,12 +5,21 @@ import kotlin.test.assertFailsWith
 
 class ComposeTest : APLTest() {
     @Test
-    fun simpleCompose() {
+    fun compose2Arg() {
         parseAPLExpression("¯2 3 4 (×∘-) 1000").let { result ->
             assertDimension(dimensionsOfSize(3), result)
             assertArrayContent(arrayOf(2000, -3000, -4000), result)
         }
     }
+
+    @Test
+    fun compose1Arg() {
+        parseAPLExpression("(×∘÷) ¯1 2 3").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(-1, 1, 1), result)
+        }
+    }
+
 
     @Test
     fun mismatchedArgumentCount() {

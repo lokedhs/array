@@ -1,6 +1,8 @@
 package array.builtins
 
 import array.*
+import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_1ARG_DOUBLE
+import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_1ARG_LONG
 import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
 import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_LONG_LONG
 import array.complex.*
@@ -215,6 +217,10 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
     }
 
     open fun combine1Arg(a: APLSingleValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
+    open fun combine1ArgLong(a: Long): Long = throw IllegalStateException("Optimisation not implemented for: ${this::class.simpleName}")
+    open fun combine1ArgDouble(a: Double): Double =
+        throw IllegalStateException("Optimisation not implemented for: ${this::class.simpleName}")
+
     open fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
     open fun combine2ArgLong(a: Long, b: Long): Long =
         throw IllegalStateException("Optimisation not implemented for: ${this::class.simpleName}")
@@ -257,13 +263,16 @@ class AddAPLFunction : APLFunctionDescriptor {
             )
         }
 
+        override fun combine1ArgLong(a: Long) = a
+        override fun combine1ArgDouble(a: Double) = a
+
         override fun combine2ArgLong(a: Long, b: Long) = a + b
         override fun combine2ArgDouble(a: Double, b: Double) = a + b
 
         override fun identityValue() = APLLONG_0
         override fun deriveBitwise() = BitwiseXorFunction()
 
-        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE or OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = AddAPLFunctionImpl(pos)
@@ -325,10 +334,13 @@ class MulAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_1
         override fun deriveBitwise() = BitwiseAndFunction()
 
+        override fun combine1ArgLong(a: Long) = a.sign.toLong()
+        override fun combine1ArgDouble(a: Double) = a.sign
+
         override fun combine2ArgLong(a: Long, b: Long) = a * b
         override fun combine2ArgDouble(a: Double, b: Double) = a * b
 
-        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE or OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = MulAPLFunctionImpl(pos)

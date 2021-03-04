@@ -145,3 +145,62 @@ class RankOperator : APLOperatorValueRightArg {
         }
     }
 }
+
+class ComposedFunctionDescriptor(val fn1: APLFunction, val fn2: APLFunction) : APLFunctionDescriptor {
+    inner class ComposedFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override val optimisationFlags = computeOptimisationFlags()
+
+        private fun computeOptimisationFlags(): OptimisationFlags {
+            val fn1Flags = fn1.optimisationFlags
+            val fn2Flags = fn2.optimisationFlags
+            val flags1Arg = fn1Flags.masked1Arg.andWith(fn2Flags.masked1Arg)
+            var resFlags = 0
+            if (fn2Flags.is1ALong && fn1Flags.is2ALongLong) resFlags = resFlags or OptimisationFlags.OPTIMISATION_FLAG_2ARG_LONG_LONG
+            if (fn2Flags.is1ADouble && fn1Flags.is2ADoubleDouble) resFlags =
+                resFlags or OptimisationFlags.OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+            return OptimisationFlags(flags1Arg.flags or resFlags)
+        }
+
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val res = fn2.eval1Arg(context, a, null)
+            return fn1.eval1Arg(context, res, null)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val res = fn2.eval1Arg(context, b, null)
+            return fn1.eval2Arg(context, a, res, null)
+        }
+
+        override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long {
+            val res = fn2.eval1ArgLong(context, a, null)
+            return fn1.eval1ArgLong(context, res, null)
+        }
+
+        override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Double {
+            val res = fn2.eval1ArgDouble(context, a, null)
+            return fn1.eval1ArgDouble(context, res, null)
+        }
+
+        override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long {
+            val res = fn2.eval1ArgLong(context, b, null)
+            return fn1.eval2ArgLongLong(context, a, res, null)
+        }
+
+        override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double {
+            val res = fn2.eval1ArgDouble(context, b, null)
+            return fn1.eval2ArgDoubleDouble(context, a, res, null)
+        }
+    }
+
+    override fun make(pos: Position) = ComposedFunctionImpl(pos)
+}
+
+
+class ComposeOp : APLOperatorTwoArg {
+    override fun combineFunction(fn1: APLFunction, fn2: APLFunction, operatorAxis: Instruction?, opPos: Position): APLFunctionDescriptor {
+        if (operatorAxis != null) {
+            throw AxisNotSupported(opPos)
+        }
+        return ComposedFunctionDescriptor(fn1, fn2)
+    }
+}
