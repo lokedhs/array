@@ -214,3 +214,50 @@ class UserFunction(
         env = newFn.env
     }
 }
+
+sealed class FunctionCallChain(pos: Position) : APLFunction(pos) {
+    class Chain2(pos: Position, val fn0: APLFunction, val fn1: APLFunction) : FunctionCallChain(pos) {
+        override val optimisationFlags = computeOptimisationFlags()
+
+        private fun computeOptimisationFlags(): OptimisationFlags {
+            return OptimisationFlags(0)
+        }
+
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) throw AxisNotSupported(pos)
+            val res = fn1.eval1Arg(context, a, null)
+            return fn0.eval1Arg(context, res, null)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) throw AxisNotSupported(pos)
+            val res = fn1.eval2Arg(context, a, b, null)
+            return fn0.eval1Arg(context, res, null)
+        }
+    }
+
+    class Chain3(pos: Position, val fn0: APLFunction, val fn1: APLFunction, val fn2: APLFunction) : FunctionCallChain(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) throw AxisNotSupported(pos)
+            val right = fn2.eval1Arg(context, a, null)
+            val left = fn0.eval1Arg(context, a, null)
+            return fn1.eval2Arg(context, left, right, null)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            if (axis != null) throw AxisNotSupported(pos)
+            val right = fn2.eval2Arg(context, a, b, null)
+            val left = fn0.eval2Arg(context, a, b, null)
+            return fn1.eval2Arg(context, left, right, null)
+        }
+    }
+
+    companion object {
+        fun make(pos: Position, fn0: APLFunction, fn1: APLFunction): FunctionCallChain {
+            return when (fn1) {
+                is Chain2 -> Chain3(pos, fn0, fn1.fn0, fn1.fn1)
+                else -> Chain2(pos, fn0, fn1)
+            }
+        }
+    }
+}

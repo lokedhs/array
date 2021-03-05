@@ -209,7 +209,9 @@ class APLParser(val tokeniser: TokenGenerator) {
                         holder.pos)
                 }
             }
-            is ParseResultHolder.FnParseResult -> throw IllegalContextForFunction(holder.pos)
+            is ParseResultHolder.FnParseResult -> {
+                ParseResultHolder.FnParseResult(FunctionCallChain.make(parsedFn.pos, parsedFn, holder.fn), holder.lastToken, holder.pos)
+            }
         }
     }
 

@@ -43,4 +43,34 @@ class ComposeTest : APLTest() {
             assertArrayContent(arrayOf(300.0, -303.0, 304.0, -303.0, 306.0), result)
         }
     }
+
+    @Test
+    fun simpleFork0() {
+        parseAPLExpression("1 (⊢⊣,) 2").let { result ->
+            assertSimpleNumber(2, result)
+        }
+    }
+
+    @Test
+    fun simpleFork1() {
+        parseAPLExpression("1 (⊣⊢,) 2").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 2), result)
+        }
+    }
+
+    @Test
+    fun simple2Train0() {
+        parseAPLExpression("10 (-,) 20").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(-10, -20), result)
+        }
+    }
+
+    @Test
+    fun simple2Train1() {
+        parseAPLExpression("2 (-*) 5").let { result ->
+            assertSimpleNumber(-32, result)
+        }
+    }
 }

@@ -195,7 +195,6 @@ class ComposedFunctionDescriptor(val fn1: APLFunction, val fn2: APLFunction) : A
     override fun make(pos: Position) = ComposedFunctionImpl(pos)
 }
 
-
 class ComposeOp : APLOperatorTwoArg {
     override fun combineFunction(fn1: APLFunction, fn2: APLFunction, operatorAxis: Instruction?, opPos: Position): APLFunctionDescriptor {
         if (operatorAxis != null) {
