@@ -33,10 +33,15 @@ open class APLTest {
         return Pair(result.collapse(), output.buf.toString())
     }
 
-    fun assertArrayContent(expectedValue: Array<Int>, value: APLValue) {
+    fun assertArrayContent(expectedValue: Array<out Any>, value: APLValue) {
         assertEquals(expectedValue.size, value.size, "Array dimensions mismatch")
         for (i in expectedValue.indices) {
-            assertSimpleNumber(expectedValue[i].toLong(), value.valueAt(i), "index: ${i}")
+            when (val expected = expectedValue[i]) {
+                is Int -> assertSimpleNumber(expected.toLong(), value.valueAt(i), "index: ${i}")
+                is Long -> assertSimpleNumber(expected, value.valueAt(i), "index: ${i}")
+                is Double -> assertSimpleDouble(expected, value.valueAt(i), "index: ${i}")
+                else -> throw IllegalArgumentException("Cannot check array member at index ${i}, type = ${expected::class.simpleName}")
+            }
         }
     }
 
@@ -73,11 +78,11 @@ open class APLTest {
         assertTrue(expected.second >= num, "Comparison is not true: ${expected.second} >= ${num}")
     }
 
-    fun assertSimpleDouble(expected: Double, value: APLValue) {
-        assertTrue(value.isScalar())
+    fun assertSimpleDouble(expected: Double, value: APLValue, message: String? = null) {
+        assertTrue(value.isScalar(), message)
         val v = value.unwrapDeferredValue()
-        assertTrue(v is APLNumber)
-        assertEquals(expected, v.ensureNumber().asDouble())
+        assertTrue(v is APLNumber, message)
+        assertEquals(expected, v.ensureNumber().asDouble(), message)
     }
 
     fun assertComplexWithRange(real: Pair<Double, Double>, imaginary: Pair<Double, Double>, result: APLValue) {

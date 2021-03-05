@@ -35,4 +35,12 @@ class ComposeTest : APLTest() {
             assertArrayContent(arrayOf(300, -303, 304, -303, 306), result)
         }
     }
+
+    @Test
+    fun doubleOptimisedArrays() {
+        parseAPLExpression("(internal:ensureDouble 301 ¯302 303 ¯304 305) (+∘×) (internal:ensureDouble ¯10 ¯11 12 13 14)").let { result ->
+            assertDimension(dimensionsOfSize(5), result)
+            assertArrayContent(arrayOf(300.0, -303.0, 304.0, -303.0, 306.0), result)
+        }
+    }
 }
