@@ -44,7 +44,7 @@ class IotaArray(val indexes: IntArray) : APLArray() {
 
     override fun valueAt(p: Int): APLValue {
         val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
-        return APLArrayImpl(dimensionsOfSize(indexes.size), Array(index.size) { i -> index[i].makeAPLNumber() })
+        return APLArrayLong(dimensionsOfSize(indexes.size), LongArray(index.size) { i -> index[i].toLong() })
     }
 }
 
@@ -683,7 +683,7 @@ class RandomAPLFunction : APLFunctionDescriptor {
             return if (v is APLSingleValue) {
                 makeRandom(v.ensureNumber(pos).asLong()).makeAPLNumber()
             } else {
-                LongArrayValue(v.dimensions, LongArray(v.dimensions.contentSize()) { index -> makeRandom(v.valueAtLong(index, pos)) })
+                APLArrayLong(v.dimensions, LongArray(v.dimensions.contentSize()) { index -> makeRandom(v.valueAtLong(index, pos)) })
             }
         }
 

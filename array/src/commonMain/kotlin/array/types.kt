@@ -829,7 +829,7 @@ class IntArrayValue(
     }
 }
 
-class LongArrayValue(
+class APLArrayLong(
     srcDimensions: Dimensions,
     val values: LongArray
 ) : APLArray() {
