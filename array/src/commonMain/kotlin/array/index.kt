@@ -1,6 +1,6 @@
 package array
 
-import array.builtins.IotaArray
+import array.builtins.IotaArrayLong
 import array.builtins.unwrapEnclosedSingleValue
 
 private class IndexedArrayValue(val content: APLValue, indexValue: Array<Either<Int, IntArrayValue>>) : APLArray() {
@@ -89,7 +89,7 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
         val axis = Array(indexAsList.listSize()) { i ->
             val v = indexAsList.listElement(i).unwrapDeferredValue().let { result ->
                 if (result is APLEmpty) {
-                    IotaArray(intArrayOf(aDimensions[i]))
+                    IotaArrayLong(aDimensions[i])
                 } else {
                     result
                 }
