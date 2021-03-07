@@ -104,7 +104,15 @@ class IotaTest : APLTest() {
     @Test
     fun singleElementDimension() {
         parseAPLExpression("⍳,9").let { result ->
-            assertArrayContent(arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), result)
+            fun assertElement(expected: Long, i: Int) {
+                val v = result.valueAt(i)
+                assertDimension(dimensionsOfSize(1), v)
+                assertSimpleNumber(expected, v.valueAt(0))
+            }
+            assertDimension(dimensionsOfSize(9), result)
+            repeat(9) { index ->
+                assertElement(index.toLong(), index)
+            }
         }
     }
 

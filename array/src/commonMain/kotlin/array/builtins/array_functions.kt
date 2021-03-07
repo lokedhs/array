@@ -43,15 +43,8 @@ class IotaArray(val indexes: IntArray) : APLArray() {
     }
 
     override fun valueAt(p: Int): APLValue {
-        return if (indexes.size == 1) {
-            if (p < 0 || p >= indexes[0]) {
-                throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${indexes.size}"))
-            }
-            p.makeAPLNumber()
-        } else {
-            val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
-            APLArrayImpl(dimensionsOfSize(indexes.size), Array(index.size) { i -> index[i].makeAPLNumber() })
-        }
+        val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
+        return APLArrayImpl(dimensionsOfSize(indexes.size), Array(index.size) { i -> index[i].makeAPLNumber() })
     }
 }
 
