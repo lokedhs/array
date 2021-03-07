@@ -205,14 +205,6 @@ class UserFunction(
     }
 
     override fun make(pos: Position) = UserFunctionImpl(pos)
-
-    fun replaceFunctionDefinition(newFn: UserFunction) {
-        assertx(newFn.name === name)
-        leftFnArgs = newFn.leftFnArgs
-        rightFnArgs = newFn.rightFnArgs
-        instr = newFn.instr
-        env = newFn.env
-    }
 }
 
 sealed class FunctionCallChain(pos: Position) : APLFunction(pos) {

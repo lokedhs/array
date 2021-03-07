@@ -63,7 +63,7 @@ abstract class APLFunction(val pos: Position) {
 
     open fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double =
         throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
-    }
+}
 
 abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {

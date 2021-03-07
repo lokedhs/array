@@ -611,4 +611,56 @@ Monadic single arg:          ∇            (foo) x          {
             """.trimMargin())
         assertSimpleNumber(290, result)
     }
+
+    @Test
+    fun shortFormWithSimpleFunction() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo ⍬ +
+            |1 foo 2
+            """.trimMargin())
+        assertSimpleNumber(3, result)
+    }
+
+    @Test
+    fun shortFormWith2Train() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo ⍬ ×-
+            |foo 5
+            """.trimMargin())
+        assertSimpleNumber(-1, result)
+    }
+
+    @Test
+    fun shortFormWith3Train() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo ⍬ ⊢⊣,
+            |1 foo 2
+            """.trimMargin())
+        assertSimpleNumber(2, result)
+    }
+
+    @Test
+    fun shortFormWithFunctionExpr() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo ⍬ {⍵+1}
+            |foo 100
+            """.trimMargin())
+        assertSimpleNumber(101, result)
+    }
+
+    @Test
+    fun shortFormWithOperator() {
+        val result = parseAPLExpression(
+            """
+            |∇ bar (a) { a+1 } 
+            |∇ foo ⍬ bar¨
+            |foo 100 200 300 400 500 600
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(6), result)
+        assertArrayContent(arrayOf(101, 201, 301, 401, 501, 601), result)
+    }
 }

@@ -146,8 +146,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "⍬" to APLNullSym,
         "λ" to LambdaToken,
         "⍞" to ApplyToken,
-        ";" to ListSeparator
-    )
+        ";" to ListSeparator)
 
     private val stringToKeywordMap = hashMapOf(
         "namespace" to NamespaceToken,
@@ -165,8 +164,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷", "⌹",
             "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤", "⍥",
             "⍨", "⍪", "⍫", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
-            "○", "$", "¥", "χ", "\\", ".", "∵"
-        )
+            "○", "$", "¥", "χ", "\\", ".", "∵")
     }
 
     fun registerSingleCharFunction(name: String) {

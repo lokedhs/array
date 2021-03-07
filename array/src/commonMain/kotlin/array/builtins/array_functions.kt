@@ -54,6 +54,8 @@ class IotaArrayLong(val length: Int) : APLArray() {
     override val specialisedType: ArrayMemberType
         get() = ArrayMemberType.LONG
 
+    override fun collapseInt() = this
+
     override fun valueAtInt(p: Int, pos: Position?): Int {
         if (p < 0 || p >= length) {
             throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}"))

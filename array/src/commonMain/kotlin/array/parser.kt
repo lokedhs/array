@@ -293,7 +293,48 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    data class DefinedUserFunction(val fn: UserFunction, val name: Symbol, val pos: Position)
+    data class DefinedUserFunction(val fn: APLFunctionDescriptor, val name: Symbol, val pos: Position)
+
+    class UpdateableFunction(private var innerFnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
+        inner class UpdateableFunctionImpl(pos: Position) : APLFunction(pos) {
+            private var prevDescriptor: APLFunctionDescriptor = innerFnDescriptor
+            private var inner: APLFunction = prevDescriptor.make(pos)
+
+            private fun innerImpl(): APLFunction {
+                if (prevDescriptor !== innerFnDescriptor) {
+                    inner = innerFnDescriptor.make(pos)
+                    prevDescriptor = innerFnDescriptor
+                }
+                return inner
+            }
+
+            override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) = innerImpl().eval1Arg(context, a, axis)
+
+            override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) =
+                innerImpl().eval2Arg(context, a, b, axis)
+
+            override fun identityValue() = innerImpl().identityValue()
+            override fun deriveBitwise() = innerImpl().deriveBitwise()
+            override val optimisationFlags: OptimisationFlags get() = innerImpl().optimisationFlags
+
+            override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?) = innerImpl().eval1ArgLong(context, a, axis)
+            override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?) = innerImpl().eval1ArgDouble(context, a, axis)
+
+            override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?) =
+                innerImpl().eval2ArgLongLong(context, a, b, axis)
+
+            override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?) =
+                innerImpl().eval2ArgDoubleDouble(context, a, b, axis)
+        }
+
+        override fun make(pos: Position): APLFunction {
+            return UpdateableFunctionImpl(pos)
+        }
+
+        fun replaceFunctionDefinition(newFn: APLFunctionDescriptor) {
+            innerFnDescriptor = newFn
+        }
+    }
 
     private fun processFunctionDefinition(pos: Position, leftArgs: List<Instruction>): Instruction {
         if (leftArgs.isNotEmpty()) {
@@ -306,8 +347,8 @@ class APLParser(val tokeniser: TokenGenerator) {
     private fun registerDefinedUserFunction(definedUserFunction: DefinedUserFunction) {
         val engine = tokeniser.engine
         when (val oldDefinition = engine.getFunction(definedUserFunction.name)) {
-            null -> engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
-            is UserFunction -> oldDefinition.replaceFunctionDefinition(definedUserFunction.fn)
+            null -> engine.registerFunction(definedUserFunction.name, UpdateableFunction(definedUserFunction.fn))
+            is UpdateableFunction -> oldDefinition.replaceFunctionDefinition(definedUserFunction.fn)
             else -> throw InvalidFunctionRedefinition(definedUserFunction.name, definedUserFunction.pos)
         }
         tokeniser.engine.registerFunction(definedUserFunction.name, definedUserFunction.fn)
@@ -353,16 +394,6 @@ class APLParser(val tokeniser: TokenGenerator) {
                     FnArgComponent(list, false)
                 }
                 is CloseParen -> FnArgComponent(list, false)
-                else -> throw UnexpectedToken(token, innerPos)
-            }
-        }
-
-        fun parseComponent(): FnArgComponent? {
-            val (token, innerPos) = tokeniser.nextTokenWithPosition()
-            return when (token) {
-                is OpenFnDef -> null
-                is Symbol -> FnArgComponent(listOf(token), false)
-                is OpenParen -> parseSymbolList()
                 else -> throw UnexpectedToken(token, innerPos)
             }
         }
@@ -449,24 +480,52 @@ class APLParser(val tokeniser: TokenGenerator) {
             }
         }
 
-        val componentList = ArrayList<FnArgComponent>()
-        while (true) {
-            val component = parseComponent() ?: break
-            componentList.add(component)
+        fun parseComponentList(): Either<List<FnArgComponent>, Symbol> {
+            val componentList = ArrayList<FnArgComponent>()
+            while (true) {
+                val (token, innerPos) = tokeniser.nextTokenWithPosition()
+                when (token) {
+                    is OpenFnDef -> return Either.Left(componentList)
+                    is APLNullSym -> {
+                        if (componentList.size == 1 && componentList[0].symbols.size == 1) {
+                            return Either.Right(componentList[0].symbols[0])
+                        } else {
+                            throw ParseException("Short form function definition invalid", innerPos)
+                        }
+                    }
+                    is Symbol -> FnArgComponent(listOf(token), false)
+                    is OpenParen -> parseSymbolList()
+                    else -> throw UnexpectedToken(token, innerPos)
+                }
+            }
         }
 
-        return when {
-            componentList.isEmpty() -> throw ParseException("No function name specified", pos)
-            componentList.size == 1 -> {
-                processFnWithArg(componentList[0], null, null)
+        when (val definition = parseComponentList()) {
+            is Either.Left -> {
+                val componentList = definition.value
+                when {
+                    componentList.isEmpty() -> throw ParseException("No function name specified", pos)
+                    componentList.size == 1 -> {
+                        processFnWithArg(componentList[0], null, null)
+                    }
+                    componentList.size == 2 -> {
+                        processFnWithArg(componentList[0], null, componentList[1])
+                    }
+                    componentList.size == 3 -> {
+                        processFnWithArg(componentList[1], componentList[0], componentList[2])
+                    }
+                    else -> throw ParseException("Invalid function definition format", pos)
+                }
             }
-            componentList.size == 2 -> {
-                processFnWithArg(componentList[0], null, componentList[1])
+            is Either.Right -> {
+                val sym = definition.value
+                val holder = parseValue()
+                if (holder is ParseResultHolder.FnParseResult) {
+                    registerDefinedUserFunction(DefinedUserFunction(UpdateableFunction(holder.fn), sym))
+                } else {
+                    throw ParseException("Attempt to declare a function to something that is not a function", holder.pos)
+                }
             }
-            componentList.size == 3 -> {
-                processFnWithArg(componentList[1], componentList[0], componentList[2])
-            }
-            else -> throw ParseException("Invalid function definition format", pos)
         }
     }
 
