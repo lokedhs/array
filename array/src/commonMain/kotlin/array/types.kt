@@ -837,6 +837,7 @@ class APLArrayLong(
     override val dimensions = srcDimensions
     override fun valueAt(p: Int) = values[p].makeAPLNumber()
     override fun valueAtLong(p: Int, pos: Position?) = values[p]
+    override fun collapseInt() = this
 }
 
 open class DelegatedValue(val value: APLValue) : APLValue() {
