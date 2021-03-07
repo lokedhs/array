@@ -111,7 +111,11 @@ class IotaAPLFunction : APLFunctionDescriptor {
             val aDimensions = a.dimensions
             return when (aDimensions.size) {
                 0 -> IotaArrayLong(a.ensureNumber(pos).asInt())
-                1 -> IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
+                1 -> if (aDimensions[0] == 0) {
+                    EnclosedAPLValue(APLNullValue())
+                } else {
+                    IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
+                }
                 else -> throwAPLException(InvalidDimensionsException("Right argument must be rank 0 or 1", pos))
             }
         }

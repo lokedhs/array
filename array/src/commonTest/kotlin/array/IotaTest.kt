@@ -121,4 +121,13 @@ class IotaTest : APLTest() {
             parseAPLExpression("⍳ 2 2 ⍴ 1 2 3 4")
         }
     }
+
+    @Test
+    fun iotaWithNullArg() {
+        parseAPLExpression("⍳⍬").let { result ->
+            assertDimension(emptyDimensions(), result)
+            val inner = result.valueAt(0)
+            assertAPLNull(inner)
+        }
+    }
 }
