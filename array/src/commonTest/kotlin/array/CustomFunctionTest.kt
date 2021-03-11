@@ -616,7 +616,7 @@ Monadic single arg:          ∇            (foo) x          {
     fun shortFormWithSimpleFunction() {
         val result = parseAPLExpression(
             """
-            |∇ foo ⍬ +
+            |foo ⇐ +
             |1 foo 2
             """.trimMargin())
         assertSimpleNumber(3, result)
@@ -626,7 +626,7 @@ Monadic single arg:          ∇            (foo) x          {
     fun shortFormWith2Train() {
         val result = parseAPLExpression(
             """
-            |∇ foo ⍬ ×-
+            |foo ⇐ ×-
             |foo 5
             """.trimMargin())
         assertSimpleNumber(-1, result)
@@ -636,7 +636,7 @@ Monadic single arg:          ∇            (foo) x          {
     fun shortFormWith3Train() {
         val result = parseAPLExpression(
             """
-            |∇ foo ⍬ ⊢⊣,
+            |foo ⇐ ⊢⊣,
             |1 foo 2
             """.trimMargin())
         assertSimpleNumber(2, result)
@@ -646,7 +646,7 @@ Monadic single arg:          ∇            (foo) x          {
     fun shortFormWithFunctionExpr() {
         val result = parseAPLExpression(
             """
-            |∇ foo ⍬ {⍵+1}
+            |foo ⇐ {⍵+1}
             |foo 100
             """.trimMargin())
         assertSimpleNumber(101, result)
@@ -657,7 +657,7 @@ Monadic single arg:          ∇            (foo) x          {
         val result = parseAPLExpression(
             """
             |∇ bar (a) { a+1 } 
-            |∇ foo ⍬ bar¨
+            |foo ⇐ bar¨
             |foo 100 200 300 400 500 600
             """.trimMargin())
         assertDimension(dimensionsOfSize(6), result)

@@ -19,6 +19,7 @@ object CloseBracket : Token()
 object StatementSeparator : Token()
 object LeftArrow : Token()
 object FnDefSym : Token()
+object FnDefArrow : Token()
 object APLNullSym : Token()
 object QuotePrefix : Token()
 object LambdaToken : Token()
@@ -143,6 +144,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "◊" to StatementSeparator,
         "⋄" to StatementSeparator,
         "∇" to FnDefSym,
+        "⇐" to FnDefArrow,
         "⍬" to APLNullSym,
         "λ" to LambdaToken,
         "⍞" to ApplyToken,

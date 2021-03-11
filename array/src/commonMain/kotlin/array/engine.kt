@@ -85,6 +85,28 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
 }
 
+abstract class DelegatedAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) = innerImpl().eval1Arg(context, a, axis)
+
+    override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) =
+        innerImpl().eval2Arg(context, a, b, axis)
+
+    override fun identityValue() = innerImpl().identityValue()
+    override fun deriveBitwise() = innerImpl().deriveBitwise()
+    override val optimisationFlags: OptimisationFlags get() = innerImpl().optimisationFlags
+
+    override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?) = innerImpl().eval1ArgLong(context, a, axis)
+    override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?) = innerImpl().eval1ArgDouble(context, a, axis)
+
+    override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?) =
+        innerImpl().eval2ArgLongLong(context, a, b, axis)
+
+    override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?) =
+        innerImpl().eval2ArgDoubleDouble(context, a, b, axis)
+
+    abstract fun innerImpl(): APLFunction
+}
+
 /**
  * A function that is declared directly in a { ... } expression.
  */
