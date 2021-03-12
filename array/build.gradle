@@ -167,6 +167,7 @@ kotlin {
         }
         all {
             languageSettings.enableLanguageFeature("InlineClasses")
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
         }
         // Note: To enable common source sets please comment out 'kotlin.import.noCommonSourceSets' property
         // in gradle.properties file and re-import your project in IDE.
