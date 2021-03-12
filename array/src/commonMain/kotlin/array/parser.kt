@@ -321,16 +321,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         return LiteralAPLNullValue(pos)
     }
 
-    private fun processShortFormFn(pos: Position, leftArgs: List<Instruction>): ParseResultHolder {
-        fun leftArgError(): Nothing = throw ParseException("Left side of the arrow must be a single symbol", pos)
-        if (leftArgs.size != 1) {
-            leftArgError()
-        }
-        val symInstr = leftArgs[0]
-        if (symInstr !is VariableRef) {
-            leftArgError()
-        }
-        val sym = symInstr.name
+    private fun processShortFormFn(pos: Position, sym: Symbol): ParseResultHolder {
         val holder = parseValue()
         if (holder !is ParseResultHolder.FnParseResult) {
             throw ParseException("Right side of the arrow must be a function", pos)
@@ -435,11 +426,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                         inProcessUserFunction.instr = instr
                         DefinedUserFunction(inProcessUserFunction, name, pos)
                     }
-                    if (leftAndRightArgsIsEmpty) {
-                        currentEnvironment().registerLocalFunction(definedUserFunction.name, definedUserFunction.fn)
-                    } else {
-                        registerDefinedUserFunction(definedUserFunction)
-                    }
+                    registerDefinedUserFunction(definedUserFunction)
                 }
                 2 -> {
                     if (nameComponent.semicolonSeparated) throw ParseException("Invalid function name", pos)
@@ -540,6 +527,15 @@ class APLParser(val tokeniser: TokenGenerator) {
                     if (customSyntax != null) {
                         leftArgs.add(processCustomSyntax(this, customSyntax))
                     } else {
+                        val (fnDefToken, fnDefPos) = tokeniser.nextTokenWithPosition()
+                        // If the next  symbol is a function assignment, it needs to be treated specially
+                        if (fnDefToken is FnDefArrow) {
+                            if (leftArgs.size != 0) {
+                                throw ParseException("Left side of the arrow must be a single symbol", pos)
+                            }
+                            return processShortFormFn(fnDefPos, token)
+                        }
+                        tokeniser.pushBackToken(fnDefToken)
                         val fn = lookupFunction(token)
                         if (fn != null) {
                             return processFn(fn.make(pos), leftArgs)
@@ -560,7 +556,6 @@ class APLParser(val tokeniser: TokenGenerator) {
                 is ParsedCharacter -> leftArgs.add(LiteralCharacter(token.value, pos))
                 is LeftArrow -> return processAssignment(pos, leftArgs)
                 is FnDefSym -> leftArgs.add(processFunctionDefinition(pos, leftArgs))
-                is FnDefArrow -> return processShortFormFn(pos, leftArgs)
                 is APLNullSym -> leftArgs.add(LiteralAPLNullValue(pos))
                 is StringToken -> leftArgs.add(LiteralStringValue(token.value, pos))
                 is QuotePrefix -> leftArgs.add(LiteralSymbol(tokeniser.nextTokenWithType(), pos))
@@ -730,8 +725,8 @@ class APLParser(val tokeniser: TokenGenerator) {
         return if (allocateEnvironment) {
             val engine = tokeniser.engine
             withEnvironment {
-                val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.currentNamespace))
-                val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.currentNamespace))
+                val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.coreNamespace))
+                val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.coreNamespace))
                 val instruction = parseValueToplevel(endToken)
                 DeclaredFunction("<unnamed>", instruction, leftBinding, rightBinding, currentEnvironment())
             }

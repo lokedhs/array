@@ -118,56 +118,18 @@ class DeclaredFunction(
     val env: Environment
 ) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
-//        override val optimisationFlags = when (instruction) {
-//            is FunctionCall1Arg -> instruction.fn.optimisationFlags
-//            is FunctionCall2Arg -> instruction.fn.optimisationFlags
-//            else -> OptimisationFlags(0)
-//        }
-
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            return context.withLinkedContext(env, "declaredFunction1", pos) { localContext ->
+            return context.withLinkedContext(env, "declaredFunction1arg(${name})", pos) { localContext ->
                 localContext.setVar(rightArgName, a)
                 instruction.evalWithContext(localContext)
             }
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            return context.withLinkedContext(env, "declaredFunction2", pos) { localContext ->
+            return context.withLinkedContext(env, "declaredFunction2arg(${name})", pos) { localContext ->
                 localContext.setVar(leftArgName, a)
                 localContext.setVar(rightArgName, b)
                 instruction.evalWithContext(localContext)
-            }
-        }
-
-        override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long {
-            if (instruction is FunctionCall1Arg) {
-                return instruction.fn.eval1ArgLong(context, a, axis)
-            } else {
-                throw IllegalStateException("Illegal call to specialised function")
-            }
-        }
-
-        override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?): Double {
-            if (instruction is FunctionCall1Arg) {
-                return instruction.fn.eval1ArgDouble(context, a, axis)
-            } else {
-                throw IllegalStateException("Illegal call to specialised function")
-            }
-        }
-
-        override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?): Long {
-            if (instruction is FunctionCall2Arg) {
-                return instruction.fn.eval2ArgLongLong(context, a, b, axis)
-            } else {
-                throw IllegalStateException("Illegal call to specialised function")
-            }
-        }
-
-        override fun eval2ArgDoubleDouble(context: RuntimeContext, a: Double, b: Double, axis: APLValue?): Double {
-            if (instruction is FunctionCall2Arg) {
-                return instruction.fn.eval2ArgDoubleDouble(context, a, b, axis)
-            } else {
-                throw IllegalStateException("Illegal call to specialised function")
             }
         }
     }

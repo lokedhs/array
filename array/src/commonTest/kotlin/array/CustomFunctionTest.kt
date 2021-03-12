@@ -271,14 +271,38 @@ class CustomFunctionTest : APLTest() {
     }
 
     @Test
+    fun multilineDefaultArgNames1Arg() {
+        val result = parseAPLExpression(
+            """
+            |∇ bar {
+            |  ⍵ + 10
+            |}
+            |bar 9
+            """.trimMargin())
+        assertSimpleNumber(19, result)
+    }
+
+    @Test
+    fun multilineDefaultArgNames2Arg() {
+        val result = parseAPLExpression(
+            """
+            |∇ bar {
+            |  ⍵ + 10 + ⍺
+            |}
+            |2 bar 9
+            """.trimMargin())
+        assertSimpleNumber(21, result)
+    }
+
+    @Test
     fun localFunctionScope0() {
         val result = parseAPLExpression(
             """
-            |∇ foo {
+            |foo ⇐ {
             |  30 + ⍵
             |}
             |∇ bar { 
-            |  ∇ foo {
+            |  foo ⇐ {
             |    x ← 300
             |    1 + ⍵ + x
             |  }
@@ -295,12 +319,92 @@ class CustomFunctionTest : APLTest() {
             parseAPLExpression(
                 """
                 |∇ bar { 
-                |  ∇ foo {
+                |  foo ⇐ {
                 |    1 + ⍵
                 |  }
                 |  100 + foo ⍵
                 |}
                 |foo 10 
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun localFunctionScope2() {
+        val result = parseAPLExpression(
+            """
+            |foo ⇐ {
+            |  30 + ⍵
+            |}
+            |bar ⇐ { 
+            |  foo ⇐ {
+            |    x ← 300
+            |    1 + ⍵ + x
+            |  }
+            |  200 + foo ⍵
+            |}
+            |(foo 1) + bar 100 
+            """.trimMargin())
+        assertSimpleNumber(632, result)
+    }
+
+    @Test
+    fun localFunctionScope3() {
+        val result = parseAPLExpression(
+            """
+            |foo ⇐ {
+            |  30 + ⍵
+            |}
+            |∇ bar { 
+            |  200 + ⍵
+            |}
+            |bar 100 
+            """.trimMargin())
+        assertSimpleNumber(300, result)
+    }
+
+    @Test
+    fun simpleFormMultiline0() {
+        val result = parseAPLExpression(
+            """
+            |foo ⇐ {
+            |  x ← 300
+            |  1 + ⍵ + x
+            |}
+            |200 + foo 10
+            """.trimMargin())
+        assertSimpleNumber(511, result)
+    }
+
+    @Test
+    fun simpleFormMultiline1() {
+        val result = parseAPLExpression(
+            """
+            |foo ⇐ {
+            |  x ← 300
+            |  1 + ⍵ + ⍺ + ⍺ + x
+            |}
+            |200 + 3 foo 10
+            """.trimMargin())
+        assertSimpleNumber(517, result)
+    }
+
+    @Test
+    fun invalidName0() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression(
+                """
+                |1 ⇐ { ⍵ + 100 } 
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun invalidName1() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression(
+                """
+                |1 x ⇐ { ⍵ + 100 } 
                 """.trimMargin())
         }
     }
