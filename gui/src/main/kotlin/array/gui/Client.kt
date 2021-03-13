@@ -71,7 +71,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
                     onAction = EventHandler { openSettings() }
                 })
                 items.add(MenuItem("Close").apply {
-                    onAction = EventHandler { stage.close() }
+                    onAction = EventHandler { Platform.exit() }
                 })
             }
             menus.add(fileMenu)
@@ -177,6 +177,10 @@ class Client(val application: ClientApplication, val stage: Stage) {
 
     private fun initCustomFunctions() {
         initGraphicCommands(this)
+    }
+
+    fun stopRequest() {
+        calculationQueue.stop()
     }
 
     private inner class ClientRenderContextImpl : ClientRenderContext {
