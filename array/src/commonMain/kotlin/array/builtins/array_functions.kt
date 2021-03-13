@@ -1221,7 +1221,22 @@ class WhereAPLFunction : APLFunctionDescriptor {
 
 class UniqueFunction : APLFunctionDescriptor {
     class UniqueFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+        private fun iterateUnique(input: List<APLValue>): APLArrayImpl {
+            val map = HashSet<APLValue.APLValueKey>()
+            val result = ArrayList<APLValue>()
+            input.forEach { a ->
+                a.iterateMembers { v ->
+                    val key = v.makeKey()
+                    if (!map.contains(key)) {
+                        result.add(v)
+                        map.add(key)
+                    }
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
+
+        private fun collapseAndCheckRank(a: APLValue): APLValue {
             val a1 = a.arrayify().collapse()
             if (a1.rank != 1) {
                 throwAPLException(
@@ -1229,16 +1244,15 @@ class UniqueFunction : APLFunctionDescriptor {
                         "Argument to unique must be a scalar or a 1-dimensional array",
                         pos))
             }
-            val map = HashSet<APLValue.APLValueKey>()
-            val result = ArrayList<APLValue>()
-            a1.iterateMembers { v ->
-                val key = v.makeKey()
-                if (!map.contains(key)) {
-                    result.add(v)
-                    map.add(key)
-                }
-            }
-            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+            return a1
+        }
+
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return iterateUnique(listOf(collapseAndCheckRank(a)))
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            return iterateUnique(listOf(collapseAndCheckRank(a), collapseAndCheckRank(b)))
         }
     }
 
