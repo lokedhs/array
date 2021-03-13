@@ -1,8 +1,10 @@
 package array
 
+import kotlin.jvm.JvmInline
 import kotlin.native.concurrent.SharedImmutable
 
-inline class Dimensions(val dimensions: IntArray) {
+@JvmInline
+value class Dimensions(val dimensions: IntArray) {
     val size: Int
         get() = dimensions.size
 

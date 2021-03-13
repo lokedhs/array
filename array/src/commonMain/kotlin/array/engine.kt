@@ -3,13 +3,15 @@ package array
 import array.builtins.*
 import array.json.JsonAPLModule
 import array.syntax.CustomSyntax
+import kotlin.jvm.JvmInline
 import kotlin.reflect.KClass
 
 interface APLFunctionDescriptor {
     fun make(pos: Position): APLFunction
 }
 
-inline class OptimisationFlags(val flags: Int) {
+@JvmInline
+value class OptimisationFlags(val flags: Int) {
     val is1ALong get() = (flags and OPTIMISATION_FLAG_1ARG_LONG) != 0
     val is1ADouble get() = (flags and OPTIMISATION_FLAG_1ARG_DOUBLE) != 0
     val is2ALongLong get() = (flags and OPTIMISATION_FLAG_2ARG_LONG_LONG) != 0
