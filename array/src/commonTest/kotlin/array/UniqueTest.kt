@@ -183,4 +183,32 @@ class UniqueTest : APLTest() {
             assertString("fo", result)
         }
     }
+
+    @Test
+    fun unionWithInvalidDimension0() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("(2 2 ⍴ ⍳4) ∪ 1 2 3")
+        }
+    }
+
+    @Test
+    fun unionWithInvalidDimension1() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("3 2 1 ∪ (2 2 ⍴ ⍳4)")
+        }
+    }
+
+    @Test
+    fun unionWithInvalidDimension2() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("(2 2 ⍴ 6 7 8 9) ∪ (2 2 ⍴ ⍳4)")
+        }
+    }
+
+    @Test
+    fun unionWithInvalidDimension3() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("(2 2 2 ⍴ 6 7 8 9) ∪ (2 2 ⍴ ⍳4)")
+        }
+    }
 }

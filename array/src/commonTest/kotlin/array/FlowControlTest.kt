@@ -1,6 +1,5 @@
 package array
 
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -199,14 +198,6 @@ class FlowControlTest : APLTest() {
             |⍞foo 60
             """.trimMargin())
         assertSimpleNumber(303, result)
-    }
-
-    @Ignore
-    @Test
-    fun nonLocalExitTest() {
-        parseAPLExpression("catch ('a) { { ⍵+10 ◊ 3→'a ◊ 10 } 1 } {⍵+1}").let { result ->
-            assertSimpleNumber(4, result)
-        }
     }
 
     @Test
