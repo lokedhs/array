@@ -1258,3 +1258,39 @@ class UniqueFunction : APLFunctionDescriptor {
 
     override fun make(pos: Position) = UniqueFunctionImpl(pos)
 }
+
+class IntersectionAPLFunction : APLFunctionDescriptor {
+    class IntersectionAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val map = HashSet<APLValue.APLValueKey>()
+            val leftKeys = HashSet<APLValue.APLValueKey>()
+            val a0 = collapseAndCheckRank(a)
+            val b0 = collapseAndCheckRank(b)
+            b0.iterateMembers { v ->
+                map.add(v.makeKey())
+            }
+            val result = ArrayList<APLValue>()
+            a0.iterateMembers { v ->
+                val key = v.makeKey()
+                if (map.contains(key) && !leftKeys.contains(key)) {
+                    result.add(v)
+                    leftKeys.add(key)
+                }
+            }
+            return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
+        }
+
+        private fun collapseAndCheckRank(a: APLValue): APLValue {
+            val a1 = a.arrayify().collapse()
+            if (a1.rank != 1) {
+                throwAPLException(
+                    InvalidDimensionsException(
+                        "Argument to intersection must be a scalar or a 1-dimensional array",
+                        pos))
+            }
+            return a1
+        }
+    }
+
+    override fun make(pos: Position) = IntersectionAPLFunctionImpl(pos)
+}
