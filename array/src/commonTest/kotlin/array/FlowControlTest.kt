@@ -238,4 +238,24 @@ class FlowControlTest : APLTest() {
         assertSimpleNumber(9, result)
         assertEquals("barfooqwe", out)
     }
+
+    /**
+     * Test that the atLeave function is called when scope is exited normally.
+     */
+    @Test
+    fun atLeaveTest0() {
+        val (result, out) = parseAPLExpressionWithOutput("{ { io:print 1+⍵ } atLeave 100 } 0")
+        assertSimpleNumber(100, result)
+        assertEquals("101", out)
+    }
+
+    /**
+     * Test that the atLeave function is still called at non-local exit.
+     */
+    @Test
+    fun atLeaveTest1() {
+        val (result, out) = parseAPLExpressionWithOutput("{ { io:print 1+⍵ } atLeave 100 ◊ 'foo→1 } catch 1 2 ⍴ 'foo λ{50+⍺}")
+        assertSimpleNumber(51, result)
+        assertEquals("101", out)
+    }
 }

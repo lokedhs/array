@@ -195,7 +195,6 @@ class StringBuilderOutput : CharacterOutput {
 
     override fun writeString(s: String) {
         buf.append(s)
-        curr = curr + s
     }
 }
 

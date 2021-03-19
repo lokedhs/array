@@ -63,6 +63,7 @@ class UnexpectedToken(token: Token, pos: Position? = null) : ParseException("Une
 class IncompatibleTypeParseException(message: String, pos: Position? = null) : ParseException(message, pos)
 class IllegalNumberFormat(message: String, pos: Position? = null) : ParseException(message, pos)
 class IllegalContextForFunction(pos: Position? = null) : ParseException("Illegal function call", pos)
+class OperatorAxisNotSupported(pos: Position) : ParseException("Operator does not support axis argument", pos)
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
     ParseException("In custom syntax rule: Expected: ${expectedSymbol.symbolName}. Found: ${foundSymbol.symbolName}", pos)
 
@@ -200,7 +201,9 @@ fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: 
         throwAPLException(
             APLIndexOutOfBoundsException(
                 "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
-                pos))
+                pos
+                                        )
+                         )
     }
 }
 

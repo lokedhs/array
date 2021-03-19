@@ -1,5 +1,5 @@
 package array.builtins
-
+//≠∵⌺⍨ ⍳30
 import array.*
 
 abstract class BitwiseCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
@@ -66,4 +66,21 @@ class BitwiseNorFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = BitwiseNorFunctionImpl(pos)
+}
+
+// TODO: Need to assign this to the appropriate parent function
+class BitwiseCountBitsFunction : APLFunctionDescriptor {
+    class BitwiseCountBitsFunctionImpl(pos: Position) : BitwiseCombineAPLFunction(pos) {
+        override fun bitwiseCombine1Arg(a: Long): Long {
+            var total = 0L
+            repeat(64) { i ->
+                if (a and (1L shl i) > 0) {
+                    total++
+                }
+            }
+            return total
+        }
+    }
+
+    override fun make(pos: Position) = BitwiseCountBitsFunctionImpl(pos)
 }

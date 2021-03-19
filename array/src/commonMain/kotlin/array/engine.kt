@@ -22,8 +22,9 @@ value class OptimisationFlags(val flags: Int) {
             OPTIMISATION_FLAG_1ARG_LONG to "1ALong",
             OPTIMISATION_FLAG_1ARG_DOUBLE to "1ADouble",
             OPTIMISATION_FLAG_2ARG_LONG_LONG to "2ALongLong",
-            OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE to "2ADoubleDouble")
-        val flagsString = flagMap.filter { (value, _) -> (flags and value) != 0 }.joinToString(", ")
+            OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE to "2ADoubleDouble"
+                            )
+        val flagsString = flagMap.filter { (value, _) -> (flags and value) != 0 }.joinToString(", ") { it.second }
         return "OptimisationFlags(flags=0x${flags.toString(16)}, values: ${flagsString})"
     }
 
@@ -40,16 +41,21 @@ value class OptimisationFlags(val flags: Int) {
         const val OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE = 0x8
 
         const val OPTIMISATION_FLAGS_1ARG_MASK = OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE
-        const val OPTIMISATION_FLAGS_2ARG_MASK = OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+        const val OPTIMISATION_FLAGS_2ARG_MASK =
+            OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
     }
 }
 
 abstract class APLFunction(val pos: Position) {
-    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue = throwAPLException(Unimplemented1ArgException(pos))
+    open fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue =
+        throwAPLException(Unimplemented1ArgException(pos))
+
     open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue =
         throwAPLException(Unimplemented2ArgException(pos))
 
-    open fun identityValue(): APLValue = throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
+    open fun identityValue(): APLValue =
+        throwAPLException(APLIncompatibleDomainsException("Function does not have an identity value", pos))
+
     open fun deriveBitwise(): APLFunctionDescriptor? = null
 
     open val optimisationFlags: OptimisationFlags get() = OptimisationFlags(0)
@@ -75,7 +81,8 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
         return eval1Arg(context, a)
     }
 
-    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue = throwAPLException(Unimplemented1ArgException(pos))
+    open fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue =
+        throwAPLException(Unimplemented1ArgException(pos))
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
         if (axis != null) {
@@ -84,11 +91,13 @@ abstract class NoAxisAPLFunction(pos: Position) : APLFunction(pos) {
         return eval2Arg(context, a, b)
     }
 
-    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue = throwAPLException(Unimplemented2ArgException(pos))
+    open fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue =
+        throwAPLException(Unimplemented2ArgException(pos))
 }
 
 abstract class DelegatedAPLFunctionImpl(pos: Position) : APLFunction(pos) {
-    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) = innerImpl().eval1Arg(context, a, axis)
+    override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?) =
+        innerImpl().eval1Arg(context, a, axis)
 
     override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?) =
         innerImpl().eval2Arg(context, a, b, axis)
@@ -97,8 +106,11 @@ abstract class DelegatedAPLFunctionImpl(pos: Position) : APLFunction(pos) {
     override fun deriveBitwise() = innerImpl().deriveBitwise()
     override val optimisationFlags: OptimisationFlags get() = innerImpl().optimisationFlags
 
-    override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?) = innerImpl().eval1ArgLong(context, a, axis)
-    override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?) = innerImpl().eval1ArgDouble(context, a, axis)
+    override fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?) =
+        innerImpl().eval1ArgLong(context, a, axis)
+
+    override fun eval1ArgDouble(context: RuntimeContext, a: Double, axis: APLValue?) =
+        innerImpl().eval1ArgDouble(context, a, axis)
 
     override fun eval2ArgLongLong(context: RuntimeContext, a: Long, b: Long, axis: APLValue?) =
         innerImpl().eval2ArgLongLong(context, a, b, axis)
@@ -118,7 +130,7 @@ class DeclaredFunction(
     val leftArgName: EnvironmentBinding,
     val rightArgName: EnvironmentBinding,
     val env: Environment
-) : APLFunctionDescriptor {
+                      ) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             return context.withLinkedContext(env, "declaredFunction1arg(${name})", pos) { localContext ->
@@ -284,11 +296,12 @@ class Engine {
         registerNativeOperator("catch", CatchOperator())
         registerNativeFunction("labels", LabelsFunction())
         registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
-        registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
+//        registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
         registerNativeOperator("defer", DeferAPLOperator())
         registerNativeFunction("ensureGeneric", EnsureTypeFunction(ArrayMemberType.GENERIC), "internal")
         registerNativeFunction("ensureLong", EnsureTypeFunction(ArrayMemberType.LONG), "internal")
         registerNativeFunction("ensureDouble", EnsureTypeFunction(ArrayMemberType.DOUBLE), "internal")
+        registerNativeOperator("atLeave", AtLeaveScopeOperator())
 
         // maths
         registerNativeFunction("sin", SinAPLFunction(), "math")
@@ -420,7 +433,8 @@ class Engine {
         }
     }
 
-    fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
+    fun internSymbol(name: String, namespace: Namespace? = null): Symbol =
+        (namespace ?: currentNamespace).internSymbol(name)
 
     fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
         return namespaces.getOrPut(name) {
@@ -461,7 +475,7 @@ class Engine {
         }
     }
 
-    inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
+    inline fun <T> withCallStackElement(name: String, pos: Position, fn: (CallStackElement) -> T): T {
         if (callStack.size >= 100) {
             throwAPLException(APLEvalException("Stack overflow", pos))
         }
@@ -469,7 +483,7 @@ class Engine {
         callStack.add(callStackElement)
         val prevSize = callStack.size
         try {
-            return fn()
+            return fn(callStackElement)
         } finally {
             assertx(prevSize == callStack.size)
             val removedElement = callStack.removeLast()
@@ -500,7 +514,13 @@ class Engine {
 
     inline fun <reified T : APLValue> callClosableHandler(value: T, pos: Position) {
         val handler =
-            closableHandlers[value::class] ?: throw APLEvalException("Value cannot be closed: ${value.formatted(FormatStyle.PLAIN)}", pos)
+            closableHandlers[value::class] ?: throw APLEvalException(
+                "Value cannot be closed: ${
+                    value.formatted(
+                        FormatStyle.PLAIN
+                                   )
+                }", pos
+                                                                    )
         @Suppress("UNCHECKED_CAST")
         (handler as ClosableHandler<T>).close(value)
     }
@@ -534,9 +554,30 @@ class VariableHolder {
 
 class RuntimeContext(val engine: Engine, val environment: Environment, val parent: RuntimeContext? = null) {
     private val localVariables = HashMap<EnvironmentBinding, VariableHolder>()
+    private var releaseCallbacks: MutableList<() -> Unit>? = null
 
     init {
         initBindings()
+    }
+
+    fun pushReleaseCallback(callback: () -> Unit) {
+        val list = releaseCallbacks
+        if (list == null) {
+            val updated = ArrayList<() -> Unit>()
+            updated.add(callback)
+            releaseCallbacks = updated
+        } else {
+            list.add(callback)
+        }
+    }
+
+    fun fireReleaseCallbacks() {
+        val list = releaseCallbacks
+        if (list != null) {
+            list.asReversed().forEach { fn ->
+                fn()
+            }
+        }
     }
 
     private fun initBindings() {
@@ -571,7 +612,8 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     }
 
     private fun findOrThrow(name: EnvironmentBinding): VariableHolder {
-        return localVariables[name] ?: throw IllegalStateException("Attempt to set the value of a nonexistent binding: ${name}")
+        return localVariables[name]
+            ?: throw IllegalStateException("Attempt to set the value of a nonexistent binding: ${name}")
     }
 
     fun setVar(name: EnvironmentBinding, value: APLValue) {
@@ -583,7 +625,11 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
     inline fun <T> withLinkedContext(env: Environment, name: String, pos: Position, fn: (RuntimeContext) -> T): T {
         val newContext = RuntimeContext(engine, env, this)
         return withCallStackElement(name, pos) {
-            fn(newContext)
+            try {
+                fn(newContext)
+            } finally {
+                newContext.fireReleaseCallbacks()
+            }
         }
     }
 
@@ -606,7 +652,7 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
         }
     }
 
-    inline fun <T> withCallStackElement(name: String, pos: Position, fn: () -> T): T {
+    inline fun <T> withCallStackElement(name: String, pos: Position, fn: (CallStackElement) -> T): T {
         return engine.withCallStackElement(name, pos, fn)
     }
 }

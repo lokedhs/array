@@ -19,7 +19,7 @@ class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
 
     override fun formatted(style: FormatStyle) = "graphic-window"
     override fun compareEquals(reference: APLValue) = reference is GraphicWindowAPLValue && window === reference.window
-    override fun makeKey() = APLValue.APLValueKeyImpl(this, window)
+    override fun makeKey() = APLValueKeyImpl(this, window)
 
     fun updateContent(w: Int, h: Int, content: DoubleArray) {
         Platform.runLater {
