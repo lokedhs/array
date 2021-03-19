@@ -296,7 +296,7 @@ class Engine {
         registerNativeOperator("catch", CatchOperator())
         registerNativeFunction("labels", LabelsFunction())
         registerNativeFunction("timeMillis", TimeMillisFunction(), "time")
-//        registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
+        registerNativeFunction("unwindProtect", UnwindProtectAPLFunction(), "int")
         registerNativeOperator("defer", DeferAPLOperator())
         registerNativeFunction("ensureGeneric", EnsureTypeFunction(ArrayMemberType.GENERIC), "internal")
         registerNativeFunction("ensureLong", EnsureTypeFunction(ArrayMemberType.LONG), "internal")
