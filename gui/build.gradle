@@ -1,7 +1,7 @@
 plugins {
     id 'application'
     id 'org.jetbrains.kotlin.jvm'
-    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
 repositories {
@@ -34,7 +34,7 @@ javafx {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation project(':array')
-    implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.5'
+    implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.6'
 }
 
 mainClassName = 'array.gui.Client'
