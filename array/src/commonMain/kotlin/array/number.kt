@@ -137,6 +137,8 @@ class APLComplex(val value: Complex) : APLNumber() {
 
 val APLLONG_0 = APLLong(0)
 val APLLONG_1 = APLLong(1)
+val APLDOUBLE_0 = APLDouble(0.0)
+val APLDOUBLE_1 = APLDouble(1.0)
 
 fun Int.makeAPLNumber() = APLLong(this.toLong())
 fun Long.makeAPLNumber() = APLLong(this)

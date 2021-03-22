@@ -455,8 +455,8 @@ class ModAPLFunction : APLFunctionDescriptor {
                 pos,
                 a,
                 b,
-                { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
-                { x, y -> (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
+                { x, y -> if (x == 0L) y.makeAPLNumber() else (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
+                { x, y -> if (x == 0.0) y.makeAPLNumber() else (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
                 { _, _ -> TODO("Not implemented") })
         }
     }

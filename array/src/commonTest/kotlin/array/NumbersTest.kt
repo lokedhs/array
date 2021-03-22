@@ -47,6 +47,9 @@ class NumbersTest : APLTest() {
         assertSimpleNumber(0, parseAPLExpression("3|3"))
         assertSimpleNumber(2, parseAPLExpression("100|2"))
         assertSimpleNumber(-5, parseAPLExpression("10000|¯20005"))
+        assertSimpleNumber(0, parseAPLExpression("5|0"))
+        assertSimpleNumber(0, parseAPLExpression("0|0"))
+        assertSimpleNumber(3, parseAPLExpression("0|3"))
     }
 
     @Test
