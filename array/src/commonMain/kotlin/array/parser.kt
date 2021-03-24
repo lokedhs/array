@@ -594,7 +594,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                 }
             }
         } catch (e: MPFileException) {
-            throw ParseException("Error loading file: ${e.message}", pos)
+            throw ParseException("Error loading file: ${resolved}: ${e.message}", pos)
         }
     }
 

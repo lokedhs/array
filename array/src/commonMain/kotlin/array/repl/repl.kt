@@ -5,11 +5,12 @@ import array.options.ArgParser
 import array.options.InvalidOption
 import array.options.Option
 
-fun runRepl(args: Array<String>) {
+fun runRepl(args: Array<String>, defaultLibPath: String? = null) {
     val argParser = ArgParser(
         Option("lib-path", true, "Location of the KAP standard library"),
         Option("load", true, "File to load"),
-        Option("no-repl", false, "Don't start the REPL"))
+        Option("no-repl", false, "Don't start the REPL"),
+        Option("no-standard-lib", false, "Don't load standard-lib"))
     val argResult = try {
         argParser.parse(args)
     } catch (e: InvalidOption) {
@@ -25,13 +26,17 @@ fun runRepl(args: Array<String>) {
             }
         }
     }
-    argResult["lib-path"]?.let { libPath ->
+    val libPath = argResult["lib-path"] ?: defaultLibPath
+    if (libPath != null) {
         val libPathType = fileType(libPath)
         if (libPathType != null && libPathType === FileNameType.DIRECTORY) {
             engine.addLibrarySearchPath(libPath)
         } else {
             println("Warning: ${libPath} is not a directory, ignoring")
         }
+    }
+    if (!argResult.containsKey("no-standard-lib")) {
+        engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
     }
     argResult["load"]?.let { file ->
         val loadFileType = fileType(file)
