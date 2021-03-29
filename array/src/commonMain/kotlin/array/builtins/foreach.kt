@@ -26,7 +26,7 @@ class ForEachResult2Arg(
 ) : APLArray() {
     init {
         unless(arg1.dimensions.compareEquals(arg2.dimensions)) {
-            throwAPLException(IncompatibleTypeException("Arguments to foreach does not have the same dimensions", pos))
+            throwAPLException(InvalidDimensionsException("Arguments to foreach does not have the same dimensions", pos))
         }
     }
 

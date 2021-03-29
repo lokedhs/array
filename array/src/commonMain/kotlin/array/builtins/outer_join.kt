@@ -11,10 +11,14 @@ open class OuterJoinResult(
 ) : APLArray() {
     final override val dimensions: Dimensions
     protected val divisor: Int
+    protected val aScalar: Boolean
+    protected val bScalar: Boolean
 
     init {
         val aDimensions = a.dimensions
+        aScalar = aDimensions.size == 0
         val bDimensions = b.dimensions
+        bScalar = bDimensions.size == 0
         dimensions = Dimensions(IntArray(aDimensions.size + bDimensions.size) { index ->
             if (index < aDimensions.size) aDimensions[index] else bDimensions[index - aDimensions.size]
         })
@@ -25,7 +29,7 @@ open class OuterJoinResult(
     override fun valueAt(p: Int): APLValue {
         val aPosition = p / divisor
         val bPosition = p % divisor
-        return fn.eval2Arg(context, a.valueAt(aPosition), b.valueAt(bPosition), null)
+        return fn.eval2Arg(context, if (aScalar) a else a.valueAt(aPosition), if (bScalar) b else b.valueAt(bPosition), null)
     }
 }
 
@@ -37,6 +41,10 @@ class OuterJoinResultLong(
     pos: Position
 ) : OuterJoinResult(context, a, b, fn, pos) {
     override val specialisedType get() = ArrayMemberType.LONG
+
+    init {
+        assertx(!aScalar && !bScalar)
+    }
 
     override fun valueAtLong(p: Int, pos: Position?): Long {
         val aPosition = p / divisor
@@ -53,6 +61,10 @@ class OuterJoinResultDouble(
     pos: Position
 ) : OuterJoinResult(context, a, b, fn, pos) {
     override val specialisedType get() = ArrayMemberType.DOUBLE
+
+    init {
+        assertx(!aScalar && !bScalar)
+    }
 
     override fun valueAtDouble(p: Int, pos: Position?): Double {
         val aPosition = p / divisor

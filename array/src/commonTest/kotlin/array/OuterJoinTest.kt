@@ -161,4 +161,36 @@ class OuterJoinTest : APLTest() {
             assertArrayContent(arrayOf(180, 270, 360, 450), result)
         }
     }
+
+    @Test
+    fun outerJoinWithScalarRightArg() {
+        parseAPLExpression("(15+⍳4)∘.+10").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(25, 26, 27, 28), result)
+        }
+    }
+
+    @Test
+    fun outerJoinScalarRightArgAndArray() {
+        parseAPLExpression("(3 5 ⍴ (10+⍳20))∘.+110").let { result ->
+            assertDimension(dimensionsOfSize(3, 5), result)
+            assertArrayContent(arrayOf(120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134), result)
+        }
+    }
+
+    @Test
+    fun outerJoinWithScalarLeftArg() {
+        parseAPLExpression("10∘.+(15+⍳4)").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(25, 26, 27, 28), result)
+        }
+    }
+
+    @Test
+    fun outerJoinScalarLeftArgAndArray() {
+        parseAPLExpression("10∘.+3 5 ⍴ (10+⍳20)").let { result ->
+            assertDimension(dimensionsOfSize(3, 5), result)
+            assertArrayContent(arrayOf(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34), result)
+        }
+    }
 }

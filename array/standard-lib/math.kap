@@ -60,3 +60,17 @@ namespace("kap")
 }
 
 declare(:export ⌹)
+
+∇ (A) ⊥ (B) {
+  +/ (×\ ¯1↓1,(0×B)+⌽A) × ⌽B
+}
+
+declare(:export ⊥)
+
+∇ (A) ⊤ (B) {
+  declare(:local a0)
+  declare(:local d)
+  ⍉ ⌽ a0 (|⍤1) ⌊B ∘.÷ d←×\ ¯1 ↓ 1,a0←⌽A
+}
+
+declare(:export ⊤)
