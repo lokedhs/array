@@ -784,13 +784,26 @@ class InverseAPLValue private constructor(val source: APLValue, val axis: Int) :
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
 
     override val dimensions = source.dimensions
+    override val specialisedType get() = source.specialisedType
 
     override val labels by lazy { resolveLabels() }
 
     override fun valueAt(p: Int): APLValue {
+        return source.valueAt(destinationIndex(p))
+    }
+
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return source.valueAtLong(destinationIndex(p), pos)
+    }
+
+    override fun valueAtDouble(p: Int, pos: Position?): Double {
+        return source.valueAtDouble(destinationIndex(p), pos)
+    }
+
+    private fun destinationIndex(p: Int): Int {
         return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
             val coord = axisActionFactors.dimensions[axis] - axisCoord - 1
-            source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
+            (highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal
         }
     }
 
@@ -872,6 +885,7 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
     override val dimensions: Dimensions
     private val multipliers: IntArray
     private val bDimensions: Dimensions
+    override val specialisedType get() = b.specialisedType
 
     override val labels by lazy { resolveLabels() }
 
@@ -895,9 +909,21 @@ class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Posi
     }
 
     override fun valueAt(p: Int): APLValue {
+        return b.valueAt(destinationIndex(p))
+    }
+
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return b.valueAtLong(destinationIndex(p), pos)
+    }
+
+    override fun valueAtDouble(p: Int, pos: Position?): Double {
+        return b.valueAtDouble(destinationIndex(p), pos)
+    }
+
+    private fun destinationIndex(p: Int): Int {
         val c = dimensions.positionFromIndex(p)
         val newPos = IntArray(dimensions.size) { index -> c[transposeAxis[index]] }
-        return b.valueAt(bDimensions.indexFromPosition(newPos))
+        return bDimensions.indexFromPosition(newPos)
     }
 
     private fun resolveLabels(): DimensionLabels? {

@@ -153,10 +153,10 @@ class Arrays {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun assertx(condition: Boolean, message: String = "Assertion error") {
+fun assertx(condition: Boolean, message: (() -> String)? = null) {
     contract { returns() implies condition }
     if (!condition) {
-        throw AssertionError(message)
+        throw AssertionError(if (message == null) "Assertion error" else message())
     }
 }
 
@@ -202,8 +202,8 @@ fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: 
             APLIndexOutOfBoundsException(
                 "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
                 pos
-                                        )
-                         )
+            )
+        )
     }
 }
 

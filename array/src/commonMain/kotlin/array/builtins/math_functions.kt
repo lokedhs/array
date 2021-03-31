@@ -31,119 +31,125 @@ class ArraySum1Arg(
     }
 }
 
-sealed class ArraySum2Args(val fn: MathCombineAPLFunction, val a0: APLValue, val b0: APLValue, pos: Position) : DeferredResultArray() {
+private fun throwMismatchedScalarFunctionArgs(pos: Position): Nothing {
+    throwAPLException(
+        InvalidDimensionsException(
+            "Arguments must be of the same dimension, or one of the arguments must be a scalar",
+            pos))
+}
+
+class GenericArraySum2Args(
+    val fn: MathCombineAPLFunction,
+    val a0: APLValue,
+    val b0: APLValue,
+    val pos: Position
+) : DeferredResultArray() {
     private val aRank = a0.rank
     private val bRank = b0.rank
 
-    final override val dimensions = if (aRank == 0) b0.dimensions else a0.dimensions
-    final override val rank = dimensions.size
+    override val dimensions = if (aRank == 0) b0.dimensions else a0.dimensions
+    override val rank = dimensions.size
 
     init {
         unless(aRank == 0 || bRank == 0 || a0.dimensions.compareEquals(b0.dimensions)) {
-            throwAPLException(
-                InvalidDimensionsException(
-                    "Arguments must be of the same dimension, or one of the arguments must be a scalar",
-                    pos))
+            throwMismatchedScalarFunctionArgs(pos)
         }
     }
 
-    class GenericArraySum2Args(
-        fn: MathCombineAPLFunction,
-        a0: APLValue,
-        b0: APLValue,
-        val pos: Position
-    ) : ArraySum2Args(fn, a0, b0, pos) {
-        override fun valueAt(p: Int): APLValue {
-            val a1 = when {
-                a0 is APLSingleValue -> a0
-                a0.isScalar() -> a0.valueAt(0).unwrapDeferredValue()
-                else -> a0.valueAt(p).unwrapDeferredValue()
-            }
-            val b1 = when {
-                b0 is APLSingleValue -> b0
-                b0.isScalar() -> b0.valueAt(0).unwrapDeferredValue()
-                else -> b0.valueAt(p).unwrapDeferredValue()
-            }
-            return if (a1 is APLSingleValue && b1 is APLSingleValue) {
-                fn.combine2Arg(a1, b1)
-            } else {
-                fn.makeCellSumFunction2Args(a1, b1, pos)
-            }
+    override fun valueAt(p: Int): APLValue {
+        val a1 = when {
+            a0 is APLSingleValue -> a0
+            a0.isScalar() -> a0.valueAt(0).unwrapDeferredValue()
+            else -> a0.valueAt(p).unwrapDeferredValue()
+        }
+        val b1 = when {
+            b0 is APLSingleValue -> b0
+            b0.isScalar() -> b0.valueAt(0).unwrapDeferredValue()
+            else -> b0.valueAt(p).unwrapDeferredValue()
+        }
+        return if (a1 is APLSingleValue && b1 is APLSingleValue) {
+            fn.combine2Arg(a1, b1)
+        } else {
+            fn.makeCellSumFunction2Args(a1, b1, pos)
         }
     }
+}
 
-    class LongArraySum2Args(
-        val fn: MathCombineAPLFunction,
-        val a0: APLValue,
-        val b0: APLValue,
-        val pos: Position
-    ) : APLArray() {
-        override val dimensions: Dimensions
-        override val specialisedType get() = ArrayMemberType.LONG
+class LongArraySum2Args(
+    val fn: MathCombineAPLFunction,
+    val a0: APLValue,
+    val b0: APLValue,
+    val pos: Position
+) : APLArray() {
+    override val dimensions: Dimensions
+    override val specialisedType get() = ArrayMemberType.LONG
 
-        init {
-            assertx(a0.dimensions.compareEquals(b0.dimensions))
-            dimensions = a0.dimensions
+    init {
+        unless(a0.dimensions.compareEquals(b0.dimensions)) {
+            throwMismatchedScalarFunctionArgs(pos)
         }
-
-        override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
-
-        override fun valueAtLong(p: Int, pos: Position?): Long {
-            return fn.combine2ArgLong(a0.valueAtLong(p, pos), b0.valueAtLong(p, pos))
-        }
+        dimensions = a0.dimensions
     }
 
-    class DoubleArraySum2Args(
-        val fn: MathCombineAPLFunction,
-        val a0: APLValue,
-        val b0: APLValue,
-        val pos: Position
-    ) : APLArray() {
-        override val dimensions: Dimensions
-        override val specialisedType get() = ArrayMemberType.DOUBLE
+    override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
 
-        init {
-            assertx(a0.dimensions.compareEquals(b0.dimensions))
-            dimensions = a0.dimensions
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return fn.combine2ArgLong(a0.valueAtLong(p, pos), b0.valueAtLong(p, pos))
+    }
+}
+
+class DoubleArraySum2Args(
+    val fn: MathCombineAPLFunction,
+    val a0: APLValue,
+    val b0: APLValue,
+    val pos: Position
+) : APLArray() {
+    override val dimensions: Dimensions
+    override val specialisedType get() = ArrayMemberType.DOUBLE
+
+    init {
+        unless(a0.dimensions.compareEquals(b0.dimensions)) {
+            throwMismatchedScalarFunctionArgs(pos)
         }
-
-        override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
-
-        override fun valueAtDouble(p: Int, pos: Position?): Double {
-            return fn.combine2ArgDouble(a0.valueAtDouble(p, pos), b0.valueAtDouble(p, pos))
-        }
+        dimensions = a0.dimensions
     }
 
-    class LongArraySum2ArgsLeftScalar(
-        val fn: MathCombineAPLFunction,
-        val a0: Long,
-        val b0: APLValue,
-        val pos: Position
-    ) : APLArray() {
-        override val dimensions = b0.dimensions
-        override val specialisedType get() = ArrayMemberType.LONG
+    override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
 
-        override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
-
-        override fun valueAtLong(p: Int, pos: Position?): Long {
-            return fn.combine2ArgLong(a0, b0.valueAtLong(p, pos))
-        }
+    override fun valueAtDouble(p: Int, pos: Position?): Double {
+        return fn.combine2ArgDouble(a0.valueAtDouble(p, pos), b0.valueAtDouble(p, pos))
     }
+}
 
-    class LongArraySum2ArgsRightScalar(
-        val fn: MathCombineAPLFunction,
-        val a0: APLValue,
-        val b0: Long,
-        val pos: Position
-    ) : APLArray() {
-        override val dimensions = a0.dimensions
-        override val specialisedType get() = ArrayMemberType.LONG
+class LongArraySum2ArgsLeftScalar(
+    val fn: MathCombineAPLFunction,
+    val a0: Long,
+    val b0: APLValue,
+    val pos: Position
+) : APLArray() {
+    override val dimensions = b0.dimensions
+    override val specialisedType get() = ArrayMemberType.LONG
 
-        override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
+    override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
 
-        override fun valueAtLong(p: Int, pos: Position?): Long {
-            return fn.combine2ArgLong(a0.valueAtLong(p, pos), b0)
-        }
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return fn.combine2ArgLong(a0, b0.valueAtLong(p, pos))
+    }
+}
+
+class LongArraySum2ArgsRightScalar(
+    val fn: MathCombineAPLFunction,
+    val a0: APLValue,
+    val b0: Long,
+    val pos: Position
+) : APLArray() {
+    override val dimensions = a0.dimensions
+    override val specialisedType get() = ArrayMemberType.LONG
+
+    override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
+
+    override fun valueAtLong(p: Int, pos: Position?): Long {
+        return fn.combine2ArgLong(a0.valueAtLong(p, pos), b0)
     }
 }
 
@@ -167,25 +173,25 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             a is APLSingleValue -> {
                 when {
                     a is APLLong && b.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
-                        ArraySum2Args.LongArraySum2ArgsLeftScalar(this, a.value, b, pos)
+                        LongArraySum2ArgsLeftScalar(this, a.value, b, pos)
                     else ->
-                        ArraySum2Args.GenericArraySum2Args(this, a, b, pos)
+                        GenericArraySum2Args(this, a, b, pos)
                 }
             }
             b is APLSingleValue -> {
                 when {
                     b is APLLong && a.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
-                        ArraySum2Args.LongArraySum2ArgsRightScalar(this, a, b.value, pos)
+                        LongArraySum2ArgsRightScalar(this, a, b.value, pos)
                     else ->
-                        ArraySum2Args.GenericArraySum2Args(this, a, b, pos)
+                        GenericArraySum2Args(this, a, b, pos)
                 }
             }
             a.specialisedType === ArrayMemberType.LONG && b.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
-                ArraySum2Args.LongArraySum2Args(this, a, b, pos)
+                LongArraySum2Args(this, a, b, pos)
             a.specialisedType === ArrayMemberType.DOUBLE && b.specialisedType === ArrayMemberType.DOUBLE && optimisationFlags.is2ADoubleDouble ->
-                ArraySum2Args.DoubleArraySum2Args(this, a, b, pos)
+                DoubleArraySum2Args(this, a, b, pos)
             else ->
-                ArraySum2Args.GenericArraySum2Args(this, a, b, pos)
+                GenericArraySum2Args(this, a, b, pos)
         }
     }
 
