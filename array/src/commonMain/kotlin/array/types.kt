@@ -658,10 +658,16 @@ class CollapsedArrayImpl(dimensions: Dimensions, values: Array<APLValue>) : APLA
     override fun collapseInt() = this
 
     companion object {
-        fun make(orig: APLValue): CollapsedArrayImpl {
+        fun make(orig: APLValue): APLValue {
             val d = orig.dimensions
-            val content = Array(d.contentSize()) { index -> orig.valueAt(index).collapseInt() }
-            return CollapsedArrayImpl(d, content)
+            return when (orig.specialisedType) {
+                ArrayMemberType.LONG -> APLArrayLong(d, LongArray(d.contentSize()) { index -> orig.valueAtLong(index, null) })
+                ArrayMemberType.DOUBLE -> APLArrayDouble(d, DoubleArray(d.contentSize()) { index -> orig.valueAtDouble(index, null) })
+                ArrayMemberType.GENERIC -> {
+                    val content = Array(d.contentSize()) { index -> orig.valueAt(index).collapseInt() }
+                    CollapsedArrayImpl(d, content)
+                }
+            }
         }
     }
 }
@@ -830,13 +836,22 @@ class IntArrayValue(
 }
 
 class APLArrayLong(
-    srcDimensions: Dimensions,
+    override val dimensions: Dimensions,
     val values: LongArray
 ) : APLArray() {
     override val specialisedType get() = ArrayMemberType.LONG
-    override val dimensions = srcDimensions
     override fun valueAt(p: Int) = values[p].makeAPLNumber()
     override fun valueAtLong(p: Int, pos: Position?) = values[p]
+    override fun collapseInt() = this
+}
+
+class APLArrayDouble(
+    override val dimensions: Dimensions,
+    val values: DoubleArray
+) : APLArray() {
+    override val specialisedType get() = ArrayMemberType.DOUBLE
+    override fun valueAt(p: Int) = values[p].makeAPLNumber()
+    override fun valueAtDouble(p: Int, pos: Position?) = values[p]
     override fun collapseInt() = this
 }
 

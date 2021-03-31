@@ -7,21 +7,21 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 open class APLTest {
-    fun parseAPLExpression(expr: String, withStandardLib: Boolean = false): APLValue {
-        return parseAPLExpression2(expr, withStandardLib).first
+    fun parseAPLExpression(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): APLValue {
+        return parseAPLExpression2(expr, withStandardLib, collapse).first
     }
 
-    fun parseAPLExpression2(expr: String, withStandardLib: Boolean = false): Pair<APLValue, Engine> {
+    fun parseAPLExpression2(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): Pair<APLValue, Engine> {
         val engine = Engine()
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
             engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
         }
         val result = engine.parseAndEval(StringSourceLocation(expr), false)
-        return Pair(result.collapse(), engine)
+        return Pair(if (collapse) result.collapse() else result, engine)
     }
 
-    fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false): Pair<APLValue, String> {
+    fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): Pair<APLValue, String> {
         val engine = Engine()
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
@@ -30,7 +30,7 @@ open class APLTest {
         val output = StringBuilderOutput()
         engine.standardOutput = output
         val result = engine.parseAndEval(StringSourceLocation(expr), false)
-        return Pair(result.collapse(), output.buf.toString())
+        return Pair(if (collapse) result.collapse() else result, output.buf.toString())
     }
 
     fun assertArrayContent(expectedValue: Array<out Any>, value: APLValue) {

@@ -93,6 +93,27 @@ sealed class ArraySum2Args(val fn: MathCombineAPLFunction, val a0: APLValue, val
         }
     }
 
+    class DoubleArraySum2Args(
+        val fn: MathCombineAPLFunction,
+        val a0: APLValue,
+        val b0: APLValue,
+        val pos: Position
+    ) : APLArray() {
+        override val dimensions: Dimensions
+        override val specialisedType get() = ArrayMemberType.DOUBLE
+
+        init {
+            assertx(a0.dimensions.compareEquals(b0.dimensions))
+            dimensions = a0.dimensions
+        }
+
+        override fun valueAt(p: Int) = valueAtLong(p, pos).makeAPLNumber()
+
+        override fun valueAtDouble(p: Int, pos: Position?): Double {
+            return fn.combine2ArgDouble(a0.valueAtDouble(p, pos), b0.valueAtDouble(p, pos))
+        }
+    }
+
     class LongArraySum2ArgsLeftScalar(
         val fn: MathCombineAPLFunction,
         val a0: Long,
@@ -161,6 +182,8 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
             }
             a.specialisedType === ArrayMemberType.LONG && b.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
                 ArraySum2Args.LongArraySum2Args(this, a, b, pos)
+            a.specialisedType === ArrayMemberType.DOUBLE && b.specialisedType === ArrayMemberType.DOUBLE && optimisationFlags.is2ADoubleDouble ->
+                ArraySum2Args.DoubleArraySum2Args(this, a, b, pos)
             else ->
                 ArraySum2Args.GenericArraySum2Args(this, a, b, pos)
         }

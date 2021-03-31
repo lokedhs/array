@@ -181,7 +181,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         return when {
             leftArgs.isEmpty() -> null
             leftArgs.size == 1 -> LiteralScalarValue(leftArgs[0])
-            else -> Literal1DArray(leftArgs)
+            else -> Literal1DArray.make(leftArgs)
         }
     }
 

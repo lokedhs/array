@@ -104,7 +104,7 @@ class VariableRef(val name: Symbol, val binding: EnvironmentBinding, pos: Positi
     override fun toString() = "Var(${name})"
 }
 
-class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos) {
+class Literal1DArray private constructor(val values: List<Instruction>, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         val size = values.size
         val result = Array<APLValue?>(size) { null }
@@ -115,6 +115,49 @@ class Literal1DArray(val values: List<Instruction>) : Instruction(values[0].pos)
     }
 
     override fun toString() = "Literal1DArray(${values})"
+
+    companion object {
+        fun make(values: List<Instruction>): Instruction {
+            assertx(values.isNotEmpty())
+            return when (val firstElement = values[0]) {
+                is LiteralInteger -> {
+                    collectLongValues(firstElement.value, values, firstElement.pos)
+                }
+                is LiteralDouble -> {
+                    collectDoubleValues(firstElement.value, values, firstElement.pos)
+                }
+                else -> Literal1DArray(values, firstElement.pos)
+            }
+        }
+
+        private fun collectLongValues(firstValue: Long, values: List<Instruction>, pos: Position): Instruction {
+            val result = ArrayList<Long>()
+            result.add(firstValue)
+            for (i in 1 until values.size) {
+                val v = values[i]
+                if (v is LiteralInteger) {
+                    result.add(v.value)
+                } else {
+                    return Literal1DArray(values, pos)
+                }
+            }
+            return LiteralLongArray(result.toLongArray(), pos)
+        }
+
+        private fun collectDoubleValues(firstValue: Double, values: List<Instruction>, pos: Position): Instruction {
+            val result = ArrayList<Double>()
+            result.add(firstValue)
+            for (i in 1 until values.size) {
+                val v = values[i]
+                if (v is LiteralDouble) {
+                    result.add(v.value)
+                } else {
+                    return Literal1DArray(values, pos)
+                }
+            }
+            return LiteralDoubleArray(result.toDoubleArray(), pos)
+        }
+    }
 }
 
 class LiteralScalarValue(val value: Instruction) : Instruction(value.pos) {
@@ -157,6 +200,14 @@ class EmptyValueMarker(pos: Position) : Instruction(pos) {
 
 class LiteralStringValue(val s: String, pos: Position) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext) = APLString.make(s)
+}
+
+class LiteralLongArray(val value: LongArray, pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue = APLArrayLong(dimensionsOfSize(value.size), value)
+}
+
+class LiteralDoubleArray(val value: DoubleArray, pos: Position) : Instruction(pos) {
+    override fun evalWithContext(context: RuntimeContext): APLValue = APLArrayDouble(dimensionsOfSize(value.size), value)
 }
 
 class AssignmentInstruction(val variableList: Array<EnvironmentBinding>, val instr: Instruction, pos: Position) : Instruction(pos) {
