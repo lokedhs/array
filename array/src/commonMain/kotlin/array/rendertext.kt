@@ -3,18 +3,13 @@ package array.rendertext
 import array.*
 import kotlin.math.max
 
-private class String2D {
+class String2D {
     private val content: List<List<String>>
     private val width: Int
 
     constructor(value: String) {
-        val list = ArrayList<List<String>>()
-        value.split('\n').forEach { line ->
-            val chars = line.asGraphemeList()
-            list.add(chars)
-        }
-        content = list
-        width = computeLongestRow(list)
+        content = value.split('\n').map { line -> line.asGraphemeList() }
+        width = computeLongestRow(content)
     }
 
     constructor(initContent: List<List<String>>) {

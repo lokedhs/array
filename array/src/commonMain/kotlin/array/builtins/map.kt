@@ -122,13 +122,7 @@ class MapRemoveAPLFunction : APLFunctionDescriptor {
 class MapKeyValuesFunction : APLFunctionDescriptor {
     class MapKeyValuesFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            val map = a.ensureMap(pos)
-            val content = ArrayList<APLValue>()
-            map.content.forEach { (key, value) ->
-                content.add(key.value)
-                content.add(value)
-            }
-            return APLArrayImpl(dimensionsOfSize(content.size / 2, 2), content.toTypedArray())
+            return a.ensureMap(pos).aplMapToArray()
         }
     }
 

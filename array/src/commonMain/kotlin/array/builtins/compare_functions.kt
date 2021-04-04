@@ -1,7 +1,6 @@
 package array.builtins
 
 import array.*
-import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
 import array.OptimisationFlags.Companion.OPTIMISATION_FLAG_2ARG_LONG_LONG
 import array.complex.Complex
 
@@ -24,9 +23,8 @@ class EqualsAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_1
-        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
         override fun combine2ArgLong(a: Long, b: Long) = if (a == b) 1L else 0L
-        override fun combine2ArgDouble(a: Double, b: Double) = if (a == b) 1.0 else 0.0
     }
 
     override fun make(pos: Position) = EqualsAPLFunctionImpl(pos)
@@ -51,7 +49,6 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
         }
 
         override fun identityValue() = APLLONG_0
-
         override fun deriveBitwise() = BitwiseXorFunction()
     }
 
@@ -135,7 +132,7 @@ class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
 }
 
 fun makeBoolean(value: Boolean): APLValue {
-    return (if (value) 1 else 0).makeAPLNumber()
+    return if (value) APLLONG_1 else APLLONG_0
 }
 
 inline fun numericRelationOperation(
@@ -146,10 +143,7 @@ inline fun numericRelationOperation(
     fnDouble: (ad: Double, bd: Double) -> APLValue,
     fnComplex: (ac: Complex, bc: Complex) -> APLValue,
     fnChar: ((aChar: Int, bChar: Int) -> APLValue) = { _, _ ->
-        throwAPLException(
-            IncompatibleTypeException(
-                "Incompatible argument types",
-                pos))
+        throwAPLException(IncompatibleTypeException("Incompatible argument types", pos))
     },
     fnOther: ((aOther: APLValue, bOther: APLValue) -> APLValue) = { _, _ ->
         throwAPLException(IncompatibleTypeException("Incompatible argument types", pos))

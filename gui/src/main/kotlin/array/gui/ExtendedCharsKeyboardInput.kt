@@ -30,7 +30,7 @@ class ExtendedCharsKeyboardInput {
             makeKeyDescriptor("r") to "⍴",
             makeKeyDescriptor("t") to "∼", makeKeyDescriptor("T", Flag.SHIFT) to "⍨",
             makeKeyDescriptor("y") to "↑", makeKeyDescriptor("Y", Flag.SHIFT) to "¥",
-            makeKeyDescriptor("u") to "↓",
+            makeKeyDescriptor("u") to "↓", makeKeyDescriptor("U", Flag.SHIFT) to "⇐",
             makeKeyDescriptor("i") to "⍳", makeKeyDescriptor("I", Flag.SHIFT) to "⍸",
             makeKeyDescriptor("o") to "○", makeKeyDescriptor("O", Flag.SHIFT) to "⍥",
             makeKeyDescriptor("p") to "⋆", makeKeyDescriptor("P", Flag.SHIFT) to "⍣",

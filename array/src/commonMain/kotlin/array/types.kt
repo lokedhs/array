@@ -1,6 +1,7 @@
 package array
 
 import array.builtins.compareAPLArrays
+import array.rendertext.String2D
 import array.rendertext.encloseInBox
 import array.rendertext.renderStringValue
 
@@ -393,7 +394,34 @@ class APLMap(val content: ImmutableMap2<APLValueKey, APLValue>) : APLSingleValue
     override val dimensions = emptyDimensions()
 
     override fun formatted(style: FormatStyle): String {
-        return "map[size=${content.size}]"
+        return when (style) {
+            FormatStyle.PLAIN -> "map[size=${content.size}]"
+            FormatStyle.READABLE -> formatMapReadable()
+            FormatStyle.PRETTY -> formatMapPretty()
+        }
+    }
+
+    private fun formatMapReadable(): String {
+        val buf = StringBuilder()
+        buf.append("map ${content.size} 2 ⍴")
+        content.forEach { (k, v) ->
+            buf.append(" (${k.value.formatted(FormatStyle.READABLE)}) (${v.formatted(FormatStyle.READABLE)})")
+        }
+        return buf.toString()
+    }
+
+    private fun formatMapPretty(): String {
+        val buf = StringBuilder()
+        buf.append("map(size=${content.size})\n")
+        val s = String2D(aplMapToArray().formatted(FormatStyle.PRETTY))
+        repeat(s.height()) { i ->
+            buf.append("  ")
+            s.row(i).forEach { ch ->
+                buf.append(ch)
+            }
+            buf.append("\n")
+        }
+        return buf.toString()
     }
 
     override fun compareEquals(reference: APLValue): Boolean {
@@ -442,6 +470,15 @@ class APLMap(val content: ImmutableMap2<APLValueKey, APLValue>) : APLSingleValue
 
     fun removeValues(toRemove: ArrayList<APLValue>): APLMap {
         return APLMap(content.copyWithoutMultiple(toRemove.map { v -> v.makeKey() }.toTypedArray()))
+    }
+
+    fun aplMapToArray(): APLValue {
+        val res = ArrayList<APLValue>()
+        content.forEach { (key, value) ->
+            res.add(key.value)
+            res.add(value)
+        }
+        return APLArrayImpl(dimensionsOfSize(res.size / 2, 2), res.toTypedArray())
     }
 
     companion object {
