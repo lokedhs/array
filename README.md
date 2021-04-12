@@ -39,8 +39,8 @@ make it work. Help appreciated if anyone is interested in working on it.
 
 ## Web client
 
-The application also compiles to Javascript and it's possible to run it in a browser. Note that a lot of functionality
-is missing from the Javascript version. For example, the standard library cannot be loaded.
+The application also compiles to Javascript and it's possible to run it in a browser. Note that some functionality
+is missing from the Javascript version. For example, network and file operations are currently not implemented.
 
 ### Online demo
 
