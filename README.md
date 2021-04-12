@@ -32,7 +32,7 @@ Build the entire project:
 ./gradlew build
 ``` 
 
-Once the build is complete, the binaries can be found in the following directory: `array/build/bin/linux`.
+Once the build is complete, the binaries can be found in the following directory: `text-client/build/bin/linux`.
 
 There is currently no support for native compilation on Windows or OSX. As long as the dependencies are available, it should be possible to
 make it work. Help appreciated if anyone is interested in working on it.
