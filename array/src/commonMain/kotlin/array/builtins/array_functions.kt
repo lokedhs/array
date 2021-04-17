@@ -126,20 +126,40 @@ class IotaAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = IotaAPLFunctionImpl(pos)
 }
 
-class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
-    override val specialisedType = value.specialisedType
-    override fun valueAt(p: Int) = if (value is APLSingleValue) value else value.valueAt(p % value.size)
-    override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)
-    override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
+object ResizedArrayImpls {
+    class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
+        override val specialisedType = value.specialisedType
+        override fun valueAt(p: Int) = value.valueAt(p % value.size)
+        override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)
+        override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
+    }
 
-    companion object {
-        fun makeResizedArray(dimensions: Dimensions, value: APLValue): APLValue {
-            assertx(dimensions.size >= 1)
-            return if (dimensions.compareEquals(value.dimensions)) {
-                value
-            } else {
-                ResizedArray(dimensions, value)
-            }
+    class ResizedSingleValueGeneric(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
+        override val specialisedType get() = ArrayMemberType.GENERIC
+        override fun valueAt(p: Int) = value
+    }
+
+    class ResizedArrayLong(override val dimensions: Dimensions, private val boxed: APLLong) : APLArray() {
+        override val specialisedType get() = ArrayMemberType.LONG
+        override fun valueAt(p: Int) = boxed
+        override fun valueAtLong(p: Int, pos: Position?) = boxed.value
+    }
+
+    class ResizedArrayDouble(override val dimensions: Dimensions, private val boxed: APLDouble) : APLArray() {
+        override val specialisedType get() = ArrayMemberType.LONG
+        override fun valueAt(p: Int) = boxed
+        override fun valueAtDouble(p: Int, pos: Position?) = boxed.value
+    }
+
+    fun makeResizedArray(dimensions: Dimensions, value: APLValue): APLValue {
+        assertx(dimensions.size >= 1)
+        val v = value.unwrapDeferredValue()
+        return when {
+            dimensions.compareEquals(v.dimensions) -> v
+            v is APLLong -> ResizedArrayLong(dimensions, v)
+            v is APLDouble -> ResizedArrayDouble(dimensions, v)
+            v is APLSingleValue -> ResizedSingleValueGeneric(dimensions, v)
+            else -> ResizedArray(dimensions, v)
         }
     }
 }
@@ -165,7 +185,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
             } else {
                 Dimensions(IntArray(v.size) { v.valueAtInt(it, pos) })
             }
-            return ResizedArray.makeResizedArray(d1, b)
+            return ResizedArrayImpls.makeResizedArray(d1, b)
         }
     }
 
@@ -296,12 +316,12 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
     private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
         val a1 = if (a.isScalar()) {
-            ResizedArray.makeResizedArray(b.dimensions, a.disclose())
+            ResizedArrayImpls.makeResizedArray(b.dimensions, a.disclose())
         } else {
             a
         }
         val b1 = if (b.isScalar()) {
-            ResizedArray.makeResizedArray(a.dimensions, b.disclose())
+            ResizedArrayImpls.makeResizedArray(a.dimensions, b.disclose())
         } else {
             b
         }
@@ -320,8 +340,8 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
             throwAPLException(InvalidDimensionsException(aDimensions, bDimensions, pos))
         }
         val rd = aDimensions.insert(axis, 1)
-        val a2 = ResizedArray.makeResizedArray(rd, a1)
-        val b2 = ResizedArray.makeResizedArray(rd, b1)
+        val a2 = ResizedArrayImpls.makeResizedArray(rd, a1)
+        val b2 = ResizedArrayImpls.makeResizedArray(rd, b1)
         return joinByAxis(a2, b2, axis)
     }
 
@@ -360,13 +380,13 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
         val a2 = if (b1.rank - a1.rank == 1) {
             // Reshape a1, inserting a new dimension at the position of the axis
-            ResizedArray.makeResizedArray(a1.dimensions.insert(axis, 1), a1)
+            ResizedArrayImpls.makeResizedArray(a1.dimensions.insert(axis, 1), a1)
         } else {
             a1
         }
 
         val b2 = if (a1.rank - b1.rank == 1) {
-            ResizedArray.makeResizedArray(b1.dimensions.insert(axis, 1), b1)
+            ResizedArrayImpls.makeResizedArray(b1.dimensions.insert(axis, 1), b1)
         } else {
             b1
         }
@@ -502,7 +522,7 @@ class ConcatenateAPLFunctionFirstAxis : APLFunctionDescriptor {
                     aDimensions[0],
                     aDimensions.dimensions.drop(1).reduceWithInitial(1) { v1, v2 -> v1 * v2 })
             }
-            return ResizedArray.makeResizedArray(c, a)
+            return ResizedArrayImpls.makeResizedArray(c, a)
         }
 
         override fun defaultAxis(a: APLValue, b: APLValue) = 0
@@ -523,7 +543,7 @@ class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
             return when {
                 a is APLSingleValue -> APLArrayImpl.make(dimensionsOfSize(1)) { a }
                 a.rank == 0 -> DelegatedAPLArrayValue(dimensionsOfSize(1), a)
-                else -> ResizedArray.makeResizedArray(dimensionsOfSize(a.size), a)
+                else -> ResizedArrayImpls.makeResizedArray(dimensionsOfSize(a.size), a)
             }
         }
 

@@ -225,7 +225,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
                         else -> i + 1
                     }
                 }
-                return TransposedAPLValue(transposeAxis, ResizedArray.makeResizedArray(d, baseVal), pos)
+                return TransposedAPLValue(transposeAxis, ResizedArrayImpls.makeResizedArray(d, baseVal), pos)
             }
 
             // When an axis is given, one of the arguments must be rank 1, and its dimension must be equal to the
