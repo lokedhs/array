@@ -43,7 +43,7 @@ interface CharacterProvider : NativeCloseable {
             if (ch == null) {
                 val s = buf.toString()
                 return if (s.isEmpty()) null else s
-            } else if (ch == '\n'.toInt()) {
+            } else if (ch == '\n'.code) {
                 return buf.toString()
             }
             buf.addCodepoint(ch)
@@ -79,7 +79,7 @@ class PushBackCharacterProvider(val sourceLocation: SourceLocation) : CharacterP
             }
             chWithPos
         }
-        if (ch.character == '\n'.toInt()) {
+        if (ch.character == '\n'.code) {
             line++
             col = 0
         } else {

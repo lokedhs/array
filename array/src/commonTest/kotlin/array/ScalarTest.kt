@@ -167,12 +167,12 @@ class ScalarTest : APLTest() {
         parseAPLExpression("@a⌈@b").let { result ->
             val v = result.unwrapDeferredValue()
             assertTrue(v is APLChar)
-            assertEquals('b'.toInt(), v.value)
+            assertEquals('b'.code, v.value)
         }
         parseAPLExpression("@C⌈@D").let { result ->
             val v = result.unwrapDeferredValue()
             assertTrue(v is APLChar)
-            assertEquals('D'.toInt(), v.value)
+            assertEquals('D'.code, v.value)
         }
     }
 
@@ -201,12 +201,12 @@ class ScalarTest : APLTest() {
         parseAPLExpression("@a⌊@b").let { result ->
             val v = result.unwrapDeferredValue()
             assertTrue(v is APLChar)
-            assertEquals('a'.toInt(), v.value)
+            assertEquals('a'.code, v.value)
         }
         parseAPLExpression("@C⌊@D").let { result ->
             val v = result.unwrapDeferredValue()
             assertTrue(v is APLChar)
-            assertEquals('C'.toInt(), v.value)
+            assertEquals('C'.code, v.value)
         }
     }
 

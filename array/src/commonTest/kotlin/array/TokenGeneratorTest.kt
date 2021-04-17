@@ -163,10 +163,10 @@ class TokenGeneratorTest {
     @Test
     fun testCharacters() {
         val gen = makeGenerator("@a @b @1 @2")
-        assertTokenIsCharacter('a'.toInt(), gen.nextToken())
-        assertTokenIsCharacter('b'.toInt(), gen.nextToken())
-        assertTokenIsCharacter('1'.toInt(), gen.nextToken())
-        assertTokenIsCharacter('2'.toInt(), gen.nextToken())
+        assertTokenIsCharacter('a'.code, gen.nextToken())
+        assertTokenIsCharacter('b'.code, gen.nextToken())
+        assertTokenIsCharacter('1'.code, gen.nextToken())
+        assertTokenIsCharacter('2'.code, gen.nextToken())
         assertSame(EndOfFile, gen.nextToken())
     }
 
@@ -281,7 +281,7 @@ class TokenGeneratorTest {
         }
         gen.nextToken().let { token ->
             assertTrue(token is ParsedCharacter)
-            assertEquals('b'.toInt(), token.value)
+            assertEquals('b'.code, token.value)
         }
         assertSame(EndOfFile, gen.nextToken())
     }

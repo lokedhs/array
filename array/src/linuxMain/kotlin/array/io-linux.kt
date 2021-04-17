@@ -27,7 +27,7 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
                 }
             }
             ch.isLowSurrogate() -> throw IllegalStateException("Unexpected low surrogate")
-            else -> ch.toInt()
+            else -> ch.code
         }
     }
 
@@ -80,7 +80,7 @@ class LinuxByteProvider(val fd: Int, val name: String) : ByteProvider {
         }
     }
 
-    override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
+    override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int {
         val startPos = start ?: 0
         val lengthInt = length ?: buffer.size - startPos
         memScoped {

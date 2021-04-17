@@ -245,23 +245,23 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         pushBackQueue.add(token)
     }
 
-    private fun isNegationSign(ch: Int) = ch == '¯'.toInt()
-    private fun isQuoteChar(ch: Int) = ch == '"'.toInt()
-    private fun isCommentChar(ch: Int) = ch == '⍝'.toInt()
-    private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.toInt() || ch == ':'.toInt()
+    private fun isNegationSign(ch: Int) = ch == '¯'.code
+    private fun isQuoteChar(ch: Int) = ch == '"'.code
+    private fun isCommentChar(ch: Int) = ch == '⍝'.code
+    private fun isSymbolStartChar(ch: Int) = isLetter(ch) || ch == '_'.code || ch == ':'.code
     private fun isSymbolContinuation(ch: Int) = isSymbolStartChar(ch) || isDigit(ch)
     private fun isNumericConstituent(ch: Int) =
-        isDigit(ch) || isNegationSign(ch) || ch == '.'.toInt() || ch == 'j'.toInt() || ch == 'J'.toInt()
+        isDigit(ch) || isNegationSign(ch) || ch == '.'.code || ch == 'j'.code || ch == 'J'.code
 
-    private fun isCharQuote(ch: Int) = ch == '@'.toInt()
-    private fun isQuotePrefixChar(ch: Int) = ch == '\''.toInt()
-    private fun isNewline(ch: Int) = ch == '\n'.toInt()
-    private fun isBackquote(ch: Int) = ch == '`'.toInt()
+    private fun isCharQuote(ch: Int) = ch == '@'.code
+    private fun isQuotePrefixChar(ch: Int) = ch == '\''.code
+    private fun isNewline(ch: Int) = ch == '\n'.code
+    private fun isBackquote(ch: Int) = ch == '`'.code
 
     private fun skipUntilNewline(): Whitespace {
         while (true) {
             val ch = content.nextCodepoint()
-            if (ch == null || ch == '\n'.toInt()) {
+            if (ch == null || ch == '\n'.code) {
                 break
             }
         }
@@ -295,7 +295,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             val posBeforeParse = content.pos()
             val ch = content.nextCodepoint() ?: break
             when {
-                ch == 'j'.toInt() || ch == 'J'.toInt() -> {
+                ch == 'j'.code || ch == 'J'.code -> {
                     if (foundComplex) {
                         throw IllegalNumberFormat("Garbage after number", posBeforeParse)
                     }
@@ -326,7 +326,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         var foundColon = false
         while (true) {
             val ch = content.nextCodepoint() ?: break
-            if (ch == ':'.toInt()) {
+            if (ch == ':'.code) {
                 if (foundColon) {
                     throw ParseException("Multiple : characters in symbol")
                 }
@@ -380,9 +380,9 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 "End of input in the middle of string",
                 content.pos()
             )
-            if (ch == '"'.toInt()) {
+            if (ch == '"'.code) {
                 break
-            } else if (ch == '\\'.toInt()) {
+            } else if (ch == '\\'.code) {
                 val next = content.nextCodepoint() ?: throw ParseException(
                     "End of input in the middle of string",
                     content.pos()

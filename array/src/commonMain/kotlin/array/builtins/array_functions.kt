@@ -22,17 +22,6 @@ class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
     }
 }
 
-class IotaArrayOld(private val numElements: Int, private val start: Int = 0) : APLArray() {
-    override val dimensions get() = dimensionsOfSize(numElements)
-
-    override fun valueAt(p: Int): APLValue {
-        if (p < 0 || p >= size) {
-            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${size}"))
-        }
-        return (p + start).makeAPLNumber()
-    }
-}
-
 class IotaArray(val indexes: IntArray) : APLArray() {
     override val dimensions = Dimensions(indexes)
 
@@ -51,8 +40,7 @@ class IotaArray(val indexes: IntArray) : APLArray() {
 class IotaArrayLong(val length: Int) : APLArray() {
     override val dimensions = dimensionsOfSize(length)
 
-    override val specialisedType: ArrayMemberType
-        get() = ArrayMemberType.LONG
+    override val specialisedType get() = ArrayMemberType.LONG
 
     override fun collapseInt() = this
 

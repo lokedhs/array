@@ -84,7 +84,7 @@ class UnicodeTest : APLTest() {
     @Test
     fun convertSingleIntegerToChar() {
         parseAPLExpression("unicode:fromCodepoints 120").let { result ->
-            assertChar('x'.toInt(), result)
+            assertChar('x'.code, result)
         }
     }
 
@@ -92,7 +92,7 @@ class UnicodeTest : APLTest() {
     fun convertCodepointsToCharsNonAscii() {
         parseAPLExpression("unicode:fromCodepoints 97 955 12493 119979 119990 8833").let { result ->
             assertDimension(dimensionsOfSize(6), result)
-            assertChar('a'.toInt(), result.valueAt(0))
+            assertChar('a'.code, result.valueAt(0))
             assertChar(955, result.valueAt(1))
             assertChar(12493, result.valueAt(2))
             assertChar(119979, result.valueAt(3))
@@ -105,13 +105,13 @@ class UnicodeTest : APLTest() {
     fun convertCodepointsToCharsNested() {
         parseAPLExpression("unicode:fromCodepoints 99 100 101 (102 103)").let { result ->
             assertDimension(dimensionsOfSize(4), result)
-            assertChar('c'.toInt(), result.valueAt(0))
-            assertChar('d'.toInt(), result.valueAt(1))
-            assertChar('e'.toInt(), result.valueAt(2))
+            assertChar('c'.code, result.valueAt(0))
+            assertChar('d'.code, result.valueAt(1))
+            assertChar('e'.code, result.valueAt(2))
             result.valueAt(3).let { v ->
                 assertDimension(dimensionsOfSize(2), v)
-                assertChar('f'.toInt(), v.valueAt(0))
-                assertChar('g'.toInt(), v.valueAt(1))
+                assertChar('f'.code, v.valueAt(0))
+                assertChar('g'.code, v.valueAt(1))
             }
         }
     }

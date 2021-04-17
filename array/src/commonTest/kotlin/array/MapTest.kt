@@ -44,7 +44,7 @@ class MapTest : APLTest() {
             assertTrue(result is APLMap)
             assertEquals(3, result.elementCount())
             assertSimpleNumber(2, result.lookupValue(1.makeAPLNumber()))
-            assertSimpleNumber(3, result.lookupValue(APLChar('a'.toInt())))
+            assertSimpleNumber(3, result.lookupValue(APLChar('a'.code)))
             assertSimpleNumber(
                 4,
                 result.lookupValue(

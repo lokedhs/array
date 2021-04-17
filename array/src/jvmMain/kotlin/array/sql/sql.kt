@@ -57,14 +57,14 @@ class SQLConnectionValue(val conn: Connection, val description: String) : APLSin
     override val aplValueType get() = APLValueType.INTERNAL
     override fun formatted(style: FormatStyle) = "Connection(${description})"
     override fun compareEquals(reference: APLValue): Boolean = reference is SQLConnectionValue && reference.conn == conn
-    override fun makeKey(): APLValue.APLValueKey = APLValue.APLValueKeyImpl(this, conn)
+    override fun makeKey(): APLValueKey = APLValueKeyImpl(this, conn)
 }
 
 class SQLPreparedStatementValue(val statement: PreparedStatement) : APLSingleValue() {
     override val aplValueType get() = APLValueType.INTERNAL
     override fun formatted(style: FormatStyle) = "PreparedStatement(${statement})"
     override fun compareEquals(reference: APLValue): Boolean = reference is SQLPreparedStatementValue && reference.statement == statement
-    override fun makeKey(): APLValue.APLValueKey = APLValue.APLValueKeyImpl(this, statement)
+    override fun makeKey(): APLValueKey = APLValueKeyImpl(this, statement)
 }
 
 private fun ensureSQLConnectionValue(a: APLValue, pos: Position? = null): SQLConnectionValue {
@@ -100,7 +100,7 @@ private fun parseEntry(value: Any, colIndex: Int, pos: Position): APLValue {
         is Short -> value.toLong().makeAPLNumber()
         is Int -> value.toLong().makeAPLNumber()
         is Long -> value.makeAPLNumber()
-        is Char -> APLChar(value.toInt())
+        is Char -> APLChar(value.code)
         is String -> APLString(value)
         else -> throw SQLAPLException("Cannot convert value ${value} to an APL Value (column ${colIndex + 1} in result", pos)
     }

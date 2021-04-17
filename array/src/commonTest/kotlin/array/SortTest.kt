@@ -168,7 +168,7 @@ class SortTest : APLTest() {
 
     @Test
     fun numberCharComparison() {
-        val char1 = APLChar('a'.toInt())
+        val char1 = APLChar('a'.code)
         val num1 = 1.makeAPLNumber()
         assertFailsWith<APLEvalException> {
             char1.compare(num1)
@@ -182,7 +182,7 @@ class SortTest : APLTest() {
     fun symbolCharComparison() {
         val engine = Engine()
         val sym = APLSymbol(engine.internSymbol("foo"))
-        val ch = APLChar('a'.toInt())
+        val ch = APLChar('a'.code)
         assertFailsWith<APLEvalException> {
             sym.compare(ch)
         }

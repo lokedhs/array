@@ -24,7 +24,7 @@ actual class StringCharacterProvider actual constructor(private val s: String) :
                 }
             }
             ch.isLowSurrogate() -> throw IllegalStateException("Unexpected low surrogate")
-            else -> ch.toInt()
+            else -> ch.code
         }
     }
 

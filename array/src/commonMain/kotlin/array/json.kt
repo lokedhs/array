@@ -113,7 +113,7 @@ private fun jsonEscape(s: String): String {
             else -> {
                 buf.append("\\u")
                 // Ugly, but without a formatting library this is what we get. Kotlin multiplatform really needs a printf implementation.
-                val hexString = ch.toInt().toString(16)
+                val hexString = ch.code.toString(16)
                 repeat(4 - hexString.length) {
                     buf.append("0")
                 }

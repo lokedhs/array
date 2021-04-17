@@ -38,11 +38,11 @@ actual fun String.asCodepointList(): List<Int> {
                 if (low.isLowSurrogate()) {
                     Char.toCodePoint(ch, low)
                 } else {
-                    throw IllegalStateException("Expected low surrogate, got: ${low.toInt()}")
+                    throw IllegalStateException("Expected low surrogate, got: ${low.code}")
                 }
             }
-            ch.isLowSurrogate() -> throw IllegalStateException("Standalone low surrogate found: ${ch.toInt()}")
-            else -> ch.toInt()
+            ch.isLowSurrogate() -> throw IllegalStateException("Standalone low surrogate found: ${ch.code}")
+            else -> ch.code
         }
         result.add(v)
     }
@@ -56,7 +56,7 @@ actual fun String.asGraphemeList(): List<String> {
         val length = text.length + 1
         val nativeBuf = allocArray<UCharVar>(length)
         for (i in text.indices) {
-            nativeBuf[i] = text[i].toInt().toUShort()
+            nativeBuf[i] = text[i].code.toUShort()
         }
         nativeBuf[text.length] = 0.toUShort()
 

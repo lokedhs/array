@@ -247,9 +247,9 @@ class ConcatenateTest : APLTest() {
         parseAPLExpression("(⊂\"as\") , \"abc\"").let { result ->
             assertDimension(dimensionsOfSize(4), result)
             assertString("as", result.valueAt(0))
-            assertChar('a'.toInt(), result.valueAt(1))
-            assertChar('b'.toInt(), result.valueAt(2))
-            assertChar('c'.toInt(), result.valueAt(3))
+            assertChar('a'.code, result.valueAt(1))
+            assertChar('b'.code, result.valueAt(2))
+            assertChar('c'.code, result.valueAt(3))
         }
     }
 
@@ -257,9 +257,9 @@ class ConcatenateTest : APLTest() {
     fun concatenateRightEnclosed() {
         parseAPLExpression("\"foo\" , (⊂\"as\")").let { result ->
             assertDimension(dimensionsOfSize(4), result)
-            assertChar('f'.toInt(), result.valueAt(0))
-            assertChar('o'.toInt(), result.valueAt(1))
-            assertChar('o'.toInt(), result.valueAt(2))
+            assertChar('f'.code, result.valueAt(0))
+            assertChar('o'.code, result.valueAt(1))
+            assertChar('o'.code, result.valueAt(2))
             assertString("as", result.valueAt(3))
         }
     }

@@ -34,8 +34,8 @@ actual fun StringBuilder.addCodepoint(codepoint: Int): StringBuilder {
 }
 
 fun makeCharFromSurrogatePair(high: Char, low: Char): Int {
-    val highInt = high.toInt()
-    val lowInt = low.toInt()
+    val highInt = high.code
+    val lowInt = low.code
     assertx(highInt in 0xD800..0xDBFF)
     assertx(lowInt in 0xDC00..0xDFFF)
     val off = 0x10000 - (0xD800 shl 10) - 0xDC00
@@ -53,11 +53,11 @@ actual fun String.asCodepointList(): List<Int> {
                 if (low.isLowSurrogate()) {
                     makeCharFromSurrogatePair(ch, low)
                 } else {
-                    throw IllegalStateException("Expected low surrogate, got: ${low.toInt()}")
+                    throw IllegalStateException("Expected low surrogate, got: ${low.code}")
                 }
             }
-            ch.isLowSurrogate() -> throw IllegalStateException("Standalone low surrogate found: ${ch.toInt()}")
-            else -> ch.toInt()
+            ch.isLowSurrogate() -> throw IllegalStateException("Standalone low surrogate found: ${ch.code}")
+            else -> ch.code
         }
         result.add(v)
     }
