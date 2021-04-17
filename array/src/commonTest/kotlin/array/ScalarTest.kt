@@ -303,6 +303,60 @@ class ScalarTest : APLTest() {
         }
     }
 
+    @Test
+    fun twoLevelScalarLeftArg() {
+        parseAPLExpression("1 + 1 + 2 3 ⍴ ⍳6").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertArrayContent(arrayOf(2, 3, 4, 5, 6, 7), result)
+        }
+    }
+
+    @Test
+    fun twoLevelScalarLeftArgGeneric() {
+        parseAPLExpression("1 + 1 + internal:ensureGeneric 2 3 ⍴ ⍳6").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertArrayContent(arrayOf(2, 3, 4, 5, 6, 7), result)
+        }
+    }
+
+    @Test
+    fun twoLeverEnclosedArrayLeftArg() {
+        parseAPLExpression("1 + (⊂1 2) + 2 3 ⍴ ⍳6").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            fun assertElement(expected: Array<Int>, index: Int) {
+                result.valueAt(index).let { v ->
+                    assertDimension(dimensionsOfSize(expected.size), v)
+                    assertArrayContent(expected, v)
+                }
+            }
+            assertElement(arrayOf(2,3), 0)
+            assertElement(arrayOf(3,4), 1)
+            assertElement(arrayOf(4,5), 2)
+            assertElement(arrayOf(5,6), 3)
+            assertElement(arrayOf(6,7), 4)
+            assertElement(arrayOf(7,8), 5)
+        }
+    }
+
+    @Test
+    fun twoLeverEnclosedArrayLeftArgGeneric() {
+        parseAPLExpression("1 + (⊂1 2) + internal:ensureGeneric 2 3 ⍴ ⍳6").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            fun assertElement(expected: Array<Int>, index: Int) {
+                result.valueAt(index).let { v ->
+                    assertDimension(dimensionsOfSize(expected.size), v)
+                    assertArrayContent(expected, v)
+                }
+            }
+            assertElement(arrayOf(2,3), 0)
+            assertElement(arrayOf(3,4), 1)
+            assertElement(arrayOf(4,5), 2)
+            assertElement(arrayOf(5,6), 3)
+            assertElement(arrayOf(6,7), 4)
+            assertElement(arrayOf(7,8), 5)
+        }
+    }
+
     private fun runMaxTest(expected: Any, op: String, a: String, b: String) {
         assertAPLValue(expected, parseAPLExpression("${a}${op}${b}"))
         assertAPLValue(expected, parseAPLExpression("${b}${op}${a}"))
