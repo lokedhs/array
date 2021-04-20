@@ -2,6 +2,7 @@ package array
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ForEachTest : APLTest() {
     @Test
@@ -68,5 +69,66 @@ class ForEachTest : APLTest() {
             assertDimension(dimensionsOfSize(1), inner)
             assertArrayContent(arrayOf(1), inner)
         }
+    }
+
+    @Test
+    fun forEachEnclosedOneArg() {
+        parseAPLExpression("{3+⍵}¨ ⊂1 2 3").let { result ->
+            assertTrue(result.isScalar())
+            val v = result.valueAt(0)
+            assertDimension(dimensionsOfSize(3), v)
+            assertArrayContent(arrayOf(4, 5, 6), v)
+        }
+    }
+
+    @Test
+    fun forEachEnclosedTwoArg() {
+        parseAPLExpression("(⊂10 20 30) {10000+⍵+⍺}¨ ⊂1 2 3").let { result ->
+            assertTrue(result.isScalar())
+            val v = result.valueAt(0)
+            assertDimension(dimensionsOfSize(3), v)
+            assertArrayContent(arrayOf(10011, 10022, 10033), v)
+        }
+
+    }
+
+    @Test
+    fun forEachRightEnclosedTwoArg() {
+        parseAPLExpression("10 20 30 {10000+⍵+⍺}¨ ⊂1 2 3").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10011, 10012 ,10013), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10021, 10022 ,10023), v)
+            }
+            result.valueAt(2).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10031, 10032 ,10033), v)
+            }
+        }
+
+    }
+
+    @Test
+    fun forEachLeftEnclosedTwoArg() {
+        parseAPLExpression("(⊂10 20 30) {10000+⍵+⍺}¨ 1 2 3").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            result.valueAt(0).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10011, 10021 ,10031), v)
+            }
+            result.valueAt(1).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10012, 10022 ,10032), v)
+            }
+            result.valueAt(2).let { v ->
+                assertDimension(dimensionsOfSize(3), v)
+                assertArrayContent(arrayOf(10013, 10023 ,10033), v)
+            }
+        }
+
     }
 }

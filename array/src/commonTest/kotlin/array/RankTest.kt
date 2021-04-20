@@ -154,4 +154,16 @@ class RankTest : APLTest() {
 (2 3⍴0 1 2 7 8 9)≡0 4(+⍤ 9 0 1)2 3⍴⍳6
 (2 3 2⍴(12⍴0 4)+2/⍳6)≡0 4(+⍤1 0)2 3⍴⍳6
      */
+
+    /**
+     * This error was found after a change to scalar function evaluation, and was triggered by
+     * the KAP implementation of decode.
+     */
+    @Test
+    fun fromDecodeImpl() {
+        parseAPLExpression("6 3 2 (|⍤1) 15 2 0").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(3, 2, 0), result)
+        }
+    }
 }

@@ -42,12 +42,7 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
         return object : APLFunction(pos) {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 return if (a.isScalar()) {
-                    val result = fn.eval1Arg(context, a, null)
-                    return if (result is APLSingleValue) {
-                        result
-                    } else {
-                        EnclosedAPLValue(result)
-                    }
+                    return EnclosedAPLValue(fn.eval1Arg(context, a.disclose(), null))
                 } else {
                     ForEachResult1Arg(context, fn, a, axis, pos)
                 }
@@ -67,12 +62,7 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
     companion object {
         fun compute2Arg(context: RuntimeContext, fn: APLFunction, a: APLValue, b: APLValue, axis: APLValue?, pos: Position): APLValue {
             if (a.isScalar() && b.isScalar()) {
-                val result = fn.eval2Arg(context, a, b, axis).unwrapDeferredValue()
-                return if (result is APLSingleValue) {
-                    result
-                } else {
-                    EnclosedAPLValue(result)
-                }
+                return EnclosedAPLValue(fn.eval2Arg(context, a.disclose(), b.disclose(), axis).unwrapDeferredValue())
             }
             val a1 = if (a.isScalar()) {
                 ConstantArray(b.dimensions, a.valueAtWithScalarCheck(0))
