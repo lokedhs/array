@@ -763,10 +763,8 @@ class APLString(val content: IntArray) : APLArray() {
     }
 }
 
-private val NULL_DIMENSIONS = dimensionsOfSize(0)
-
 class APLNullValue : APLArray() {
-    override val dimensions get() = NULL_DIMENSIONS
+    override val dimensions get() = nullDimensions()
     override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Attempt to read a value from the null value"))
 }
 
@@ -776,7 +774,7 @@ class APLNullValue : APLArray() {
  * it has different behaviour. The main case is for array indexing.
  */
 class APLEmpty : APLArray() {
-    override val dimensions get() = NULL_DIMENSIONS
+    override val dimensions get() = nullDimensions()
     override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Attempt to read a value from the null value"))
 }
 

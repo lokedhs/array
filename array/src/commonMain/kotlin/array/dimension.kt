@@ -111,7 +111,11 @@ value class Dimensions(val dimensions: IntArray) {
 }
 
 @SharedImmutable
+private val NULL_DIMENSIONS = Dimensions(intArrayOf(0))
+
+@SharedImmutable
 private val EMPTY_DIMENSIONS = Dimensions(intArrayOf())
 
+fun nullDimensions() = NULL_DIMENSIONS
 fun emptyDimensions() = EMPTY_DIMENSIONS
 fun dimensionsOfSize(vararg values: Int) = Dimensions(values)
