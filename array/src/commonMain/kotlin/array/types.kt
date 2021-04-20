@@ -72,7 +72,6 @@ abstract class APLValue {
     open val specialisedType: ArrayMemberType get() = ArrayMemberType.GENERIC
 
     abstract fun valueAt(p: Int): APLValue
-    open fun valueAtWithScalarCheck(p: Int): APLValue = valueAt(p)
     open fun valueAtLong(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asLong()
     open fun valueAtDouble(p: Int, pos: Position?) = valueAt(p).ensureNumber(pos).asDouble()
     open fun valueAtInt(p: Int, pos: Position?): Int {
@@ -281,8 +280,7 @@ fun APLValue.membersSequence(): Sequence<APLValue> {
 
 abstract class APLSingleValue : APLValue() {
     override val dimensions get() = emptyDimensions()
-    override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Reading index ${p} from scalar"))
-    override fun valueAtWithScalarCheck(p: Int) =
+    override fun valueAt(p: Int) =
         if (p == 0) this else throwAPLException(APLIndexOutOfBoundsException("Reading at non-zero index ${p} from scalar"))
 
     override val size get() = 1
@@ -299,8 +297,7 @@ abstract class APLArray : APLValue() {
     override fun collapseInt(): APLValue {
         val v = unwrapDeferredValue()
         return when {
-            v is APLSingleValue -> v
-            v.rank == 0 -> EnclosedAPLValue(v.valueAt(0).collapseInt())
+            v.rank == 0 -> EnclosedAPLValue.make(v.valueAt(0).collapseInt())
             else -> CollapsedArrayImpl.make(v)
         }
     }
@@ -714,7 +711,7 @@ class APLArrayList(override val dimensions: Dimensions, private val values: List
     override fun toString() = values.toString()
 }
 
-class EnclosedAPLValue(val value: APLValue) : APLArray() {
+class EnclosedAPLValue private constructor(val value: APLValue) : APLArray() {
     override val dimensions: Dimensions
         get() = emptyDimensions()
 
@@ -723,6 +720,16 @@ class EnclosedAPLValue(val value: APLValue) : APLArray() {
             throwAPLException(APLIndexOutOfBoundsException("Attempt to read from a non-zero index "))
         }
         return value
+    }
+
+    companion object {
+        fun make(value: APLValue): APLValue {
+            return if (value is APLSingleValue) {
+                value
+            } else {
+                EnclosedAPLValue(value)
+            }
+        }
     }
 }
 
@@ -896,7 +903,6 @@ open class DelegatedValue(val value: APLValue) : APLValue() {
     override val rank: Int get() = value.rank
     override val specialisedType: ArrayMemberType get() = value.specialisedType
     override fun valueAt(p: Int) = value.valueAt(p)
-    override fun valueAtWithScalarCheck(p: Int) = value.valueAtWithScalarCheck(p)
     override fun valueAtLong(p: Int, pos: Position?) = value.valueAtLong(p, pos)
     override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
     override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)

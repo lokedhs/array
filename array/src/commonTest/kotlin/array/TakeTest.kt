@@ -41,6 +41,21 @@ class TakeTest : APLTest() {
     }
 
     @Test
+    fun takeScalar0() {
+        parseAPLExpression("↑6").let { result ->
+            assertSimpleNumber(6, result)
+        }
+    }
+
+    @Test
+    fun testScalar1() {
+        parseAPLExpression("↑⊂6 5").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(6, 5), result)
+        }
+    }
+
+    @Test
     fun takeSingleDimension() {
         parseAPLExpression("3 ↑ 10 11 12 13 14 15 16 17").let { result ->
             assertDimension(dimensionsOfSize(3), result)

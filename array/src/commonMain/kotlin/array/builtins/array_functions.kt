@@ -95,7 +95,7 @@ class IotaAPLFunction : APLFunctionDescriptor {
             return when (aDimensions.size) {
                 0 -> IotaArrayLong(a.ensureNumber(pos).asInt())
                 1 -> if (aDimensions[0] == 0) {
-                    EnclosedAPLValue(APLNullValue())
+                    EnclosedAPLValue.make(APLNullValue())
                 } else {
                     IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
                 }
@@ -1068,7 +1068,7 @@ class FindResultValue(val context: RuntimeContext, val a: APLValue, val b: APLVa
 
         fun processOneLevel(level: Int, aCurr: Int, bCurr: Int): Boolean {
             if (level == aDimensions.size) {
-                return a.valueAtWithScalarCheck(aCurr).compareEquals(b.valueAt(bCurr))
+                return a.valueAt(aCurr).compareEquals(b.valueAt(bCurr))
             } else {
                 val axis = dimensionsDiff + level
                 val aStride = aMultipliers[level]

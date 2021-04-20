@@ -174,7 +174,7 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
                 when {
                     a is APLLong && b.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
                         LongArraySum2ArgsLeftScalar(this, a.value, b, pos)
-                    b.isScalar() -> EnclosedAPLValue(makeCellSumFunction2Args(a, b.valueAt(0), pos))
+                    b.isScalar() -> EnclosedAPLValue.make(makeCellSumFunction2Args(a, b.valueAt(0), pos))
                     else ->
                         GenericArraySum2Args(this, a, b, pos)
                 }
@@ -183,12 +183,12 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
                 when {
                     b is APLLong && a.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
                         LongArraySum2ArgsRightScalar(this, a, b.value, pos)
-                    a.isScalar() -> EnclosedAPLValue(makeCellSumFunction2Args(a.valueAt(0), b, pos))
+                    a.isScalar() -> EnclosedAPLValue.make(makeCellSumFunction2Args(a.valueAt(0), b, pos))
                     else ->
                         GenericArraySum2Args(this, a, b, pos)
                 }
             }
-            a.rank == 0 && b.rank == 0 -> EnclosedAPLValue(makeCellSumFunction2Args(a.valueAt(0), b.valueAt(0), pos))
+            a.rank == 0 && b.rank == 0 -> EnclosedAPLValue.make(makeCellSumFunction2Args(a.valueAt(0), b.valueAt(0), pos))
             a.specialisedType === ArrayMemberType.LONG && b.specialisedType === ArrayMemberType.LONG && optimisationFlags.is2ALongLong ->
                 LongArraySum2Args(this, a, b, pos)
             a.specialisedType === ArrayMemberType.DOUBLE && b.specialisedType === ArrayMemberType.DOUBLE && optimisationFlags.is2ADoubleDouble ->

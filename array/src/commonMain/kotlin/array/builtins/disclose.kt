@@ -62,11 +62,7 @@ class AxisMultiDimensionEnclosedValue(val value: APLValue, numDimensions: Int) :
     override fun valueAt(p: Int): APLValue {
         return if (highValFactor == 1) {
             val v = value.valueAt(p).unwrapDeferredValue()
-            if (v is APLSingleValue) {
-                v
-            } else {
-                EnclosedAPLValue(v)
-            }
+            EnclosedAPLValue.make(v)
         } else {
             val high = p * highValFactor
             APLArrayImpl(lowDimensions, Array(lowDimensions.contentSize()) { i ->
@@ -117,7 +113,7 @@ class EncloseAPLFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             val v = a.unwrapDeferredValue()
             return if (axis == null) {
-                if (v is APLSingleValue) v else EnclosedAPLValue(v)
+                EnclosedAPLValue.make(v)
             } else {
                 val axis0 = axis.arrayify()
                 when {
