@@ -529,29 +529,7 @@ class APLList(val elements: List<APLValue>) : APLSingleValue() {
     fun listElement(index: Int) = elements[index]
 }
 
-fun APLValue.positionalArgument(n: Int): APLValue? {
-    return if (this is APLList) {
-        if (n >= 0 && n < listSize()) {
-            listElement(n)
-        } else {
-            null
-        }
-    } else if (n == 0) {
-        this
-    } else {
-        null
-    }
-}
-
-fun APLValue.primaryPositionalArgument(): APLValue {
-    return if (this is APLList) {
-        listElement(0)
-    } else {
-        this
-    }
-}
-
-class ComparableList<T> : MutableList<T> by ArrayList<T>() {
+class ComparableList<T> : MutableList<T> by ArrayList() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ComparableList<*>) return false

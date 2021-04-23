@@ -11,7 +11,7 @@ class JsAtomicRefArray<T>(size: Int) : MPAtomicRefArray<T> {
     private val content: MutableList<T?>
 
     init {
-        content = ArrayList<T?>()
+        content = ArrayList()
         repeat(size) {
             content.add(null)
         }

@@ -260,34 +260,6 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun parseFnArgs(): List<Symbol>? {
-        val initial = tokeniser.nextToken()
-        if (initial != OpenParen) {
-            tokeniser.pushBackToken(initial)
-            return null
-        }
-
-        val result = ArrayList<Symbol>()
-
-        val (token, pos) = tokeniser.nextTokenWithPosition()
-        when (token) {
-            is CloseParen -> return result
-            is Symbol -> result.add(token)
-            else -> throw ParseException("Token is not a symbol: ${token}", pos)
-        }
-        while (true) {
-            val (newToken, newPos) = tokeniser.nextTokenWithPosition()
-            when {
-                newToken == CloseParen -> return result
-                newToken != ListSeparator -> throw ParseException("Expected separator or end of list, got ${newToken}", newPos)
-                else -> {
-                    val symbolToken = tokeniser.nextTokenWithType<Symbol>()
-                    result.add(symbolToken)
-                }
-            }
-        }
-    }
-
     data class DefinedUserFunction(val fn: APLFunctionDescriptor, val name: Symbol, val pos: Position)
 
     class UpdateableFunction(private var innerFnDescriptor: APLFunctionDescriptor) : APLFunctionDescriptor {
