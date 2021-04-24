@@ -45,14 +45,10 @@ namespace("output")
 }
 
 ∇ prettyPrintToChars (v) {
-  enclosed ← if(isArray v) {
-    if (×/,('char)=typeof¨v) {
-      stringToGraphemes @",v,@"
-    } else {
-      render2d prettyPrintToChars¨ v
-    }
-  } else {
-    stringToGraphemes ⍕v
+  enclosed ← when {
+    (~isArray(v)) { stringToGraphemes ⍕v }
+    (×/,('char)=typeof¨v) { stringToGraphemes @",v,@" }
+    (1) { render2d prettyPrintToChars¨ v }
   }
   enclosed
 }
