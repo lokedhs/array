@@ -53,14 +53,6 @@ class BitwiseTest : APLTest() {
     }
 
     @Test
-    fun bitwiseXorWithAddArray() {
-        parseAPLExpression("99 +∵ 70").let { result ->
-            assertDimension(dimensionsOfSize(4), result)
-            assertArrayContent(arrayOf(), result)
-        }
-    }
-
-    @Test
     fun bitwiseXorWithSub() {
         assertSimpleNumber(37, parseAPLExpression("99 -∵ 70"))
     }
