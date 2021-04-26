@@ -190,6 +190,44 @@ class CustomFunctionTest : APLTest() {
         assertArrayContent(arrayOf(1001, 4), result)
     }
 
+    @Test
+    fun simpleFunction0() {
+        parseAPLExpression("f ⇐ - ⋄ (f 5) (3 f 1)").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(-5, 2), result)
+        }
+    }
+
+    @Test
+    fun simpleFork0() {
+        parseAPLExpression("f ⇐ ⊢⊣, ⋄ 1 f 2").let { result ->
+            assertSimpleNumber(2, result)
+        }
+    }
+
+    @Test
+    fun simpleFork1() {
+        parseAPLExpression("f ⇐ ⊣⊢, ⋄ 1 f 2").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(1, 2), result)
+        }
+    }
+
+    @Test
+    fun simple2Train0() {
+        parseAPLExpression("f ⇐ -, ⋄ 10 f 20").let { result ->
+            assertDimension(dimensionsOfSize(2), result)
+            assertArrayContent(arrayOf(-10, -20), result)
+        }
+    }
+
+    @Test
+    fun simple2Train1() {
+        parseAPLExpression("f ⇐ -* ⋄ 2 f 5").let { result ->
+            assertSimpleNumber(-32, result)
+        }
+    }
+
     /**
      * This test verifies that after redefining a function, the new definition is used
      * from code which was previously parsed when the old definition was in place.

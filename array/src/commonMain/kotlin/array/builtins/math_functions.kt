@@ -403,7 +403,7 @@ class DivAPLFunction : APLFunctionDescriptor {
                     }
                 },
                 { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) },
-                { x, y -> if (y == Complex.ZERO) APLDouble(0.0) else (x / y).makeAPLNumber() }
+                { x, y -> if (y == Complex.ZERO) APLDOUBLE_0 else (x / y).makeAPLNumber() }
             )
         }
 

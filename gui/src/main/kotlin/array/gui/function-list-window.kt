@@ -9,7 +9,6 @@ import javafx.scene.control.Button
 import javafx.scene.control.TableCell
 import javafx.scene.control.TableColumn
 import javafx.scene.control.TableView
-import javafx.scene.control.cell.CheckBoxTableCell
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
@@ -96,7 +95,7 @@ class FunctionListPanel(engine: Engine) : TableView<FunctionRow>() {
     }
 }
 
-class NamespaceNameCell() : TableCell<FunctionRow, APLSymbolWrapper>() {
+class NamespaceNameCell : TableCell<FunctionRow, APLSymbolWrapper>() {
     override fun updateItem(item: APLSymbolWrapper?, empty: Boolean) {
         super.updateItem(item, empty)
         if (empty || item == null) {

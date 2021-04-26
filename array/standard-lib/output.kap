@@ -16,10 +16,14 @@ namespace("output")
 }
 
 ∇ dbg (title;data) {
-  println "=== begin:",title," ==="
-  println data
-  println "=== end:",title," ==="
+  io:println "=== begin:",title," ==="
+  io:println data
+  io:println "=== end:",title," ==="
   data
+}
+
+∇ dbg1 (x) {
+  dbg ("Empty" ; x)
 }
 
 ∇ render2d (v) {
@@ -33,7 +37,7 @@ namespace("output")
   ⍝ Compute the height of each row in a similar way as the cols
   rowHeights ← ⌈/[1] {↑⍴⍵}¨xAligned
   ⍝ Pad each row so that they are all the same height
-  yAligned ← (⍉ (⍴ xAligned) ⍴ rowHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
+  yAligned ← (⍉ (⌽ ⍴ xAligned) ⍴ rowHeights) {⍵ ,[0] ((⍺-↑⍴⍵) ((⍴⍵)[1])) ⍴ (⊂" ")}¨ xAligned
 
   vSeparated ← {⍺,(⊂" "),⍵}/ yAligned
 
@@ -41,21 +45,17 @@ namespace("output")
 }
 
 ∇ prettyPrintToChars (v) {
-  enclosed ← if(isArray v) {
-    if (×/,('char)=typeof¨v) {
-      stringToGraphemes @",v,@"
-    } else {
-      render2d prettyPrintToChars¨ v
-    }
-  } else {
-    stringToGraphemes ⍕v
+  enclosed ← when {
+    (~isArray(v)) { stringToGraphemes ⍕v }
+    (×/,('char)=typeof¨v) { stringToGraphemes @",v,@" }
+    (1) { render2d prettyPrintToChars¨ v }
   }
   enclosed
 }
 
 ∇ prettyPrint (v) {
   result ← prettyPrintToChars v
-  println¨,/result
+  io:println¨,/result
   0
 }
 

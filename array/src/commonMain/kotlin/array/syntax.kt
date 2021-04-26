@@ -27,6 +27,33 @@ class ConstantSyntaxRule(val symbolName: Symbol) : SyntaxRule {
     }
 }
 
+class TokenSyntaxRule(val matchToken: Token) : SyntaxRule {
+    override fun isValid(token: Token) = matchToken == token
+
+    override fun processRule(parser: APLParser, syntaxRuleBindings: MutableList<SyntaxRuleVariableBinding>) {
+        val (token, pos) = parser.tokeniser.nextTokenAndPosWithType<Token>()
+        if (matchToken != token) {
+            throw throw ParseException("Expected token ${matchToken.formatted()}, found: ${token.formatted()}", pos)
+        }
+    }
+
+    companion object {
+        fun make(tokeniser: TokenGenerator): TokenSyntaxRule {
+            val (symbol, pos) = tokeniser.nextTokenAndPosWithType<Symbol>()
+            if (symbol.namespace !== tokeniser.engine.keywordNamespace) {
+                throw ParseException("Special type must be a keyword", pos)
+            }
+            val token = when (symbol.symbolName) {
+                "openBrace" -> OpenFnDef
+                "closeBrace" -> CloseFnDef
+                "newline" -> Newline
+                else -> throw(ParseException("Invalid special token", pos))
+            }
+            return TokenSyntaxRule(token)
+        }
+    }
+}
+
 class ValueSyntaxRule(val variable: EnvironmentBinding) : SyntaxRule {
     override fun isValid(token: Token) = token is OpenParen
 
@@ -142,16 +169,30 @@ class RepeatSyntaxRule(val name: EnvironmentBinding, val customSyntax: CustomSyn
 
 private fun processPair(parser: APLParser, curr: MutableList<SyntaxRule>, token: Symbol, pos: Position) {
     val tokeniser = parser.tokeniser
-    if (token.namespace !== tokeniser.engine.keywordNamespace) {
-        throw ParseException("Tag is not a keyword: ${token.nameWithNamespace()}", pos)
+
+    fun ensureKeyword(symbol: Symbol) {
+        if (symbol.namespace !== tokeniser.engine.keywordNamespace) {
+            throw ParseException("Tag is not a keyword: ${symbol.nameWithNamespace()}", pos)
+        }
     }
+
+    ensureKeyword(token)
     when (token.symbolName) {
         "constant" -> curr.add(ConstantSyntaxRule(tokeniser.nextTokenWithType()))
+        "special" -> curr.add(TokenSyntaxRule.make(tokeniser))
         "value" -> curr.add(ValueSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
-        "function" -> curr.add(BFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
-        "nfunction" -> curr.add(NFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
-        "exprfunction" -> curr.add(ExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
-        "nexprfunction" -> curr.add(NExprFunctionSyntaxRule(parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "function" -> curr.add(
+            BFunctionSyntaxRule(
+                parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "nfunction" -> curr.add(
+            NFunctionSyntaxRule(
+                parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "exprfunction" -> curr.add(
+            ExprFunctionSyntaxRule(
+                parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
+        "nexprfunction" -> curr.add(
+            NExprFunctionSyntaxRule(
+                parser.currentEnvironment().bindLocal(tokeniser.nextTokenWithType())))
         "optional" -> curr.add(processOptional(parser))
         "repeat" -> curr.add(processRepeat(parser))
         else -> throw ParseException("Unexpected tag: ${token.nameWithNamespace()}")
@@ -185,7 +226,8 @@ private fun processRepeat(parser: APLParser): SyntaxRule {
     val (subName, subNamePos) = tokeniser.nextTokenAndPosWithType<Symbol>()
     tokeniser.nextTokenWithType<CloseParen>()
 
-    val subRules = tokeniser.engine.customSyntaxSubRulesForSymbol(subName) ?: throw SyntaxSubRuleNotFound(subName, subNamePos)
+    val subRules =
+        tokeniser.engine.customSyntaxSubRulesForSymbol(subName) ?: throw SyntaxSubRuleNotFound(subName, subNamePos)
     return RepeatSyntaxRule(name, subRules)
 }
 
@@ -207,7 +249,13 @@ fun processDefsyntax(parser: APLParser, pos: Position): Instruction {
         val rulesList = processPairs(parser)
         tokeniser.nextTokenWithType<OpenFnDef>()
         val instr = parser.parseValueToplevel(CloseFnDef)
-        tokeniser.engine.registerCustomSyntax(CustomSyntax(triggerSymbol, parser.currentEnvironment(), rulesList, instr, pos))
+        tokeniser.engine.registerCustomSyntax(
+            CustomSyntax(
+                triggerSymbol,
+                parser.currentEnvironment(),
+                rulesList,
+                instr,
+                pos))
         return LiteralSymbol(triggerSymbol, pos)
     }
 }
@@ -218,7 +266,7 @@ class CallWithVarInstruction(
     val env: Environment,
     val bindings: List<Pair<EnvironmentBinding, Instruction>>,
     pos: Position
-) : Instruction(pos) {
+                            ) : Instruction(pos) {
     override fun evalWithContext(context: RuntimeContext): APLValue {
         return context.withLinkedContext(env, name, pos) { newContext ->
             bindings.forEach { (envBinding, instr) ->
