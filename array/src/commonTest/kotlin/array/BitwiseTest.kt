@@ -17,6 +17,22 @@ class BitwiseTest : APLTest() {
     }
 
     @Test
+    fun bitwiseAndArray() {
+        parseAPLExpression("99 ∧∵ 70 191 100 9").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(66, 35, 96, 1), result)
+        }
+    }
+
+    @Test
+    fun bitwiseAndArrayBothArgs() {
+        parseAPLExpression("1 2 4 ∧∵ 10 11 12").let { result ->
+            assertDimension(dimensionsOfSize(3), result)
+            assertArrayContent(arrayOf(0, 2, 4), result)
+        }
+    }
+
+    @Test
     fun bitwiseAndWithMul() {
         assertSimpleNumber(66, parseAPLExpression("99 ×∵ 70"))
     }
@@ -34,6 +50,14 @@ class BitwiseTest : APLTest() {
     @Test
     fun bitwiseXorWithAdd() {
         assertSimpleNumber(37, parseAPLExpression("99 +∵ 70"))
+    }
+
+    @Test
+    fun bitwiseXorWithAddArray() {
+        parseAPLExpression("99 +∵ 70").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(), result)
+        }
     }
 
     @Test

@@ -3,9 +3,14 @@ package array.builtins
 import array.*
 
 abstract class BitwiseCombineAPLFunction(pos: Position) : MathCombineAPLFunction(pos) {
+    override val optimisationFlags get() = OptimisationFlags(OptimisationFlags.OPTIMISATION_FLAG_1ARG_LONG or OptimisationFlags.OPTIMISATION_FLAG_2ARG_LONG_LONG)
+
     override fun combine1Arg(a: APLSingleValue): APLValue = bitwiseCombine1Arg(a.ensureNumber(pos).asLong()).makeAPLNumber()
     override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue =
         bitwiseCombine2Arg(a.ensureNumber(pos).asLong(), b.ensureNumber(pos).asLong()).makeAPLNumber()
+
+    override fun combine1ArgLong(a: Long) = bitwiseCombine1Arg(a)
+    override fun combine2ArgLong(a: Long, b: Long) = bitwiseCombine2Arg(a, b)
 
     open fun bitwiseCombine1Arg(a: Long): Long = throwAPLException(Unimplemented1ArgException(pos))
     open fun bitwiseCombine2Arg(a: Long, b: Long): Long = throwAPLException(Unimplemented2ArgException(pos))

@@ -22,8 +22,7 @@ value class OptimisationFlags(val flags: Int) {
             OPTIMISATION_FLAG_1ARG_LONG to "1ALong",
             OPTIMISATION_FLAG_1ARG_DOUBLE to "1ADouble",
             OPTIMISATION_FLAG_2ARG_LONG_LONG to "2ALongLong",
-            OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE to "2ADoubleDouble"
-                            )
+            OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE to "2ADoubleDouble")
         val flagsString = flagMap.filter { (value, _) -> (flags and value) != 0 }.joinToString(", ") { it.second }
         return "OptimisationFlags(flags=0x${flags.toString(16)}, values: ${flagsString})"
     }
@@ -41,8 +40,7 @@ value class OptimisationFlags(val flags: Int) {
         const val OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE = 0x8
 
         const val OPTIMISATION_FLAGS_1ARG_MASK = OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE
-        const val OPTIMISATION_FLAGS_2ARG_MASK =
-            OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
+        const val OPTIMISATION_FLAGS_2ARG_MASK = OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE
     }
 }
 
@@ -58,7 +56,7 @@ abstract class APLFunction(val pos: Position) {
 
     open fun deriveBitwise(): APLFunctionDescriptor? = null
 
-    open val optimisationFlags: OptimisationFlags get() = OptimisationFlags(0)
+    open val optimisationFlags get() = OptimisationFlags(0)
 
     open fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long =
         throw IllegalStateException("Illegal call to specialised function: ${this::class.simpleName}")
@@ -130,7 +128,7 @@ class DeclaredFunction(
     val leftArgName: EnvironmentBinding,
     val rightArgName: EnvironmentBinding,
     val env: Environment
-                      ) : APLFunctionDescriptor {
+) : APLFunctionDescriptor {
     inner class DeclaredFunctionImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
             return context.withLinkedContext(env, "declaredFunction1arg(${name})", pos) { localContext ->
@@ -518,9 +516,9 @@ class Engine {
                 "Value cannot be closed: ${
                     value.formatted(
                         FormatStyle.PLAIN
-                                   )
+                    )
                 }", pos
-                                                                    )
+            )
         @Suppress("UNCHECKED_CAST")
         (handler as ClosableHandler<T>).close(value)
     }
