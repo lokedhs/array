@@ -805,4 +805,18 @@ Monadic single arg:          ∇            (foo) x          {
         assertDimension(dimensionsOfSize(6), result)
         assertArrayContent(arrayOf(101, 201, 301, 401, 501, 601), result)
     }
+
+    @Test
+    fun shortFormWithLeftArgShouldFail() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("foo ⇐ 10+")
+        }
+    }
+
+    @Test
+    fun shortFormWithSimpleOperator() {
+        parseAPLExpression("foo ⇐ ×/ ⋄ foo 1 2 3").let { result ->
+            assertSimpleNumber(6, result)
+        }
+    }
 }
