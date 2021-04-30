@@ -446,7 +446,7 @@ class APLMap(val content: ImmutableMap2<APLValueKey, APLValue>) : APLSingleValue
     }
 
     fun lookupValue(key: APLValue): APLValue {
-        return content[key.makeKey()] ?: APLNullValue()
+        return content[key.makeKey()] ?: APLNullValue.APL_NULL_INSTANCE
     }
 
     fun updateValue(key: APLValue, value: APLValue): APLMap {
@@ -748,9 +748,13 @@ class APLString(val content: IntArray) : APLArray() {
     }
 }
 
-class APLNullValue : APLArray() {
+class APLNullValue private constructor() : APLArray() {
     override val dimensions get() = nullDimensions()
     override fun valueAt(p: Int) = throwAPLException(APLIndexOutOfBoundsException("Attempt to read a value from the null value"))
+
+    companion object {
+        val APL_NULL_INSTANCE = APLNullValue()
+    }
 }
 
 /**

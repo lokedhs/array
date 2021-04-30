@@ -156,7 +156,7 @@ abstract class ReduceFunctionImpl(val fn: APLFunction, val operatorAxis: Instruc
             }
             return when (size) {
                 1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(b))
-                0 -> APLNullValue()
+                0 -> APLNullValue.APL_NULL_INSTANCE
                 -1 -> APLArrayImpl(dimensionsOfSize(1), arrayOf(APLLONG_0))
                 else -> throwAPLException(InvalidDimensionsException("Invalid left argument for scalar right arg", pos))
             }

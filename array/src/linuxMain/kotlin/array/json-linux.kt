@@ -36,7 +36,7 @@ private fun parseEntry(value: CPointer<json_t>): APLValue {
         json_type.JSON_STRING -> parseString(value)
         json_type.JSON_TRUE -> APLLONG_1
         json_type.JSON_FALSE -> APLLONG_0
-        json_type.JSON_NULL -> APLNullValue()
+        json_type.JSON_NULL -> APLNullValue.APL_NULL_INSTANCE
         else -> throw JsonParseException("Unexpected json type: ${type}")
     }
 }

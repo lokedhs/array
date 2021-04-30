@@ -16,7 +16,7 @@ actual fun parseJsonToAPL(input: CharacterProvider): APLValue {
 
 private fun parseEntry(value: Any?): APLValue {
     if (value == null) {
-        return APLNullValue()
+        return APLNullValue.APL_NULL_INSTANCE
     }
     return when (value) {
         is Array<*> -> parseArray(value)

@@ -1,11 +1,10 @@
 package array.gui
 
-import array.APLValue
-import array.Either
-import array.Engine
-import array.SourceLocation
+import array.*
 import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.TransferQueue
+
+class WrappedException(cause: Throwable) : APLGenericException("JVM exception while evaluating expression: ${cause.message}", null, cause)
 
 class CalculationQueue(val engine: Engine) {
     private val queue: TransferQueue<Request> = LinkedTransferQueue()
@@ -18,8 +17,13 @@ class CalculationQueue(val engine: Engine) {
                 val queueResult = try {
                     val result = engine.parseAndEval(request.source, request.linkNewContext).collapse()
                     Either.Left(result)
-                } catch (e: Exception) {
+                } catch (e: InterruptedException) {
+                    throw e
+                } catch (e: APLGenericException) {
                     Either.Right(e)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Either.Right(WrappedException(e))
                 }
                 request.callback(queueResult)
             }

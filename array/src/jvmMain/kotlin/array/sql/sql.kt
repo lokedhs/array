@@ -208,7 +208,7 @@ class SQLPreparedUpdateFunction : APLFunctionDescriptor {
                     else -> throw SQLAPLException("Right value must rank 1 or 2", pos)
                 }
             }
-            return APLNullValue()
+            return APLNullValue.APL_NULL_INSTANCE
         }
     }
 

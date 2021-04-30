@@ -95,7 +95,7 @@ class IotaAPLFunction : APLFunctionDescriptor {
             return when (aDimensions.size) {
                 0 -> IotaArrayLong(a.ensureNumber(pos).asInt())
                 1 -> if (aDimensions[0] == 0) {
-                    EnclosedAPLValue.make(APLNullValue())
+                    EnclosedAPLValue.make(APLNullValue.APL_NULL_INSTANCE)
                 } else {
                     IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
                 }
@@ -1219,7 +1219,7 @@ class WhereAPLFunction : APLFunctionDescriptor {
     class WhereAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             return if (a.isScalar()) {
-                APLNullValue()
+                APLNullValue.APL_NULL_INSTANCE
             } else {
                 val aDimensions = a.dimensions
                 val multipliers = aDimensions.multipliers()

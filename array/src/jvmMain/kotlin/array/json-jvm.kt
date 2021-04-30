@@ -77,7 +77,7 @@ private fun parseBoolean(reader: JsonReader): APLNumber {
 
 private fun parseNull(reader: JsonReader): APLNullValue {
     reader.nextNull()
-    return APLNullValue()
+    return APLNullValue.APL_NULL_INSTANCE
 }
 
 fun main() {

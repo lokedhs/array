@@ -10,7 +10,7 @@ fun readExcelFile(name: String): APLValue {
     val evaluator = workbook.creationHelper.createFormulaEvaluator()
     val sheet = workbook.getSheetAt(0)
     if (sheet.physicalNumberOfRows == 0) {
-        return APLNullValue()
+        return APLNullValue.APL_NULL_INSTANCE
     }
 
     val lastRowIndex = sheet.lastRowNum
@@ -28,7 +28,7 @@ fun readExcelFile(name: String): APLValue {
         if (colIndex < row.size) {
             row[colIndex]
         } else {
-            APLNullValue()
+            APLNullValue.APL_NULL_INSTANCE
         }
     }
 }
@@ -43,7 +43,7 @@ fun readRow(row: Row, evaluator: FormulaEvaluator): List<APLValue> {
             numPendingNulls++
         } else {
             repeat(numPendingNulls) {
-                cellList.add(APLNullValue())
+                cellList.add(APLNullValue.APL_NULL_INSTANCE)
             }
             numPendingNulls = 0
             cellList.add(cellToAPLValue(cell, evaluator))

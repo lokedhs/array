@@ -27,7 +27,7 @@ fun readCsv(source: CharacterProvider): APLValue {
         val colIndex = index % width
         val row = rows[rowIndex]
         if (colIndex >= row.size) {
-            APLNullValue()
+            APLNullValue.APL_NULL_INSTANCE
         } else {
             row[colIndex]
         }

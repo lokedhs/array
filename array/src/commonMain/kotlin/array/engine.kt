@@ -3,6 +3,9 @@ package array
 import array.builtins.*
 import array.json.JsonAPLModule
 import array.syntax.CustomSyntax
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 import kotlin.reflect.KClass
 
@@ -473,7 +476,9 @@ class Engine {
         }
     }
 
+    @OptIn(ExperimentalContracts::class)
     inline fun <T> withCallStackElement(name: String, pos: Position, fn: (CallStackElement) -> T): T {
+        contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         if (callStack.size >= 100) {
             throwAPLException(APLEvalException("Stack overflow", pos))
         }
@@ -620,7 +625,9 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
 
     fun getVar(binding: EnvironmentBinding): APLValue? = findOrThrow(binding).value
 
+    @OptIn(ExperimentalContracts::class)
     inline fun <T> withLinkedContext(env: Environment, name: String, pos: Position, fn: (RuntimeContext) -> T): T {
+        contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         val newContext = RuntimeContext(engine, env, this)
         return withCallStackElement(name, pos) {
             try {
@@ -650,7 +657,9 @@ class RuntimeContext(val engine: Engine, val environment: Environment, val paren
         }
     }
 
+    @OptIn(ExperimentalContracts::class)
     inline fun <T> withCallStackElement(name: String, pos: Position, fn: (CallStackElement) -> T): T {
+        contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         return engine.withCallStackElement(name, pos, fn)
     }
 }

@@ -191,7 +191,7 @@ class LiteralSymbol(name: Symbol, pos: Position) : Instruction(pos) {
 }
 
 class LiteralAPLNullValue(pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = APLNullValue()
+    override fun evalWithContext(context: RuntimeContext) = APLNullValue.APL_NULL_INSTANCE
 }
 
 class EmptyValueMarker(pos: Position) : Instruction(pos) {

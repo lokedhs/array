@@ -1,6 +1,7 @@
 package array.gui
 
 import array.*
+import array.gui.graphics.initGraphicCommands
 import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.scene.Scene

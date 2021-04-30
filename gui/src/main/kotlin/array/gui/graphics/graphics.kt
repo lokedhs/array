@@ -1,18 +1,24 @@
-package array.gui
+package array.gui.graphics
 
 import array.*
+import array.gui.Client
 import javafx.application.Platform
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.image.WritableImage
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.stage.Stage
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.reflect.KClass
 
-class GraphicWindowAPLValue(width: Int, height: Int) : APLSingleValue() {
-    private val window = GraphicWindow(width, height)
+class GraphicWindowAPLValue(engine: Engine, width: Int, height: Int) : APLSingleValue() {
+    val window = GraphicWindow(engine, width, height)
 
     override val aplValueType: APLValueType
         get() = APLValueType.INTERNAL
@@ -37,7 +43,7 @@ class MakeGraphicFunction : APLFunctionDescriptor {
             }
             val width = a.valueAtInt(0, pos)
             val height = a.valueAtInt(1, pos)
-            return GraphicWindowAPLValue(width, height)
+            return GraphicWindowAPLValue(context.engine, width, height)
         }
     }
 
@@ -66,12 +72,54 @@ class DrawGraphicFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = DrawGraphicFunctionImpl(pos)
 }
 
-class GraphicWindow(width: Int, height: Int) {
+typealias EventType = KClass<out KapWindowEvent>
+
+class GraphicWindow(val engine: Engine, width: Int, height: Int) {
     private var content = AtomicReference<Content?>()
+    private val events = LinkedList<KapWindowEvent>()
+    private val enabledEvents = HashSet<EventType>()
+    private val lock = ReentrantLock()
+    private val condition = lock.newCondition()
 
     init {
         Platform.runLater {
             content.set(Content(width, height))
+        }
+    }
+
+    fun nextEvent(): KapWindowEvent? {
+        return lock.withLock {
+            events.poll()
+        }
+    }
+
+    fun waitForEvent(): KapWindowEvent {
+        lock.withLock {
+            while (events.isEmpty()) {
+                condition.await()
+            }
+            return events.removeFirst()
+        }
+    }
+
+    fun addEnabledEvent(v: EventType): Boolean {
+        return lock.withLock {
+            enabledEvents.add(v)
+        }
+    }
+
+    fun removeEnabledEvent(v: EventType): Boolean {
+        return lock.withLock {
+            enabledEvents.remove(v)
+        }
+    }
+
+    fun publishEventIfEnabled(event: KapWindowEvent) {
+        lock.withLock {
+            if (enabledEvents.contains(event::class)) {
+                events.add(event)
+                condition.signal()
+            }
         }
     }
 
@@ -86,7 +134,9 @@ class GraphicWindow(width: Int, height: Int) {
             val border = BorderPane().apply {
                 center = canvas
             }
-            stage.scene = Scene(border, width.toDouble(), height.toDouble())
+            val scene = Scene(border, width.toDouble(), height.toDouble())
+            scene.addEventFilter(KeyEvent.KEY_PRESSED, ::processKeyPress)
+            stage.scene = scene
             stage.show()
         }
 
@@ -106,6 +156,10 @@ class GraphicWindow(width: Int, height: Int) {
             }
             canvas.graphicsContext2D.drawImage(image, 0.0, 0.0)
         }
+
+        private fun processKeyPress(event: KeyEvent) {
+            publishEventIfEnabled(KapKeyEvent(event))
+        }
     }
 
     fun repaintContent(width: Int, height: Int, array: DoubleArray) {
@@ -116,6 +170,15 @@ class GraphicWindow(width: Int, height: Int) {
 fun initGraphicCommands(client: Client) {
     val engine = client.engine
     val guiNamespace = engine.makeNamespace("gui")
-    engine.registerFunction(engine.internSymbol("makeGraphic", guiNamespace), MakeGraphicFunction())
-    engine.registerFunction(engine.internSymbol("drawArray", guiNamespace), DrawGraphicFunction())
+
+    fun addFn(name: String, fn: APLFunctionDescriptor) {
+        engine.registerFunction(engine.internSymbol(name, guiNamespace), fn)
+    }
+
+    addFn("create", MakeGraphicFunction())
+    addFn("draw", DrawGraphicFunction())
+    addFn("nextEvent", ReadEventFunction())
+    addFn("nextEventBlocking", ReadEventBlockingFunction())
+    addFn("enableEvents", EnableEventsFunction())
+    addFn("disableEvents", DisableEventsFunction())
 }

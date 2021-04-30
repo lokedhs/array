@@ -115,11 +115,11 @@ class UnwindProtectAPLFunction : APLFunctionDescriptor {
             var thrownException: APLEvalException? = null
             var result: APLValue? = null
             try {
-                result = fn.makeClosure().eval1Arg(context, APLNullValue(), null)
+                result = fn.makeClosure().eval1Arg(context, APLNullValue.APL_NULL_INSTANCE, null)
             } catch (e: APLEvalException) {
                 thrownException = e
             }
-            finallyHandler.makeClosure().eval1Arg(context, APLNullValue(), null)
+            finallyHandler.makeClosure().eval1Arg(context, APLNullValue.APL_NULL_INSTANCE, null)
             if (thrownException != null) {
                 throw thrownException
             }
@@ -194,7 +194,7 @@ class CatchOperator : APLOperatorOneArg {
                                          )
                     }
                     try {
-                        return fn.eval1Arg(context, APLNullValue(), null)
+                        return fn.eval1Arg(context, APLNullValue.APL_NULL_INSTANCE, null)
                     } catch (e: TagCatch) {
                         val sentTag = e.tag
                         val multipliers = dimensions.multipliers()
