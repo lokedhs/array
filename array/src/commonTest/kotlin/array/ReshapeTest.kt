@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class ReshapeTest : APLTest() {
     @Test
@@ -36,5 +37,35 @@ class ReshapeTest : APLTest() {
         val result = parseAPLExpression("2 4 ⍴ 1")
         assertDimension(dimensionsOfSize(2, 4), result)
         assertArrayContent(arrayOf(1, 1, 1, 1, 1, 1, 1, 1), result)
+    }
+
+    @Test
+    fun reshapeCalculatedDimension0() {
+        parseAPLExpression("¯1 2 ⍴ ⍳4").let { result ->
+            assertDimension(dimensionsOfSize(2, 2), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3), result)
+        }
+    }
+
+    @Test
+    fun reshapeCalculatedDimension1() {
+        parseAPLExpression("2 ¯1 ⍴ ⍳4").let { result ->
+            assertDimension(dimensionsOfSize(2, 2), result)
+            assertArrayContent(arrayOf(0, 1, 2, 3), result)
+        }
+    }
+
+    @Test
+    fun reshapeCalculatedFailsWithMismatchedSource() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("2 ¯1 ⍴ ⍳5")
+        }
+    }
+
+    @Test
+    fun reshapeCalculatedFailsWithMultipleUndefinedDimensions() {
+        assertFailsWith<InvalidDimensionsException> {
+            parseAPLExpression("¯1 ¯1 ⍴ ⍳4")
+        }
     }
 }

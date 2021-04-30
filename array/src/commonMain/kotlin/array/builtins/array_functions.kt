@@ -171,7 +171,49 @@ class RhoAPLFunction : APLFunctionDescriptor {
             val d1 = if (v.isScalar()) {
                 dimensionsOfSize(v.ensureNumber(pos).asInt())
             } else {
-                Dimensions(IntArray(v.size) { v.valueAtInt(it, pos) })
+                val dimensionsArray = IntArray(v.size) { v.valueAtInt(it, pos) }
+                var calculatedIndex: Int? = null
+                dimensionsArray.forEachIndexed { i, sizeSpecValue ->
+                    if (sizeSpecValue < 0) {
+                        if (sizeSpecValue == -1) {
+                            if (calculatedIndex != null) {
+                                throwAPLException(InvalidDimensionsException("Only one dimension may be set to -1", pos))
+                            }
+                            calculatedIndex = i
+                        } else {
+                            throwAPLException(InvalidDimensionsException("Illegal value at index ${i} in dimensions: ${sizeSpecValue}"))
+                        }
+                    }
+                }
+                val updatedDimensionsArray = calculatedIndex.let { calcPos ->
+                    if (calcPos == null) {
+                        dimensionsArray
+                    } else {
+                        val bDimensions = b.dimensions
+                        if (bDimensions.size == 0) {
+                            throwAPLException(
+                                APLIllegalArgumentException(
+                                    "Calculated dimensions can only be used with array arguments",
+                                    pos))
+                        }
+                        val contentSize = bDimensions.contentSize()
+                        val total = dimensionsArray.filter { it >= 0 }.reduceWithInitial(1) { o0, o1 -> o0 * o1 }
+                        IntArray(v.size) { index ->
+                            if (index == calcPos) {
+                                if (contentSize % total != 0) {
+                                    throwAPLException(
+                                        InvalidDimensionsException(
+                                            "Invalid size of right argument: ${contentSize}. Should be divisible by ${total}.",
+                                            pos))
+                                }
+                                contentSize / total
+                            } else {
+                                dimensionsArray[index]
+                            }
+                        }
+                    }
+                }
+                Dimensions(updatedDimensionsArray)
             }
             return ResizedArrayImpls.makeResizedArray(d1, b)
         }
