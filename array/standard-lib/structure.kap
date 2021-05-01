@@ -7,7 +7,7 @@ defsyntax if (:value cond :nfunction thenStatement :optional (:constant else :nf
 declare(:export (if else))
 
 defsyntax while (:nexprfunction cond :nfunction body) {
-  {if (⍞cond 0) { ⍞body 0 ◊ 0 } else { 1 }} ⍣ {⍵} 0
+  ({if (⍞cond 0) { ⍞body 0 ◊ 0 } else { 1 }} ⍣ {⍵}) 0
 }
 
 declare(:export while)

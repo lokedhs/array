@@ -48,7 +48,7 @@ class Environment {
 
 class APLParser(val tokeniser: TokenGenerator) {
 
-    private var environments: MutableList<Environment> = ArrayList(listOf(tokeniser.engine.rootContext.environment))
+    private var environments = mutableListOf(tokeniser.engine.rootContext.environment)
 
     fun currentEnvironment() = environments.last()
 

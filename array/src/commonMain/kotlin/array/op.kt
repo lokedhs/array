@@ -79,6 +79,31 @@ interface APLOperatorValueRightArg : APLOperator {
     fun combineFunction(fn: APLFunction, instr: Instruction, opPos: Position): APLFunction
 }
 
+interface APLOperatorCombinedRightArg : APLOperator {
+    override fun parseAndCombineFunctions(aplParser: APLParser, currentFn: APLFunction, opPos: Position): APLFunction {
+        val axis = aplParser.parseAxis()
+        if (axis != null) {
+            throw ParseException("Axis argument not supported", opPos)
+        }
+        return when (val rightArg = aplParser.parseValue()) {
+            is ParseResultHolder.InstrParseResult -> {
+                aplParser.tokeniser.pushBackToken(rightArg.lastToken)
+                combineFunctionAndExpr(currentFn, rightArg.instr, opPos).make(opPos)
+            }
+            is ParseResultHolder.FnParseResult -> {
+                aplParser.tokeniser.pushBackToken(rightArg.lastToken)
+                combineFunctions(currentFn, rightArg.fn, opPos).make(opPos)
+            }
+            is ParseResultHolder.EmptyParseResult -> {
+                throw ParseException("Expected function or value", rightArg.pos)
+            }
+        }
+    }
+
+    fun combineFunctionAndExpr(fn: APLFunction, instr: Instruction, opPos: Position): APLFunctionDescriptor
+    fun combineFunctions(fn1: APLFunction, fn2: APLFunction, opPos: Position): APLFunctionDescriptor
+}
+
 class UserDefinedOperatorOneArg(
     val name: Symbol,
     val opBinding: EnvironmentBinding,
