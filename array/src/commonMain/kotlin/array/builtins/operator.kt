@@ -3,17 +3,36 @@ package array.builtins
 import array.*
 import kotlin.math.max
 
-class PowerAPLOperator : APLOperatorTwoArg {
-    override fun combineFunction(
-        fn1: APLFunction,
-        fn2: APLFunction,
-        operatorAxis: Instruction?,
-        opPos: Position
-    ): APLFunctionDescriptor {
-        if (operatorAxis != null) {
-            throwAPLException(AxisNotSupported(opPos))
-        }
+class PowerAPLOperator : APLOperatorCombinedRightArg {
+    override fun combineFunctionAndExpr(fn: APLFunction, instr: Instruction, opPos: Position): APLFunctionDescriptor {
+        return PowerAPLFunctionWithValueDescriptor(fn, instr)
+    }
+
+    override fun combineFunctions(fn1: APLFunction, fn2: APLFunction, opPos: Position): APLFunctionDescriptor {
         return PowerAPLFunctionDescriptor(fn1, fn2)
+    }
+
+    class PowerAPLFunctionWithValueDescriptor(
+        val fn: APLFunction,
+        val instr: Instruction
+    ) : APLFunctionDescriptor {
+        override fun make(pos: Position): APLFunction {
+            return object : APLFunction(pos) {
+                override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
+                    val iterations = instr.evalWithContext(context)
+                    var n = iterations.ensureNumber(pos).asLong()
+                    if (n < 0) {
+                        throwAPLException(APLIllegalArgumentException("Argument to power is negative: ${n}", pos))
+                    }
+                    var curr = a
+                    while (n > 0) {
+                        curr = fn.eval1Arg(context, curr, null).collapse()
+                        n--
+                    }
+                    return curr
+                }
+            }
+        }
     }
 
     class PowerAPLFunctionDescriptor(
