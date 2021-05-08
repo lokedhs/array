@@ -32,7 +32,7 @@ dependencies {
 
 distributions {
     main {
-        distributionBaseName = 'kap-plain'
+        distributionBaseName = 'kap-jvm'
         contents {
             from('../array/standard-lib') {
                 into 'standard-lib'

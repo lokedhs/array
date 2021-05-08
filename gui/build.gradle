@@ -37,4 +37,14 @@ dependencies {
     implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.6'
 }
 
+distributions {
+    main {
+        contents {
+            from('../array/standard-lib') {
+                into 'standard-lib'
+            }
+        }
+    }
+}
+
 mainClassName = 'array.gui.Client'
