@@ -700,6 +700,8 @@ class EnclosedAPLValue private constructor(val value: APLValue) : APLArray() {
         return value
     }
 
+    override fun disclose() = value
+
     companion object {
         fun make(value: APLValue): APLValue {
             return if (value is APLSingleValue) {

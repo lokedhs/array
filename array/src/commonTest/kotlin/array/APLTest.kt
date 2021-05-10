@@ -100,9 +100,11 @@ open class APLTest {
         assertEquals(expected, v.ensureNumber().asComplex())
     }
 
-    fun assertString(expected: String, value: APLValue) {
-        assertEquals(1, value.dimensions.size)
-        assertEquals(expected, value.toStringValue())
+    fun assertString(expected: String, value: APLValue, message: String? = null) {
+        val suffix = if (message != null) ": ${message}" else ""
+        assertEquals(1, value.dimensions.size, "Expected rank-1, got: ${value.dimensions.size}${suffix}")
+        val valueString = value.toStringValue()
+        assertEquals(expected, valueString, "Expected '${expected}', got: '${valueString}'${suffix}")
     }
 
     fun assertAPLNull(value: APLValue) {

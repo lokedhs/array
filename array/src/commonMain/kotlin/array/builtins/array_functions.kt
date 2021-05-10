@@ -147,6 +147,7 @@ object ResizedArrayImpls {
             v is APLLong -> ResizedArrayLong(dimensions, v)
             v is APLDouble -> ResizedArrayDouble(dimensions, v)
             v is APLSingleValue -> ResizedSingleValueGeneric(dimensions, v)
+            dimensions.size == 0 -> ResizedSingleValueGeneric(dimensions, v.disclose())
             else -> ResizedArray(dimensions, v)
         }
     }
@@ -346,12 +347,12 @@ abstract class ConcatenateAPLFunctionImpl(pos: Position) : APLFunction(pos) {
 
     private fun joinByLaminate(a: APLValue, b: APLValue, axis: Int): APLValue {
         val a1 = if (a.isScalar()) {
-            ResizedArrayImpls.makeResizedArray(b.dimensions, a.disclose())
+            ResizedArrayImpls.makeResizedArray(b.dimensions, a)
         } else {
             a
         }
         val b1 = if (b.isScalar()) {
-            ResizedArrayImpls.makeResizedArray(a.dimensions, b.disclose())
+            ResizedArrayImpls.makeResizedArray(a.dimensions, b)
         } else {
             b
         }

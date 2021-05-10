@@ -46,7 +46,8 @@ class ConcatenateTest : APLTest() {
                 arrayOf(
                     0, 1, 2, 3, 4, 1000, 5, 6, 7, 8, 9, 1001, 10, 11, 12, 13, 14, 1002,
                     15, 16, 17, 18, 19, 1003
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -58,7 +59,8 @@ class ConcatenateTest : APLTest() {
                 arrayOf(
                     0, 1, 2, 3, 4, 1000, 5, 6, 7, 8, 9, 1001, 10, 11, 12, 13, 14, 1002,
                     15, 16, 17, 18, 19, 1003
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -70,7 +72,8 @@ class ConcatenateTest : APLTest() {
                 arrayOf(
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
                     1000, 1001, 1002, 1003, 1004
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -121,7 +124,8 @@ class ConcatenateTest : APLTest() {
                 arrayOf(
                     0, 1, 2, 3, 4, 5, 1234, 6, 7, 8, 9, 10, 11, 1234, 12, 13, 14, 15, 16,
                     17, 1234, 18, 19, 20, 21, 22, 23, 1234, 24, 25, 26, 27, 28, 29, 1234
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -149,7 +153,8 @@ class ConcatenateTest : APLTest() {
                     10089, 10090, 10091, 10092, 10093, 10094, 10095, 10096, 10097, 10098,
                     99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 10099, 10100,
                     10101, 10102, 10103, 10104, 10105, 10106, 10107, 10108, 10109
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -178,7 +183,8 @@ class ConcatenateTest : APLTest() {
                     10097, 98, 10098, 99, 10099, 100, 10100, 101, 10101, 102, 10102, 103,
                     10103, 104, 10104, 105, 10105, 106, 10106, 107, 10107, 108, 10108,
                     109, 10109
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -190,7 +196,8 @@ class ConcatenateTest : APLTest() {
                 arrayOf(
                     0, 1, 2, 3, 4, 5, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
                     110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -205,7 +212,8 @@ class ConcatenateTest : APLTest() {
                     19, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
                     128, 129, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 130, 131, 132, 133,
                     134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144
-                ), result)
+                ), result
+            )
         }
     }
 
@@ -263,6 +271,39 @@ class ConcatenateTest : APLTest() {
             assertString("as", result.valueAt(3))
         }
     }
+
+    @Test
+    fun concatenateWithEnclosedRight() {
+        parseAPLExpression("1 2 3 4 ,[0.5] ⊂\"foo\"").let { result ->
+            assertDimension(dimensionsOfSize(4, 2), result)
+            fun assertRow(i: Int) {
+                val col0 = result.valueAt(i * 2)
+                assertSimpleNumber((i + 1).toLong(), col0, "Column 0 row ${i}: Expected ${i + 1}. Got: ${col0}")
+                val col1 = result.valueAt(i * 2 + 1)
+                assertString("foo", col1, "Column 1 row ${i}: Expected foo got: ${col1}")
+            }
+            repeat(4) { i ->
+                assertRow(i)
+            }
+        }
+    }
+
+    @Test
+    fun concatenateWithEnclosedLeft() {
+        parseAPLExpression("(⊂\"foo\") ,[0.5] 10 11 12 13").let { result ->
+            assertDimension(dimensionsOfSize(4, 2), result)
+            fun assertRow(i: Int) {
+                val col0 = result.valueAt(i * 2)
+                assertString("foo", col0, "Column 1 row ${i}: Expected foo got: ${col0}")
+                val col1 = result.valueAt(i * 2 + 1)
+                assertSimpleNumber((i + 10).toLong(), col1, "Column 0 row ${i}: Expected ${i + 1}. Got: ${col1}")
+            }
+            repeat(4) { i ->
+                assertRow(i)
+            }
+        }
+    }
+
 
     private fun assertChar(expected: Int, result: APLValue) {
         assertTrue(result is APLChar)
