@@ -1,7 +1,9 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 class ReshapeTest : APLTest() {
     @Test
@@ -66,6 +68,54 @@ class ReshapeTest : APLTest() {
     fun reshapeCalculatedFailsWithMultipleUndefinedDimensions() {
         assertFailsWith<InvalidDimensionsException> {
             parseAPLExpression("¯1 ¯1 ⍴ ⍳4")
+        }
+    }
+
+    @Test
+    fun reshapeSpecialisedLong() {
+        parseAPLExpression("2 3 ⍴ 10 11 12 13").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertSame(ArrayMemberType.LONG, result.specialisedType)
+            assertEquals(10L, result.valueAtLong(0, null))
+            assertEquals(11L, result.valueAtLong(1, null))
+            assertEquals(12L, result.valueAtLong(2, null))
+            assertEquals(13L, result.valueAtLong(3, null))
+            assertEquals(10L, result.valueAtLong(4, null))
+            assertEquals(11L, result.valueAtLong(5, null))
+        }
+    }
+
+    @Test
+    fun reshapeSpecialisedDouble() {
+        parseAPLExpression("2 3 ⍴ 1.1 1.2 1.3 1.4").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            assertSame(ArrayMemberType.DOUBLE, result.specialisedType)
+            assertEquals(1.1, result.valueAtDouble(0, null))
+            assertEquals(1.2, result.valueAtDouble(1, null))
+            assertEquals(1.3, result.valueAtDouble(2, null))
+            assertEquals(1.4, result.valueAtDouble(3, null))
+            assertEquals(1.1, result.valueAtDouble(4, null))
+            assertEquals(1.2, result.valueAtDouble(5, null))
+        }
+    }
+
+    @Test
+    fun reshapeSpecialisedLongSingleValue() {
+        parseAPLExpression("2 3 ⍴ 1").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            repeat(6) { i ->
+                assertEquals(1, result.valueAtLong(i, null))
+            }
+        }
+    }
+
+    @Test
+    fun reshapeSpecialisedDoubleSingleValue() {
+        parseAPLExpression("2 3 ⍴ 1.2").let { result ->
+            assertDimension(dimensionsOfSize(2, 3), result)
+            repeat(6) { i ->
+                assertEquals(1.2, result.valueAtDouble(i, null))
+            }
         }
     }
 }

@@ -118,8 +118,9 @@ object ResizedArrayImpls {
     class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
         override val specialisedType = value.specialisedType
         override fun valueAt(p: Int) = value.valueAt(p % value.size)
-        override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p, pos)
-        override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p, pos)
+        override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p % value.size, pos)
+        override fun valueAtLong(p: Int, pos: Position?) = value.valueAtLong(p % value.size, pos)
+        override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p % value.size, pos)
     }
 
     class ResizedSingleValueGeneric(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
@@ -134,7 +135,7 @@ object ResizedArrayImpls {
     }
 
     class ResizedArrayDouble(override val dimensions: Dimensions, private val boxed: APLDouble) : APLArray() {
-        override val specialisedType get() = ArrayMemberType.LONG
+        override val specialisedType get() = ArrayMemberType.DOUBLE
         override fun valueAt(p: Int) = boxed
         override fun valueAtDouble(p: Int, pos: Position?) = boxed.value
     }
