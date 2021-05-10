@@ -1,7 +1,7 @@
 plugins {
     id 'application'
     id 'org.jetbrains.kotlin.jvm'
-    id 'org.openjfx.javafxplugin' version '0.0.9'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 repositories {
@@ -27,7 +27,7 @@ compileTestKotlin {
 }
 
 javafx {
-    version = "14"
+    version = "15"
     modules = ['javafx.base', 'javafx.controls', 'javafx.graphics', 'javafx.fxml', 'javafx.web', 'javafx.swing']
 }
 
