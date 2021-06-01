@@ -1,4 +1,3 @@
-// build.gradle
 plugins {
     // Add the official Orchid Gradle plugin so you can use Orchid with the custom DSL   
     id "com.eden.orchidPlugin" version "0.21.0"
