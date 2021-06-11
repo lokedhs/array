@@ -2,7 +2,6 @@ package array.gui
 
 import array.APLGenericException
 import array.APLValue
-import array.FormatStyle
 import array.gui.styledarea.*
 import javafx.scene.Node
 import javafx.scene.layout.*
@@ -16,7 +15,6 @@ import org.fxmisc.richtext.model.TextOps
 import java.util.*
 import java.util.function.BiConsumer
 import java.util.function.Function
-import kotlin.collections.ArrayList
 
 class ResultList3(val client: Client) {
     private val styledOps = CodeSegmentOps()
@@ -64,7 +62,8 @@ class ResultList3(val client: Client) {
     fun getNode() = scrollArea
 
     fun addResult(v: APLValue) {
-        styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
+        //styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
+        styledArea.appendAPLValueEnd(v, TextStyle(TextStyle.Type.RESULT))
     }
 
     fun addExceptionResult(e: Exception) {
@@ -120,7 +119,7 @@ class ResultList3(val client: Client) {
             return currentSeg.joinSegment(nextSeg)
         }
 
-        override fun realGetText(seg: EditorContent): String {
+        override fun realGetText(seg: EditorContent): String? {
             return seg.realGetText()
         }
 

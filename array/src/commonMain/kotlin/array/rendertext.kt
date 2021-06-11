@@ -333,17 +333,20 @@ fun renderStringValue(value: APLValue, style: FormatStyle): String {
     }
 }
 
-private fun renderStringValueOptionalQuotes(value: APLValue, showQuotes: Boolean): String {
+fun renderStringValueOptionalQuotes(value: APLValue, showQuotes: Boolean): String {
     val buf = StringBuilder()
     if (showQuotes) {
         buf.append("\"")
     }
     for (i in 0 until value.size) {
         val v = value.valueAt(i)
-        if (v is APLChar) {
-            buf.addCodepoint(v.value)
-        } else {
+        if (v !is APLChar) {
             throw IllegalStateException("String contain non-chars")
+        }
+        val ch = v.value
+        when {
+            ch == '"'.code -> buf.append("\\\"")
+            else -> buf.addCodepoint(ch)
         }
     }
     if (showQuotes) {

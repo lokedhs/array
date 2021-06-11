@@ -255,8 +255,7 @@ class ScanResult1Arg(val context: RuntimeContext, val fn: APLFunction, val fnAxi
             if (currIndex < axisCoord) {
                 for (i in (currIndex + 1)..axisCoord) {
                     val index = axisActionFactors.indexForAxis(high, low, i)
-                    leftValue =
-                        cachedResults.checkOrUpdate(index) { fn.eval2Arg(context, leftValue, a.valueAt(index), fnAxis).collapse() }
+                    leftValue = cachedResults.checkOrUpdate(index) { fn.eval2Arg(context, leftValue, a.valueAt(index), fnAxis).collapse() }
                 }
             }
 

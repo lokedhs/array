@@ -11,7 +11,7 @@ interface EditorContent {
     fun length(): Int
     fun createNode(renderContext: ClientRenderContext, style: TextStyle): Node
     fun joinSegment(nextSeg: EditorContent): Optional<EditorContent>
-    fun realGetText(): String
+    fun realGetText(): String?
     fun realCharAt(index: Int): Char
     fun realSubsequence(start: Int, end: Int): EditorContent
 

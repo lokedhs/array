@@ -1,5 +1,7 @@
 package array.gui.styledarea
 
+import array.APLValue
+import array.gui.Array2ContentEntry
 import array.gui.ExtendedCharsKeyboardInput
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
@@ -56,7 +58,9 @@ class ROStyledArea(
                 .addParagraph(
                     listOf(
                         StyledSegment(EditorContent.makeString(">"), TextStyle(TextStyle.Type.PROMPT)),
-                        StyledSegment(EditorContent.makeString(" "), TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
+                        StyledSegment(EditorContent.makeString(" "), TextStyle(TextStyle.Type.PROMPT, promptTag = true))
+                    )
+                )
                 .build()
             insert(document.length(), inputDocument)
         }
@@ -146,13 +150,14 @@ class ROStyledArea(
         return document.subSequence(inputPosition.inputStart, inputPosition.inputEnd).text
     }
 
-    fun withUpdateEnabled(fn: () -> Unit) {
+    fun <T> withUpdateEnabled(fn: () -> T): T {
         contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
         val oldEnabled = updatesEnabled
         updatesEnabled = true
         try {
-            fn()
+            val result = fn()
             moveToEndOfInput()
+            return result
         } finally {
             updatesEnabled = oldEnabled
         }
@@ -168,13 +173,31 @@ class ROStyledArea(
         showParagraphAtTop(document.paragraphs.size - 1)
     }
 
+    fun appendAPLValueEnd(value: APLValue, style: TextStyle, parStyle: ParStyle = ParStyle()) {
+        withUpdateEnabled {
+            val newDoc = ReadOnlyStyledDocumentBuilder(segOps, parStyle)
+                .addParagraph(
+                    mutableListOf(
+                        StyledSegment(Array2ContentEntry(value), style)
+                    )
+                )
+                .addParagraph(EditorContent.makeBlank(), style)
+                .build()
+            val inputPos = findInputStartEnd()
+            insert(inputPos.promptStartPos, newDoc)
+        }
+        showParagraphAtTop(document.paragraphs.size - 1)
+    }
+
     fun appendErrorMessage(text: String) {
         withUpdateEnabled {
             val inputPos = findInputStartEnd()
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
                 .addParagraph(
                     mutableListOf(
-                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR))))
+                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR))
+                    )
+                )
                 .addParagraph(EditorContent.makeBlank(), TextStyle(TextStyle.Type.ERROR))
                 .build()
             insert(inputPos.promptStartPos, newDoc)

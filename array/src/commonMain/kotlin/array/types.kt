@@ -27,7 +27,35 @@ enum class FormatStyle {
 class AxisLabel(val title: String)
 
 class DimensionLabels(val labels: List<List<AxisLabel?>?>) {
+    fun computeLabelledAxes(): BooleanArray {
+        val result = BooleanArray(labels.size) { i ->
+            val labelList = labels[i]
+            if (labelList == null) {
+                false
+            } else {
+                var found = false
+                for (element in labelList) {
+                    if (element != null) {
+                        found = true
+                        break
+                    }
+                }
+                found
+            }
+        }
+        return result
+    }
+
     companion object {
+        fun computeLabelledAxis(value: APLValue): BooleanArray {
+            val labels = value.labels
+            return if (labels == null) {
+                BooleanArray(value.dimensions.size) { false }
+            } else {
+                labels.computeLabelledAxes()
+            }
+        }
+
         fun makeEmpty(dimensions: Dimensions): DimensionLabels {
             val result = ArrayList<List<AxisLabel?>?>(dimensions.size)
             repeat(dimensions.size) {
@@ -793,7 +821,9 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
             throwAPLException(
                 IncompatibleTypeException(
                     "Symbols can't be compared to values with type: ${reference.aplValueType.typeName}",
-                    pos))
+                    pos
+                )
+            )
         }
     }
 

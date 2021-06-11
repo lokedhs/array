@@ -24,6 +24,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     val functionListWindow: FunctionListWindow
     val keyboardHelpWindow: KeyboardHelpWindow
     val aboutWindow: AboutWindow
+    val settingsWindow: Settings
     val calculationQueue: CalculationQueue
     val sourceEditors = ArrayList<SourceEditor>()
 
@@ -51,6 +52,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
         functionListWindow = FunctionListWindow.create(renderContext, engine)
         keyboardHelpWindow = KeyboardHelpWindow(renderContext)
         aboutWindow = AboutWindow()
+        settingsWindow = Settings()
 
         calculationQueue.start()
         stage.onCloseRequest = EventHandler { calculationQueue.stop() }
@@ -122,7 +124,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
     }
 
     private fun openSettings() {
-        println("Settings panel not implemented")
+        settingsWindow.show()
     }
 
     fun sendInput(text: String) {
