@@ -6,7 +6,7 @@
 ⍝ Try to determine if x is part of the mandelbrot set
 ∇ (Iterations) m (x) {
 	n ← 0
-	{n←n+1 ◊ x+⍵×⍵}⍣{(2<|⍺) ∨ n≥Iterations} 0
+	({n←n+1 ◊ x+⍵×⍵}⍣{(2<|⍺) ∨ n≥Iterations}) 0
 	n
 }
 
@@ -18,7 +18,7 @@
 
 ∇ mandelbrotDemo (x) {
 	dimension ← 800 800
-	g ← gui:makeGraphic dimension
-	g gui:drawArray 50 mandelbrot dimension
+	g ← gui:create dimension
+	g gui:draw 50 mandelbrot dimension
 	0
 }
