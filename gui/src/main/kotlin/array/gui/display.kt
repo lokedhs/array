@@ -8,7 +8,6 @@ import array.rendertext.renderStringValueOptionalQuotes
 import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.scene.Node
-import javafx.scene.control.Label
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
@@ -38,7 +37,7 @@ fun makeArrayNode(value: APLValue): Node {
         value.isStringValue() -> makeStringDisp(value)
         d.size == 1 -> makeArray1(value)
         d.size == 2 -> makeArray2(value)
-        else -> Label(value.formatted(FormatStyle.PRETTY))
+        else -> Text(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
     }
 }
 
@@ -74,8 +73,9 @@ private fun makeArray2(value: APLValue): Node {
             labels.labels[1]?.let { axis1Labels ->
                 axis1Labels.forEachIndexed { i, axisLabel ->
                     if (axisLabel != null) {
-                        val label = Text(axisLabel.title)
-                        label.style = "-fx-font-weight: bold;"
+                        val label = Text(axisLabel.title).apply {
+                            styleClass.add("kapresult-header")
+                        }
                         GridPane.setRowIndex(label, 0)
                         GridPane.setColumnIndex(label, i + colOffset)
                         GridPane.setMargin(label, Insets(3.0, 3.0, 3.0, 3.0))
@@ -93,8 +93,9 @@ private fun makeArray2(value: APLValue): Node {
                 labels.labels[0]?.let { axis0Labels ->
                     val axisLabel = axis0Labels[rowIndex]
                     if (axisLabel != null) {
-                        val rowLabel = Text(axisLabel.title)
-                        rowLabel.style = "-fx-font-weight: bold;"
+                        val rowLabel = Text(axisLabel.title).apply {
+                            styleClass.add("kapresult-header")
+                        }
                         GridPane.setRowIndex(rowLabel, rowIndex + rowOffset)
                         GridPane.setColumnIndex(rowLabel, 0)
                         GridPane.setMargin(rowLabel, Insets(3.0, 3.0, 3.0, 3.0))
@@ -118,5 +119,5 @@ private fun makeArray2(value: APLValue): Node {
 }
 
 private fun makeStringDisp(value: APLValue): Node {
-    return Text(renderStringValueOptionalQuotes(value, true))
+    return Text(renderStringValueOptionalQuotes(value, true)).apply { styleClass.add("kapresult") }
 }

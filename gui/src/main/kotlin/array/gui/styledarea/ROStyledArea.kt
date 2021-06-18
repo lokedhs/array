@@ -176,11 +176,7 @@ class ROStyledArea(
     fun appendAPLValueEnd(value: APLValue, style: TextStyle, parStyle: ParStyle = ParStyle()) {
         withUpdateEnabled {
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, parStyle)
-                .addParagraph(
-                    mutableListOf(
-                        StyledSegment(Array2ContentEntry(value), style)
-                    )
-                )
+                .addParagraph(mutableListOf(StyledSegment(Array2ContentEntry(value), style)))
                 .addParagraph(EditorContent.makeBlank(), style)
                 .build()
             val inputPos = findInputStartEnd()

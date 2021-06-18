@@ -345,7 +345,7 @@ fun renderStringValueOptionalQuotes(value: APLValue, showQuotes: Boolean): Strin
         }
         val ch = v.value
         when {
-            ch == '"'.code -> buf.append("\\\"")
+            ch == '"'.code && showQuotes -> buf.append("\\\"")
             else -> buf.addCodepoint(ch)
         }
     }
