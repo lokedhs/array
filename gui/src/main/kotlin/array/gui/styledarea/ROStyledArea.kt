@@ -1,8 +1,8 @@
 package array.gui.styledarea
 
 import array.APLValue
-import array.gui.Array2ContentEntry
 import array.gui.ExtendedCharsKeyboardInput
+import array.gui.ValueRenderer
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
@@ -178,9 +178,7 @@ class ROStyledArea(
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, parStyle)
                 .addParagraph(
                     mutableListOf(
-                        StyledSegment(Array2ContentEntry(value), style)
-                    )
-                )
+                        StyledSegment(ValueRenderer.makeContent(value), style)))
                 .addParagraph(EditorContent.makeBlank(), style)
                 .build()
             val inputPos = findInputStartEnd()
@@ -195,9 +193,7 @@ class ROStyledArea(
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, ParStyle())
                 .addParagraph(
                     mutableListOf(
-                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR))
-                    )
-                )
+                        StyledSegment(EditorContent.makeString(text), TextStyle(TextStyle.Type.ERROR))))
                 .addParagraph(EditorContent.makeBlank(), TextStyle(TextStyle.Type.ERROR))
                 .build()
             insert(inputPos.promptStartPos, newDoc)
