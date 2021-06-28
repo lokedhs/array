@@ -8,6 +8,7 @@ import array.rendertext.renderStringValueOptionalQuotes
 import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.scene.Node
+import javafx.scene.control.Label
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
