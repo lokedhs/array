@@ -36,6 +36,7 @@ open class KAPEditorStyledArea<P, S>(
     private var prefixActive = false
 
     init {
+        stylesheets.add("/array/gui/interactor.css")
         updateKeymap()
     }
 

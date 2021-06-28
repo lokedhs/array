@@ -13,6 +13,7 @@ import javafx.scene.text.Font
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
+import java.lang.IllegalStateException
 
 class Client(val application: ClientApplication, val stage: Stage) {
     val renderContext: ClientRenderContext = ClientRenderContextImpl()
@@ -38,7 +39,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
         calculationQueue = CalculationQueue(engine)
 
         val fontIn = javaClass.getResourceAsStream("fonts/FreeMono.otf")
-        inputFont = fontIn.use { Font.loadFont(it, 18.0) }
+        inputFont = fontIn.use { Font.loadFont(it, 18.0) ?: throw IllegalStateException("Unable to load font") }
 
         resultList = ResultList3(this)
 

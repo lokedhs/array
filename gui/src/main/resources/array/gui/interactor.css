@@ -1,0 +1,9 @@
+.kapresult {
+    -fx-font-size: 16px;
+    -fx-font-family: FreeMono;
+}
+
+.kapresult-header {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
