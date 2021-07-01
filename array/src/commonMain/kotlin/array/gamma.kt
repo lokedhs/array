@@ -37,7 +37,6 @@ private const val Pa5 = -1.89773526463879200348872089421e-03
 private const val Pa6 = 5.69394463439411649408050664078e-03
 private const val Pa7 = -1.44705562421428915453880392761e-02
 
-// Logarithm values
 private const val ln2_hi = 6.93147180369123816490e-01
 private const val ln2_lo = 1.90821492927058770002e-10
 private const val two54 = 1.80143985094819840000e+16
@@ -394,8 +393,8 @@ private fun largeGamma(xInput: Double): DoubleSet {
     x -= 0.5
     var va = x
     va = doubleTruncate(va)
-    var vb = x - va
-    var ta = va * ua
+    val vb = x - va
+    val ta = va * ua
     var tb = vb * ua + x * ub
 
     tb += lns2pi_lo
@@ -421,11 +420,11 @@ private fun smallGamma(x: Double): Double {
     var yya = ra - 1.0
     y = ym1
     var rb = y - yya
-    var yyb = rb
+    val yyb = rb
 
     ym1 = y - 1.0
     while (ym1 > LEFT + x0) {
-        var t = ra * yya
+        val t = ra * yya
         rb = ra * yyb + y * rb
         ra = doubleTruncate(t)
         rb += t - ra
@@ -433,7 +432,7 @@ private fun smallGamma(x: Double): Double {
         y = ym1--
         yya--
     }
-    var yy = ratfunGamma(y - x0, 0.0)
+    val yy = ratfunGamma(y - x0, 0.0)
     y = rb * (yy.a + yy.b) + ra * yy.b
     y += yy.a * ra
     return y
@@ -444,7 +443,7 @@ private fun smallerGamma(xInput: Double): Double {
     var x = xInput
     var t: Double
     var d: Double
-    var xxa: Double
+    val xxa: Double
     var xxb: Double
     if (x < x0 + LEFT) {
         t = doubleTruncate(x)
@@ -467,9 +466,9 @@ private fun smallerGamma(xInput: Double): Double {
         d = -x0 - t
         d += x
     }
-    var r = ratfunGamma(t, d)
+    val r = ratfunGamma(t, d)
     var ra = r.a
-    var rb = r.b
+    val rb = r.b
     d = doubleTruncate(ra / x)
     ra -= d * xxa
     ra -= d * xxb
@@ -557,42 +556,6 @@ private fun ratfunGamma(z: Double, c: Double): DoubleSet {
     return DoubleSet(ra, rb)
 }
 
-/*
-static struct Double
-ratfun_gam(z, c)
-	double z, c;
-{
-	double p, q;
-	struct Double r, t;
-
-	q = Q0 +z*(Q1+z*(Q2+z*(Q3+z*(Q4+z*(Q5+z*(Q6+z*(Q7+z*Q8)))))));
-	p = P0 + z*(P1 + z*(P2 + z*(P3 + z*P4)));
-
-	/* return r.a + r.b = a0 + (z+c)^2*p/q, with r.a truncated to 26 bits. */
-	p = p/q;
-	t.a = z, TRUNC(t.a);		/* t ~= z + c */
-	t.b = (z - t.a) + c;
-	t.b *= (t.a + z);
-	q = (t.a *= t.a);		/* t = (z+c)^2 */
-	TRUNC(t.a);
-	t.b += (q - t.a);
-	r.a = p, TRUNC(r.a);		/* r = P/Q */
-	r.b = p - r.a;
-	t.b = t.b*p + t.a*r.b + a0_lo;
-	t.a *= r.a;			/* t = (z+c)^2*(P/Q) */
-	r.a = t.a + a0_hi, TRUNC(r.a);
-	r.b = ((a0_hi-r.a) + t.a) + t.b;
-	return (r);			/* r = a0 + t */
-}
- */
-
-private inline fun <T> withDoubleBits(x: Double, fn: (a: Int, b: Int) -> T): T {
-    val xBits = x.toBits().toULong()
-    val highBits = xBits and 0xFFFFFFFF00000000UL
-    val lowBits = xBits and 0xFFFFFFFFUL
-    return fn(highBits.toInt(), lowBits.toInt())
-}
-
 private fun doubleTruncate(x: Double): Double {
     val xBits = x.toBits().toULong()
     val highBits = xBits and 0xFFFFFFFF00000000UL
@@ -605,6 +568,7 @@ fun gammaTest() {
     println("res = $x")
 }
 
+@Strictfp
 private fun expD(xInput: Double, cInput: Double): Double {
     var x = xInput
     var c = cInput
@@ -653,50 +617,6 @@ private fun expD(xInput: Double, cInput: Double): Double {
     }
 }
 
-/*
-double __exp__D(x, c)
-double x, c;
-{
-    double  z,hi,lo;
-    int k;
-
-    if (x != x)	/* x is NaN */
-        return(x);
-    if ( x <= lnhuge ) {
-        if ( x >= lntiny ) {
-
-            /* argument reduction : x --> x - k*ln2 */
-            z = invln2*x;
-            k = z + copysign(.5, x);
-
-            /* express (x+c)-k*ln2 as hi-lo and let x=hi-lo rounded */
-
-            hi=(x-k*ln2hi);			/* Exact. */
-            x= hi - (lo = k*ln2lo-c);
-            /* return 2^k*[1+x+x*c/(2+c)]  */
-            z=x*x;
-            c= x - z*(p1+z*(p2+z*(p3+z*(p4+z*p5))));
-            c = (x*c)/(2.0-c);
-
-            return  scalb(1.+(hi-(lo - c)), k);
-        }
-        /* end of x > lntiny */
-
-        else
-        /* exp(-big#) underflows to zero */
-            if(finite(x))  return(scalb(1.0,-5000));
-
-            /* exp(-INF) is zero */
-            else return(0.0);
-    }
-    /* end of x < lnhuge */
-
-    else
-    /* exp(INF) is INF, exp(+big#) overflows to INF */
-        return( finite(x) ?  scalb(1.0,5000)  : x);
-}
-*/
-
 private fun copysign(x: Double, y: Double): Double {
     val xBits = x.toBits().toULong()
     val yBits = y.toBits().toULong()
@@ -704,20 +624,10 @@ private fun copysign(x: Double, y: Double): Double {
     return Double.fromBits(res.toLong())
 }
 
-/*
-double
-copysign(double x, double y)
-{
-	u_int32_t hx,hy;
-	GET_HIGH_WORD(hx,x);
-	GET_HIGH_WORD(hy,y);
-	SET_HIGH_WORD(x,(hx&0x7fffffff)|(hy&0x80000000));
-        return x;
-}
- */
-
+@Strictfp
 private fun scalb(x: Double, exp: Double) = x * 2.0.pow(exp)
 
+@Strictfp
 private fun logD(x: Double): DoubleSet {
     var m = logB(x).toInt()
     var g = ldexp(x, -m)
@@ -749,50 +659,12 @@ private fun logD(x: Double): DoubleSet {
     val resultA = doubleTruncate(u1 + u2)
     val resultB = (u1 - resultA) + u2
     return DoubleSet(resultA, resultB)
-
-
-    /*
-    int m, j;
-	double F, f, g, q, u, v, u2;
-	volatile double u1;
-	struct Double r;
-
-	/* Argument reduction: 1 <= g < 2; x/2^m = g;	*/
-	/* y = F*(1 + f/F) for |f| <= 2^-8		*/
-
-	m = logb(x);
-	g = ldexp(x, -m);
-	if (m == -1022) {
-		j = logb(g), m += j;
-		g = ldexp(g, -j);
-	}
-	j = N*(g-1) + .5;
-	F = (1.0/N) * j + 1;
-	f = g - F;
-
-	g = 1/(2*F+f);
-	u = 2*f*g;
-	v = u*u;
-	q = u*v*(A1 + v*(A2 + v*(A3 + v*A4)));
-	if (m | j)
-		u1 = u + 513, u1 -= 513;
-	else
-		u1 = u, TRUNC(u1);
-	u2 = (2.0*(f - F*u1) - u1*f) * g;
-
-	u1 += m*logF_head[N] + logF_head[j];
-
-	u2 +=  logF_tail[j]; u2 += q;
-	u2 += logF_tail[N]*m;
-	r.a = u1 + u2;			/* Only difference is here */
-	TRUNC(r.a);
-	r.b = (u1 - r.a) + u2;
-	return (r);
-     */
 }
 
+@Strictfp
 private fun ldexp(x: Double, y: Int) = if (y > 0) x * (1 shl y) else x / (1 shl y.absoluteValue)
 
+@Strictfp
 private fun logB(x: Double): Double {
     val xBits = x.toBits().toULong()
     val ix = ((xBits and 0xFFFFFFFF00000000UL) shr 32).toInt()
@@ -816,26 +688,6 @@ private fun logB(x: Double): Double {
         }
     }
 }
-
-/*
-double
-logb(double x)
-{
-	int32_t lx,ix;
-	EXTRACT_WORDS(ix,lx,x);
-	ix &= 0x7fffffff;			/* high |x| */
-	if((ix|lx)==0) return -1.0/fabs(x);
-	if(ix>=0x7ff00000) return x*x;
-	if(ix<0x00100000) {
-		x *= two54;		 /* convert subnormal x to normal */
-		GET_HIGH_WORD(ix,x);
-		ix &= 0x7fffffff;
-		return (double) ((ix>>20)-1023-54);
-	} else
-		return (double) ((ix>>20)-1023);
-}
-
- */
 
 fun doubleBinomial(a: Double, b: Double): Double {
     val row = (if (a < 0) 4 else 0) or (if (b < 0) 2 else 0) or (if (b < a) 1 else 0)
