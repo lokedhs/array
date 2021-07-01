@@ -8,30 +8,59 @@ import array.rendertext.renderStringValueOptionalQuotes
 import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.scene.Node
+import javafx.scene.control.Label
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
 import java.util.*
+import kotlin.reflect.KClass
 
-class Array2ContentEntry(val value: APLValue) : EditorContent {
-    private val textContent = value.formatted(FormatStyle.PLAIN)
+interface ValueRenderer {
+    val text: String
+    fun renderValue(): Node
 
-    override fun length() = textContent.length
-    override fun createNode(renderContext: ClientRenderContext, style: TextStyle) = makeArrayNode(value)
-    override fun joinSegment(nextSeg: EditorContent): Optional<EditorContent> = Optional.empty()
-    override fun realGetText() = textContent
-    override fun realCharAt(index: Int) = throw IllegalStateException("Can't get character array element")
+    companion object {
+        private val renderers = hashMapOf<KClass<out APLValue>, (APLValue) -> ValueRenderer>(
+            Pair(APLMap::class, { APLMapRenderer(it) }))
 
-    override fun realSubsequence(start: Int, end: Int): EditorContent {
-        return if (start == 0 && end == textContent.length) {
-            this
-        } else {
-            StringEditorContentEntry(textContent.substring(start, end))
+        fun makeValueRenderer(value: APLValue): ValueRenderer {
+            val renderer = renderers[value::class]
+            return if (renderer != null) {
+                renderer(value)
+            } else {
+                Array2ValueRenderer(value)
+            }
+        }
+
+        fun makeContent(value: APLValue): EditorContent {
+            return Array2ContentEntry(makeValueRenderer(value))
         }
     }
 }
 
-fun makeArrayNode(value: APLValue): Node {
+class Array2ValueRenderer(private val value: APLValue) : ValueRenderer {
+    override val text = value.formatted(FormatStyle.PLAIN)
+    override fun renderValue(): Node = makeArrayNode(value)
+}
+
+private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
+    override fun length() = renderer.text.length
+    override fun createNode(renderContext: ClientRenderContext, style: TextStyle) = renderer.renderValue()
+    override fun joinSegment(nextSeg: EditorContent): Optional<EditorContent> = Optional.empty()
+    override fun realGetText() = renderer.text
+    override fun realCharAt(index: Int) = throw IllegalStateException("Can't get character array element")
+
+    override fun realSubsequence(start: Int, end: Int): EditorContent {
+        val text = renderer.text
+        return if (start == 0 && end == text.length) {
+            this
+        } else {
+            StringEditorContentEntry(text.substring(start, end))
+        }
+    }
+}
+
+private fun makeArrayNode(value: APLValue): Node {
     val d = value.dimensions
     return when {
         value.isStringValue() -> makeStringDisp(value)
@@ -120,4 +149,12 @@ private fun makeArray2(value: APLValue): Node {
 
 private fun makeStringDisp(value: APLValue): Node {
     return Text(renderStringValueOptionalQuotes(value, true)).apply { styleClass.add("kapresult") }
+}
+
+class APLMapRenderer(val value: APLValue) : ValueRenderer {
+    override val text = value.formatted(FormatStyle.PLAIN)
+
+    override fun renderValue(): Node {
+        return Label("map(not implemented)")
+    }
 }
