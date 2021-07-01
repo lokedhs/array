@@ -1,5 +1,6 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -144,4 +145,62 @@ class NumbersTest : APLTest() {
             fn(result)
         }
     }
+
+    @Test
+    fun positiveIntegerGamma() {
+        parseAPLExpression("!1 2 10 11").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 2, 3628800, 39916800), result)
+        }
+    }
+
+    @Test
+    fun positiveDoubleGamme() {
+        parseAPLExpression("!1.2 1.3 1.4 10.1 2.2 4.2").let { result ->
+            assertDimension(dimensionsOfSize(6), result)
+            assertArrayContent(
+                arrayOf(
+                    NearDouble(1.101802491, 4),
+                    NearDouble(1.166711905, 4),
+                    NearDouble(1.242169345, 4),
+                    NearDouble(4593083.59, 2),
+                    NearDouble(2.42396548, 4),
+                    NearDouble(32.57809605, 4)
+                ), result)
+        }
+    }
+
+    @Test
+    fun negativeDoubleGamma() {
+        parseAPLExpression("!¯1.2 ¯3.4 ¯5.1 ¯5.2 ¯2.2 ¯2.3").let { result ->
+            assertDimension(dimensionsOfSize(6), result)
+            assertArrayContent(
+                arrayOf(
+                    NearDouble(-5.821148569, 4),
+                    NearDouble(-1.108029947, 4),
+                    NearDouble(-0.3639731139, 4),
+                    NearDouble(-0.1640610505, 4),
+                    NearDouble(4.850957141, 4),
+                    NearDouble(3.328347007, 4)
+                ), result
+            )
+        }
+    }
+
+    @Ignore
+    @Test
+    fun positiveIntegerBinomial() {
+        parseAPLExpression("10!32").let { result ->
+            assertSimpleNumber(64512240, result)
+        }
+    }
+
+    @Ignore
+    @Test
+    fun positiveDoubleBinominal() {
+        parseAPLExpression("10.2!32.2").let { result ->
+            assertNearDouble(NearDouble(80760102.76, 2), result)
+        }
+    }
+
 }

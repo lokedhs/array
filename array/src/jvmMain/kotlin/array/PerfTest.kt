@@ -5,6 +5,10 @@ import kotlinx.collections.immutable.persistentHashMapOf
 import kotlin.system.measureTimeMillis
 
 fun main() {
+    gammaTest()
+}
+
+fun xamain() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)

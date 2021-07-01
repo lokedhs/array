@@ -35,7 +35,9 @@ private fun throwMismatchedScalarFunctionArgs(pos: Position): Nothing {
     throwAPLException(
         InvalidDimensionsException(
             "Arguments must be of the same dimension, or one of the arguments must be a scalar",
-            pos))
+            pos
+        )
+    )
 }
 
 class GenericArraySum2Args(
@@ -218,7 +220,9 @@ abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
                     throwAPLException(
                         InvalidDimensionsException(
                             "Dimensions of A does not match dimensions of B across axis ${axisInt}",
-                            pos))
+                            pos
+                        )
+                    )
                 }
                 val d = d2.remove(axisInt).insert(d2.size - 1, d2[axisInt])
                 val transposeAxis = IntArray(d2.size) { i ->
@@ -631,7 +635,8 @@ class LogAPLFunction : APLFunctionDescriptor {
                 { x, y ->
                     if (x < 0 || y < 0) y.toDouble().toComplex().log(x.toDouble()).makeAPLNumber() else log(
                         y.toDouble(),
-                        x.toDouble()).makeAPLNumber()
+                        x.toDouble()
+                    ).makeAPLNumber()
                 },
                 { x, y -> if (x < 0 || y < 0) y.toComplex().log(x.toComplex()).makeAPLNumber() else log(y, x).makeAPLNumber() },
                 { x, y -> y.log(x).makeAPLNumber() }
@@ -910,4 +915,26 @@ class OrAPLFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = OrAPLFunctionImpl(pos)
+}
+
+class BinomialAPLFunction : APLFunctionDescriptor {
+    class BinomialAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun numberCombine1Arg(a: APLNumber): APLValue {
+            return singleArgNumericRelationOperation(pos, a,
+                { x -> doubleGamma((x + 1).toDouble()).makeAPLNumber() },
+                { x -> doubleGamma(x + 1.0).makeAPLNumber() },
+                { x -> complexGamma(x + 1.0).makeAPLNumber() })
+        }
+
+        override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
+            return numericRelationOperation(pos,
+                a,
+                b,
+                { x, y -> doubleBinomial(x.toDouble(), y.toDouble()).makeAPLNumber() },
+                { x, y -> doubleBinomial(x, y).makeAPLNumber() },
+                { x, y -> complexBinomial(x, y).makeAPLNumber() })
+        }
+    }
+
+    override fun make(pos: Position) = BinomialAPLFunctionImpl(pos)
 }
