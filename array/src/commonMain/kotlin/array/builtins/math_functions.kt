@@ -33,11 +33,7 @@ class ArraySum1Arg(
 
 private fun throwMismatchedScalarFunctionArgs(pos: Position): Nothing {
     throwAPLException(
-        InvalidDimensionsException(
-            "Arguments must be of the same dimension, or one of the arguments must be a scalar",
-            pos
-        )
-    )
+        InvalidDimensionsException("Arguments must be of the same dimension, or one of the arguments must be a scalar", pos))
 }
 
 class GenericArraySum2Args(

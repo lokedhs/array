@@ -518,13 +518,7 @@ class Engine {
 
     inline fun <reified T : APLValue> callClosableHandler(value: T, pos: Position) {
         val handler =
-            closableHandlers[value::class] ?: throw APLEvalException(
-                "Value cannot be closed: ${
-                    value.formatted(
-                        FormatStyle.PLAIN
-                    )
-                }", pos
-            )
+            closableHandlers[value::class] ?: throw APLEvalException("Value cannot be closed: ${value.formatted(FormatStyle.PLAIN)}", pos)
         @Suppress("UNCHECKED_CAST")
         (handler as ClosableHandler<T>).close(value)
     }

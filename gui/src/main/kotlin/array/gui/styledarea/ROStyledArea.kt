@@ -58,9 +58,7 @@ class ROStyledArea(
                 .addParagraph(
                     listOf(
                         StyledSegment(EditorContent.makeString(">"), TextStyle(TextStyle.Type.PROMPT)),
-                        StyledSegment(EditorContent.makeString(" "), TextStyle(TextStyle.Type.PROMPT, promptTag = true))
-                    )
-                )
+                        StyledSegment(EditorContent.makeString(" "), TextStyle(TextStyle.Type.PROMPT, promptTag = true))))
                 .build()
             insert(document.length(), inputDocument)
         }

@@ -182,8 +182,7 @@ class NumbersTest : APLTest() {
                     NearDouble(-0.1640610505, 4),
                     NearDouble(4.850957141, 4),
                     NearDouble(3.328347007, 4)
-                ), result
-            )
+                ), result)
         }
     }
 

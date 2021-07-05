@@ -24,8 +24,7 @@ class OuterJoinTest : APLTest() {
             arrayOf(2, 9),
             arrayOf(2, 8),
             arrayOf(2, 7),
-            arrayOf(2, 6)
-        )
+            arrayOf(2, 6))
     }
 
     @Test

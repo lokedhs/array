@@ -168,8 +168,7 @@ class FlowControlTest : APLTest() {
                 |foo ← λ{ x + ⍵ }
                 |bar ← λ{ x ← 10 ◊ (⍞foo 1) - ⍵ }
                 |⍞bar 20 
-                """.trimMargin()
-            )
+                """.trimMargin())
         }
     }
 
