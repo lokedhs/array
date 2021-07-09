@@ -769,16 +769,8 @@ class RandomAPLFunction : APLFunctionDescriptor {
         }
 
         private fun randSubsetC2(a: Int, b: Long): LongArray {
-            val rp = LongArray(a) { 0 }
-            var sz = 1L
-            while (sz < b * 2) {
-                sz *= 2
-            }
-            sz *= 2
+            val rp = LongArray(a) { i -> i.toLong() }
             val map = HashMap<Long, Long>(0)
-            repeat(a) { i ->
-                rp[i] = i.toLong()
-            }
             repeat(a) { i ->
                 val j = makeRandom(b - i) + i
                 if (j < a) {
