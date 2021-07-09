@@ -756,26 +756,41 @@ class RandomAPLFunction : APLFunctionDescriptor {
                         "A should not be greater than B. A: ${aInt}, B: ${bLong}",
                         pos))
             }
-
-            // TODO: We don't have a tree set available in Kotlin Native, so we're using two sets here. Very much suboptimal.
-            val picked = HashSet<Long>()
-            val result = ArrayList<Long>()
-            val count = bLong + 1
-            for (i in count - aInt until count) {
-                val item = (0 until bLong).random()
-                if (picked.contains(item)) {
-                    picked.add(i)
-                    result.add(i)
-                } else {
-                    picked.add(item)
-                    result.add(item)
-                }
+            if (aInt == 0) {
+                return APLArrayLong(dimensionsOfSize(0), longArrayOf())
             }
-            return APLArrayImpl.make(dimensionsOfSize(result.size)) { index -> result[index].makeAPLNumber() }
+
+            val result = randSubsetC2(aInt, bLong)
+            return APLArrayLong(dimensionsOfSize(result.size), result)
         }
 
         private fun makeRandom(limit: Long): Long {
             return (0 until limit).random()
+        }
+
+        private fun randSubsetC2(a: Int, b: Long): LongArray {
+            val rp = LongArray(a) { 0 }
+            var sz = 1L
+            while (sz < b * 2) {
+                sz *= 2
+            }
+            sz *= 2
+            val map = HashMap<Long, Long>(0)
+            repeat(a) { i ->
+                rp[i] = i.toLong()
+            }
+            repeat(a) { i ->
+                val j = makeRandom(b - i) + i
+                if (j < a) {
+                    val jInt = j.toInt()
+                    val c = rp[jInt]
+                    rp[jInt] = rp[i]
+                    rp[i] = c
+                } else {
+                    rp[i] = (map[j] ?: j).also { map[j] = rp[i] }
+                }
+            }
+            return rp
         }
     }
 

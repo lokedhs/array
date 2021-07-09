@@ -66,8 +66,7 @@ class ExceptionsTest : APLTest() {
             |}
             |
             |bar 1 2 3 4
-            """.trimMargin()
-            )
+            """.trimMargin())
             assertTrue(false, "Exception was expected")
         } catch (ex: APLEvalException) {
             val callStack = ex.callStack

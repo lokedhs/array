@@ -201,9 +201,7 @@ fun checkAxisPositionIsInRange(posAlongAxis: Int, dimensions: Dimensions, axis: 
         throwAPLException(
             APLIndexOutOfBoundsException(
                 "Position ${posAlongAxis} does not fit in dimensions ${Arrays.toString(dimensions.dimensions.toTypedArray())} axis ${axis}",
-                pos
-            )
-        )
+                pos))
     }
 }
 

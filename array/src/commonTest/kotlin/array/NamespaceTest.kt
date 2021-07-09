@@ -179,8 +179,7 @@ class NamespaceTest : APLTest() {
                 |a ← 10
                 |namespace("bar")
                 |a
-                """.trimMargin()
-            )
+                """.trimMargin())
         }
     }
 

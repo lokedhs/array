@@ -46,8 +46,7 @@ class ForEachTest : APLTest() {
             |  X + 1
             |}
             |foo¨ 1
-            """.trimMargin()
-        )
+            """.trimMargin())
         assertSimpleNumber(2, result)
     }
 
@@ -98,15 +97,15 @@ class ForEachTest : APLTest() {
             assertDimension(dimensionsOfSize(3), result)
             result.valueAt(0).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10011, 10012 ,10013), v)
+                assertArrayContent(arrayOf(10011, 10012, 10013), v)
             }
             result.valueAt(1).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10021, 10022 ,10023), v)
+                assertArrayContent(arrayOf(10021, 10022, 10023), v)
             }
             result.valueAt(2).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10031, 10032 ,10033), v)
+                assertArrayContent(arrayOf(10031, 10032, 10033), v)
             }
         }
 
@@ -118,15 +117,15 @@ class ForEachTest : APLTest() {
             assertDimension(dimensionsOfSize(3), result)
             result.valueAt(0).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10011, 10021 ,10031), v)
+                assertArrayContent(arrayOf(10011, 10021, 10031), v)
             }
             result.valueAt(1).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10012, 10022 ,10032), v)
+                assertArrayContent(arrayOf(10012, 10022, 10032), v)
             }
             result.valueAt(2).let { v ->
                 assertDimension(dimensionsOfSize(3), v)
-                assertArrayContent(arrayOf(10013, 10023 ,10033), v)
+                assertArrayContent(arrayOf(10013, 10023, 10033), v)
             }
         }
 

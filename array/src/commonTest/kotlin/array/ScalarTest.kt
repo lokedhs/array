@@ -79,8 +79,7 @@ class ScalarTest : APLTest() {
             arrayOf(
                 110, 111, 112, 113, 114, 115, 126, 127, 128, 129, 130, 131, 142, 143, 144, 145, 146, 147, 158, 159, 160, 161, 162, 163
             ),
-            result
-        )
+            result)
     }
 
     @Test
@@ -91,8 +90,7 @@ class ScalarTest : APLTest() {
             arrayOf(
                 110, 111, 122, 123, 134, 135, 116, 117, 128, 129, 140, 141, 122, 123, 134, 135, 146, 147, 128, 129, 140, 141, 152, 153
             ),
-            result
-        )
+            result)
     }
 
     @Test
@@ -102,10 +100,8 @@ class ScalarTest : APLTest() {
         assertArrayContent(
             arrayOf(
                 110, 121, 112, 123, 114, 125, 116, 127, 118, 129, 120, 131, 122, 133,
-                124, 135, 126, 137, 128, 139, 130, 141, 132, 143
-            ),
-            result
-        )
+                124, 135, 126, 137, 128, 139, 130, 141, 132, 143),
+            result)
     }
 
     @Test
@@ -435,8 +431,7 @@ class ScalarTest : APLTest() {
             assertEquals(
                 doubleFn((i - 4).toDouble()),
                 result.valueAt(i).ensureNumber().asDouble(),
-                "function: ${functionName}, arg: ${i - 4}"
-            )
+                "function: ${functionName}, arg: ${i - 4}")
         }
     }
 
@@ -452,8 +447,7 @@ class ScalarTest : APLTest() {
             assertEquals(
                 doubleFn(100.0, (100 + i).toDouble()),
                 result.valueAt(i).ensureNumber().asDouble(),
-                "function: ${functionName}}, index: ${i}"
-            )
+                "function: ${functionName}}, index: ${i}")
         }
     }
 
@@ -464,8 +458,7 @@ class ScalarTest : APLTest() {
             assertEquals(
                 doubleFn((100 + i).toDouble(), 10.0),
                 result.valueAt(i).ensureNumber().asDouble(),
-                "function: ${functionName}}. index: ${i}"
-            )
+                "function: ${functionName}}. index: ${i}")
         }
     }
 }

@@ -156,8 +156,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
         "defsyntaxsub" to DefsyntaxSubToken,
         "defsyntax" to DefsyntaxToken,
         "use" to IncludeToken,
-        "declare" to DeclareToken
-    )
+        "declare" to DeclareToken)
 
     init {
         singleCharFunctions = hashSetOf(
@@ -376,17 +375,11 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private fun collectString(): Token {
         val buf = StringBuilder()
         while (true) {
-            val ch = content.nextCodepoint() ?: throw ParseException(
-                "End of input in the middle of string",
-                content.pos()
-            )
+            val ch = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string", content.pos())
             if (ch == '"'.code) {
                 break
             } else if (ch == '\\'.code) {
-                val next = content.nextCodepoint() ?: throw ParseException(
-                    "End of input in the middle of string",
-                    content.pos()
-                )
+                val next = content.nextCodepoint() ?: throw ParseException("End of input in the middle of string", content.pos())
                 buf.addCodepoint(next)
             } else {
                 buf.addCodepoint(ch)
@@ -454,9 +447,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
                 ParsedComplex(
                     Complex(
                         withNeg(realSign.value != "", realS.value).toDouble(),
-                        withNeg(complexSign.value != "", complexS.value).toDouble()
-                    )
-                )
+                        withNeg(complexSign.value != "", complexS.value).toDouble()))
             }
         )
     }

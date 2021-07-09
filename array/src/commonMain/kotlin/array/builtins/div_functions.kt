@@ -189,9 +189,7 @@ class CatchOperator : APLOperatorOneArg {
                         throwAPLException(
                             APLIllegalArgumentException(
                                 "Catch argument must be a two-dimensional array with two columns",
-                                pos
-                                                       )
-                                         )
+                                pos))
                     }
                     try {
                         return fn.eval1Arg(context, APLNullValue.APL_NULL_INSTANCE, null)

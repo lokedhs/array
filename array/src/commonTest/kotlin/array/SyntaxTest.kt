@@ -242,9 +242,7 @@ class SyntaxText : APLTest() {
                 """
                 |declare(:foo 1)
                 |'a
-                """.trimMargin()
-            )
-
+                """.trimMargin())
         }
     }
 }

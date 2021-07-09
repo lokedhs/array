@@ -1,10 +1,32 @@
 package array
 
 import array.complex.Complex
+import kotlin.math.pow
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+
+class NearDouble(val expected: Double, val precision: Int) {
+    fun assertNear(v: Double, message: String? = null) {
+        val dist = 10.0.pow(-precision)
+        val messageWithPrefix = if (message == null) "" else ": ${message}"
+        assertTrue(expected > v - dist && expected < v + dist, "Expected=${expected}, result=${v}${messageWithPrefix}")
+    }
+}
+
+class NearComplex(val expected: Complex, val realPrecision: Int, val imPrecision: Int) {
+    fun assertNear(v: Complex, message: String? = null) {
+        val realDist = 10.0.pow(-realPrecision)
+        val imDist = 10.0.pow(-imPrecision)
+        val messageWithPrefix = if (message == null) "" else ": ${message}"
+        assertTrue(
+            expected.real > v.real - realDist
+                    && expected.real < v.real + realDist
+                    && expected.imaginary > v.imaginary - imDist
+                    && expected.imaginary < v.imaginary + imDist, "expected=${expected}, result=${v}${messageWithPrefix}")
+    }
+}
 
 open class APLTest {
     fun parseAPLExpression(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): APLValue {
@@ -40,6 +62,7 @@ open class APLTest {
                 is Int -> assertSimpleNumber(expected.toLong(), value.valueAt(i), "index: ${i}")
                 is Long -> assertSimpleNumber(expected, value.valueAt(i), "index: ${i}")
                 is Double -> assertSimpleDouble(expected, value.valueAt(i), "index: ${i}")
+                is NearDouble -> expected.assertNear(value.valueAt(i).ensureNumber().asDouble(), "index: ${i}")
                 else -> throw IllegalArgumentException("Cannot check array member at index ${i}, type = ${expected::class.simpleName}")
             }
         }
@@ -85,6 +108,10 @@ open class APLTest {
         assertEquals(expected, v.ensureNumber().asDouble(), message)
     }
 
+    fun assertNearDouble(nearDouble: NearDouble, result: APLValue, message: String? = null) {
+        nearDouble.assertNear(result.ensureNumber().asDouble(), message)
+    }
+
     fun assertComplexWithRange(real: Pair<Double, Double>, imaginary: Pair<Double, Double>, result: APLValue) {
         assertTrue(result.isScalar())
         val complex = result.ensureNumber().asComplex()
@@ -93,11 +120,11 @@ open class APLTest {
         assertTrue(imaginary.first <= complex.imaginary && imaginary.second >= complex.imaginary, message)
     }
 
-    fun assertSimpleComplex(expected: Complex, result: APLValue) {
-        assertTrue(result.isScalar())
+    fun assertSimpleComplex(expected: Complex, result: APLValue, message: String? = null) {
+        assertTrue(result.isScalar(), message)
         val v = result.unwrapDeferredValue()
-        assertTrue(v is APLNumber)
-        assertEquals(expected, v.ensureNumber().asComplex())
+        assertTrue(v is APLNumber, message)
+        assertEquals(expected, v.ensureNumber().asComplex(), message)
     }
 
     fun assertString(expected: String, value: APLValue, message: String? = null) {
@@ -112,13 +139,14 @@ open class APLTest {
         assertEquals(0, value.dimensions[0])
     }
 
-    fun assertAPLValue(expected: Any, result: APLValue) {
+    fun assertAPLValue(expected: Any, result: APLValue, message: String? = null) {
         when (expected) {
-            is Int -> assertSimpleNumber(expected.toLong(), result)
-            is Long -> assertSimpleNumber(expected, result)
-            is Double -> assertSimpleDouble(expected, result)
-            is Complex -> assertSimpleComplex(expected, result)
-            is String -> assertString(expected, result)
+            is Int -> assertSimpleNumber(expected.toLong(), result, message)
+            is Long -> assertSimpleNumber(expected, result, message)
+            is Double -> assertSimpleDouble(expected, result, message)
+            is Complex -> assertSimpleComplex(expected, result, message)
+            is String -> assertString(expected, result, message)
+            is NearDouble -> assertNearDouble(expected, result, message)
             else -> throw IllegalArgumentException("No support for comparing values of type: ${expected::class.simpleName}")
         }
     }

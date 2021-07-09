@@ -46,7 +46,7 @@ class IOAPLTest : APLTest() {
             engine.parseAndEval(
                 StringSourceLocation("io:read \"test-data/this-file-should-not-be-found-as-well\""),
                 true
-                               ).collapse()
+            ).collapse()
             fail("Read should not succeed")
         } catch (e: TagCatch) {
             val tag = e.tag.ensureSymbol().value
@@ -63,8 +63,7 @@ class IOAPLTest : APLTest() {
             |close x
             |io:print afterValue ← closedFlag x
             |beforeValue afterValue
-            """.trimMargin()
-                                                  )
+            """.trimMargin())
         assertArrayContent(arrayOf(0, 1), result)
         assertEquals("01", out)
     }
@@ -82,8 +81,7 @@ class IOAPLTest : APLTest() {
             |} 0
             |io:print closedFlag x
             |0
-            """.trimMargin()
-                                                  )
+            """.trimMargin())
         assertSimpleNumber(0, result)
         assertEquals("01", out)
     }

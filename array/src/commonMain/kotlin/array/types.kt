@@ -819,11 +819,7 @@ class APLSymbol(val value: Symbol) : APLSingleValue() {
             return value.compareTo(reference.value)
         } else {
             throwAPLException(
-                IncompatibleTypeException(
-                    "Symbols can't be compared to values with type: ${reference.aplValueType.typeName}",
-                    pos
-                )
-            )
+                IncompatibleTypeException("Symbols can't be compared to values with type: ${reference.aplValueType.typeName}", pos))
         }
     }
 
