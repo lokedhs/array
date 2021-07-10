@@ -1,8 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="array-js">
     <output-path>$PROJECT_DIR$/array/build/libs</output-path>
-    <root id="archive" name="array-js.jar">
-      <element id="module-output" name="array_test.array.jsMain" />
-    </root>
+    <root id="archive" name="array-js.jar" />
   </artifact>
 </component>

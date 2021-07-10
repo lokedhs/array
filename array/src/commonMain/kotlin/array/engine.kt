@@ -332,7 +332,7 @@ class Engine {
         registerNativeOperator("∵", BitwiseOp())
         registerNativeOperator("∘", ComposeOp())
 
-        // function aliases
+        // function aliases                             
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
         functionAliases[coreNamespace.internAndExport("~")] = coreNamespace.internAndExport("∼")
 

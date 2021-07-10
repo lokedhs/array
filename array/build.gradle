@@ -136,10 +136,10 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation kotlin('stdlib-jdk8')
-                implementation "org.apache.poi:poi-ooxml:4.1.2"
-                implementation 'com.google.code.gson:gson:2.8.6'
+                implementation "org.apache.poi:poi-ooxml:5.0.0"
+                implementation 'com.google.code.gson:gson:2.8.7'
                 implementation 'org.apache.derby:derby:10.15.2.0'
-                implementation 'org.xerial:sqlite-jdbc:3.34.0'
+                implementation 'org.xerial:sqlite-jdbc:3.36.0.1'
             }
         }
         jvmTest {
@@ -151,7 +151,7 @@ kotlin {
         jsMain {
             dependencies {
                 implementation kotlin('stdlib-js')
-                implementation npm('xregexp', '4.4.1')
+                implementation npm('xregexp', '5.0.2')
                 implementation npm('grapheme-splitter', '1.0.4')
             }
         }
