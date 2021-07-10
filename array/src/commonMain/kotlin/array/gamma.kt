@@ -529,7 +529,6 @@ private fun negGamma(x: Double): Double {
     if (sgn < 0) {
         y = -y
     }
-    println("F")
     return PI / (y * z)
 }
 
