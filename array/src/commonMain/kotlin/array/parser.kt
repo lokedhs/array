@@ -460,7 +460,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
     }
 
-    private fun lookupFunction(name: Symbol): APLFunctionDescriptor? {
+    fun lookupFunction(name: Symbol): APLFunctionDescriptor? {
         environments.asReversed().forEach { env ->
             val function = env.findLocalFunction(name)
             if (function != null) {

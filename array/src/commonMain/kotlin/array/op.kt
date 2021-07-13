@@ -17,7 +17,7 @@ private fun parseFunctionOrNull(parser: APLParser): Either<APLFunction, Pair<Tok
     val (token, pos) = parser.tokeniser.nextTokenWithPosition()
     return when (token) {
         is Symbol -> {
-            val fn = parser.tokeniser.engine.getFunction(token)
+            val fn = parser.lookupFunction(token)
             if (fn == null) {
                 parser.tokeniser.pushBackToken(token)
                 Either.Right(Pair(token, pos))
