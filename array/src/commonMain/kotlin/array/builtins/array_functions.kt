@@ -1266,6 +1266,36 @@ class FormatAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = FormatAPLFunctionImpl(pos)
 }
 
+class ParseNumberFunction : APLFunctionDescriptor {
+    class ParseNumberFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            val s = a.toStringValue(pos)
+
+            fun throwParseError(): Nothing = throwAPLException(APLEvalException("Value cannot be parsed as a number: '${s}", pos))
+
+            val intMatch = INTEGER_PATTERN.matchEntire(s)
+            if (intMatch != null) {
+                return intMatch.groups.get(1)!!.value.toInt().makeAPLNumber()
+            }
+            val doubleMatch = DOUBLE_PATTERN.matchEntire(s)
+            if (doubleMatch != null) {
+                val doubleAsString = doubleMatch.groups.get(1)!!.value
+                if (doubleAsString == ".") throwParseError()
+                return doubleAsString.toDouble().makeAPLNumber()
+            }
+            throwParseError()
+        }
+
+        companion object {
+            private val INTEGER_PATTERN = "^(-?[0-9]+)$".toRegex()
+            private val DOUBLE_PATTERN = "^(-?[0-9]*\\.[0-9]*)$".toRegex()
+        }
+    }
+
+    override fun make(pos: Position) = ParseNumberFunctionImpl(pos)
+}
+
+
 class WhereAPLFunction : APLFunctionDescriptor {
     class WhereAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {

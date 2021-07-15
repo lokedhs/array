@@ -274,6 +274,7 @@ class Engine {
         registerNativeFunction("⍱", NorAPLFunction())
         registerNativeFunction("∩", IntersectionAPLFunction())
         registerNativeFunction("!", BinomialAPLFunction())
+        registerNativeFunction("⍎", ParseNumberFunction())
 
         // hash tables
         registerNativeFunction("map", MapAPLFunction())

@@ -3,6 +3,7 @@ package array
 import array.complex.Complex
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class StringsTest : APLTest() {
@@ -96,5 +97,52 @@ class StringsTest : APLTest() {
     @Test
     fun formatSelfString() {
         assertString("foo bar", parseAPLExpression("⍕\"foo bar\""))
+    }
+
+    @Test
+    fun parseIntegerTest() {
+        assertSimpleNumber(123, parseAPLExpression("⍎\"123\""))
+        assertSimpleNumber(-10, parseAPLExpression("⍎\"-10\""))
+    }
+
+    @Test
+    fun parseDoubleTest() {
+        assertNearDouble(NearDouble(10.1, 4), parseAPLExpression("⍎\"10.1\""))
+        assertNearDouble(NearDouble(-4.5, 4), parseAPLExpression("⍎\"-4.5\""))
+    }
+
+    @Test
+    fun parseNumberErrorTest() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"illegal\"")
+        }
+    }
+
+    @Test
+    fun parseNumberFailsWithArrayInput() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎1 2 3")
+        }
+    }
+
+    @Test
+    fun parseNumberFailsWithIllegalTypeInt() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎1")
+        }
+    }
+
+    @Test
+    fun parseNumberFailsWithIllegalTypeCharacter() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎@a")
+        }
+    }
+
+    @Test
+    fun parseNumberFailsWithIllegalTypeMap() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎map 1 2")
+        }
     }
 }
