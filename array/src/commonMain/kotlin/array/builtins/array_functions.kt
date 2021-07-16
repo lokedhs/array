@@ -46,7 +46,7 @@ class IotaArrayLong(val length: Int) : APLArray() {
 
     override fun valueAtInt(p: Int, pos: Position?): Int {
         if (p < 0 || p >= length) {
-            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}"))
+            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}", pos))
         }
         return p
     }
