@@ -33,7 +33,7 @@ class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
             val lowPosition = p % fromSourceMul
             val posInSrc = highPosition * toDestMul + lowPosition
 
-            return APLArrayImpl(dimensionsOfSize(sizeAlongAxis), Array(sizeAlongAxis) { i ->
+            APLArrayImpl(dimensionsOfSize(sizeAlongAxis), Array(sizeAlongAxis) { i ->
                 value.valueAt(i * stepLength + posInSrc)
             })
         }
