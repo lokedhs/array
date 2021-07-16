@@ -1287,8 +1287,8 @@ class ParseNumberFunction : APLFunctionDescriptor {
         }
 
         companion object {
-            private val INTEGER_PATTERN = "^(-?[0-9]+)$".toRegex()
-            private val DOUBLE_PATTERN = "^(-?[0-9]*\\.[0-9]*)$".toRegex()
+            private val INTEGER_PATTERN = "^[ \t]*(-?[0-9]+)[ \t]*$".toRegex()
+            private val DOUBLE_PATTERN = "^[ \t]*(-?[0-9]*\\.[0-9]*)[ \t]*$".toRegex()
         }
     }
 
