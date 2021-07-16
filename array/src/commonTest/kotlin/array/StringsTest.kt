@@ -116,7 +116,7 @@ class StringsTest : APLTest() {
         assertNearDouble(NearDouble(-3.0, 4), parseAPLExpression("⍎\"-3.\""))
         assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"  40.0\""))
         assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"40.0\""))
-        assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"  -40.0   \""))
+        assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"  40.0   \""))
     }
 
     @Test
