@@ -6,7 +6,7 @@ private fun regexpFromValue(a: APLValue, pos: Position): Regex {
     val regexpString = a.toStringValue(pos)
     try {
         return toRegexpWithException(regexpString)
-    } catch (e: Exception) {
+    } catch (e: RegexpParseException) {
         throwAPLException(InvalidRegexp("Invalid format: ${regexpString}", pos))
     }
 }
@@ -50,7 +50,7 @@ class RegexpFindFunction : APLFunctionDescriptor {
 }
 
 
-class RegexModule : KapModule {
+class RegexpModule : KapModule {
     override val name get() = "regexp"
 
     override fun init(engine: Engine) {
