@@ -34,10 +34,10 @@ class RegexpTest : APLTest() {
 
     @Test
     fun plainRegexSyntaxError() {
-        assertFailsWith<InvalidRegex> {
+        assertFailsWith<InvalidRegexp> {
             parseAPLExpression("\"a[z\" regexp:matches \"foo\"")
         }
-        assertFailsWith<InvalidRegex> {
+        assertFailsWith<InvalidRegexp> {
             parseAPLExpression("\"a(z\" regexp:matches \"foo\"")
         }
     }

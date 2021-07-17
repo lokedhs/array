@@ -1,13 +1,13 @@
 package array
 
-class InvalidRegex(message: String, pos: Position? = null) : APLEvalException(message, pos)
+class InvalidRegexp(message: String, pos: Position? = null) : APLEvalException(message, pos)
 
 private fun regexpFromValue(a: APLValue, pos: Position): Regex {
-    val regexString = a.toStringValue(pos)
+    val regexpString = a.toStringValue(pos)
     try {
-        return regexString.toRegex()
+        return toRegexpWithException(regexpString)
     } catch (e: Exception) {
-        throwAPLException(InvalidRegex("Invalid format: ${regexString}", pos))
+        throwAPLException(InvalidRegexp("Invalid format: ${regexpString}", pos))
     }
 }
 
