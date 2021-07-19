@@ -43,6 +43,24 @@ class RegexpTest : APLTest() {
     }
 
     @Test
+    fun plainWithMatcher0() {
+        val result = parseAPLExpression(
+            """
+            |(regexp:make "abc") regexp:matches "qweabcasd"
+            """.trimMargin())
+        assertSimpleNumber(1, result)
+    }
+
+    @Test
+    fun plainWithMatcher1() {
+        val result = parseAPLExpression(
+            """
+            |(regexp:make "abc") regexp:matches "xyztestcxz"
+            """.trimMargin())
+        assertSimpleNumber(0, result)
+    }
+
+    @Test
     fun regexpFind0() {
         val result = parseAPLExpression(
             """

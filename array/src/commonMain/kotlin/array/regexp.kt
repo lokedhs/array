@@ -3,11 +3,15 @@ package array
 class InvalidRegexp(message: String, pos: Position? = null) : APLEvalException(message, pos)
 
 private fun regexpFromValue(a: APLValue, pos: Position): Regex {
-    val regexpString = a.toStringValue(pos)
-    try {
-        return toRegexpWithException(regexpString)
-    } catch (e: RegexpParseException) {
-        throwAPLException(InvalidRegexp("Invalid format: ${regexpString}", pos))
+    return if (a is RegexpMatcherValue) {
+        a.matcher
+    } else {
+        val regexpString = a.toStringValue(pos)
+        try {
+            toRegexpWithException(regexpString)
+        } catch (e: RegexpParseException) {
+            throwAPLException(InvalidRegexp("Invalid format: ${regexpString}", pos))
+        }
     }
 }
 
@@ -49,6 +53,27 @@ class RegexpFindFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = RegexpFindFunctionImpl(pos)
 }
 
+class RegexpMatcherValue(val matcher: Regex) : APLSingleValue() {
+    override val aplValueType get() = APLValueType.INTERNAL
+    override fun formatted(style: FormatStyle) = "regexp-matcher"
+    override fun compareEquals(reference: APLValue) = reference is RegexpMatcherValue && matcher == reference.matcher
+    override fun makeKey(): APLValueKey = APLValueKeyImpl(this, matcher)
+}
+
+class MakeRegexpFunction : APLFunctionDescriptor {
+    class MakeRegexpFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
+            return RegexpMatcherValue(toRegexpWithException(a.toStringValue(pos)))
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            TODO("no flags support yet")
+        }
+    }
+
+    override fun make(pos: Position) = MakeRegexpFunctionImpl(pos)
+}
+
 
 class RegexpModule : KapModule {
     override val name get() = "regexp"
@@ -57,5 +82,6 @@ class RegexpModule : KapModule {
         val namespace = engine.makeNamespace("regexp")
         engine.registerFunction(namespace.internAndExport("matches"), RegexpMatchesFunction())
         engine.registerFunction(namespace.internAndExport("find"), RegexpFindFunction())
+        engine.registerFunction(namespace.internAndExport("make"), MakeRegexpFunction())
     }
 }
