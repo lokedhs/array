@@ -86,7 +86,7 @@ class RegexpTest : APLTest() {
     fun regexpTestMultiline() {
         val result = parseAPLExpression(
             """
-            |(multiLine regexp:create "^foo") regexp:matches "a
+            |(:multiLine regexp:create "^foo") regexp:matches "a
             |fooa
             |a
             |a"
