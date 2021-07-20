@@ -40,9 +40,9 @@ actual fun currentTime(): Long {
     return System.currentTimeMillis()
 }
 
-actual fun toRegexpWithException(string: String): Regex {
+actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex {
     return try {
-        string.toRegex()
+        string.toRegex(options)
     } catch (e: PatternSyntaxException) {
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }

@@ -8,7 +8,7 @@ private fun regexpFromValue(a: APLValue, pos: Position): Regex {
     } else {
         val regexpString = a.toStringValue(pos)
         try {
-            toRegexpWithException(regexpString)
+            toRegexpWithException(regexpString, emptySet())
         } catch (e: RegexpParseException) {
             throwAPLException(InvalidRegexp("Invalid format: ${regexpString}", pos))
         }
@@ -60,18 +60,37 @@ class RegexpMatcherValue(val matcher: Regex) : APLSingleValue() {
     override fun makeKey(): APLValueKey = APLValueKeyImpl(this, matcher)
 }
 
-class MakeRegexpFunction : APLFunctionDescriptor {
-    class MakeRegexpFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+class CreateRegexpFunction : APLFunctionDescriptor {
+    class CreateRegexpFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            return RegexpMatcherValue(toRegexpWithException(a.toStringValue(pos)))
+            return RegexpMatcherValue(toRegexpWithException(a.toStringValue(pos), emptySet()))
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            TODO("no flags support yet")
+            val d = a.dimensions
+            val flags = when {
+                d.size == 0 -> setOf(valueToFlag(context.engine, a))
+                d.size == 1 -> a.membersSequence().map { v -> valueToFlag(context.engine, v) }.toSet()
+                else -> throwAPLException(APLEvalException("Regexp flags must be a single symbol or a one-dimensional array", pos))
+            }
+            return RegexpMatcherValue(toRegexpWithException(b.toStringValue(pos), flags))
+        }
+
+        private fun valueToFlag(engine: Engine, v: APLValue): RegexOption {
+            val s = v.unwrapDeferredValue()
+            if (s !is APLSymbol) {
+                throwAPLException(APLEvalException("Regexp flag must be a symbol"))
+            }
+            val sym = s.value
+            return when {
+                sym === engine.keywordNamespace.internSymbol("ignoreCase") -> RegexOption.IGNORE_CASE
+                sym === engine.keywordNamespace.internSymbol("multiLine") -> RegexOption.MULTILINE
+                else -> throwAPLException(APLEvalException("Unknown regexp flag: ${sym.symbolName}"))
+            }
         }
     }
 
-    override fun make(pos: Position) = MakeRegexpFunctionImpl(pos)
+    override fun make(pos: Position) = CreateRegexpFunctionImpl(pos)
 }
 
 
@@ -82,6 +101,6 @@ class RegexpModule : KapModule {
         val namespace = engine.makeNamespace("regexp")
         engine.registerFunction(namespace.internAndExport("matches"), RegexpMatchesFunction())
         engine.registerFunction(namespace.internAndExport("find"), RegexpFindFunction())
-        engine.registerFunction(namespace.internAndExport("make"), MakeRegexpFunction())
+        engine.registerFunction(namespace.internAndExport("create"), CreateRegexpFunction())
     }
 }

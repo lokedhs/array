@@ -42,4 +42,4 @@ expect fun currentTime(): Long
 
 class RegexpParseException(message: String, cause: Throwable) : Exception(message, cause)
 
-expect fun toRegexpWithException(string: String): Regex
+expect fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex
