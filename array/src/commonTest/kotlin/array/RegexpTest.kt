@@ -114,8 +114,8 @@ class RegexpTest : APLTest() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression(
                 """
-            |:foo regexp:create "foo"
-            """.trimMargin())
+                |:foo regexp:create "foo"
+                """.trimMargin())
         }
     }
 
@@ -124,8 +124,8 @@ class RegexpTest : APLTest() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression(
                 """
-            |:foo :bar regexp:create "foo"
-            """.trimMargin())
+                |:foo :bar regexp:create "foo"
+                """.trimMargin())
         }
     }
 
@@ -134,8 +134,8 @@ class RegexpTest : APLTest() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression(
                 """
-            |1 regexp:create "foo"
-            """.trimMargin())
+                |1 regexp:create "foo"
+                """.trimMargin())
         }
     }
 
@@ -144,8 +144,8 @@ class RegexpTest : APLTest() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression(
                 """
-            |(2 1 ⍴ :multiLine :ignoreCase) regexp:create "foo"
-            """.trimMargin())
+                |(2 1 ⍴ :multiLine :ignoreCase) regexp:create "foo"
+                """.trimMargin())
         }
     }
 }

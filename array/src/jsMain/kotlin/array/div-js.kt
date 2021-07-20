@@ -53,7 +53,7 @@ actual fun currentTime(): Long {
 
 actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex {
     return try {
-        string.toRegex()
+        string.toRegex(options)
     } catch (e: Throwable) {
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }
