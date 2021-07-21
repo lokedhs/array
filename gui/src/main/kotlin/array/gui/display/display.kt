@@ -62,12 +62,17 @@ private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
 }
 
 private fun makeArrayNode(value: APLValue): Node {
+    fun renderAsString(): Text {
+        return Text(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
+    }
+
     val d = value.dimensions
     return when {
+        d.size == 1 && d[0] == 0 -> renderAsString()
         value.isStringValue() -> makeStringDisp(value)
         d.size == 1 -> makeArray1(value)
         d.size == 2 -> makeArray2(value)
-        else -> Text(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
+        else -> renderAsString()
     }
 }
 

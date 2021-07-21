@@ -1,0 +1,12 @@
+namespace("regexp")
+
+∇ (m) finderror (s) {
+  result ← m regexp:find s
+  if (result ≡ ⍬) {
+    →"No match"
+  } else {
+    result
+  }
+}
+
+declare(:export finderror)

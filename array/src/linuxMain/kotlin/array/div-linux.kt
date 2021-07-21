@@ -58,3 +58,11 @@ actual fun currentTime(): Long {
         return (value.tv_sec * 1000) + (value.tv_usec / 1000)
     }
 }
+
+actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex {
+    return try {
+        string.toRegex(options)
+    } catch (e: Exception) {
+        throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
+    }
+}

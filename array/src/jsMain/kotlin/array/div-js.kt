@@ -49,3 +49,12 @@ actual fun Double.formatDouble(): String {
 actual fun currentTime(): Long {
     return Date.now().toLong()
 }
+
+
+actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex {
+    return try {
+        string.toRegex(options)
+    } catch (e: Throwable) {
+        throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
+    }
+}

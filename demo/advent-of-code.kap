@@ -1,0 +1,32 @@
+∇ solveDay1 (file) {
+    content ← ⍎¨io:read file
+    ×/ content[↑ (,2020 = (∘.+⍨content)) / ,⍳,⍨⍴content]
+}
+
+∇ solveDay2 (file) {
+    parseLine ⇐ {
+        (min max ch s) ← λ⍎ λ⍎ λ⊣ λ⊣ {⍞⍺ ⍵}¨ ↓ "^([0-9]+)-([0-9]+) +([a-z]): +([^ ]+) *$" regexp:finderror ⍵
+        {(⍵≥min) ∧ ⍵≤max} +/s=↑ch
+    }
+    +/ parseLine¨io:read file
+}
+
+∇ (m) part3CountObjects (offsets) {
+    (xOffset yOffset) ← offsets
+    (h w) ← ⍴m
+    n ← ⌈h÷yOffset
+    yCoords ← yOffset×⍳n
+    xCoords ← w|xOffset×⍳n
+    pairs ← yCoords (⊂,)¨ xCoords
+    +/ pairs ⊃¨ ⊂m
+}
+
+∇ solveDay3part1 (file) {
+    m ← @# = ⊃io:read file
+    m part3CountObjects 3 1
+}
+
+∇ solveDay3part2 (file) {
+    m ← @# = ⊃io:read file
+    ×/ (⊂m) part3CountObjects¨ (1 1) (3 1) (5 1) (7 1) (1 2)
+}

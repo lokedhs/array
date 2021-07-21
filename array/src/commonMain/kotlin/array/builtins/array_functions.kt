@@ -22,41 +22,74 @@ class AxisActionFactors(val dimensions: Dimensions, axis: Int) {
     }
 }
 
-class IotaArray(val indexes: IntArray) : APLArray() {
-    override val dimensions = Dimensions(indexes)
-
-    private val multipliers = dimensions.multipliers()
-
-    init {
-        assertx(indexes.isNotEmpty())
+object IotaArrayImpls {
+    interface GenericIotaArrayLong {
+        fun resizeIotaArray(d: Dimensions, updatedOffset: Long): ResizedIotaArrayLong
     }
 
-    override fun valueAt(p: Int): APLValue {
-        val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
-        return APLArrayLong(dimensionsOfSize(indexes.size), LongArray(index.size) { i -> index[i].toLong() })
-    }
-}
+    class IotaArray(val indexes: IntArray) : APLArray() {
+        override val dimensions = Dimensions(indexes)
 
-class IotaArrayLong(val length: Int) : APLArray() {
-    override val dimensions = dimensionsOfSize(length)
+        private val multipliers = dimensions.multipliers()
 
-    override val specialisedType get() = ArrayMemberType.LONG
-
-    override fun collapseInt() = this
-
-    override fun valueAtInt(p: Int, pos: Position?): Int {
-        if (p < 0 || p >= length) {
-            throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}"))
+        init {
+            assertx(indexes.isNotEmpty())
         }
-        return p
+
+        override fun valueAt(p: Int): APLValue {
+            val index = Dimensions.positionFromIndexWithMultipliers(p, multipliers)
+            return APLArrayLong(dimensionsOfSize(indexes.size), LongArray(index.size) { i -> index[i].toLong() })
+        }
     }
 
-    override fun valueAtLong(p: Int, pos: Position?): Long {
-        return valueAtInt(p, pos).toLong()
+    class IotaArrayLong(val length: Int) : APLArray(), GenericIotaArrayLong {
+        override val dimensions = dimensionsOfSize(length)
+        override val specialisedType get() = ArrayMemberType.LONG
+        override fun collapseInt() = this
+
+        override fun valueAtInt(p: Int, pos: Position?): Int {
+            if (p < 0 || p >= length) {
+                throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}", pos))
+            }
+            return p
+        }
+
+        override fun valueAtLong(p: Int, pos: Position?): Long {
+            return valueAtInt(p, pos).toLong()
+        }
+
+        override fun valueAt(p: Int): APLValue {
+            return valueAtLong(p, null).makeAPLNumber()
+        }
+
+        override fun resizeIotaArray(d: Dimensions, updatedOffset: Long): ResizedIotaArrayLong {
+            return ResizedIotaArrayLong(d, length, updatedOffset)
+        }
     }
 
-    override fun valueAt(p: Int): APLValue {
-        return valueAtLong(p, null).makeAPLNumber()
+    class ResizedIotaArrayLong(
+        override val dimensions: Dimensions,
+        val width: Int,
+        val offset: Long
+    ) : APLArray(), GenericIotaArrayLong {
+        val length = dimensions.contentSize()
+        override val specialisedType get() = ArrayMemberType.LONG
+        override fun collapseInt() = this
+
+        override fun valueAtLong(p: Int, pos: Position?): Long {
+            if (p < 0 || p >= length) {
+                throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}", pos))
+            }
+            return (p % width) + offset
+        }
+
+        override fun valueAt(p: Int): APLValue {
+            return valueAtLong(p, null).makeAPLNumber()
+        }
+
+        override fun resizeIotaArray(d: Dimensions, updatedOffset: Long): ResizedIotaArrayLong {
+            return ResizedIotaArrayLong(d, width, offset + updatedOffset)
+        }
     }
 }
 
@@ -93,11 +126,11 @@ class IotaAPLFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val aDimensions = a.dimensions
             return when (aDimensions.size) {
-                0 -> IotaArrayLong(a.ensureNumber(pos).asInt())
+                0 -> IotaArrayImpls.IotaArrayLong(a.ensureNumber(pos).asInt())
                 1 -> if (aDimensions[0] == 0) {
                     EnclosedAPLValue.make(APLNullValue.APL_NULL_INSTANCE)
                 } else {
-                    IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
+                    IotaArrayImpls.IotaArray(IntArray(aDimensions[0]) { i -> a.valueAtInt(i, pos) })
                 }
                 else -> throwAPLException(InvalidDimensionsException("Right argument must be rank 0 or 1", pos))
             }
@@ -145,6 +178,7 @@ object ResizedArrayImpls {
         val v = value.unwrapDeferredValue()
         return when {
             dimensions.compareEquals(v.dimensions) -> v
+            value is IotaArrayImpls.GenericIotaArrayLong -> value.resizeIotaArray(dimensions, 0)
             v is APLLong -> ResizedArrayLong(dimensions, v)
             v is APLDouble -> ResizedArrayDouble(dimensions, v)
             v is APLSingleValue -> ResizedSingleValueGeneric(dimensions, v)
@@ -1287,8 +1321,8 @@ class ParseNumberFunction : APLFunctionDescriptor {
         }
 
         companion object {
-            private val INTEGER_PATTERN = "^(-?[0-9]+)$".toRegex()
-            private val DOUBLE_PATTERN = "^(-?[0-9]*\\.[0-9]*)$".toRegex()
+            private val INTEGER_PATTERN = "^[ \t]*(-?[0-9]+)[ \t]*$".toRegex()
+            private val DOUBLE_PATTERN = "^[ \t]*(-?[0-9]*\\.[0-9]*)[ \t]*$".toRegex()
         }
     }
 

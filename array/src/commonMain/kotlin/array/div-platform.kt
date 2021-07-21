@@ -39,3 +39,7 @@ expect fun Double.formatDouble(): String
  * Return the current time in number of milliseconds
  */
 expect fun currentTime(): Long
+
+class RegexpParseException(message: String, cause: Throwable) : Exception(message, cause)
+
+expect fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex

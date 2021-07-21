@@ -103,18 +103,48 @@ class StringsTest : APLTest() {
     fun parseIntegerTest() {
         assertSimpleNumber(123, parseAPLExpression("⍎\"123\""))
         assertSimpleNumber(-10, parseAPLExpression("⍎\"-10\""))
+        assertSimpleNumber(30, parseAPLExpression("⍎\"  30\""))
+        assertSimpleNumber(30, parseAPLExpression("⍎\"30   \""))
+        assertSimpleNumber(30, parseAPLExpression("⍎\"  30   \""))
     }
 
     @Test
     fun parseDoubleTest() {
         assertNearDouble(NearDouble(10.1, 4), parseAPLExpression("⍎\"10.1\""))
         assertNearDouble(NearDouble(-4.5, 4), parseAPLExpression("⍎\"-4.5\""))
+        assertNearDouble(NearDouble(-0.3, 4), parseAPLExpression("⍎\"-.3\""))
+        assertNearDouble(NearDouble(-3.0, 4), parseAPLExpression("⍎\"-3.\""))
+        assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"  40.0\""))
+        assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"40.0\""))
+        assertNearDouble(NearDouble(40.0, 4), parseAPLExpression("⍎\"  40.0   \""))
     }
 
     @Test
     fun parseNumberErrorTest() {
         assertFailsWith<APLEvalException> {
             parseAPLExpression("⍎\"illegal\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\".\"")
+        }
+
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"10 11\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"- 1\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"--1\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"1.2.3\"")
+        }
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression("⍎\"1..\"")
         }
     }
 

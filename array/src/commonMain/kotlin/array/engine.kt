@@ -341,6 +341,7 @@ class Engine {
 
         addModule(UnicodeModule())
         addModule(JsonAPLModule())
+        addModule(RegexpModule())
     }
 
     fun addModule(module: KapModule) {

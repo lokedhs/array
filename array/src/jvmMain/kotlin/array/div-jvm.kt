@@ -1,6 +1,7 @@
 package array
 
 import java.util.concurrent.atomic.AtomicReferenceArray
+import java.util.regex.PatternSyntaxException
 import kotlin.reflect.KClass
 
 actual fun sleepMillis(time: Long) {
@@ -37,4 +38,12 @@ actual fun Double.formatDouble() = this.toString()
 
 actual fun currentTime(): Long {
     return System.currentTimeMillis()
+}
+
+actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex {
+    return try {
+        string.toRegex(options)
+    } catch (e: PatternSyntaxException) {
+        throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
+    }
 }
