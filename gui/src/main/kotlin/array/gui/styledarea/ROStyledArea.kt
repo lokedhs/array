@@ -2,7 +2,7 @@ package array.gui.styledarea
 
 import array.APLValue
 import array.gui.ExtendedCharsKeyboardInput
-import array.gui.ValueRenderer
+import array.gui.display.ValueRenderer
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination

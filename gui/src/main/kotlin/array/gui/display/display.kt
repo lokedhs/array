@@ -1,6 +1,7 @@
-package array.gui
+package array.gui.display
 
 import array.*
+import array.gui.ClientRenderContext
 import array.gui.styledarea.EditorContent
 import array.gui.styledarea.StringEditorContentEntry
 import array.gui.styledarea.TextStyle
@@ -21,7 +22,7 @@ interface ValueRenderer {
 
     companion object {
         private val renderers = hashMapOf<KClass<out APLValue>, (APLValue) -> ValueRenderer>(
-            Pair(APLMap::class, { APLMapRenderer(it) }))
+            Pair(APLMap::class, { APLMapRenderer(it as APLMap) }))
 
         fun makeValueRenderer(value: APLValue): ValueRenderer {
             val renderer = renderers[value::class]
@@ -149,12 +150,4 @@ private fun makeArray2(value: APLValue): Node {
 
 private fun makeStringDisp(value: APLValue): Node {
     return Text(renderStringValueOptionalQuotes(value, true)).apply { styleClass.add("kapresult") }
-}
-
-class APLMapRenderer(val value: APLValue) : ValueRenderer {
-    override val text = value.formatted(FormatStyle.PLAIN)
-
-    override fun renderValue(): Node {
-        return Label("map(not implemented)")
-    }
 }
