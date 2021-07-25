@@ -93,14 +93,41 @@ class CreateRegexpFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = CreateRegexpFunctionImpl(pos)
 }
 
+class RegexpMatcherIndexFunction : APLFunctionDescriptor {
+    class RegexpMatcherIndexFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val matchString = b.toStringValue(pos)
+            val regexp = regexpFromValue(a, pos)
+            val result = regexp.find(matchString) ?: return APLNullValue.APL_NULL_INSTANCE
+            val groups = result.groups
+            return APLArrayImpl(dimensionsOfSize(groups.size), Array(groups.size) { i ->
+                val v = groups.get(i)
+                assertx(!(i == 0 && v == null))
+                if (v == null) {
+                    APLNullValue.APL_NULL_INSTANCE
+                } else {
+                    val (start, end) = indexesFromRegexpMatchGroup(v)
+                    APLArrayLong(dimensionsOfSize(2), longArrayOf(start.toLong(), end.toLong()))
+                }
+            })
+        }
+    }
+
+    override fun make(pos: Position) = RegexpMatcherIndexFunctionImpl(pos)
+}
+
 
 class RegexpModule : KapModule {
     override val name get() = "regexp"
 
     override fun init(engine: Engine) {
         val namespace = engine.makeNamespace("regexp")
-        engine.registerFunction(namespace.internAndExport("matches"), RegexpMatchesFunction())
-        engine.registerFunction(namespace.internAndExport("find"), RegexpFindFunction())
-        engine.registerFunction(namespace.internAndExport("create"), CreateRegexpFunction())
+        fun registerFn(name: String, fn: APLFunctionDescriptor) {
+            engine.registerFunction(namespace.internAndExport(name), fn)
+        }
+        registerFn("matches", RegexpMatchesFunction())
+        registerFn("find", RegexpFindFunction())
+        registerFn("create", CreateRegexpFunction())
+        registerFn("index", RegexpMatcherIndexFunction())
     }
 }

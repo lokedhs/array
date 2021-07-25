@@ -43,3 +43,4 @@ expect fun currentTime(): Long
 class RegexpParseException(message: String, cause: Throwable) : Exception(message, cause)
 
 expect fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex
+expect fun indexesFromRegexpMatchGroup(group: MatchGroup): Pair<Int, Int>

@@ -148,4 +148,35 @@ class RegexpTest : APLTest() {
                 """.trimMargin())
         }
     }
+
+    @Test
+    fun regexpTestWithIndex0() {
+        val result = parseAPLExpression(
+            """
+            |"a([a-z]+)9" regexp:index "xbzafoo9qwatest921"
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(3, 8), result.valueAt(0))
+        assertArrayContent(arrayOf(4, 7), result.valueAt(1))
+    }
+
+    @Test
+    fun regexpTestWithIndex1() {
+        val result = parseAPLExpression(
+            """
+            |"a([a-z]+)?9" regexp:index "xbza9qwatest921"
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(3, 5), result.valueAt(0))
+        assertAPLNull(result.valueAt(1))
+    }
+
+    @Test
+    fun regexpWithIndex2() {
+        val result = parseAPLExpression(
+            """
+            |"a([a-z]+)?9" regexp:index "xbza8qwatest821"
+            """.trimMargin())
+        assertAPLNull(result)
+    }
 }
