@@ -53,6 +53,19 @@ class RegexpFindFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = RegexpFindFunctionImpl(pos)
 }
 
+class RegexpSplitFunction : APLFunctionDescriptor {
+    class RegexpSplitFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+            val matchString = b.toStringValue(pos)
+            val regexp = regexpFromValue(a, pos)
+            val result = regexp.split(matchString)
+            return APLArrayImpl(dimensionsOfSize(result.size), result.map(::APLString).toTypedArray())
+        }
+    }
+
+    override fun make(pos: Position) = RegexpSplitFunctionImpl(pos)
+}
+
 class RegexpMatcherValue(val matcher: Regex) : APLSingleValue() {
     override val aplValueType get() = APLValueType.INTERNAL
     override fun formatted(style: FormatStyle) = "regexp-matcher"
@@ -67,10 +80,10 @@ class CreateRegexpFunction : APLFunctionDescriptor {
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val d = a.dimensions
-            val flags = when {
-                d.size == 0 -> setOf(valueToFlag(context.engine, a))
-                d.size == 1 -> a.membersSequence().map { v -> valueToFlag(context.engine, v) }.toSet()
+            fun mkFlag(v: APLValue) = valueToFlag(context.engine, v)
+            val flags = when (a.dimensions.size) {
+                0 -> setOf(valueToFlag(context.engine, a))
+                1 -> a.membersSequence().map(::mkFlag).toSet()
                 else -> throwAPLException(APLEvalException("Regexp flags must be a single symbol or a one-dimensional array", pos))
             }
             return RegexpMatcherValue(toRegexpWithException(b.toStringValue(pos), flags))
@@ -93,29 +106,28 @@ class CreateRegexpFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = CreateRegexpFunctionImpl(pos)
 }
 
-class RegexpMatcherIndexFunction : APLFunctionDescriptor {
-    class RegexpMatcherIndexFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            val matchString = b.toStringValue(pos)
-            val regexp = regexpFromValue(a, pos)
-            val result = regexp.find(matchString) ?: return APLNullValue.APL_NULL_INSTANCE
-            val groups = result.groups
-            return APLArrayImpl(dimensionsOfSize(groups.size), Array(groups.size) { i ->
-                val v = groups.get(i)
-                assertx(!(i == 0 && v == null))
-                if (v == null) {
-                    APLNullValue.APL_NULL_INSTANCE
-                } else {
-                    val (start, end) = indexesFromRegexpMatchGroup(v)
-                    APLArrayLong(dimensionsOfSize(2), longArrayOf(start.toLong(), end.toLong()))
-                }
-            })
-        }
-    }
-
-    override fun make(pos: Position) = RegexpMatcherIndexFunctionImpl(pos)
-}
-
+//class RegexpMatcherIndexFunction : APLFunctionDescriptor {
+//    class RegexpMatcherIndexFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+//        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+//            val matchString = b.toStringValue(pos)
+//            val regexp = regexpFromValue(a, pos)
+//            val result = regexp.find(matchString) ?: return APLNullValue.APL_NULL_INSTANCE
+//            val groups = result.groups
+//            return APLArrayImpl(dimensionsOfSize(groups.size), Array(groups.size) { i ->
+//                val v = groups.get(i)
+//                assertx(!(i == 0 && v == null))
+//                if (v == null) {
+//                    APLNullValue.APL_NULL_INSTANCE
+//                } else {
+//                    val (start, end) = indexesFromRegexpMatchGroup(v)
+//                    APLArrayLong(dimensionsOfSize(2), longArrayOf(start.toLong(), end.toLong()))
+//                }
+//            })
+//        }
+//    }
+//
+//    override fun make(pos: Position) = RegexpMatcherIndexFunctionImpl(pos)
+//}
 
 class RegexpModule : KapModule {
     override val name get() = "regexp"
@@ -128,6 +140,7 @@ class RegexpModule : KapModule {
         registerFn("matches", RegexpMatchesFunction())
         registerFn("find", RegexpFindFunction())
         registerFn("create", CreateRegexpFunction())
-        registerFn("index", RegexpMatcherIndexFunction())
+        registerFn("split", RegexpSplitFunction())
+//        registerFn("index", RegexpMatcherIndexFunction())
     }
 }

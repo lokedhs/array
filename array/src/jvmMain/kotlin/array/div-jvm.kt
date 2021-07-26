@@ -47,8 +47,3 @@ actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Reg
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }
 }
-
-actual fun indexesFromRegexpMatchGroup(group: MatchGroup): Pair<Int, Int> {
-    val range = group.range
-    return Pair(range.start, range.endInclusive + 1)
-}

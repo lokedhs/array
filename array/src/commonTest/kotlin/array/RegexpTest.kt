@@ -149,34 +149,147 @@ class RegexpTest : APLTest() {
         }
     }
 
+//    @Test
+//    fun regexpTestWithIndex0() {
+//        val result = parseAPLExpression(
+//            """
+//            |"a([a-z]+)9" regexp:index "xbzafoo9qwatest921"
+//            """.trimMargin())
+//        assertDimension(dimensionsOfSize(2), result)
+//        assertArrayContent(arrayOf(3, 8), result.valueAt(0))
+//        assertArrayContent(arrayOf(4, 7), result.valueAt(1))
+//    }
+//
+//    @Test
+//    fun regexpTestWithIndex1() {
+//        val result = parseAPLExpression(
+//            """
+//            |"a([a-z]+)?9" regexp:index "xbza9qwatest921"
+//            """.trimMargin())
+//        assertDimension(dimensionsOfSize(2), result)
+//        assertArrayContent(arrayOf(3, 5), result.valueAt(0))
+//        assertAPLNull(result.valueAt(1))
+//    }
+//
+//    @Test
+//    fun regexpWithIndex2() {
+//        val result = parseAPLExpression(
+//            """
+//            |"a([a-z]+)?9" regexp:index "xbza8qwatest821"
+//            """.trimMargin())
+//        assertAPLNull(result)
+//    }
+
     @Test
-    fun regexpTestWithIndex0() {
+    fun regexpSplit0() {
         val result = parseAPLExpression(
             """
-            |"a([a-z]+)9" regexp:index "xbzafoo9qwatest921"
+            |"," regexp:split "foo,bar,,test,cba" 
             """.trimMargin())
-        assertDimension(dimensionsOfSize(2), result)
-        assertArrayContent(arrayOf(3, 8), result.valueAt(0))
-        assertArrayContent(arrayOf(4, 7), result.valueAt(1))
+        assertDimension(dimensionsOfSize(5), result)
+        assertString("foo", result.valueAt(0))
+        assertString("bar", result.valueAt(1))
+        assertString("", result.valueAt(2))
+        assertString("test", result.valueAt(3))
+        assertString("cba", result.valueAt(4))
     }
 
     @Test
-    fun regexpTestWithIndex1() {
+    fun regexpSplit1() {
         val result = parseAPLExpression(
             """
-            |"a([a-z]+)?9" regexp:index "xbza9qwatest921"
+            |",+" regexp:split "foo,bar,,test,cba,,,," 
             """.trimMargin())
-        assertDimension(dimensionsOfSize(2), result)
-        assertArrayContent(arrayOf(3, 5), result.valueAt(0))
-        assertAPLNull(result.valueAt(1))
+        assertDimension(dimensionsOfSize(5), result)
+        assertString("foo", result.valueAt(0))
+        assertString("bar", result.valueAt(1))
+        assertString("test", result.valueAt(2))
+        assertString("cba", result.valueAt(3))
+        assertString("", result.valueAt(4))
     }
 
     @Test
-    fun regexpWithIndex2() {
+    fun regexpSplit2() {
         val result = parseAPLExpression(
             """
-            |"a([a-z]+)?9" regexp:index "xbza8qwatest821"
+            |",+" regexp:split ",,,foo" 
             """.trimMargin())
-        assertAPLNull(result)
+        assertDimension(dimensionsOfSize(2), result)
+        assertString("", result.valueAt(0))
+        assertString("foo", result.valueAt(1))
+    }
+
+    @Test
+    fun regexpSplit3() {
+        val result = parseAPLExpression(
+            """
+            |",+" regexp:split "foo" 
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(1), result)
+        assertString("foo", result.valueAt(0))
+    }
+
+    @Test
+    fun regexpSplit4() {
+        val result = parseAPLExpression(
+            """
+            |",+" regexp:split "" 
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(1), result)
+        assertString("", result.valueAt(0))
+    }
+
+    @Test
+    fun regexpSplit5() {
+        val result = parseAPLExpression(
+            """
+            |"," regexp:split ",a" 
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(2), result)
+        assertString("", result.valueAt(0))
+        assertString("a", result.valueAt(1))
+    }
+
+    @Test
+    fun regexpSplit6() {
+        val result = parseAPLExpression(
+            """
+            |"," regexp:split "foo,,,app" 
+            """.trimMargin())
+        assertDimension(dimensionsOfSize(4), result)
+        assertString("foo", result.valueAt(0))
+        assertString("", result.valueAt(1))
+        assertString("", result.valueAt(2))
+        assertString("app", result.valueAt(3))
+    }
+
+    @Test
+    fun regexpSplitErrorWithScalar() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |" " regexp:split 10
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun regexpSplitErrorWithWrongArrayMemberType() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |" " regexp:split 10 20
+                """.trimMargin())
+        }
+    }
+
+    @Test
+    fun regexpSplitErrorWithWrongDimension() {
+        assertFailsWith<APLEvalException> {
+            parseAPLExpression(
+                """
+                |" " regexp:split 3 4 ⍴ 10 20
+                """.trimMargin())
+        }
     }
 }
