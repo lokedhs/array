@@ -1,0 +1,4 @@
+∇ solveDay1 (file) {
+    content ← ⍎¨io:read file
+    ×/ content[↑ (,2020 = (∘.+⍨content)) / ,⍳,⍨⍴content]
+}

@@ -1,0 +1,14 @@
+∇ isValidPart1 (v) {
+    ⍝ Extract a list of the field names
+    fields ← {1 ⌷ "^([a-z]{3}):(.*)$" regexp:find ⍵}¨ " +" regexp:split v
+    ⍝ Remove optional field
+    fields ← (fields ≢¨ ⊂"cid") / fields
+    ⍝ Sort the field names
+    sorted ← fields[⍋fields]
+    ⍝ Check if all required fields exist
+    sorted ≡ "byr" "ecl" "eyr" "hcl" "hgt" "iyr" "pid"
+}
+
+∇ solveDay4part1 (file) {
+    +/ isValidPart1¨ " {2,}" regexp:split ↑{⍺," ",⍵}/ io:read file
+}

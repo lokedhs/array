@@ -1,0 +1,7 @@
+∇ solveDay2 (file) {
+    parseLine ⇐ {
+        (min max ch s) ← λ⍎ λ⍎ λ⊣ λ⊣ {⍞⍺ ⍵}¨ ↓ "^([0-9]+)-([0-9]+) +([a-z]): +([^ ]+) *$" regexp:finderror ⍵
+        {(⍵≥min) ∧ ⍵≤max} +/s=↑ch
+    }
+    +/ parseLine¨io:read file
+}
