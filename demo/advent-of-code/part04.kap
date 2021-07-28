@@ -43,7 +43,7 @@
                     "eyr" λ{year ← ⍎⍵ ◊ (year≥2020) ∧ year≤2030} `
                     "hgt" λvalidateHeight `
                     "hcl" λ{"^#[0-9a-f]{6}$" regexp:match ⍵} `
-                    "ecl" λ{"^(?:amb|blu|brn|gry|grn|hzl|oth)$" regexp:match ⍵} `
+                    "ecl" λ{(⊂⍵) ∊ "amb" "blu" "brn" "gry" "grn" "hzl" "oth"} `
                     "pid" λ{"^[0-9]{9}$" regexp:match ⍵}
     ×/ ({fn ← validators[↑⍵[0]] ◊ if(fn≡⍬) { 1 } else { ⍞fn ↑⍵[1] } }⍤1) element
 }
