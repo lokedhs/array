@@ -137,7 +137,7 @@ class RegexpModule : KapModule {
         fun registerFn(name: String, fn: APLFunctionDescriptor) {
             engine.registerFunction(namespace.internAndExport(name), fn)
         }
-        registerFn("matches", RegexpMatchesFunction())
+        registerFn("match", RegexpMatchesFunction())
         registerFn("find", RegexpFindFunction())
         registerFn("create", CreateRegexpFunction())
         registerFn("split", RegexpSplitFunction())

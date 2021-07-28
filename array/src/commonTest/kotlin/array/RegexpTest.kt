@@ -9,7 +9,7 @@ class RegexpTest : APLTest() {
     fun plainRegexpMatches() {
         val result = parseAPLExpression(
             """
-            |"abc" regexp:matches "qweabcasd"
+            |"abc" regexp:match "qweabcasd"
             """.trimMargin())
         assertSimpleNumber(1, result)
     }
@@ -18,7 +18,7 @@ class RegexpTest : APLTest() {
     fun plainRegexpNoMatch() {
         val result = parseAPLExpression(
             """
-            |"abc" regexp:matches "xyztestcxz"
+            |"abc" regexp:match "xyztestcxz"
             """.trimMargin())
         assertSimpleNumber(0, result)
     }
@@ -27,7 +27,7 @@ class RegexpTest : APLTest() {
     fun testFullStringMatch() {
         val result = parseAPLExpression(
             """
-            |"^xyz*w$" regexp:matches "xyw"
+            |"^xyz*w$" regexp:match "xyw"
             """.trimMargin())
         assertSimpleNumber(1, result)
     }
@@ -35,10 +35,10 @@ class RegexpTest : APLTest() {
     @Test
     fun plainRegexSyntaxError() {
         assertFailsWith<InvalidRegexp> {
-            parseAPLExpression("\"a[z\" regexp:matches \"foo\"")
+            parseAPLExpression("\"a[z\" regexp:match \"foo\"")
         }
         assertFailsWith<InvalidRegexp> {
-            parseAPLExpression("\"a(z\" regexp:matches \"foo\"")
+            parseAPLExpression("\"a(z\" regexp:match \"foo\"")
         }
     }
 
@@ -46,7 +46,7 @@ class RegexpTest : APLTest() {
     fun plainWithMatcher0() {
         val result = parseAPLExpression(
             """
-            |(regexp:create "abc") regexp:matches "qweabcasd"
+            |(regexp:create "abc") regexp:match "qweabcasd"
             """.trimMargin())
         assertSimpleNumber(1, result)
     }
@@ -55,7 +55,7 @@ class RegexpTest : APLTest() {
     fun plainWithMatcher1() {
         val result = parseAPLExpression(
             """
-            |(regexp:create "abc") regexp:matches "xyztestcxz"
+            |(regexp:create "abc") regexp:match "xyztestcxz"
             """.trimMargin())
         assertSimpleNumber(0, result)
     }
@@ -86,7 +86,7 @@ class RegexpTest : APLTest() {
     fun regexpTestMultiline() {
         val result = parseAPLExpression(
             """
-            |(:multiLine regexp:create "^foo") regexp:matches "a
+            |(:multiLine regexp:create "^foo") regexp:match "a
             |fooa
             |a
             |a"
@@ -98,13 +98,13 @@ class RegexpTest : APLTest() {
     fun regexpTestCase() {
         val result0 = parseAPLExpression(
             """
-            |(regexp:create "^foo$") regexp:matches "foO"
+            |(regexp:create "^foo$") regexp:match "foO"
             """.trimMargin())
         assertSimpleNumber(0, result0)
 
         val result1 = parseAPLExpression(
             """
-            |(:ignoreCase regexp:create "^foo$") regexp:matches "foO"
+            |(:ignoreCase regexp:create "^foo$") regexp:match "foO"
             """.trimMargin())
         assertSimpleNumber(1, result1)
     }

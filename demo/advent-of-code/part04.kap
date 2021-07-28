@@ -1,6 +1,6 @@
 ∇ isValidPart1 (v) {
     ⍝ Extract a list of the field names
-    fields ← {1 ⌷ "^([a-z]{3}):(.*)$" regexp:find ⍵}¨ " +" regexp:split v
+    fields ← v[;0]
     ⍝ Remove optional field
     fields ← (fields ≢¨ ⊂"cid") / fields
     ⍝ Sort the field names
@@ -9,6 +9,46 @@
     sorted ≡ "byr" "ecl" "eyr" "hcl" "hgt" "iyr" "pid"
 }
 
+∇ parseElement (v) {
+    ⊃ {1↓ "^([a-z]{3}):(.*)$" regexp:finderror ⍵}¨ " +" regexp:split v
+}
+
+∇ parseContent (file) {
+    parseElement¨ " {2,}" regexp:split ↑{⍺," ",⍵}/ io:read file
+}
+
 ∇ solveDay4part1 (file) {
-    +/ isValidPart1¨ " {2,}" regexp:split ↑{⍺," ",⍵}/ io:read file
+    +/ isValidPart1¨ parseContent file
+}
+
+∇ validateHeight (s) {
+    result ← "^([0-9]+)(cm|in)$" regexp:find s
+    if (result≡⍬) {
+        0
+    } else {
+        (v unit) ← ↓result
+        vInt ← ⍎v
+        when {
+            (unit≡"cm") {(vInt≥150) ∧ vInt≤193}
+            (unit≡"in") {(vInt≥59) ∧ vInt≤76}
+            (1)         {→"Unexpected unit"}
+        }
+    }
+}
+
+∇ validateElement (element) {
+    validators ← map ¯1 2 ⍴ `
+                    "byr" λ{year ← ⍎⍵ ◊ (year≥1920) ∧ year≤2002} `
+                    "iyr" λ{year ← ⍎⍵ ◊ (year≥2010) ∧ year≤2020} `
+                    "eyr" λ{year ← ⍎⍵ ◊ (year≥2020) ∧ year≤2030} `
+                    "hgt" λvalidateHeight `
+                    "hcl" λ{"^#[0-9a-f]{6}$" regexp:match ⍵} `
+                    "ecl" λ{"^(?:amb|blu|brn|gry|grn|hzl|oth)$" regexp:match ⍵} `
+                    "pid" λ{"^[0-9]{9}$" regexp:match ⍵}
+    ×/ ({fn ← validators[↑⍵[0]] ◊ if(fn≡⍬) { 1 } else { ⍞fn ↑⍵[1] } }⍤1) element
+}
+
+∇ solveDay4part2 (file) {
+    elements ← parseContent file
+    +/ validateElement¨ (isValidPart1¨ elements) / elements
 }
