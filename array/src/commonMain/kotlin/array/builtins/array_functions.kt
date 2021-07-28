@@ -1104,7 +1104,7 @@ class MemberResultValue(val context: RuntimeContext, val a: APLValue, val b: APL
 
     override fun unwrapDeferredValue(): APLValue {
         return if (dimensions.isEmpty()) {
-            findInArray(a)
+            findInArray(a.disclose())
         } else {
             this
         }

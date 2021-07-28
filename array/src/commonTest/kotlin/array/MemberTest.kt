@@ -41,4 +41,11 @@ class MemberTest : APLTest() {
             assertArrayContent(arrayOf(1, 0, 0), result)
         }
     }
+
+    @Test
+    fun findString() {
+        parseAPLExpression("(⊂\"bar\") ∊ \"foo\" \"bar\" \"test\" \"longerstring\"").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
 }
