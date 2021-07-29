@@ -132,4 +132,18 @@ class ComposeTest : APLTest() {
             assertSimpleNumber(-32, result)
         }
     }
+
+    @Test
+    fun composeWithLeftArgShouldFail() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("2 (3+⊢) 5")
+        }
+    }
+
+    @Test
+    fun forkWithLeftArgShouldFail() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("2 (3+⊢⊣) 5")
+        }
+    }
 }

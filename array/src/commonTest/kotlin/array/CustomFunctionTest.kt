@@ -807,6 +807,20 @@ Monadic single arg:          ∇            (foo) x          {
     }
 
     @Test
+    fun shortFormWithLeftArgAndCommuteShouldFail() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("foo ⇐ 10+⊢")
+        }
+    }
+
+    @Test
+    fun shortFormWithLeftArgAndForkShouldFail() {
+        assertFailsWith<ParseException> {
+            parseAPLExpression("foo ⇐ 10+⊢⊣")
+        }
+    }
+
+    @Test
     fun shortFormWithLeftArgShouldFail() {
         assertFailsWith<ParseException> {
             parseAPLExpression("foo ⇐ 10+")

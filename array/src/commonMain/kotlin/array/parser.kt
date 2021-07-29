@@ -7,7 +7,15 @@ import array.syntax.processDefsyntaxSub
 //data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 sealed class ParseResultHolder(val lastToken: Token, val pos: Position) {
     class InstrParseResult(val instr: Instruction, lastToken: Token, pos: Position) : ParseResultHolder(lastToken, pos)
-    class FnParseResult(val fn: APLFunction, lastToken: Token, pos: Position) : ParseResultHolder(lastToken, pos)
+    class FnParseResult(val fn: APLFunction, val leftArgs: List<Instruction>, lastToken: Token, pos: Position) :
+        ParseResultHolder(lastToken, pos) {
+        init {
+            if (leftArgs.isNotEmpty()) {
+                throw ParseException("Left arguments are not allowed with functions with no right argument", pos)
+            }
+        }
+    }
+
     class EmptyParseResult(lastToken: Token, pos: Position) : ParseResultHolder(lastToken, pos)
 }
 
@@ -190,10 +198,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         val parsedFn = parseOperator(fn)
         return when (val holder = parseValue()) {
             is ParseResultHolder.EmptyParseResult -> {
-                if (leftArgs.isNotEmpty()) {
-                    throw ParseException("Missing right argument", fn.pos)
-                }
-                ParseResultHolder.FnParseResult(parsedFn, holder.lastToken, holder.pos)
+                ParseResultHolder.FnParseResult(parsedFn, leftArgs, holder.lastToken, holder.pos)
             }
             is ParseResultHolder.InstrParseResult -> {
                 if (leftArgs.isEmpty()) {
@@ -210,7 +215,11 @@ class APLParser(val tokeniser: TokenGenerator) {
                 }
             }
             is ParseResultHolder.FnParseResult -> {
-                ParseResultHolder.FnParseResult(FunctionCallChain.make(parsedFn.pos, parsedFn, holder.fn), holder.lastToken, holder.pos)
+                ParseResultHolder.FnParseResult(
+                    FunctionCallChain.make(parsedFn.pos, parsedFn, holder.fn),
+                    leftArgs,
+                    holder.lastToken,
+                    holder.pos)
             }
         }
     }
