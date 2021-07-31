@@ -82,7 +82,7 @@ class CreateRegexpFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             fun mkFlag(v: APLValue) = valueToFlag(context.engine, v)
             val flags = when (a.dimensions.size) {
-                0 -> setOf(valueToFlag(context.engine, a))
+                0 -> setOf(mkFlag(a))
                 1 -> a.membersSequence().map(::mkFlag).toSet()
                 else -> throwAPLException(APLEvalException("Regexp flags must be a single symbol or a one-dimensional array", pos))
             }
