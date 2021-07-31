@@ -1334,7 +1334,12 @@ class WhereAPLFunction : APLFunctionDescriptor {
     class WhereAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             return if (a.isScalar()) {
-                APLNullValue.APL_NULL_INSTANCE
+                val v = a.unwrapDeferredValue()
+                if (v is APLNumber) {
+                    APLNullValue.APL_NULL_INSTANCE
+                } else {
+                    throwAPLException(APLIncompatibleDomainsException("Argument must be a number", pos))
+                }
             } else {
                 val aDimensions = a.dimensions
                 val multipliers = aDimensions.multipliers()

@@ -69,4 +69,14 @@ class WhereTest : APLTest() {
     fun scalarArgument() {
         assertAPLNull(parseAPLExpression("⍸ 1"))
     }
+
+    @Test
+    fun scalarArgumentWrongType() {
+        assertFailsWith<APLIncompatibleDomainsException> {
+            parseAPLExpression("⍸@a")
+        }
+        assertFailsWith<APLIncompatibleDomainsException> {
+            parseAPLExpression("⍸ map 2 2 ⍴ 1 2 3 4")
+        }
+    }
 }
