@@ -754,6 +754,10 @@ Monadic single arg:          ∇            (foo) x          {
         assertSimpleNumber(290, result)
     }
 
+    /////////////////////////////////////////////////////////
+    // Short form
+    /////////////////////////////////////////////////////////
+
     @Test
     fun shortFormWithSimpleFunction() {
         val result = parseAPLExpression(
@@ -832,5 +836,79 @@ Monadic single arg:          ∇            (foo) x          {
         parseAPLExpression("foo ⇐ ×/ ⋄ foo 1 2 3").let { result ->
             assertSimpleNumber(6, result)
         }
+    }
+
+    @Test
+    fun redefineStdToShortForm() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |∇ foo (x) { x+10 }
+            |io:print foo 100
+            |foo ⇐ { ⍵+20 }
+            |io:print foo 101
+            """.trimMargin())
+        assertSimpleNumber(121, result)
+        assertEquals("110121", out)
+    }
+
+    @Test
+    fun redefineShortToStdForm() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |foo ⇐ { ⍵+10 }
+            |io:print foo 100
+            |∇ foo (x) { x+20 }
+            |io:print foo 160
+            """.trimMargin())
+        assertSimpleNumber(170, result)
+        assertEquals("110170", out)
+    }
+
+    /**
+     * This test ensures that functions with local scope are only visible within the scope it's called from.
+     */
+    @Test
+    fun localScopeFunction() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |∇ foo (x) { x+50 }
+            |∇ bar (x) {
+            |  foo ⇐ { ⍵+100 }
+            |  foo x
+            |}
+            |∇ xyz (x) {
+            |  io:print foo x+200
+            |  io:print bar x+1000
+            |}
+            |xyz 8
+            """.trimMargin())
+        assertEquals("2581108", out)
+        assertSimpleNumber(1108, result)
+    }
+
+    /**
+     * This test ensures that functions with local scope can be referenced from outside the scope
+     * if a closure is returned from the defining function.
+     */
+    @Test
+    fun localScopeFunctionWithLambda() {
+        val (result, out) = parseAPLExpressionWithOutput(
+            """
+            |∇ foo (x) {x+50 }
+            |∇ bar (x) {
+            |  foo ⇐ { ⍵+100 }
+            |  (foo x) λfoo
+            |}
+            |∇ xyz (x) {
+            |  io:print foo x+200
+            |  a ← bar x+1000
+            |  io:print a[0]
+            |  b ← a[1]
+            |  io:print ⍞b 31
+            |}
+            |xyz 100
+            """.trimMargin())
+        assertEquals("3501200131", out)
+        assertSimpleNumber(131, result)
     }
 }
