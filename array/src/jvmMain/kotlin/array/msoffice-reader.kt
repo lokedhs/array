@@ -1,9 +1,11 @@
 package array.msofficereader
 
 import array.*
+import array.builtins.TagCatch
 import array.builtins.makeBoolean
 import org.apache.poi.ss.usermodel.*
 import java.io.File
+import java.io.FileNotFoundException
 
 fun readExcelFile(name: String): APLValue {
     val workbook = WorkbookFactory.create(File(name))
@@ -78,7 +80,17 @@ fun parseEvaluatedCell(cell: Cell, evaluator: FormulaEvaluator): APLValue {
 class LoadExcelFileFunction : APLFunctionDescriptor {
     class LoadExcelFileFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            return readExcelFile(arrayToString(a))
+            val filename = arrayToString(a)
+            try {
+                return readExcelFile(filename)
+            } catch (e: FileNotFoundException) {
+                throwAPLException(
+                    TagCatch(
+                        APLSymbol(context.engine.internSymbol("fileNotFound", context.engine.keywordNamespace)),
+                        APLString(filename),
+                        "File not found: ${filename}",
+                        pos))
+            }
         }
 
         private fun arrayToString(a: APLValue): String {
@@ -102,4 +114,13 @@ class LoadExcelFileFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = LoadExcelFileFunctionImpl(pos)
+}
+
+class MsOfficeModule : KapModule {
+    override val name get() = "msoffice"
+
+    override fun init(engine: Engine) {
+        val ns = engine.makeNamespace("msoffice")
+        engine.registerFunction(engine.internSymbol("read", ns), LoadExcelFileFunction())
+    }
 }

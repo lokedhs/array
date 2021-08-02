@@ -169,8 +169,7 @@ class WriteStringJsonAPLFunction : APLFunctionDescriptor {
 
 
 class JsonAPLModule : KapModule {
-    override val name: String
-        get() = "json"
+    override val name get() = "json"
 
     override fun init(engine: Engine) {
         val namespace = engine.makeNamespace("json")

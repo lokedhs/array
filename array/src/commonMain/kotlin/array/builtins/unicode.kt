@@ -68,7 +68,7 @@ class GraphemesFunction : APLFunctionDescriptor {
 }
 
 class UnicodeModule : KapModule {
-    override val name = "unicode"
+    override val name get() = "unicode"
 
     override fun init(engine: Engine) {
         val namespace = engine.makeNamespace("unicode")

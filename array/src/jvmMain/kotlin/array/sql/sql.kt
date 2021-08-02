@@ -26,31 +26,6 @@ private inline fun <T> withSQLExceptions(pos: Position, fn: () -> T): T {
     }
 }
 
-class SQLModule : KapModule {
-    override val name get() = "sql"
-
-    override fun init(engine: Engine) {
-        val ns = engine.makeNamespace("sql")
-        engine.registerFunction(ns.internAndExport("connect"), SQLConnectFunction())
-        engine.registerFunction(ns.internAndExport("query"), SQLQueryFunction())
-        engine.registerFunction(ns.internAndExport("update"), SQLUpdateFunction())
-        engine.registerFunction(ns.internAndExport("prepare"), SQLPrepareFunction())
-        engine.registerFunction(ns.internAndExport("updatePrepared"), SQLPreparedUpdateFunction())
-        engine.registerFunction(ns.internAndExport("queryPrepared"), SQLPreparedQueryFunction())
-
-        engine.registerClosableHandler(object : ClosableHandler<SQLConnectionValue> {
-            override fun close(value: SQLConnectionValue) {
-                value.conn.close()
-            }
-        })
-        engine.registerClosableHandler(object : ClosableHandler<SQLPreparedStatementValue> {
-            override fun close(value: SQLPreparedStatementValue) {
-                value.statement.close()
-            }
-        })
-    }
-}
-
 class SQLAPLException(message: String, pos: Position? = null) : APLEvalException(message, pos)
 
 class SQLConnectionValue(val conn: Connection, val description: String) : APLSingleValue() {
@@ -236,4 +211,29 @@ class SQLPreparedQueryFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position) = SQLPreparedQueryFunctionImpl(pos)
+}
+
+class SQLModule : KapModule {
+    override val name get() = "sql"
+
+    override fun init(engine: Engine) {
+        val ns = engine.makeNamespace("sql")
+        engine.registerFunction(ns.internAndExport("connect"), SQLConnectFunction())
+        engine.registerFunction(ns.internAndExport("query"), SQLQueryFunction())
+        engine.registerFunction(ns.internAndExport("update"), SQLUpdateFunction())
+        engine.registerFunction(ns.internAndExport("prepare"), SQLPrepareFunction())
+        engine.registerFunction(ns.internAndExport("updatePrepared"), SQLPreparedUpdateFunction())
+        engine.registerFunction(ns.internAndExport("queryPrepared"), SQLPreparedQueryFunction())
+
+        engine.registerClosableHandler(object : ClosableHandler<SQLConnectionValue> {
+            override fun close(value: SQLConnectionValue) {
+                value.conn.close()
+            }
+        })
+        engine.registerClosableHandler(object : ClosableHandler<SQLPreparedStatementValue> {
+            override fun close(value: SQLPreparedStatementValue) {
+                value.statement.close()
+            }
+        })
+    }
 }

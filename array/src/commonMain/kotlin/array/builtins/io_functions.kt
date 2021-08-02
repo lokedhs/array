@@ -20,7 +20,8 @@ class ReadFunction : APLFunctionDescriptor {
                     TagCatch(
                         APLSymbol(context.engine.internSymbol("fileNotFound", context.engine.keywordNamespace)),
                         APLString(file),
-                        "File not found: ${file}"))
+                        "File not found: ${file}",
+                        pos))
             }
         }
     }
