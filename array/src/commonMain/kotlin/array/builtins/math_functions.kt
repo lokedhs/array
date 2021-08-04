@@ -280,8 +280,7 @@ class AddAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> x.makeAPLNumber() },
                 { x -> x.makeAPLNumber() },
-                { x -> Complex(x.real, -x.imaginary).makeAPLNumber() }
-            )
+                { x -> Complex(x.real, -x.imaginary).makeAPLNumber() })
         }
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
@@ -291,8 +290,7 @@ class AddAPLFunction : APLFunctionDescriptor {
                 b,
                 { x, y -> (x + y).makeAPLNumber() },
                 { x, y -> (x + y).makeAPLNumber() },
-                { x, y -> (x + y).makeAPLNumber() }
-            )
+                { x, y -> (x + y).makeAPLNumber() })
         }
 
         override fun combine1ArgLong(a: Long) = a
@@ -304,7 +302,12 @@ class AddAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_0
         override fun deriveBitwise() = BitwiseXorFunction()
 
-        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_1ARG_LONG or OPTIMISATION_FLAG_1ARG_DOUBLE or OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
+        override val optimisationFlags
+            get() = OptimisationFlags(
+                OPTIMISATION_FLAG_1ARG_LONG or
+                        OPTIMISATION_FLAG_1ARG_DOUBLE or
+                        OPTIMISATION_FLAG_2ARG_LONG_LONG or
+                        OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = AddAPLFunctionImpl(pos)
@@ -318,8 +321,7 @@ class SubAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> (-x).makeAPLNumber() },
                 { x -> (-x).makeAPLNumber() },
-                { x -> (-x).makeAPLNumber() }
-            )
+                { x -> (-x).makeAPLNumber() })
         }
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
@@ -329,12 +331,23 @@ class SubAPLFunction : APLFunctionDescriptor {
                 b,
                 { x, y -> (x - y).makeAPLNumber() },
                 { x, y -> (x - y).makeAPLNumber() },
-                { x, y -> (x - y).makeAPLNumber() }
-            )
+                { x, y -> (x - y).makeAPLNumber() })
         }
+
+        override fun combine1ArgLong(a: Long) = -a
+        override fun combine1ArgDouble(a: Double) = -a
+        override fun combine2ArgLong(a: Long, b: Long) = a - b
+        override fun combine2ArgDouble(a: Double, b: Double) = a - b
 
         override fun identityValue() = APLLONG_0
         override fun deriveBitwise() = BitwiseXorFunction()
+
+        override val optimisationFlags
+            get() = OptimisationFlags(
+                OPTIMISATION_FLAG_1ARG_LONG or
+                        OPTIMISATION_FLAG_1ARG_DOUBLE or
+                        OPTIMISATION_FLAG_2ARG_LONG_LONG or
+                        OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = SubAPLFunctionImpl(pos)
@@ -386,8 +399,7 @@ class DivAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> if (x == 0L) APLLONG_0 else (1.0 / x).makeAPLNumber() },
                 { x -> if (x == 0.0) APLLONG_0 else (1.0 / x).makeAPLNumber() },
-                { x -> if (x == Complex.ZERO) APLLONG_0 else x.reciprocal().makeAPLNumber() }
-            )
+                { x -> if (x == Complex.ZERO) APLLONG_0 else x.reciprocal().makeAPLNumber() })
         }
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
@@ -403,11 +415,15 @@ class DivAPLFunction : APLFunctionDescriptor {
                     }
                 },
                 { x, y -> APLDouble(if (y == 0.0) 0.0 else x / y) },
-                { x, y -> if (y == Complex.ZERO) APLDOUBLE_0 else (x / y).makeAPLNumber() }
-            )
+                { x, y -> if (y == Complex.ZERO) APLDOUBLE_0 else (x / y).makeAPLNumber() })
         }
 
+        override fun combine1ArgDouble(a: Double) = 1.0 / a
+        override fun combine2ArgDouble(a: Double, b: Double) = a / b
+
         override fun identityValue() = APLLONG_1
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_1ARG_DOUBLE or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = DivAPLFunctionImpl(pos)
@@ -419,25 +435,24 @@ class NotAPLFunction : APLFunctionDescriptor {
             return singleArgNumericRelationOperation(
                 pos,
                 a,
-                { x -> notOp(x, pos) },
-                { x -> notOp(x.toLong(), pos) },
+                { x -> notOp(x, pos).makeAPLNumber() },
+                { x -> notOp(x.toLong(), pos).makeAPLNumber() },
                 { x ->
                     if (x.imaginary == 0.0) {
-                        notOp(x.real.toLong(), pos)
+                        notOp(x.real.toLong(), pos).makeAPLNumber()
                     } else {
                         throwAPLException(APLIncompatibleDomainsException("Not operation not supported for complex", pos))
                     }
-                }
-            )
+                })
         }
 
-        private fun notOp(v: Long, pos: Position): APLValue {
+        private fun notOp(v: Long, pos: Position): Long {
             val result = when (v) {
-                0L -> 1
-                1L -> 0
+                0L -> 1L
+                1L -> 0L
                 else -> throwAPLException(APLIncompatibleDomainsException("Not operation not supported for value", pos))
             }
-            return result.makeAPLNumber()
+            return result
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
@@ -462,7 +477,11 @@ class NotAPLFunction : APLFunctionDescriptor {
             return APLArrayImpl(dimensionsOfSize(result.size), result.toTypedArray())
         }
 
+        override fun combine1ArgLong(a: Long) = notOp(a, pos)
+
         override fun deriveBitwise() = BitwiseNotFunction()
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_1ARG_LONG)
     }
 
     override fun make(pos: Position): APLFunction {
@@ -487,10 +506,20 @@ class ModAPLFunction : APLFunctionDescriptor {
                 pos,
                 a,
                 b,
-                { x, y -> if (x == 0L) y.makeAPLNumber() else (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
-                { x, y -> if (x == 0.0) y.makeAPLNumber() else (y % x).let { result -> (if (x < 0) -result else result).makeAPLNumber() } },
+                { x, y -> opLong(x, y).makeAPLNumber() },
+                { x, y -> opDouble(x, y).makeAPLNumber() },
                 { _, _ -> TODO("Not implemented") })
         }
+
+        private fun opLong(x: Long, y: Long) =
+            if (x == 0L) y else (y % x).let { result -> (if (x < 0) -result else result) }
+
+        private fun opDouble(x: Double, y: Double) =
+            if (x == 0.0) y else (y % x).let { result -> (if (x < 0) -result else result) }
+
+        override fun combine2ArgLong(a: Long, b: Long) = opLong(a, b)
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
     override fun make(pos: Position) = ModAPLFunctionImpl(pos)
@@ -559,8 +588,7 @@ class MinAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> x.makeAPLNumber() },
                 { x -> floor(x).makeAPLNumber() },
-                { x -> complexFloor(x).makeAPLNumber() }
-            )
+                { x -> complexFloor(x).makeAPLNumber() })
         }
 
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
@@ -571,9 +599,13 @@ class MinAPLFunction : APLFunctionDescriptor {
                 { x, y -> if (x < y) x.makeAPLNumber() else y.makeAPLNumber() },
                 { x, y -> if (x < y) x.makeAPLNumber() else y.makeAPLNumber() },
                 { x, y -> (if (x.real < y.real || (x.real == y.real && x.imaginary < y.imaginary)) x else y).makeAPLNumber() },
-                { x, y -> if (x < y) APLChar(x) else APLChar(y) }
-            )
+                { x, y -> if (x < y) APLChar(x) else APLChar(y) })
         }
+
+        override fun combine2ArgLong(a: Long, b: Long) = if (a < b) a else b
+        override fun combine2ArgDouble(a: Double, b: Double) = if (a < b) a else b
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = MinAPLFunctionImpl(pos)
@@ -591,8 +623,7 @@ class MaxAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> x.makeAPLNumber() },
                 { x -> ceil(x).makeAPLNumber() },
-                { x -> complexCeiling(x).makeAPLNumber() }
-            )
+                { x -> complexCeiling(x).makeAPLNumber() })
         }
 
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
@@ -603,9 +634,13 @@ class MaxAPLFunction : APLFunctionDescriptor {
                 { x, y -> if (x > y) x.makeAPLNumber() else y.makeAPLNumber() },
                 { x, y -> if (x > y) x.makeAPLNumber() else y.makeAPLNumber() },
                 { x, y -> (if (x.real > y.real || (x.real == y.real && x.imaginary > y.imaginary)) x else y).makeAPLNumber() },
-                { x, y -> if (x > y) APLChar(x) else APLChar(y) }
-            )
+                { x, y -> if (x > y) APLChar(x) else APLChar(y) })
         }
+
+        override fun combine2ArgLong(a: Long, b: Long) = if (a > b) a else b
+        override fun combine2ArgDouble(a: Double, b: Double) = if (a > b) a else b
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG or OPTIMISATION_FLAG_2ARG_DOUBLE_DOUBLE)
     }
 
     override fun make(pos: Position) = MaxAPLFunctionImpl(pos)
@@ -619,8 +654,7 @@ class LogAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> if (x < 0) x.toDouble().toComplex().ln().makeAPLNumber() else ln(x.toDouble()).makeAPLNumber() },
                 { x -> if (x < 0) x.toComplex().ln().makeAPLNumber() else ln(x).makeAPLNumber() },
-                { x -> x.ln().makeAPLNumber() }
-            )
+                { x -> x.ln().makeAPLNumber() })
         }
 
         override fun combine2Arg(a: APLSingleValue, b: APLSingleValue): APLValue {
@@ -635,8 +669,7 @@ class LogAPLFunction : APLFunctionDescriptor {
                     ).makeAPLNumber()
                 },
                 { x, y -> if (x < 0 || y < 0) y.toComplex().log(x.toComplex()).makeAPLNumber() else log(y, x).makeAPLNumber() },
-                { x, y -> y.log(x).makeAPLNumber() }
-            )
+                { x, y -> y.log(x).makeAPLNumber() })
         }
     }
 
@@ -651,8 +684,7 @@ class SinAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> sin(x.toDouble()).makeAPLNumber() },
                 { x -> sin(x).makeAPLNumber() },
-                { x -> complexSin(x).makeAPLNumber() }
-            )
+                { x -> complexSin(x).makeAPLNumber() })
         }
     }
 
@@ -667,8 +699,7 @@ class CosAPLFunction : APLFunctionDescriptor {
                 a,
                 { x -> cos(x.toDouble()).makeAPLNumber() },
                 { x -> cos(x).makeAPLNumber() },
-                { x -> complexCos(x).makeAPLNumber() }
-            )
+                { x -> complexCos(x).makeAPLNumber() })
         }
     }
 
@@ -713,13 +744,7 @@ class AndAPLFunction : APLFunctionDescriptor {
             return numericRelationOperation(pos,
                 a,
                 b,
-                { x, y ->
-                    when {
-                        x == 0L || y == 0L -> APLLONG_0
-                        x == 1L && x == 1L -> APLLONG_1
-                        else -> (x * (y / integerGcd(x, y))).makeAPLNumber()
-                    }
-                },
+                { x, y -> opLong(x, y).makeAPLNumber() },
                 { x, y ->
                     when {
                         x == 0.0 || y == 0.0 -> APLLONG_0
@@ -730,9 +755,21 @@ class AndAPLFunction : APLFunctionDescriptor {
                 { x, y -> (y * (x / complexGcd(x, y))).nearestGaussian().makeAPLNumber() })
         }
 
+        private fun opLong(x: Long, y: Long): Long {
+            return when {
+                x == 0L || y == 0L -> 0L
+                x == 1L && x == 1L -> 1L
+                else -> (x * (y / integerGcd(x, y)))
+            }
+        }
+
+        override fun combine2ArgLong(a: Long, b: Long) = opLong(a, b)
+
         override fun deriveBitwise() = BitwiseAndFunction()
 
         override fun identityValue() = APLLONG_1
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
     override fun make(pos: Position) = AndAPLFunctionImpl(pos)
@@ -744,35 +781,41 @@ class NandAPLFunction : APLFunctionDescriptor {
             return numericRelationOperation(pos,
                 a,
                 b,
-                { x, y ->
-                    when {
-                        x == 0L && y == 0L -> APLLONG_1
-                        x == 0L && y == 1L -> APLLONG_1
-                        x == 1L && y == 0L -> APLLONG_1
-                        x == 1L && y == 1L -> APLLONG_0
-                        else -> throwIllegalArgument()
-                    }
-                },
-                { x, y ->
-                    val x0 = x.toLong()
-                    val y0 = y.toLong()
-                    when {
-                        x0 == 0L && y0 == 0L -> APLLONG_1
-                        x0 == 0L && y0 == 1L -> APLLONG_1
-                        x0 == 1L && y0 == 0L -> APLLONG_1
-                        x0 == 1L && y0 == 1L -> APLLONG_0
-                        else -> throwIllegalArgument()
-                    }
-                },
+                { x, y -> opLong(x, y).makeAPLNumber() },
+                { x, y -> opDouble(x, y).makeAPLNumber() },
                 { _, _ -> throwIllegalArgument() }
             )
         }
+
+        private fun opLong(a: Long, b: Long) = when {
+            a == 0L && b == 0L -> 1L
+            a == 0L && b == 1L -> 1L
+            a == 1L && b == 0L -> 1L
+            a == 1L && b == 1L -> 0L
+            else -> throwIllegalArgument()
+        }
+
+        private fun opDouble(a: Double, b: Double): Long {
+            val x0 = a.toLong()
+            val y0 = b.toLong()
+            return when {
+                x0 == 0L && y0 == 0L -> 1L
+                x0 == 0L && y0 == 1L -> 1L
+                x0 == 1L && y0 == 0L -> 1L
+                x0 == 1L && y0 == 1L -> 0L
+                else -> throwIllegalArgument()
+            }
+        }
+
+        override fun combine2ArgLong(a: Long, b: Long) = opLong(a, b)
 
         override fun deriveBitwise() = BitwiseNandFunction()
 
         private fun throwIllegalArgument(): Nothing {
             throwAPLException(APLIllegalArgumentException("Arguments to nand must be 0 or 1", pos))
         }
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
     override fun make(pos: Position) = NandAPLFunctionImpl(pos)
@@ -785,29 +828,35 @@ class NorAPLFunction : APLFunctionDescriptor {
                 pos,
                 a,
                 b,
-                { x, y ->
-                    when {
-                        x == 0L && y == 0L -> APLLONG_1
-                        x == 0L && y == 1L -> APLLONG_0
-                        x == 1L && y == 0L -> APLLONG_0
-                        x == 1L && y == 1L -> APLLONG_0
-                        else -> throwIllegalArgument()
-                    }
-                },
-                { x, y ->
-                    val x0 = x.toLong()
-                    val y0 = y.toLong()
-                    when {
-                        x0 == 0L && y0 == 0L -> APLLONG_1
-                        x0 == 0L && y0 == 1L -> APLLONG_0
-                        x0 == 1L && y0 == 0L -> APLLONG_0
-                        x0 == 1L && y0 == 1L -> APLLONG_0
-                        else -> throwIllegalArgument()
-                    }
-                },
+                { x, y -> opLong(x, y).makeAPLNumber() },
+                { x, y -> opDouble(x, y).makeAPLNumber() },
                 { _, _ -> throwIllegalArgument() }
             )
         }
+
+        private fun opLong(x: Long, y: Long): Long {
+            return when {
+                x == 0L && y == 0L -> 1L
+                x == 0L && y == 1L -> 0L
+                x == 1L && y == 0L -> 0L
+                x == 1L && y == 1L -> 0L
+                else -> throwIllegalArgument()
+            }
+        }
+
+        private fun opDouble(x: Double, y: Double): Long {
+            val x0 = x.toLong()
+            val y0 = y.toLong()
+            return when {
+                x0 == 0L && y0 == 0L -> 1L
+                x0 == 0L && y0 == 1L -> 0L
+                x0 == 1L && y0 == 0L -> 0L
+                x0 == 1L && y0 == 1L -> 0L
+                else -> throwIllegalArgument()
+            }
+        }
+
+        override fun combine2ArgLong(a: Long, b: Long) = opLong(a, b)
 
         override fun deriveBitwise() = BitwiseNorFunction()
 
@@ -885,29 +934,31 @@ class OrAPLFunction : APLFunctionDescriptor {
             return numericRelationOperation(pos,
                 a,
                 b,
-                { x, y ->
-                    when {
-                        x == 0L && y == 0L -> APLLONG_0
-                        (x == 0L || x == 1L) && y == 1L -> APLLONG_1
-                        x == 1L && (y == 0L || y == 1L) -> APLLONG_1
-                        else -> integerGcd(x, y).makeAPLNumber()
-                    }
-                },
-                { x, y ->
-                    when {
-                        x == 0.0 && y == 0.0 -> APLLONG_0
-                        (x == 0.0 || x == 1.0) && y == 1.0 -> APLLONG_1
-                        x == 1.0 && (y == 0.0 || y == 1.0) -> APLLONG_1
-                        else -> floatGcd(x, y).makeAPLNumber()
-
-                    }
-                },
+                { x, y -> opLong(x, y).makeAPLNumber() },
+                { x, y -> opDouble(x, y).makeAPLNumber() },
                 { x, y -> complexGcd(x, y).makeAPLNumber() })
         }
 
-        override fun identityValue() = APLLONG_0
+        private fun opLong(x: Long, y: Long) = when {
+            x == 0L && y == 0L -> 0
+            (x == 0L || x == 1L) && y == 1L -> 1
+            x == 1L && (y == 0L || y == 1L) -> 1
+            else -> integerGcd(x, y)
+        }
 
+        private fun opDouble(x: Double, y: Double) = when {
+            x == 0.0 && y == 0.0 -> 0.0
+            (x == 0.0 || x == 1.0) && y == 1.0 -> 1.0
+            x == 1.0 && (y == 0.0 || y == 1.0) -> 1.0
+            else -> floatGcd(x, y)
+        }
+
+        override fun combine2ArgLong(a: Long, b: Long) = opLong(a, b)
+
+        override fun identityValue() = APLLONG_0
         override fun deriveBitwise() = BitwiseOrFunction()
+
+        override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
     override fun make(pos: Position) = OrAPLFunctionImpl(pos)
