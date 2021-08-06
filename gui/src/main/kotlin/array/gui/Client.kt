@@ -1,6 +1,7 @@
 package array.gui
 
 import array.*
+import array.gui.arrayedit.ArrayEditor
 import array.gui.graphics.initGraphicCommands
 import javafx.application.Platform
 import javafx.event.EventHandler
@@ -86,6 +87,9 @@ class Client(val application: ClientApplication, val stage: Stage) {
                 })
                 items.add(MenuItem("Functions").apply {
                     onAction = EventHandler { functionListWindow.show() }
+                })
+                items.add(MenuItem("Array Editor").apply {
+                    onAction = EventHandler { ArrayEditor.makeArrayEditor().show() }
                 })
             }
             menus.add(windowMenu)
