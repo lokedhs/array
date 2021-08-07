@@ -1,7 +1,7 @@
 package array.gui.styledarea
 
 import array.APLValue
-import array.gui.ExtendedCharsKeyboardInput
+import array.gui.Client
 import array.gui.display.ValueRenderer
 import javafx.scene.Node
 import javafx.scene.input.KeyCode
@@ -18,13 +18,13 @@ import kotlin.contracts.contract
 
 @OptIn(ExperimentalContracts::class)
 class ROStyledArea(
-    keyboardInput: ExtendedCharsKeyboardInput,
+    client: Client,
     applyParagraphStyle: BiConsumer<TextFlow, ParStyle>,
     document: EditableStyledDocument<ParStyle, EditorContent, TextStyle>,
     styledTextOps: TextOps<EditorContent, TextStyle>,
     nodeFactory: Function<StyledSegment<EditorContent, TextStyle>, Node>
 ) : KAPEditorStyledArea<ParStyle, EditorContent>(
-    keyboardInput,
+    client,
     ParStyle(),
     applyParagraphStyle,
     TextStyle(),
@@ -176,7 +176,7 @@ class ROStyledArea(
             val newDoc = ReadOnlyStyledDocumentBuilder(segOps, parStyle)
                 .addParagraph(
                     mutableListOf(
-                        StyledSegment(ValueRenderer.makeContent(value), style)))
+                        StyledSegment(ValueRenderer.makeContent(client, value), style)))
                 .addParagraph(EditorContent.makeBlank(), style)
                 .build()
             val inputPos = findInputStartEnd()

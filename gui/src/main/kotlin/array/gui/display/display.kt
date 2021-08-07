@@ -1,15 +1,21 @@
 package array.gui.display
 
 import array.*
+import array.gui.Client
 import array.gui.ClientRenderContext
+import array.gui.arrayedit.ArrayEditor
 import array.gui.styledarea.EditorContent
 import array.gui.styledarea.StringEditorContentEntry
 import array.gui.styledarea.TextStyle
 import array.rendertext.renderStringValueOptionalQuotes
+import javafx.event.EventHandler
 import javafx.geometry.HPos
 import javafx.geometry.Insets
+import javafx.geometry.Side
 import javafx.scene.Node
-import javafx.scene.control.Label
+import javafx.scene.control.ContextMenu
+import javafx.scene.control.MenuItem
+import javafx.scene.input.MouseButton
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
@@ -24,24 +30,24 @@ interface ValueRenderer {
         private val renderers = hashMapOf<KClass<out APLValue>, (APLValue) -> ValueRenderer>(
             Pair(APLMap::class, { APLMapRenderer(it as APLMap) }))
 
-        fun makeValueRenderer(value: APLValue): ValueRenderer {
+        fun makeValueRenderer(client: Client, value: APLValue): ValueRenderer {
             val renderer = renderers[value::class]
             return if (renderer != null) {
                 renderer(value)
             } else {
-                Array2ValueRenderer(value)
+                Array2ValueRenderer(client, value)
             }
         }
 
-        fun makeContent(value: APLValue): EditorContent {
-            return Array2ContentEntry(makeValueRenderer(value))
+        fun makeContent(client: Client, value: APLValue): EditorContent {
+            return Array2ContentEntry(makeValueRenderer(client, value))
         }
     }
 }
 
-class Array2ValueRenderer(private val value: APLValue) : ValueRenderer {
+class Array2ValueRenderer(private val client: Client, private val value: APLValue) : ValueRenderer {
     override val text = value.formatted(FormatStyle.PLAIN)
-    override fun renderValue(): Node = makeArrayNode(value)
+    override fun renderValue(): Node = makeArrayNode(client, value)
 }
 
 private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
@@ -61,7 +67,7 @@ private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
     }
 }
 
-private fun makeArrayNode(value: APLValue): Node {
+private fun makeArrayNode(client: Client, value: APLValue): Node {
     fun renderAsString(): Text {
         return Text(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
     }
@@ -70,17 +76,17 @@ private fun makeArrayNode(value: APLValue): Node {
     return when {
         d.size == 1 && d[0] == 0 -> renderAsString()
         value.isStringValue() -> makeStringDisp(value)
-        d.size == 1 -> makeArray1(value)
-        d.size == 2 -> makeArray2(value)
+        d.size == 1 -> makeArray1(client, value)
+        d.size == 2 -> makeArray2(client, value)
         else -> renderAsString()
     }
 }
 
-private fun makeArray1(value: APLValue): Node {
+private fun makeArray1(client: Client, value: APLValue): Node {
     val grid = GridPane()
     grid.border = Border(BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths(1.0)))
     value.iterateMembersWithPosition { v, i ->
-        val label = makeArrayNode(v)
+        val label = makeArrayNode(client, v)
         GridPane.setRowIndex(label, 0)
         GridPane.setColumnIndex(label, i)
         GridPane.setMargin(label, Insets(3.0, 3.0, 3.0, 3.0))
@@ -90,7 +96,7 @@ private fun makeArray1(value: APLValue): Node {
     return grid
 }
 
-private fun makeArray2(value: APLValue): Node {
+private fun makeArray2(client: Client, value: APLValue): Node {
     val dimensions = value.dimensions
     val grid = GridPane()
     grid.border = Border(BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths(1.0)))
@@ -141,12 +147,20 @@ private fun makeArray2(value: APLValue): Node {
             }
         }
         repeat(numCols) { colIndex ->
-            val label = makeArrayNode(value.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, colIndex), multipliers)))
+            val label = makeArrayNode(client, value.valueAt(dimensions.indexFromPosition(intArrayOf(rowIndex, colIndex), multipliers)))
             GridPane.setRowIndex(label, rowIndex + rowOffset)
             GridPane.setColumnIndex(label, colIndex + colOffset)
             GridPane.setMargin(label, Insets(3.0, 3.0, 3.0, 3.0))
             GridPane.setHalignment(label, HPos.RIGHT)
             grid.children.add(label)
+        }
+    }
+
+    val contextMenu = ContextMenu(MenuItem("Open in editor").apply { onAction = EventHandler { ArrayEditor.open(client, value) } })
+    grid.setOnMouseClicked { event ->
+        if (event.button == MouseButton.SECONDARY) {
+            contextMenu.show(grid, Side.RIGHT, -(grid.width - event.x), event.y)
+            event.consume()
         }
     }
 

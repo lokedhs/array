@@ -79,7 +79,6 @@ class SourceEditor(val client: Client) {
         val doc = GenericEditableStyledDocument(SourceEditorParStyle(), TextStyle(), styledTextOps)
         val srcEdit = SourceEditorStyledArea(
             this,
-            client.renderContext.extendedInput(),
             SourceEditorParStyle(),
             applyParagraphStyle,
             TextStyle(),
@@ -174,7 +173,6 @@ class SourceEditorParStyle(val type: StyleType = StyleType.NORMAL) {
 
 class SourceEditorStyledArea(
     private val sourceEditor: SourceEditor,
-    extendedInput: ExtendedCharsKeyboardInput,
     parStyle: SourceEditorParStyle,
     applyParagraphStyle: BiConsumer<TextFlow, SourceEditorParStyle>,
     textStyle: TextStyle,
@@ -182,7 +180,7 @@ class SourceEditorStyledArea(
     styledTextOps: TextOps<String, TextStyle>,
     nodeFactory: Function<StyledSegment<String, TextStyle>, Node>
 ) : KAPEditorStyledArea<SourceEditorParStyle, String>(
-    extendedInput,
+    sourceEditor.client,
     parStyle,
     applyParagraphStyle,
     textStyle,

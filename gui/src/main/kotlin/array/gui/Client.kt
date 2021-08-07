@@ -14,7 +14,6 @@ import javafx.scene.text.Font
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
-import java.lang.IllegalStateException
 
 class Client(val application: ClientApplication, val stage: Stage) {
     val renderContext: ClientRenderContext = ClientRenderContextImpl()
@@ -89,7 +88,7 @@ class Client(val application: ClientApplication, val stage: Stage) {
                     onAction = EventHandler { functionListWindow.show() }
                 })
                 items.add(MenuItem("Array Editor").apply {
-                    onAction = EventHandler { ArrayEditor.makeArrayEditor().show() }
+                    onAction = EventHandler { ArrayEditor.open(this@Client) }
                 })
             }
             menus.add(windowMenu)

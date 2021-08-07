@@ -1,5 +1,6 @@
 package array.gui.styledarea
 
+import array.gui.Client
 import array.gui.ExtendedCharsKeyboardInput
 import javafx.event.Event
 import javafx.scene.Node
@@ -17,7 +18,7 @@ import java.util.function.BiConsumer
 import java.util.function.Function
 
 open class KAPEditorStyledArea<P, S>(
-    val keyboardInput: ExtendedCharsKeyboardInput,
+    val client: Client,
     parStyle: P,
     applyParagraphStyle: BiConsumer<TextFlow, P>,
     textStyle: TextStyle,
@@ -44,7 +45,7 @@ open class KAPEditorStyledArea<P, S>(
         val entries = ArrayList<InputMap<out Event>>()
 
         // Keymap
-        keyboardInput.keymap.forEach { e ->
+        client.renderContext.extendedInput().keymap.forEach { e ->
             val modifiers =
                 if (e.key.shift) arrayOf(KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN) else arrayOf(KeyCombination.ALT_DOWN)
             val v = InputMap.consume(EventPattern.keyTyped(e.key.character, *modifiers), { replaceSelection(e.value) })
@@ -83,7 +84,9 @@ open class KAPEditorStyledArea<P, S>(
                     InputHandler.Result.PROCEED
                 } else {
                     prefixActive = false
-                    val charMapping = keyboardInput.keymap[ExtendedCharsKeyboardInput.KeyDescriptor(event.character, event.isShiftDown)]
+                    val charMapping = client.renderContext.extendedInput().keymap[ExtendedCharsKeyboardInput.KeyDescriptor(
+                        event.character,
+                        event.isShiftDown)]
                     if (charMapping == null) {
                         InputHandler.Result.PROCEED
                     } else {

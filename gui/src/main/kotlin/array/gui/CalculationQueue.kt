@@ -14,32 +14,58 @@ class CalculationQueue(val engine: Engine) {
         try {
             while (!Thread.interrupted()) {
                 val request = queue.take()
-                val queueResult = try {
-                    val result = engine.parseAndEval(request.source, request.linkNewContext).collapse()
-                    Either.Left(result)
-                } catch (e: InterruptedException) {
-                    throw e
-                } catch (e: APLGenericException) {
-                    Either.Right(e)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Either.Right(WrappedException(e))
-                }
-                request.callback(queueResult)
+                request.processRequest()
             }
         } catch (e: InterruptedException) {
             println("Closing calculation queue")
         }
     }
 
-    private class Request(
+    interface Request {
+        fun processRequest()
+    }
+
+    inner class EvalAPLRequest(
         val source: SourceLocation,
         val linkNewContext: Boolean,
         val callback: (Either<APLValue, Exception>) -> Unit
-    )
+    ) : Request {
+        override fun processRequest() {
+            val queueResult = try {
+                val result = engine.parseAndEval(source, linkNewContext).collapse()
+                Either.Left(result)
+            } catch (e: InterruptedException) {
+                throw e
+            } catch (e: APLGenericException) {
+                Either.Right(e)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Either.Right(WrappedException(e))
+            }
+            callback(queueResult)
+        }
+    }
+
+    inner class ReadVariableRequest(val name: String, val callback: (APLValue?) -> Unit) : Request {
+        override fun processRequest() {
+            val sym = engine.currentNamespace.findSymbol(name, includePrivate = true)
+            val result = if (sym == null) {
+                null
+            } else {
+                engine.rootContext.environment.findBinding(sym)?.let { binding ->
+                    engine.rootContext.getVar(binding)?.collapse()
+                }
+            }
+            callback(result)
+        }
+    }
 
     fun pushRequest(source: SourceLocation, linkNewContext: Boolean, fn: (Either<APLValue, Exception>) -> Unit) {
-        queue.add(Request(source, linkNewContext, fn))
+        queue.add(EvalAPLRequest(source, linkNewContext, fn))
+    }
+
+    fun pushReadVariableRequest(name: String, callback: (APLValue?) -> Unit) {
+        queue.add(ReadVariableRequest(name.trim(), callback))
     }
 
     fun start() {

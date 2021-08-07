@@ -37,7 +37,7 @@ class ResultList3(val client: Client) {
         }
 
         val document = GenericEditableStyledDocument(ParStyle(), TextStyle(), styledOps)
-        styledArea = ROStyledArea(client.renderContext.extendedInput(), applyParagraphStyle, document, styledOps, nodeFactory)
+        styledArea = ROStyledArea(client, applyParagraphStyle, document, styledOps, nodeFactory)
 
         styledArea.addCommandListener(::processCommand)
 
