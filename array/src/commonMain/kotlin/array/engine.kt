@@ -59,6 +59,8 @@ abstract class APLFunction(val pos: Position) {
 
     open fun deriveBitwise(): APLFunctionDescriptor? = null
 
+    open fun deriveInverse(): APLFunctionDescriptor? = null
+
     open val optimisationFlags get() = OptimisationFlags(0)
 
     open fun eval1ArgLong(context: RuntimeContext, a: Long, axis: APLValue?): Long =

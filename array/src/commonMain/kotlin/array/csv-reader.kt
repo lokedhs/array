@@ -120,7 +120,7 @@ private val PATTERN_INTEGER = "^-?[0-9]+$".toRegex()
 private val PATTERN_FLOAT1 = "^-?[0-9]+\\.[0-9]*$".toRegex()
 private val PATTERN_FLOAT2 = "^-?[0-9]*\\.[0-9]+$".toRegex()
 
-private fun stringToAplValue(string: String): APLValue {
+fun stringToAplValue(string: String): APLValue {
     return when {
         PATTERN_INTEGER.matches(string) -> string.toLong().makeAPLNumber()
         PATTERN_FLOAT1.matches(string) -> string.toDouble().makeAPLNumber()

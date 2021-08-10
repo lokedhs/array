@@ -5,14 +5,15 @@ import array.gui.Client
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
+import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
 import javafx.scene.Parent
 import javafx.scene.Scene
-import javafx.scene.control.TableColumn
-import javafx.scene.control.TableView
-import javafx.scene.control.TextField
+import javafx.scene.control.*
+import javafx.scene.input.Clipboard
 import javafx.stage.Stage
+import org.jsoup.Jsoup
 
 class ArrayEditor {
     private lateinit var stage: Stage
@@ -35,11 +36,9 @@ class ArrayEditor {
         println("Variable name: ${variableField?.text}")
         val name = variableField!!.text
         client!!.calculationQueue.pushReadVariableRequest(name) { result ->
-            println("Got result: ${result}")
             if (result != null) {
                 val v = result.collapse()
                 Platform.runLater {
-                    println("Loading: ${v}")
                     loadArray(v)
                 }
             }
@@ -68,6 +67,23 @@ class ArrayEditor {
         table!!.items.setAll(*rows)
     }
 
+    private fun pasteToTable() {
+        val clipboard = Clipboard.getSystemClipboard()
+        when {
+            clipboard.hasHtml() -> {
+                pasteHtml(clipboard.html)
+            }
+        }
+    }
+
+    private fun pasteHtml(html: String) {
+        val doc = Jsoup.parse(html)
+        val result = htmlTableToArray(doc)
+        if (result != null) {
+            loadArray(result)
+        }
+    }
+
     companion object {
         private fun makeArrayEditor(client: Client): ArrayEditor {
             val loader = FXMLLoader(ArrayEditor::class.java.getResource("arrayeditor.fxml"))
@@ -79,6 +95,8 @@ class ArrayEditor {
             val scene = Scene(root, 800.0, 300.0)
             controller.stage.title = "Array Editor"
             controller.stage.scene = scene
+
+            controller.table!!.contextMenu = ContextMenu(MenuItem("Paste").apply { onAction = EventHandler { controller.pasteToTable() } })
 
             return controller
         }

@@ -1351,8 +1351,7 @@ class WhereAPLFunction : APLFunctionDescriptor {
                             i.makeAPLNumber()
                         } else {
                             val positionIndex = Dimensions.positionFromIndexWithMultipliers(i, multipliers)
-                            val valueArray =
-                                Array<APLValue>(positionIndex.size) { v -> positionIndex[v].makeAPLNumber() }
+                            val valueArray = Array<APLValue>(positionIndex.size) { v -> positionIndex[v].makeAPLNumber() }
                             APLArrayImpl(dimensionsOfSize(valueArray.size), valueArray)
                         }
                         repeat(n) {
