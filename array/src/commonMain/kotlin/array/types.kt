@@ -684,7 +684,7 @@ open class APLArrayImpl(
 ) : APLArray() {
 
     override fun valueAt(p: Int) = values[p]
-    override fun toString() = Arrays.toString(values)
+    override fun toString() = "APLArrayImpl[${dimensions}, ${Arrays.toString(values)}]"
 
     companion object {
         inline fun make(dimensions: Dimensions, fn: (index: Int) -> APLValue): APLArrayImpl {

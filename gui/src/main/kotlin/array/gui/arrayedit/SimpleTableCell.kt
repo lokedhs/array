@@ -13,13 +13,25 @@ class ArrayEditorTableCell : TableCell<ArrayEditorRow, ArrayEditorCell>() {
     override fun updateItem(item: ArrayEditorCell?, empty: Boolean) {
         super.updateItem(item, empty)
         if (item == null) {
-            graphic = null
+            text = ""
         } else {
             val v = item.value
-            graphic = when {
-                v.isStringValue() -> Text(v.toStringValue()).apply { fill = Color.RED }
-                v is APLNumber -> Text(v.formatted(FormatStyle.PRETTY)).apply { alignment = Pos.BASELINE_RIGHT }
-                else -> Text(v.formatted(FormatStyle.PRETTY))
+            when {
+                v.isStringValue() -> {
+                    text = v.toStringValue()
+                    textFill = Color.RED
+                    alignment = Pos.BASELINE_LEFT
+                }
+                v is APLNumber -> {
+                    text = v.formatted(FormatStyle.PRETTY)
+                    textFill = Color.BLACK
+                    alignment = Pos.BASELINE_RIGHT
+                }
+                else -> {
+                    text = v.formatted(FormatStyle.PRETTY)
+                    textFill = Color.BLACK
+                    alignment = Pos.BASELINE_LEFT
+                }
             }
         }
     }

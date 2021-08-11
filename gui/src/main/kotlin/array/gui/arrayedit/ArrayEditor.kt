@@ -1,6 +1,8 @@
 package array.gui.arrayedit
 
+import array.APLArrayImpl
 import array.APLValue
+import array.dimensionsOfSize
 import array.gui.Client
 import javafx.application.Platform
 import javafx.collections.FXCollections
@@ -33,14 +35,36 @@ class ArrayEditor {
     }
 
     fun loadFromVariable(@Suppress("UNUSED_PARAMETER") event: ActionEvent) {
+        loadFromField()
+    }
+
+    fun getClicked(event: ActionEvent) {
+        loadFromField()
+    }
+
+    fun putClicked(event: ActionEvent) {
+        saveFromField()
+    }
+
+    private fun loadFromField() {
         println("Variable name: ${variableField?.text}")
-        val name = variableField!!.text
+        val name = variableField!!.text.trim()
         client!!.calculationQueue.pushReadVariableRequest(name) { result ->
             if (result != null) {
                 val v = result.collapse()
                 Platform.runLater {
                     loadArray(v)
                 }
+            }
+        }
+    }
+
+    private fun saveFromField() {
+        println("Variable name: ${variableField?.text}")
+        val name = variableField!!.text.trim()
+        client!!.calculationQueue.pushWriteVariableRequest(name, makeArrayContent()) { result ->
+            if(result != null) {
+                result.printStackTrace()
             }
         }
     }
@@ -59,12 +83,23 @@ class ArrayEditor {
                 text = columnLabels?.get(index)?.title ?: index.toString()
             }
         }
-
         table!!.columns.setAll(colList)
 
         val rows = (0 until d[0]).map { i -> ArrayEditorRow(value, i, d[1]) }.toTypedArray()
         table!!.items = FXCollections.observableArrayList()
         table!!.items.setAll(*rows)
+    }
+
+    private fun makeArrayContent(): APLValue {
+        val items = table!!.items
+        val numRows = items.size
+        val numCols = table!!.columns.size
+        val content = ArrayList<APLValue>()
+        items.forEach { row ->
+            content.addAll(row.values)
+        }
+        assert(items.size == numRows * numCols)
+        return APLArrayImpl(dimensionsOfSize(numRows, numCols), content.toTypedArray())
     }
 
     private fun pasteToTable() {

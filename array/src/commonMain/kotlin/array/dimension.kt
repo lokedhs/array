@@ -84,18 +84,7 @@ value class Dimensions(val dimensions: IntArray) {
         }
     }
 
-    override fun toString(): String {
-        val buf = StringBuilder()
-        buf.append("Dimensions[")
-        for (i in dimensions.indices) {
-            if (i > 0) {
-                buf.append(", ")
-            }
-            buf.append(dimensions[i])
-        }
-        buf.append("]")
-        return buf.toString()
-    }
+    override fun toString() = "Dimensions[${dimensions.joinToString(", ")}]"
 
     companion object {
         fun positionFromIndexWithMultipliers(p: Int, multipliers: IntArray): IntArray {

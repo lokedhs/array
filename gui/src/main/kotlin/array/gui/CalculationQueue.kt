@@ -60,12 +60,26 @@ class CalculationQueue(val engine: Engine) {
         }
     }
 
+    inner class WriteVariableRequest(val name: String, val value: APLValue, val callback: (Exception?) -> Unit) : Request {
+        override fun processRequest() {
+            val sym = engine.currentNamespace.internSymbol(name)
+            val binding = engine.rootContext.environment.findBinding(sym) ?: engine.rootContext.environment.bindLocal(sym)
+            engine.rootContext.reinitRootBindings()
+            engine.rootContext.setVar(binding, value)
+            callback(null)
+        }
+    }
+
     fun pushRequest(source: SourceLocation, linkNewContext: Boolean, fn: (Either<APLValue, Exception>) -> Unit) {
         queue.add(EvalAPLRequest(source, linkNewContext, fn))
     }
 
     fun pushReadVariableRequest(name: String, callback: (APLValue?) -> Unit) {
         queue.add(ReadVariableRequest(name.trim(), callback))
+    }
+
+    fun pushWriteVariableRequest(name: String, value: APLValue, fn: (Exception?) -> Unit) {
+        queue.add(WriteVariableRequest(name.trim(), value, fn))
     }
 
     fun start() {
