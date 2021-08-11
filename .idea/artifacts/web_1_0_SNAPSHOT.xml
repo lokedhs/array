@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="web-1.0-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/web/build/libs</output-path>
-    <root id="archive" name="web-1.0-SNAPSHOT.jar">
-      <element id="module-output" name="array_test.web.main" />
-    </root>
-  </artifact>
-</component>
