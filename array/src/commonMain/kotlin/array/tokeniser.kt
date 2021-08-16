@@ -126,7 +126,7 @@ class FileSourceLocation(private val file: String) : SourceLocation {
     override fun open() = openCharFile(file)
 }
 
-class Position(val source: SourceLocation, val line: Int, val col: Int)
+data class Position(val source: SourceLocation, val line: Int, val col: Int)
 
 class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
     private val content = PushBackCharacterProvider(contentArg)
@@ -165,7 +165,7 @@ class TokenGenerator(val engine: Engine, contentArg: SourceLocation) {
             "≢", "≤", "≥", "⊂", "⊃", "⊖", "⊢", "⊣", "⊤", "⊥", "⋆", "⌈", "⌊", "⌶", "⌷", "⌹",
             "⌺", "⌽", "⌿", "⍀", "⍉", "⍋", "⍎", "⍒", "⍕", "⍙", "⍞", "⍟", "⍠", "⍣", "⍤", "⍥",
             "⍨", "⍪", "⍫", "⍱", "⍲", "⍳", "⍴", "⍵", "⍶", "⍷", "⍸", "⍹", "⍺", "◊",
-            "○", "$", "¥", "χ", "\\", ".", "∵")
+            "○", "$", "¥", "χ", "\\", ".", "∵", "⍓")
     }
 
     fun registerSingleCharFunction(name: String) {

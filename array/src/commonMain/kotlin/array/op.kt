@@ -26,7 +26,7 @@ private fun parseFunctionOrNull(parser: APLParser): Either<APLFunction, Pair<Tok
             }
         }
         is OpenFnDef -> {
-            Either.Left(parser.parseFnDefinition().make(pos))
+            Either.Left(parser.parseFnDefinition(pos).make(pos))
         }
         is OpenParen -> {
             val holder = parser.parseExprToplevel(CloseParen)

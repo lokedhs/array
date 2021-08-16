@@ -1,5 +1,6 @@
 package array
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -65,7 +66,7 @@ class CustomFunctionTest : APLTest() {
 
     @Test
     fun selfRecursion() {
-        parseAPLExpression("n←0 ◊ ∇ foo (A) { if(A≡0) { 1 } else {  n←n+1 ◊ foo ¯1+A } } ◊ n,foo 10", true).let { result ->
+        parseAPLExpression("n←0 ◊ foo ⇐ { if(⍵≡0) { 1 } else {  n←n+1 ◊ ⍓ ¯1+⍵ } } ◊ n,foo 10", true).let { result ->
             assertDimension(dimensionsOfSize(2), result)
             assertArrayContent(arrayOf(10, 1), result)
         }
@@ -615,6 +616,23 @@ Monadic single arg:          ∇            (foo) x          {
         }
     }
 
+    @Test
+    fun longFormCannotAccessOutsideScope() {
+        assertFailsWith<VariableNotAssigned> {
+            parseAPLExpression(
+                """
+                |foo ⇐ {
+                |  q ← 10
+                |  ∇ bar (x) {
+                |    x+q
+                |  }
+                |  q+1
+                |}
+                |bar 20
+                """.trimMargin())
+        }
+    }
+
     /////////////////////////////////////////////////////////
     // Operators
     /////////////////////////////////////////////////////////
@@ -910,5 +928,26 @@ Monadic single arg:          ∇            (foo) x          {
             """.trimMargin())
         assertEquals("3501200131", out)
         assertSimpleNumber(131, result)
+    }
+
+    @Test
+    fun localScopeNesting() {
+        val result = parseAPLExpression(
+            """
+            |∇ foo (x) {
+            |  a ← 1
+            |  bar ⇐ {
+            |    b ← ⍵
+            |    barInternal ⇐ {
+            |      a + 2 + ⍵ + b
+            |    }
+            |    λbarInternal
+            |  }
+            |  bar 3 + x 
+            |}
+            |c ← foo 4
+            |⍞c 5
+            """.trimMargin())
+        assertSimpleNumber(15, result)
     }
 }

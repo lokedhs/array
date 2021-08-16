@@ -7,7 +7,7 @@ import array.syntax.processDefsyntaxSub
 //data class InstrTokenHolder(val instruction: Optional<Instruction>, val lastToken: Token, val pos: Position)
 sealed class ParseResultHolder(val lastToken: Token, val pos: Position) {
     class InstrParseResult(val instr: Instruction, lastToken: Token, pos: Position) : ParseResultHolder(lastToken, pos)
-    class FnParseResult(val fn: APLFunction, val leftArgs: List<Instruction>, lastToken: Token, pos: Position) :
+    class FnParseResult(val fn: APLFunction, leftArgs: List<Instruction>, lastToken: Token, pos: Position) :
         ParseResultHolder(lastToken, pos) {
         init {
             if (leftArgs.isNotEmpty()) {
@@ -443,29 +443,31 @@ class APLParser(val tokeniser: TokenGenerator) {
             }
         }
 
-        val componentList = ArrayList<FnArgComponent>()
-        while (true) {
-            val (token, innerPos) = tokeniser.nextTokenWithPosition()
-            when (token) {
-                is OpenFnDef -> break
-                is Symbol -> componentList += FnArgComponent(listOf(token), false)
-                is OpenParen -> componentList += parseSymbolList()
-                else -> throw UnexpectedToken(token, innerPos)
+        withNullEnvironment {
+            val componentList = ArrayList<FnArgComponent>()
+            while (true) {
+                val (token, innerPos) = tokeniser.nextTokenWithPosition()
+                when (token) {
+                    is OpenFnDef -> break
+                    is Symbol -> componentList += FnArgComponent(listOf(token), false)
+                    is OpenParen -> componentList += parseSymbolList()
+                    else -> throw UnexpectedToken(token, innerPos)
+                }
             }
-        }
 
-        when {
-            componentList.isEmpty() -> throw ParseException("No function name specified", pos)
-            componentList.size == 1 -> {
-                processFnWithArg(componentList[0], null, null)
+            when {
+                componentList.isEmpty() -> throw ParseException("No function name specified", pos)
+                componentList.size == 1 -> {
+                    processFnWithArg(componentList[0], null, null)
+                }
+                componentList.size == 2 -> {
+                    processFnWithArg(componentList[0], null, componentList[1])
+                }
+                componentList.size == 3 -> {
+                    processFnWithArg(componentList[1], componentList[0], componentList[2])
+                }
+                else -> throw ParseException("Invalid function definition format", pos)
             }
-            componentList.size == 2 -> {
-                processFnWithArg(componentList[0], null, componentList[1])
-            }
-            componentList.size == 3 -> {
-                processFnWithArg(componentList[1], componentList[0], componentList[2])
-            }
-            else -> throw ParseException("Invalid function definition format", pos)
         }
     }
 
@@ -530,7 +532,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                     is ParseResultHolder.FnParseResult -> return processFn(expr.fn, leftArgs)
                     is ParseResultHolder.EmptyParseResult -> throw ParseException("Empty expression", pos)
                 }
-                is OpenFnDef -> return processFn(parseFnDefinition().make(pos), leftArgs)
+                is OpenFnDef -> return processFn(parseFnDefinition(pos).make(pos), leftArgs)
                 is ParsedLong -> leftArgs.add(LiteralInteger(token.value, pos))
                 is ParsedDouble -> leftArgs.add(LiteralDouble(token.value, pos))
                 is ParsedComplex -> leftArgs.add(LiteralComplex(token.value, pos))
@@ -679,7 +681,7 @@ class APLParser(val tokeniser: TokenGenerator) {
         val (token, pos2) = tokeniser.nextTokenWithPosition()
         return when (token) {
             is OpenFnDef -> {
-                val fnDefinition = parseFnDefinition()
+                val fnDefinition = parseFnDefinition(pos)
                 EvalLambdaFnx(fnDefinition.make(pos), pos)
             }
             is Symbol -> {
@@ -698,6 +700,7 @@ class APLParser(val tokeniser: TokenGenerator) {
     }
 
     fun parseFnDefinition(
+        pos: Position,
         leftArgName: Symbol? = null,
         rightArgName: Symbol? = null,
         endToken: Token = CloseFnDef,
@@ -708,7 +711,12 @@ class APLParser(val tokeniser: TokenGenerator) {
             withEnvironment {
                 val leftBinding = currentEnvironment().bindLocal(leftArgName ?: engine.internSymbol("⍺", engine.coreNamespace))
                 val rightBinding = currentEnvironment().bindLocal(rightArgName ?: engine.internSymbol("⍵", engine.coreNamespace))
+                val name = tokeniser.engine.currentNamespace.internSymbol(OUTER_CALL_SYMBOL)
+                val inProcessUserFunction = UserFunction(
+                    name, listOf(leftBinding), listOf(rightBinding), DummyInstr(pos), currentEnvironment())
+                currentEnvironment().registerLocalFunction(name, inProcessUserFunction)
                 val instruction = parseValueToplevel(endToken)
+                inProcessUserFunction.instr = instruction
                 DeclaredFunction("<unnamed>", instruction, leftBinding, rightBinding, currentEnvironment())
             }
         } else {
@@ -743,5 +751,9 @@ class APLParser(val tokeniser: TokenGenerator) {
         }
 
         return parseValueToplevel(CloseBracket)
+    }
+
+    companion object {
+        const val OUTER_CALL_SYMBOL = "⍓"
     }
 }

@@ -80,7 +80,7 @@ abstract class FunctionSyntaxRule(private val variable: EnvironmentBinding) : Sy
         if (token != startToken()) {
             throw UnexpectedToken(token, pos)
         }
-        val fnDefinition = parser.parseFnDefinition(endToken = endToken(), allocateEnvironment = allocateEnvironment())
+        val fnDefinition = parser.parseFnDefinition(pos, endToken = endToken(), allocateEnvironment = allocateEnvironment())
         syntaxRuleBindings.add(
             SyntaxRuleVariableBinding(
                 variable,
