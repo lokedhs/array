@@ -5,20 +5,23 @@ import kotlinx.collections.immutable.persistentHashMapOf
 import kotlin.system.measureTimeMillis
 
 fun main() {
-    gammaTest()
-}
-
-fun xamain() {
     val engine = Engine()
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
     val srcString = """
-            |{⍵+⍺}/⍳200000000
+            |+/(~comp R∊comp (∘.×)⍨R)/R←2+⍳4000
         """.trimMargin()
+    // N←1000
+    // Default: 0.548
+    // Specialised find result value: 0.072
+    // N←4000
+    // With previous opt: 4.191
     println("Starting")
     val elapsed = measureTimeMillis {
-        val result = engine.parseAndEval(StringSourceLocation(srcString), true)
-        result.collapse()
+        repeat(10) {
+            val result = engine.parseAndEval(StringSourceLocation(srcString), true)
+            result.collapse()
+        }
     }
     println("Elapsed: ${elapsed / 1000.0}")
 }

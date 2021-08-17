@@ -145,13 +145,14 @@ private const val NUMBER_CACHE_SIZE = 1024
 private val longCache = Array(NUMBER_CACHE_SIZE) { i -> APLLong(i - (NUMBER_CACHE_SIZE / 2L)) }
 
 fun Int.makeAPLNumber() = this.toLong().makeAPLNumber()
-fun Long.makeAPLNumber() =
-    if (this >= -(NUMBER_CACHE_SIZE / 2) && this <= NUMBER_CACHE_SIZE / 2 - 1) {
+
+fun Long.makeAPLNumber(): APLLong {
+    return if (this >= -(NUMBER_CACHE_SIZE / 2) && this <= NUMBER_CACHE_SIZE / 2 - 1) {
         longCache[this.toInt() + NUMBER_CACHE_SIZE / 2]
     } else {
-        APLLong(
-            this)
+        APLLong(this)
     }
+}
 
 fun Double.makeAPLNumber() = APLDouble(this)
 fun Complex.makeAPLNumber() = if (this.imaginary == 0.0) APLDouble(real) else APLComplex(this)

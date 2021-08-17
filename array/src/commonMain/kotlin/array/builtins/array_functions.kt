@@ -751,7 +751,7 @@ class DropAPLFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
             val aDimensions = a.dimensions
             if (!((aDimensions.size == 0 && b.rank == 1) ||
-                        (aDimensions.size == 1 && aDimensions[0] == b.rank))
+                            (aDimensions.size == 1 && aDimensions[0] == b.rank))
             ) {
                 throwAPLException(InvalidDimensionsException("Size of A must match the rank of B", pos))
             }
@@ -1095,35 +1095,64 @@ class CompareNotEqualFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = CompareFunctionImpl(pos)
 }
 
-class MemberResultValue(val context: RuntimeContext, val a: APLValue, val b: APLValue) : APLArray() {
-    override val dimensions = a.dimensions
+object MemberResultValueImpls {
+    open class MemberResultValue(val context: RuntimeContext, val a: APLValue, val b: APLValue, val pos: Position) : APLArray() {
+        override val dimensions = a.dimensions
+        override val specialisedType get() = ArrayMemberType.LONG
 
-    override fun valueAt(p: Int): APLValue {
-        return findInArray(a.valueAt(p).unwrapDeferredValue())
-    }
-
-    override fun unwrapDeferredValue(): APLValue {
-        return if (dimensions.isEmpty()) {
-            findInArray(a.disclose())
-        } else {
-            this
+        override fun valueAt(p: Int): APLValue {
+            return valueAtLong(p, null).makeAPLNumber()
         }
-    }
 
-    private fun findInArray(target: APLValue): APLValue {
-        b.iterateMembers { value ->
-            if (target.compareEquals(value)) {
-                return APLLONG_1
+        override fun valueAtLong(p: Int, pos: Position?): Long {
+            return findInArray(a.valueAt(p).unwrapDeferredValue())
+        }
+
+        override fun unwrapDeferredValue(): APLValue {
+            return if (dimensions.isEmpty()) {
+                findInArray(a.disclose()).makeAPLNumber()
+            } else {
+                this
             }
         }
-        return APLLONG_0
+
+        protected open fun findInArray(target: APLValue): Long {
+            b.iterateMembers { value ->
+                if (target.compareEquals(value)) {
+                    return 1
+                }
+            }
+            return 0
+        }
+    }
+
+    class MemberResultValueRightLong(
+        context: RuntimeContext, a: APLValue, b: APLValue, pos: Position
+    ) : MemberResultValue(context, a, b, pos) {
+        override fun findInArray(target: APLValue): Long {
+            val targetLong = target.ensureNumber(pos).asLong()
+            repeat(b.size) { i ->
+                if (b.valueAtLong(i, pos) == targetLong) {
+                    return 1
+                }
+            }
+            return 0
+        }
+    }
+
+    fun make(context: RuntimeContext, a: APLValue, b: APLValue, pos: Position): MemberResultValue {
+        val stb = b.specialisedType
+        return when {
+            stb === ArrayMemberType.LONG -> MemberResultValueRightLong(context, a, b, pos)
+            else -> MemberResultValue(context, a, b, pos)
+        }
     }
 }
 
 class MemberFunction : APLFunctionDescriptor {
     class MemberFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            return MemberResultValue(context, a, b)
+            return MemberResultValueImpls.make(context, a, b, pos)
         }
     }
 
