@@ -1285,11 +1285,9 @@ abstract class SelectElementsFunctionImpl(pos: Position) : APLFunction(pos) {
                 IntArray(bDimensions[axisInt]) { v }
             }
         } else {
-            a.toIntArray(pos).also { indexes ->
-                indexes.forEach { v ->
-                    if (v < 0) {
-                        throwAPLException(APLIncompatibleDomainsException("Selection index is negative", pos))
-                    }
+            a.toIntArray(pos).onEach { v ->
+                if (v < 0) {
+                    throwAPLException(APLIncompatibleDomainsException("Selection index is negative", pos))
                 }
             }
         }

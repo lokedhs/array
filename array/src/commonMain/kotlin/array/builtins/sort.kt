@@ -78,7 +78,7 @@ abstract class GradeFunction(pos: Position) : NoAxisAPLFunction(pos) {
 
         val source = a.collapse()
         val list = IntArray(aDimensions[0]) { it }
-        val sorted = list.sortedWith({ aIndex, bIndex ->
+        val sorted = list.sortedWith { aIndex, bIndex ->
             var ap = aIndex * firstAxisMultiplier
             var bp = bIndex * firstAxisMultiplier
             var res = 0
@@ -94,7 +94,7 @@ abstract class GradeFunction(pos: Position) : NoAxisAPLFunction(pos) {
                 bp++
             }
             applyReverse(res)
-        })
+        }
         return APLArrayImpl(dimensionsOfSize(sorted.size), sorted.map { it.makeAPLNumber() }.toTypedArray())
     }
 

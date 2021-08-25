@@ -82,7 +82,7 @@ class LinuxByteProvider(val fd: Int, val name: String) : ByteProvider {
 
     override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int {
         val startPos = start ?: 0
-        val lengthInt = length ?: buffer.size - startPos
+        val lengthInt = length ?: (buffer.size - startPos)
         memScoped {
             val buf = allocArray<ByteVar>(lengthInt)
             val result = read(fd, buf, lengthInt.toULong())

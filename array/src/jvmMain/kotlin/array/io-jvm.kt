@@ -140,7 +140,7 @@ class InputStreamByteProvider(private val input: InputStream) : ByteProvider {
     override fun readBlock(buffer: ByteArray, start: Int?, length: Int?): Int? {
         transformIOException {
             val startPos = start ?: 0
-            val result = input.read(buffer, startPos, length ?: buffer.size - startPos)
+            val result = input.read(buffer, startPos, length ?: (buffer.size - startPos))
             return if (result == -1) null else result
         }
     }

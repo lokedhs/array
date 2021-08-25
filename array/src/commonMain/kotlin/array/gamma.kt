@@ -561,11 +561,6 @@ private fun doubleTruncate(x: Double): Double {
     return Double.fromBits((highBits or (lowBits and 0xF8000000UL)).toLong())
 }
 
-fun gammaTest() {
-    val x = doubleGamma(12.2)
-    println("res = $x")
-}
-
 @Strictfp
 private fun expD(xInput: Double, cInput: Double): Double {
     var x = xInput

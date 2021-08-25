@@ -21,7 +21,7 @@ interface ByteProvider : NativeCloseable {
 
     fun readBlock(buffer: ByteArray, start: Int? = null, length: Int? = null): Int? {
         val startPos = start ?: 0
-        val n = length ?: buffer.size - startPos
+        val n = length ?: (buffer.size - startPos)
         var i = 0
         while (i < n) {
             val value = readByte() ?: break
@@ -42,7 +42,7 @@ interface CharacterProvider : NativeCloseable {
             val ch = nextCodepoint()
             if (ch == null) {
                 val s = buf.toString()
-                return if (s.isEmpty()) null else s
+                return s.ifEmpty { null }
             } else if (ch == '\n'.code) {
                 return buf.toString()
             }
@@ -118,13 +118,11 @@ class ByteToCharacterProvider(val source: ByteProvider) : CharacterProvider {
 
         while (true) {
             val nextByte = source.readByte()
-            if (nextByte == null) {
-                if (utfBytesNeeded != 0) {
+                ?: if (utfBytesNeeded != 0) {
                     throw MPFileException("Truncated UTF-8 stream")
                 } else {
                     return null
                 }
-            }
             val a = nextByte.toInt() and 0xFF
             if (utfBytesNeeded == 0) {
                 when {
