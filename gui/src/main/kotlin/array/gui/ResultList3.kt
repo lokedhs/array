@@ -62,7 +62,6 @@ class ResultList3(val client: Client) {
     fun getNode() = scrollArea
 
     fun addResult(v: APLValue) {
-        //styledArea.appendTextEnd(v.formatted(FormatStyle.PRETTY) + "\n", TextStyle(TextStyle.Type.RESULT))
         styledArea.appendAPLValueEnd(v, TextStyle(TextStyle.Type.RESULT))
     }
 
@@ -72,7 +71,6 @@ class ResultList3(val client: Client) {
         } else {
             "Exception from KAP engine: ${e.message}"
         }
-        //styledArea.appendTextEnd(message + "\n", TextStyle(TextStyle.Type.ERROR))
         styledArea.appendErrorMessage(message)
     }
 

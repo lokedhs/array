@@ -66,9 +66,6 @@ class DrawGraphicFunction : APLFunctionDescriptor {
         }
     }
 
-    // ∇ range (low;high;v) { low+(⍳v)÷(v÷(high-low)) }
-    // ∇ m (x) { z←r←n←0 ◊ while((r ≤ 2) ∧ (n < 20)) { z ← x+z⋆2 ◊ r ← |z ◊ n←n+1} ◊ n÷20 }
-    // m¨(0J1×range(-2;2;200)) ∘.+ range(-2;2;200)
     override fun make(pos: Position) = DrawGraphicFunctionImpl(pos)
 }
 

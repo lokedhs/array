@@ -127,14 +127,6 @@ class SourceEditor(val client: Client) {
             builder.addParagraph(text, styledArea.initialTextStyle)
         }
         styledArea.insert(0, builder.build())
-//        content.forEach { text ->
-//            styledArea.content.paragraphs.add(
-//                Paragraph(
-//                    styledArea.initialParagraphStyle,
-//                    styledArea.segOps,
-//                    text,
-//                    styledArea.initialTextStyle))
-//        }
         loaded = file
     }
 
