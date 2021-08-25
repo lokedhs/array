@@ -9,7 +9,7 @@ fun main() {
     engine.addLibrarySearchPath("standard-lib")
     engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
     val srcString = """
-            |+/(~comp R∊comp (∘.×)⍨R)/R←2+⍳4000
+            |+/ (⍳N) /⍨ {~0∊⍵|⍨1↓1+⍳⍵⋆0.5}¨ ⍳N←2000000
         """.trimMargin()
     // N←1000
     // Default: 0.548
