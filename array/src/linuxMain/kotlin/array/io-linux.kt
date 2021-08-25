@@ -45,19 +45,6 @@ class KeyboardInputNative : KeyboardInput {
     }
 }
 
-//class KeyboardInputLibedit : KeyboardInput {
-//    override fun readString(prompt: String): String? {
-//        val result = libedit.readline(prompt)
-//        return if (result == null) {
-//            null
-//        } else {
-//            val resultConverted = result.toKString()
-//            free(result.rawValue)
-//            resultConverted
-//        }
-//    }
-//}
-
 actual fun makeKeyboardInput(): KeyboardInput {
     return KeyboardInputNative()
 }
