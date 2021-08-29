@@ -4,7 +4,9 @@ import array.gui.Client
 import array.gui.ExtendedCharsKeyboardInput
 import javafx.event.Event
 import javafx.scene.Node
+import javafx.scene.input.InputEvent
 import javafx.scene.input.KeyCombination
+import javafx.scene.input.KeyEvent
 import javafx.scene.text.TextFlow
 import org.fxmisc.richtext.GenericStyledArea
 import org.fxmisc.richtext.model.EditableStyledDocument
@@ -55,7 +57,7 @@ open class KAPEditorStyledArea<P, S>(
         addInputMappings(entries)
 
         // Prefix input
-        val prefixChar = "." // this should be read from config
+        val prefixChar = "`" // this should be read from config
         entries.add(makePrefixInputKeymap(prefixChar))
 
         entries.add(defaultKeymap)
@@ -70,19 +72,40 @@ open class KAPEditorStyledArea<P, S>(
             replaceSelection(s)
         }
 
+        fun processKey(event: KeyEvent) {
+            val charMapping = client.renderContext.extendedInput().keymap[ExtendedCharsKeyboardInput.KeyDescriptor(
+                event.character,
+                event.isShiftDown)]
+            if(charMapping == null) {
+                disableAndAdd(prefixChar)
+            } else {
+                disableAndAdd(charMapping)
+            }
+        }
+
+        fun emptyKeyModifiers(event: KeyEvent): Boolean {
+            return !(event.isAltDown || event.isShiftDown || event.isControlDown || event.isMetaDown)
+        }
+
         val entries = ArrayList<InputMap<out Event>>()
-        entries.add(InputMap.consume(EventPattern.keyTyped(prefixChar), {
+        entries.add(InputMap.consume(EventPattern.keyTyped(prefixChar)) { event ->
             if (!prefixActive) {
                 prefixActive = true
             } else {
-                disableAndAdd(prefixChar)
+                processKey(event)
             }
-        }))
-        entries.add(InputMap.process(EventPattern.keyTyped(),
-            { event ->
-                if (!prefixActive) {
+        })
+        entries.add(InputMap.process(EventPattern.keyTyped()) { event ->
+            when {
+                !prefixActive -> {
                     InputHandler.Result.PROCEED
-                } else {
+                }
+                event.character == " " && emptyKeyModifiers(event) -> {
+                    prefixActive = false
+                    replaceSelection(prefixChar)
+                    InputHandler.Result.CONSUME
+                }
+                else -> {
                     prefixActive = false
                     val charMapping = client.renderContext.extendedInput().keymap[ExtendedCharsKeyboardInput.KeyDescriptor(
                         event.character,
@@ -94,7 +117,8 @@ open class KAPEditorStyledArea<P, S>(
                         InputHandler.Result.CONSUME
                     }
                 }
-            }))
+            }
+        })
         return InputMap.sequence(*entries.toTypedArray())
     }
 }
