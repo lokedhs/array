@@ -69,7 +69,7 @@ class CompareTest : APLTest() {
     }
 
     @Test
-    fun oneArgumentIdenticalTest() {
+    fun oneArgumentNotIdenticalTest() {
         assertSimpleNumber(0, parseAPLExpression("≢0⍴0"))
         assertSimpleNumber(0, parseAPLExpression("≢4"))
         assertSimpleNumber(4, parseAPLExpression("≢1 2 3 4"))
@@ -78,5 +78,33 @@ class CompareTest : APLTest() {
         assertSimpleNumber(8, parseAPLExpression("≢8 3 4 ⍴ ⍳100"))
         assertSimpleNumber(2, parseAPLExpression("≢(2 2 ⍴ ⍳4) (2 2 ⍴ ⍳4)"))
         assertSimpleNumber(5, parseAPLExpression("≢(1 2) (3 4) (5 6) (7 8) (9 10)"))
+    }
+
+    @Test
+    fun oneArgumentIdenticalTest0() {
+        assertSimpleNumber(1, parseAPLExpression("≡1 2 3"))
+        assertSimpleNumber(0, parseAPLExpression("≡1"))
+        assertSimpleNumber(2, parseAPLExpression("≡(1 2 3) (4 5 6)"))
+        assertSimpleNumber(2, parseAPLExpression("≡(1 2 3) (10 11)"))
+        assertSimpleNumber(2, parseAPLExpression("≡(1 2 3) (4 5 6) (100 200) (3000 4000)"))
+        assertSimpleNumber(3, parseAPLExpression("≡(1 2 3) (4 5 6 (10 11))"))
+        assertSimpleNumber(3, parseAPLExpression("≡((1 2) (3 4)) ((10 20) (30 40))"))
+        assertSimpleNumber(1, parseAPLExpression("≡\"foo\""))
+        assertSimpleNumber(2, parseAPLExpression("≡(1 2 ⍬)"))
+    }
+
+    @Test
+    fun oneArgumentIdenticalWithHashMap() {
+        val result = parseAPLExpression(
+            """
+            |a ← map 2 2 ⍴ 1 2 3 4
+            |≡a
+            """.trimMargin())
+        assertSimpleNumber(0, result)
+    }
+
+    @Test
+    fun oneArgumentIdenticalWithComplex() {
+        assertSimpleNumber(0, parseAPLExpression("≡1J3"))
     }
 }
