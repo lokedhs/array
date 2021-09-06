@@ -118,4 +118,26 @@ class ReshapeTest : APLTest() {
             }
         }
     }
+
+    @Test
+    fun reshapeFromSingleElementArray() {
+        parseAPLExpression("{ (⍴⍵) ⍴ 1 } 1 2 3 4").let { result ->
+            assertDimension(dimensionsOfSize(4), result)
+            assertArrayContent(arrayOf(1, 1, 1, 1), result)
+        }
+    }
+
+    @Test
+    fun reshapeScalar0() {
+        parseAPLExpression("⍬ ⍴ 1").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
+
+    @Test
+    fun reshapeScalar1() {
+        parseAPLExpression("⍬ ⍴ 1 2 3 4 5 6").let { result ->
+            assertSimpleNumber(1, result)
+        }
+    }
 }

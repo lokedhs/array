@@ -196,62 +196,68 @@ class RhoAPLFunction : APLFunctionDescriptor {
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
-            if (a.dimensions.size > 1) {
-                throwAPLException(
-                    InvalidDimensionsException(
-                        "Left side of rho must be scalar or a one-dimensional array",
-                        pos))
+            val d = a.dimensions
+
+            if (d.size > 1) {
+                throwAPLException(InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array", pos))
             }
 
             val v = a.unwrapDeferredValue()
-            val d1 = if (v.isScalar()) {
-                dimensionsOfSize(v.ensureNumber(pos).asInt())
+            if (d.size == 1 && d[0] == 0) {
+                return b.arrayify().valueAt(0)
             } else {
-                val dimensionsArray = IntArray(v.size) { v.valueAtInt(it, pos) }
-                var calculatedIndex: Int? = null
-                dimensionsArray.forEachIndexed { i, sizeSpecValue ->
-                    if (sizeSpecValue < 0) {
-                        if (sizeSpecValue == -1) {
-                            if (calculatedIndex != null) {
-                                throwAPLException(InvalidDimensionsException("Only one dimension may be set to -1", pos))
-                            }
-                            calculatedIndex = i
-                        } else {
-                            throwAPLException(InvalidDimensionsException("Illegal value at index ${i} in dimensions: ${sizeSpecValue}"))
-                        }
-                    }
-                }
-                val updatedDimensionsArray = calculatedIndex.let { calcPos ->
-                    if (calcPos == null) {
-                        dimensionsArray
-                    } else {
-                        val bDimensions = b.dimensions
-                        if (bDimensions.size == 0) {
-                            throwAPLException(
-                                APLIllegalArgumentException(
-                                    "Calculated dimensions can only be used with array arguments",
-                                    pos))
-                        }
-                        val contentSize = bDimensions.contentSize()
-                        val total = dimensionsArray.filter { it >= 0 }.reduceWithInitial(1) { o0, o1 -> o0 * o1 }
-                        IntArray(v.size) { index ->
-                            if (index == calcPos) {
-                                if (contentSize % total != 0) {
-                                    throwAPLException(
-                                        InvalidDimensionsException(
-                                            "Invalid size of right argument: ${contentSize}. Should be divisible by ${total}.",
-                                            pos))
+                val d1 = if (d.size == 0) {
+                    dimensionsOfSize(v.ensureNumber(pos).asInt())
+                } else {
+                    val dimensionsArray = IntArray(v.size) { v.valueAtInt(it, pos) }
+                    var calculatedIndex: Int? = null
+                    dimensionsArray.forEachIndexed { i, sizeSpecValue ->
+                        if (sizeSpecValue < 0) {
+                            if (sizeSpecValue == -1) {
+                                if (calculatedIndex != null) {
+                                    throwAPLException(InvalidDimensionsException("Only one dimension may be set to -1", pos))
                                 }
-                                contentSize / total
+                                calculatedIndex = i
                             } else {
-                                dimensionsArray[index]
+                                throwAPLException(
+                                    InvalidDimensionsException(
+                                        "Illegal value at index ${i} in dimensions: ${sizeSpecValue}",
+                                        pos))
                             }
                         }
                     }
+                    val updatedDimensionsArray = calculatedIndex.let { calcPos ->
+                        if (calcPos == null) {
+                            dimensionsArray
+                        } else {
+                            val bDimensions = b.dimensions
+                            if (bDimensions.size == 0) {
+                                throwAPLException(
+                                    APLIllegalArgumentException(
+                                        "Calculated dimensions can only be used with array arguments",
+                                        pos))
+                            }
+                            val contentSize = bDimensions.contentSize()
+                            val total = dimensionsArray.filter { it >= 0 }.reduceWithInitial(1) { o0, o1 -> o0 * o1 }
+                            IntArray(v.size) { index ->
+                                if (index == calcPos) {
+                                    if (contentSize % total != 0) {
+                                        throwAPLException(
+                                            InvalidDimensionsException(
+                                                "Invalid size of right argument: ${contentSize}. Should be divisible by ${total}.",
+                                                pos))
+                                    }
+                                    contentSize / total
+                                } else {
+                                    dimensionsArray[index]
+                                }
+                            }
+                        }
+                    }
+                    Dimensions(updatedDimensionsArray)
                 }
-                Dimensions(updatedDimensionsArray)
+                return ResizedArrayImpls.makeResizedArray(d1, b)
             }
-            return ResizedArrayImpls.makeResizedArray(d1, b)
         }
     }
 
