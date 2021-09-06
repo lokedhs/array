@@ -1080,23 +1080,23 @@ class CompareFunction : APLFunctionDescriptor {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             fun recurse(level: Int, v: APLValue): Int {
                 val d = v.dimensions
-                return if (d.size == 0) {
-                    level
-                } else if (d.contentSize() == 0) {
-                    level + 1
-                } else {
-                    var first = true
-                    var currentSize = 0
-                    v.iterateMembers { inner ->
-                        val size = recurse(level + 1, inner)
-                        if (first) {
-                            currentSize = size
-                            first = false
-                        } else {
-                            currentSize = max(currentSize, size)
+                return when {
+                    d.size == 0 -> level
+                    d.contentSize() == 0 -> level + 1
+                    else -> {
+                        var first = true
+                        var currentSize = 0
+                        v.iterateMembers { inner ->
+                            val size = recurse(level + 1, inner)
+                            if (first) {
+                                currentSize = size
+                                first = false
+                            } else {
+                                currentSize = max(currentSize, size)
+                            }
                         }
+                        currentSize
                     }
-                    currentSize
                 }
             }
             return recurse(0, a).makeAPLNumber()
