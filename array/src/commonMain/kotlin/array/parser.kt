@@ -220,7 +220,7 @@ class APLParser(val tokeniser: TokenGenerator) {
                     leftArgs,
                     holder.lastToken,
                     holder.pos)
-            }
+            }                    //       (1 (2 3 (4 5 6)))
         }
     }
 

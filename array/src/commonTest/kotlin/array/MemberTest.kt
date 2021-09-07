@@ -1,6 +1,7 @@
 package array
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class MemberTest : APLTest() {
     @Test
@@ -47,5 +48,27 @@ class MemberTest : APLTest() {
         parseAPLExpression("(⊂\"bar\") ∊ \"foo\" \"bar\" \"test\" \"longerstring\"").let { result ->
             assertSimpleNumber(1, result)
         }
+    }
+
+    @Test
+    fun optimisedFind0() {
+        val (result, out) = parseAPLExpressionWithOutput("2 ∊ {io:print ⍵}¨ 0 1 2 3 4")
+        assertSimpleNumber(1, result)
+        assertEquals("012", out)
+    }
+
+    @Test
+    fun optimisedFind1() {
+        val (result, out) = parseAPLExpressionWithOutput("34 35 ∊ io:print¨ 30+⍳7")
+        assertDimension(dimensionsOfSize(2), result)
+        assertArrayContent(arrayOf(1, 1), result)
+        assertEquals("3031323334303132333435", out)
+    }
+
+    @Test
+    fun optimisedFind2() {
+        val (result, out) = parseAPLExpressionWithOutput("1 ∊ io:print¨ 10+⍳6")
+        assertSimpleNumber(0, result)
+        assertEquals("101112131415", out)
     }
 }
