@@ -1078,28 +1078,28 @@ class TransposeFunction : APLFunctionDescriptor {
 class CompareFunction : APLFunctionDescriptor {
     class CompareFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
-            fun recurse(level: Int, v: APLValue): Int {
+            fun recurse(v: APLValue): Int {
                 val d = v.dimensions
                 return when {
-                    d.size == 0 -> level
-                    d.contentSize() == 0 -> level + 1
+                    d.size == 0 -> 0
+                    d.contentSize() == 0 -> 1
                     else -> {
                         var first = true
                         var currentSize = 0
                         v.iterateMembers { inner ->
-                            val size = recurse(level + 1, inner)
-                            if (first) {
+                            val size = recurse(inner)
+                            if(first) {
                                 currentSize = size
                                 first = false
                             } else {
                                 currentSize = max(currentSize, size)
                             }
                         }
-                        currentSize
+                        currentSize + 1
                     }
                 }
             }
-            return recurse(0, a).makeAPLNumber()
+            return recurse(a).makeAPLNumber()
         }
 
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
