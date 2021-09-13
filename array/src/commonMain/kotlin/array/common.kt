@@ -10,7 +10,8 @@ open class APLGenericException(message: String, val pos: Position? = null, cause
     fun formattedError(): String {
         val exceptionText = message ?: "no message"
         return if (pos != null) {
-            "Error at: ${pos.line + 1}:${pos.col + 1}: ${exceptionText}"
+            val name = if(pos.name != null) "function ${pos.name}: " else ""
+            "Error at: ${pos.line + 1}:${pos.col + 1}: ${name}${exceptionText}"
         } else {
             "Error: ${exceptionText}"
         }
