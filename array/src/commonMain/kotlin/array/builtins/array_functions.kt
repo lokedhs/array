@@ -626,27 +626,85 @@ class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
 }
 
 class AccessFromIndexAPLFunction : APLFunctionDescriptor {
-    class AccessFromIndexAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue): APLValue {
+    class AccessFromIndexAPLFunctionImpl(pos: Position) : APLFunction(pos) {
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
             val aFixed = a.arrayify()
             val ad = aFixed.dimensions
+
             if (ad.size != 1) {
                 throwAPLException(InvalidDimensionsException("Position argument is not rank 1", pos))
             }
+
             val bd = b.dimensions
-            if (ad[0] != bd.size) {
-                throwAPLException(
-                    InvalidDimensionsException(
-                        "Number of values in position argument must match the number of dimensions",
-                        pos))
+            val indexList = if (axis == null) {
+                if (ad[0] > bd.size) {
+                    throwAPLException(
+                        InvalidDimensionsException(
+                            "Number of values in position argument must be equal or less than the number of dimensions", pos))
+                }
+                Array(bd.size) { i ->
+                    if (i < ad[0]) {
+                        val indexValue = aFixed.valueAt(i)
+                        if (indexValue.dimensions.size == 0) {
+                            Either.Left(
+                                indexValue.ensureNumber(pos).asInt()
+                                    .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, bd, i, pos) })
+                        } else {
+                            Either.Right(IntArrayValue.fromAPLValue(indexValue, pos))
+                        }
+                    } else {
+                        makeAllIndexList(bd[i])
+                    }
+                }
+            } else {
+                val list = ArrayList<Either<Int, IntArrayValue>?>()
+                repeat(bd.size) { list.add(null) }
+                val axesArray = axis.arrayify().toIntArray(pos)
+                if (axesArray.any { it < 0 || it >= bd.size }) {
+                    throwAPLException(IllegalAxisException("Invalid axis in axis specification", pos))
+                }
+                if (containsDuplicates(axesArray)) {
+                    throwAPLException(IllegalAxisException("Duplicated axis in axis specification", pos))
+                }
+                if (ad[0] != axesArray.size) {
+                    throwAPLException(
+                        IllegalAxisException(
+                            "Number of values in position argument must match the number of axes in axis specification", pos))
+                }
+                aFixed.iterateMembersWithPosition { m, p ->
+                    val axisInt = axesArray[p]
+                    val v = if (m.dimensions.size == 0) {
+                        Either.Left(m.ensureNumber(pos).asInt()
+                                        .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, bd, axisInt, pos) })
+                    } else {
+                        Either.Right(IntArrayValue.fromAPLValue(m, pos))
+                    }
+                    list[axisInt] = v
+                }
+                Array(bd.size) { i ->
+                    list[i] ?: makeAllIndexList(bd[i])
+                }
             }
-            val posList = IntArray(ad[0]) { i -> aFixed.valueAtInt(i, pos) }
-            val p = bd.indexFromPosition(posList)
-            return b.valueAt(p)
+            return IndexedArrayValue(b, indexList)
+        }
+
+        private fun makeAllIndexList(size: Int): Either.Right<IntArrayValue> {
+            val allIndexList = IntArrayValue.fromAPLValue(IotaArrayImpls.IotaArrayLong(size))
+            return Either.Right(allIndexList)
+        }
+
+        private fun containsDuplicates(values: IntArray): Boolean {
+            for (i0 in 1 until values.size) {
+                val v0 = values[i0]
+                for (i1 in 0 until i0) {
+                    if (values[i1] == v0) return true
+                }
+            }
+            return false
         }
     }
 
-    override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos)
+    override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos.withName("Lookup index"))
 }
 
 class TakeArrayValue(val selection: IntArray, val source: APLValue, val pos: Position? = null) : APLArray() {
@@ -1088,7 +1146,7 @@ class CompareFunction : APLFunctionDescriptor {
                         var currentSize = 0
                         v.iterateMembers { inner ->
                             val size = recurse(inner)
-                            if(first) {
+                            if (first) {
                                 currentSize = size
                                 first = false
                             } else {
