@@ -770,6 +770,11 @@ class DropAPLFunction : APLFunctionDescriptor {
     override fun make(pos: Position) = DropAPLFunctionImpl(pos)
 }
 
+//time:measureTime { (n?n){+/(∨/⍵∘.=⍺)/⍵}n?n←40000 }
+//Total time: 7.682
+//
+//799980000
+
 class RandomAPLFunction : APLFunctionDescriptor {
     class RandomAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
@@ -833,13 +838,18 @@ class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, v
     private val axisActionFactors = AxisActionFactors(source.dimensions, axis)
 
     override val dimensions get() = source.dimensions
+    override val specialisedType get() = source.specialisedType
 
-    override fun valueAt(p: Int): APLValue {
-        return axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
+    private fun computeValueAt(p: Int): Int {
+        axisActionFactors.withFactors(p) { highVal, lowVal, axisCoord ->
             val coord = (axisCoord + numShifts).plusMod(dimensions[axis].toLong()).toInt()
-            source.valueAt((highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal)
+            return (highVal * axisActionFactors.highValFactor) + (coord * axisActionFactors.multipliers[axis]) + lowVal
         }
     }
+
+    override fun valueAt(p: Int) = source.valueAt(computeValueAt(p))
+    override fun valueAtLong(p: Int, pos: Position?) = source.valueAtLong(computeValueAt(p), pos)
+    override fun valueAtDouble(p: Int, pos: Position?) = source.valueAtDouble(computeValueAt(p), pos)
 
     companion object {
         fun make(source: APLValue, axis: Int, numShifts: Long): APLValue {
