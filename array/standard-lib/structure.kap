@@ -47,3 +47,15 @@ declare(:singleCharExported "⊇")
 }
 
 declare(:export ⊇)
+
+declare(:singleCharExported "⍥")
+
+∇ (a) (f1 ⍥ f2) (b) {
+  if (isLocallyBound 'a) {
+    (⍞f2 a) ⍞f1 (⍞f2 b)
+  } else {
+    ⍞f1 ⍞f2 b
+  }
+}
+
+declare(:export ⍥)
