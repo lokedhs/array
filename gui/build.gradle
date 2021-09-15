@@ -34,7 +34,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation project(':array')
     implementation group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.10.6'
-    implementation group: 'org.jsoup', name: 'jsoup', version: '1.14.1'
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.14.2'
 }
 
 distributions {

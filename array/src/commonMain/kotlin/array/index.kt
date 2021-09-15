@@ -3,7 +3,7 @@ package array
 import array.builtins.IotaArrayImpls
 import array.builtins.unwrapEnclosedSingleValue
 
-private class IndexedArrayValue(val content: APLValue, indexValue: Array<Either<Int, IntArrayValue>>) : APLArray() {
+class IndexedArrayValue(val content: APLValue, indexValue: Array<Either<Int, IntArrayValue>>) : APLArray() {
     class AxisValueAndOffset(
         val sourceIndex: Int,
         val source: IntArrayValue,
