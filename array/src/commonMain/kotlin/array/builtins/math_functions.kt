@@ -152,7 +152,10 @@ class LongArraySum2ArgsRightScalar(
 }
 
 abstract class MathCombineAPLFunction(pos: Position) : APLFunction(pos) {
+    @Suppress("LeakingThis")
     val pos1Arg = name1Arg()?.let { pos.withName(it) } ?: pos
+
+    @Suppress("LeakingThis")
     val pos2Arg = name2Arg()?.let { pos.withName(it) } ?: pos
 
     open fun name1Arg(): String? = null
