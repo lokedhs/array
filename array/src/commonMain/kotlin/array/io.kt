@@ -196,6 +196,11 @@ class StringBuilderOutput : CharacterOutput {
     }
 }
 
+class NullCharacterProvider : CharacterProvider {
+    override fun close() {}
+    override fun nextCodepoint(): Int? = null
+}
+
 fun fileExists(path: String) = fileType(path) != null
 
 expect fun fileType(path: String): FileNameType?

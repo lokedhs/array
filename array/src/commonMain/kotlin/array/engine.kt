@@ -207,6 +207,7 @@ class Engine {
 
     val rootContext = RuntimeContext(this, Environment())
     var standardOutput: CharacterOutput = NullCharacterOutput()
+    var standardInput: CharacterProvider = NullCharacterProvider()
     val coreNamespace = makeNamespace(CORE_NAMESPACE_NAME, overrideDefaultImport = true)
     val keywordNamespace = makeNamespace(KEYWORD_NAMESPACE_NAME, overrideDefaultImport = true)
     val initialNamespace = makeNamespace(DEFAULT_NAMESPACE_NAME)
