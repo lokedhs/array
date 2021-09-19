@@ -30,7 +30,7 @@ class BitwiseAndFunction : APLFunctionDescriptor {
         override fun bitwiseCombine2Arg(a: Long, b: Long) = a and b
     }
 
-    override fun make(pos: Position) = BitwiseAndFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseAndFunctionImpl(pos.withName("bitwise and"))
 }
 
 class BitwiseOrFunction : APLFunctionDescriptor {
@@ -38,7 +38,7 @@ class BitwiseOrFunction : APLFunctionDescriptor {
         override fun bitwiseCombine2Arg(a: Long, b: Long) = a or b
     }
 
-    override fun make(pos: Position) = BitwiseOrFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseOrFunctionImpl(pos.withName("bitwise or"))
 }
 
 class BitwiseXorFunction : APLFunctionDescriptor {
@@ -46,7 +46,7 @@ class BitwiseXorFunction : APLFunctionDescriptor {
         override fun bitwiseCombine2Arg(a: Long, b: Long) = a xor b
     }
 
-    override fun make(pos: Position) = BitwiseXorFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseXorFunctionImpl(pos.withName("bitwise xor"))
 }
 
 class BitwiseNotFunction : APLFunctionDescriptor {
@@ -54,7 +54,7 @@ class BitwiseNotFunction : APLFunctionDescriptor {
         override fun bitwiseCombine1Arg(a: Long) = a.inv()
     }
 
-    override fun make(pos: Position) = BitwiseNotFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseNotFunctionImpl(pos.withName("bitwise not"))
 }
 
 class BitwiseNandFunction : APLFunctionDescriptor {
@@ -62,7 +62,7 @@ class BitwiseNandFunction : APLFunctionDescriptor {
         override fun bitwiseCombine2Arg(a: Long, b: Long) = (a and b).inv()
     }
 
-    override fun make(pos: Position) = BitwiseNandFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseNandFunctionImpl(pos.withName("bitwise nand"))
 }
 
 class BitwiseNorFunction : APLFunctionDescriptor {
@@ -70,7 +70,7 @@ class BitwiseNorFunction : APLFunctionDescriptor {
         override fun bitwiseCombine2Arg(a: Long, b: Long) = (a or b).inv()
     }
 
-    override fun make(pos: Position) = BitwiseNorFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseNorFunctionImpl(pos.withName("bitwise nor"))
 }
 
 // TODO: Need to assign this to the appropriate parent function
@@ -87,5 +87,5 @@ class BitwiseCountBitsFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = BitwiseCountBitsFunctionImpl(pos)
+    override fun make(pos: Position) = BitwiseCountBitsFunctionImpl(pos.withName("bitwise count bits"))
 }

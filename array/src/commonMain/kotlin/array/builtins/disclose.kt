@@ -222,7 +222,7 @@ class EncloseAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = EncloseAPLFunctionImpl(pos)
+    override fun make(pos: Position) = EncloseAPLFunctionImpl(pos.withName("enclose"))
 }
 
 class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
@@ -392,7 +392,7 @@ class DiscloseAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = DiscloseAPLFunctionImpl(pos)
+    override fun make(pos: Position) = DiscloseAPLFunctionImpl(pos.withName("disclose"))
 
     companion object {
         fun discloseValue(value: APLValue, pos: Position): APLValue {

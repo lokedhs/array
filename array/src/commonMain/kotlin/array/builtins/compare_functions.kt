@@ -27,7 +27,7 @@ class EqualsAPLFunction : APLFunctionDescriptor {
         override fun combine2ArgLong(a: Long, b: Long) = if (a == b) 1L else 0L
     }
 
-    override fun make(pos: Position) = EqualsAPLFunctionImpl(pos)
+    override fun make(pos: Position) = EqualsAPLFunctionImpl(pos.withName("equals"))
 }
 
 class NotEqualsAPLFunction : APLFunctionDescriptor {
@@ -52,7 +52,7 @@ class NotEqualsAPLFunction : APLFunctionDescriptor {
         override fun deriveBitwise() = BitwiseXorFunction()
     }
 
-    override fun make(pos: Position) = NotEqualsAPLFunctionImpl(pos)
+    override fun make(pos: Position) = NotEqualsAPLFunctionImpl(pos.withName("not equals"))
 }
 
 class LessThanAPLFunction : APLFunctionDescriptor {
@@ -71,7 +71,7 @@ class LessThanAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_0
     }
 
-    override fun make(pos: Position) = LessThanAPLFunctionImpl(pos)
+    override fun make(pos: Position) = LessThanAPLFunctionImpl(pos.withName("less than"))
 }
 
 class GreaterThanAPLFunction : APLFunctionDescriptor {
@@ -90,7 +90,7 @@ class GreaterThanAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_0
     }
 
-    override fun make(pos: Position) = GreaterThanAPLFunctionImpl(pos)
+    override fun make(pos: Position) = GreaterThanAPLFunctionImpl(pos.withName("greater than"))
 }
 
 class LessThanEqualAPLFunction : APLFunctionDescriptor {
@@ -109,7 +109,7 @@ class LessThanEqualAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_1
     }
 
-    override fun make(pos: Position) = LessThanEqualAPLFunctionImpl(pos)
+    override fun make(pos: Position) = LessThanEqualAPLFunctionImpl(pos.withName("less than or equals"))
 }
 
 class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
@@ -128,7 +128,7 @@ class GreaterThanEqualAPLFunction : APLFunctionDescriptor {
         override fun identityValue() = APLLONG_1
     }
 
-    override fun make(pos: Position) = GreaterThanEqualAPLFunctionImpl(pos)
+    override fun make(pos: Position) = GreaterThanEqualAPLFunctionImpl(pos.withName("greater than or equals"))
 }
 
 fun makeBoolean(value: Boolean): APLValue {

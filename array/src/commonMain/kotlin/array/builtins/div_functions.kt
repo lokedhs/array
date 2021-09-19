@@ -10,7 +10,7 @@ class TypeofFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = TypeofFunctionImpl(pos)
+    override fun make(pos: Position) = TypeofFunctionImpl(pos.withName("typeof"))
 }
 
 class IsLocallyBoundFunction : APLFunctionDescriptor {
@@ -21,7 +21,7 @@ class IsLocallyBoundFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = IsLocallyBoundFunctionImpl(pos)
+    override fun make(pos: Position) = IsLocallyBoundFunctionImpl(pos.withName("isLocallyBound"))
 }
 
 class CompFunction : APLFunctionDescriptor {
@@ -32,7 +32,7 @@ class CompFunction : APLFunctionDescriptor {
     }
 
     override fun make(pos: Position): APLFunction {
-        return CompFunctionImpl(pos)
+        return CompFunctionImpl(pos.withName("comp"))
     }
 }
 
@@ -259,7 +259,7 @@ class LabelsFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = LabelsFunctionImpl(pos)
+    override fun make(pos: Position) = LabelsFunctionImpl(pos.withName("labels"))
 }
 
 class TimeMillisFunction : APLFunctionDescriptor {
@@ -272,7 +272,7 @@ class TimeMillisFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = TimeMillisFunctionImpl(pos)
+    override fun make(pos: Position) = TimeMillisFunctionImpl(pos.withName("timeMillis"))
 }
 
 class ForcedElementTypeArray(val inner: APLValue, val overrideType: ArrayMemberType) : DelegatedValue(inner) {

@@ -26,7 +26,7 @@ class ReadFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = ReadFunctionImpl(pos)
+    override fun make(pos: Position) = ReadFunctionImpl(pos.withName("read"))
 }
 
 
@@ -58,7 +58,7 @@ class PrintAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = PrintAPLFunctionImpl(pos)
+    override fun make(pos: Position) = PrintAPLFunctionImpl(pos.withName("print"))
 }
 
 class ReadCSVFunction : APLFunctionDescriptor {
@@ -73,7 +73,7 @@ class ReadCSVFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = ReadCSVFunctionImpl(pos)
+    override fun make(pos: Position) = ReadCSVFunctionImpl(pos.withName("readCsvFile"))
 }
 
 class LoadFunction : APLFunctionDescriptor {
@@ -88,7 +88,7 @@ class LoadFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = LoadFunctionImpl(pos)
+    override fun make(pos: Position) = LoadFunctionImpl(pos.withName("load"))
 }
 
 class HttpRequestFunction : APLFunctionDescriptor {
@@ -100,7 +100,7 @@ class HttpRequestFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = HttpRequestFunctionImpl(pos)
+    override fun make(pos: Position) = HttpRequestFunctionImpl(pos.withName("httpRequest"))
 }
 
 class HttpPostFunction : APLFunctionDescriptor {
@@ -135,7 +135,7 @@ class HttpPostFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = HttpPostFunctionImpl(pos)
+    override fun make(pos: Position) = HttpPostFunctionImpl(pos.withName("httpPost"))
 }
 
 class ReaddirFunction : APLFunctionDescriptor {
@@ -201,7 +201,7 @@ class ReaddirFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = ReaddirFunctionImpl(pos)
+    override fun make(pos: Position) = ReaddirFunctionImpl(pos.withName("readdir"))
 
     private enum class OutputType(val selector: String) {
         SIZE("size"),

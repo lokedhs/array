@@ -209,7 +209,8 @@ class ComposedFunctionDescriptor(val fn1: APLFunction, val fn2: APLFunction) : A
         }
     }
 
-    override fun make(pos: Position) = ComposedFunctionImpl(pos)
+    override fun make(pos: Position) =
+        ComposedFunctionImpl(pos.withName("compose [${fn1.pos.name ?: "<unnamed>"}, ${fn2.pos.name ?: "<unnamed>"}]"))
 }
 
 class ComposeOp : APLOperatorTwoArg {

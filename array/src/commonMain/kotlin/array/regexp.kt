@@ -24,7 +24,7 @@ class RegexpMatchesFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = RegexpMatchesFunctionImpl(pos)
+    override fun make(pos: Position) = RegexpMatchesFunctionImpl(pos.withName("match regexp"))
 }
 
 class RegexpFindFunction : APLFunctionDescriptor {
@@ -50,7 +50,7 @@ class RegexpFindFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = RegexpFindFunctionImpl(pos)
+    override fun make(pos: Position) = RegexpFindFunctionImpl(pos.withName("find regexp"))
 }
 
 class RegexpSplitFunction : APLFunctionDescriptor {
@@ -63,7 +63,7 @@ class RegexpSplitFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = RegexpSplitFunctionImpl(pos)
+    override fun make(pos: Position) = RegexpSplitFunctionImpl(pos.withName("split regexp"))
 }
 
 class RegexpMatcherValue(val matcher: Regex) : APLSingleValue() {
@@ -103,7 +103,7 @@ class CreateRegexpFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = CreateRegexpFunctionImpl(pos)
+    override fun make(pos: Position) = CreateRegexpFunctionImpl(pos.withName("create regexp"))
 }
 
 //class RegexpMatcherIndexFunction : APLFunctionDescriptor {

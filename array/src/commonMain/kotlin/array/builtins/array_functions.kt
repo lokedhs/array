@@ -144,7 +144,7 @@ class IotaAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = IotaAPLFunctionImpl(pos)
+    override fun make(pos: Position) = IotaAPLFunctionImpl(pos.withName("iota"))
 }
 
 object ResizedArrayImpls {
@@ -190,6 +190,8 @@ object ResizedArrayImpls {
 
 class RhoAPLFunction : APLFunctionDescriptor {
     class RhoAPLFunctionImpl(pos: Position) : NoAxisAPLFunction(pos) {
+        private val arg2Pos = pos.withName("reshape")
+
         override fun eval1Arg(context: RuntimeContext, a: APLValue): APLValue {
             val argDimensions = a.dimensions
             return APLArrayImpl.make(dimensionsOfSize(argDimensions.size)) { argDimensions[it].makeAPLNumber() }
@@ -199,7 +201,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
             val d = a.dimensions
 
             if (d.size > 1) {
-                throwAPLException(InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array", pos))
+                throwAPLException(InvalidDimensionsException("Left side of rho must be scalar or a one-dimensional array", arg2Pos))
             }
 
             val v = a.unwrapDeferredValue()
@@ -207,22 +209,21 @@ class RhoAPLFunction : APLFunctionDescriptor {
                 return b.arrayify().valueAt(0)
             } else {
                 val d1 = if (d.size == 0) {
-                    dimensionsOfSize(v.ensureNumber(pos).asInt())
+                    dimensionsOfSize(v.ensureNumber(arg2Pos).asInt())
                 } else {
-                    val dimensionsArray = IntArray(v.size) { v.valueAtInt(it, pos) }
+                    val dimensionsArray = IntArray(v.size) { v.valueAtInt(it, arg2Pos) }
                     var calculatedIndex: Int? = null
                     dimensionsArray.forEachIndexed { i, sizeSpecValue ->
                         if (sizeSpecValue < 0) {
                             if (sizeSpecValue == -1) {
                                 if (calculatedIndex != null) {
-                                    throwAPLException(InvalidDimensionsException("Only one dimension may be set to -1", pos))
+                                    throwAPLException(InvalidDimensionsException("Only one dimension may be set to -1", arg2Pos))
                                 }
                                 calculatedIndex = i
                             } else {
                                 throwAPLException(
                                     InvalidDimensionsException(
-                                        "Illegal value at index ${i} in dimensions: ${sizeSpecValue}",
-                                        pos))
+                                        "Illegal value at index ${i} in dimensions: ${sizeSpecValue}", arg2Pos))
                             }
                         }
                     }
@@ -234,8 +235,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
                             if (bDimensions.size == 0) {
                                 throwAPLException(
                                     APLIllegalArgumentException(
-                                        "Calculated dimensions can only be used with array arguments",
-                                        pos))
+                                        "Calculated dimensions can only be used with array arguments", arg2Pos))
                             }
                             val contentSize = bDimensions.contentSize()
                             val total = dimensionsArray.filter { it >= 0 }.reduceWithInitial(1) { o0, o1 -> o0 * o1 }
@@ -245,7 +245,7 @@ class RhoAPLFunction : APLFunctionDescriptor {
                                         throwAPLException(
                                             InvalidDimensionsException(
                                                 "Invalid size of right argument: ${contentSize}. Should be divisible by ${total}.",
-                                                pos))
+                                                arg2Pos))
                                     }
                                     contentSize / total
                                 } else {
@@ -270,7 +270,7 @@ class IdentityAPLFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue) = b
     }
 
-    override fun make(pos: Position) = IdentityAPLFunctionImpl(pos)
+    override fun make(pos: Position) = IdentityAPLFunctionImpl(pos.withName("identity right"))
 }
 
 class HideAPLFunction : APLFunctionDescriptor {
@@ -279,7 +279,7 @@ class HideAPLFunction : APLFunctionDescriptor {
         override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue) = a
     }
 
-    override fun make(pos: Position) = HideAPLFunctionImpl(pos)
+    override fun make(pos: Position) = HideAPLFunctionImpl(pos.withName("identity left"))
 }
 
 class Concatenated1DArrays(private val a: APLValue, private val b: APLValue) : APLArray() {
@@ -600,7 +600,7 @@ class ConcatenateAPLFunctionFirstAxis : APLFunctionDescriptor {
         override fun defaultAxis(a: APLValue, b: APLValue) = 0
     }
 
-    override fun make(pos: Position) = ConcatenateAPLFunctionFirstAxisImpl(pos)
+    override fun make(pos: Position) = ConcatenateAPLFunctionFirstAxisImpl(pos.withName("concatenate first axis"))
 }
 
 class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
@@ -622,7 +622,7 @@ class ConcatenateAPLFunctionLastAxis : APLFunctionDescriptor {
         override fun defaultAxis(a: APLValue, b: APLValue) = max(a.rank, b.rank) - 1
     }
 
-    override fun make(pos: Position) = ConcatenateAPLFunctionLastAxisImpl(pos)
+    override fun make(pos: Position) = ConcatenateAPLFunctionLastAxisImpl(pos.withName("concatenate last axis"))
 }
 
 class AccessFromIndexAPLFunction : APLFunctionDescriptor {
@@ -704,7 +704,7 @@ class AccessFromIndexAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos.withName("Lookup index"))
+    override fun make(pos: Position) = AccessFromIndexAPLFunctionImpl(pos.withName("lookup index"))
 }
 
 class TakeArrayValue(val selection: IntArray, val source: APLValue, val pos: Position? = null) : APLArray() {
@@ -764,7 +764,7 @@ class TakeAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = TakeAPLFunctionImpl(pos)
+    override fun make(pos: Position) = TakeAPLFunctionImpl(pos.withName("take"))
 }
 
 class DropArrayValue(val selection: IntArray, val source: APLValue) : APLArray() {
@@ -819,13 +819,11 @@ class DropAPLFunction : APLFunctionDescriptor {
             ) {
                 throwAPLException(InvalidDimensionsException("Size of A must match the rank of B", pos))
             }
-            return DropArrayValue(
-                if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(
-                    pos), b)
+            return DropArrayValue(if (aDimensions.size == 0) intArrayOf(a.ensureNumber(pos).asInt()) else a.toIntArray(pos), b)
         }
     }
 
-    override fun make(pos: Position) = DropAPLFunctionImpl(pos)
+    override fun make(pos: Position) = DropAPLFunctionImpl(pos.withName("drop"))
 }
 
 //time:measureTime { (n?n){+/(∨/⍵∘.=⍺)/⍵}n?n←40000 }
@@ -889,7 +887,7 @@ class RandomAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = RandomAPLFunctionImpl(pos)
+    override fun make(pos: Position) = RandomAPLFunctionImpl(pos.withName("random"))
 }
 
 class RotatedAPLValue private constructor(val source: APLValue, val axis: Int, val numShifts: Long) : APLArray() {
@@ -1037,7 +1035,7 @@ class RotateHorizFunction : APLFunctionDescriptor {
         override fun defaultAxis(value: APLValue) = value.rank - 1
     }
 
-    override fun make(pos: Position) = RotateHorizFunctionImpl(pos)
+    override fun make(pos: Position) = RotateHorizFunctionImpl(pos.withName("reverse horiz"))
 }
 
 class RotateVertFunction : APLFunctionDescriptor {
@@ -1045,7 +1043,7 @@ class RotateVertFunction : APLFunctionDescriptor {
         override fun defaultAxis(value: APLValue) = 0
     }
 
-    override fun make(pos: Position) = RotateVertFunctionImpl(pos)
+    override fun make(pos: Position) = RotateVertFunctionImpl(pos.withName("reverse vert"))
 }
 
 class TransposedAPLValue(val transposeAxis: IntArray, val b: APLValue, pos: Position) : APLArray() {
@@ -1140,7 +1138,7 @@ class TransposeFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = TransposeFunctionImpl(pos)
+    override fun make(pos: Position) = TransposeFunctionImpl(pos.withName("transpose"))
 }
 
 class CompareFunction : APLFunctionDescriptor {
@@ -1175,7 +1173,7 @@ class CompareFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = CompareFunctionImpl(pos)
+    override fun make(pos: Position) = CompareFunctionImpl(pos.withName("compare"))
 }
 
 class CompareNotEqualFunction : APLFunctionDescriptor {
@@ -1191,7 +1189,7 @@ class CompareNotEqualFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = CompareFunctionImpl(pos)
+    override fun make(pos: Position) = CompareFunctionImpl(pos.withName("compare not equals"))
 }
 
 object MemberResultValueImpls {
@@ -1255,7 +1253,7 @@ class MemberFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = MemberFunctionImpl(pos)
+    override fun make(pos: Position) = MemberFunctionImpl(pos.withName("member"))
 }
 
 
@@ -1313,7 +1311,7 @@ class FindFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = FindFunctionImpl(pos)
+    override fun make(pos: Position) = FindFunctionImpl(pos.withName("find"))
 }
 
 class SelectElementsValue(selectIndexes: IntArray, val b: APLValue, val axis: Int) : APLArray() {
@@ -1423,7 +1421,7 @@ class FormatAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = FormatAPLFunctionImpl(pos)
+    override fun make(pos: Position) = FormatAPLFunctionImpl(pos.withName("format"))
 }
 
 class ParseNumberFunction : APLFunctionDescriptor {
@@ -1452,7 +1450,7 @@ class ParseNumberFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = ParseNumberFunctionImpl(pos)
+    override fun make(pos: Position) = ParseNumberFunctionImpl(pos.withName("parse number"))
 }
 
 
@@ -1495,7 +1493,7 @@ class WhereAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = WhereAPLFunctionImpl(pos)
+    override fun make(pos: Position) = WhereAPLFunctionImpl(pos.withName("where"))
 }
 
 class UniqueFunction : APLFunctionDescriptor {
@@ -1535,7 +1533,7 @@ class UniqueFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = UniqueFunctionImpl(pos)
+    override fun make(pos: Position) = UniqueFunctionImpl(pos.withName("unique"))
 }
 
 class IntersectionAPLFunction : APLFunctionDescriptor {
@@ -1571,5 +1569,5 @@ class IntersectionAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = IntersectionAPLFunctionImpl(pos)
+    override fun make(pos: Position) = IntersectionAPLFunctionImpl(pos.withName("intersection"))
 }

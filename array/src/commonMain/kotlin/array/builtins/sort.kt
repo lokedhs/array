@@ -106,7 +106,7 @@ class GradeUpFunction : APLFunctionDescriptor {
         override fun applyReverse(result: Int) = result
     }
 
-    override fun make(pos: Position) = GradeUpFunctionImpl(pos)
+    override fun make(pos: Position) = GradeUpFunctionImpl(pos.withName("grade up"))
 }
 
 class GradeDownFunction : APLFunctionDescriptor {
@@ -114,5 +114,5 @@ class GradeDownFunction : APLFunctionDescriptor {
         override fun applyReverse(result: Int) = -result
     }
 
-    override fun make(pos: Position) = GradeUpFunctionImpl(pos)
+    override fun make(pos: Position) = GradeUpFunctionImpl(pos.withName("grade down"))
 }

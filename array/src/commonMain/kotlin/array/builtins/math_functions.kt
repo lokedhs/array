@@ -281,7 +281,7 @@ abstract class MathNumericCombineAPLFunction(pos: Position) : MathCombineAPLFunc
     open fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue = throwAPLException(Unimplemented2ArgException(pos2Arg))
 }
 
-class AddAPLFunction : APLFunctionDescriptor {
+class AddAPLFunction(name: String) : NamedFunctionDescriptor(name) {
     class AddAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
@@ -504,6 +504,9 @@ class NotAPLFunction : APLFunctionDescriptor {
 
 class ModAPLFunction : APLFunctionDescriptor {
     class ModAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun name1Arg() = "abs"
+        override fun name2Arg() = "mod"
+
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
                 pos,
@@ -539,6 +542,9 @@ class ModAPLFunction : APLFunctionDescriptor {
 
 class PowerAPLFunction : APLFunctionDescriptor {
     class PowerAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun name1Arg() = "Exp"
+        override fun name2Arg() = "Pow"
+
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(
                 pos,
@@ -592,6 +598,9 @@ fun complexFloor(z: Complex): Complex {
 
 class MinAPLFunction : APLFunctionDescriptor {
     class MinAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun name1Arg() = "round down"
+        override fun name2Arg() = "min"
+
         override fun combine1Arg(a: APLSingleValue): APLValue {
             return singleArgNumericRelationOperation(
                 pos,
@@ -627,6 +636,9 @@ fun complexCeiling(value: Complex): Complex {
 
 class MaxAPLFunction : APLFunctionDescriptor {
     class MaxAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun name1Arg() = "round up"
+        override fun name2Arg() = "max"
+
         override fun combine1Arg(a: APLSingleValue): APLValue {
             return singleArgNumericRelationOperation(
                 pos,
@@ -684,7 +696,7 @@ class LogAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = LogAPLFunctionImpl(pos)
+    override fun make(pos: Position) = LogAPLFunctionImpl(pos.withName("log"))
 }
 
 class SinAPLFunction : APLFunctionDescriptor {
@@ -699,7 +711,7 @@ class SinAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = SinAPLFunctionImpl(pos)
+    override fun make(pos: Position) = SinAPLFunctionImpl(pos.withName("sin"))
 }
 
 class CosAPLFunction : APLFunctionDescriptor {
@@ -722,7 +734,7 @@ class TanAPLFunction : APLFunctionDescriptor {
         override fun numberCombine1Arg(a: APLNumber) = APLDouble(tan(a.asDouble()))
     }
 
-    override fun make(pos: Position) = TanAPLFunctionImpl(pos)
+    override fun make(pos: Position) = TanAPLFunctionImpl(pos.withName("tan"))
 }
 
 class AsinAPLFunction : APLFunctionDescriptor {
@@ -730,7 +742,7 @@ class AsinAPLFunction : APLFunctionDescriptor {
         override fun numberCombine1Arg(a: APLNumber) = APLDouble(asin(a.asDouble()))
     }
 
-    override fun make(pos: Position) = AsinAPLFunctionImpl(pos)
+    override fun make(pos: Position) = AsinAPLFunctionImpl(pos.withName("asin"))
 }
 
 class AcosAPLFunction : APLFunctionDescriptor {
@@ -738,7 +750,7 @@ class AcosAPLFunction : APLFunctionDescriptor {
         override fun numberCombine1Arg(a: APLNumber) = APLDouble(acos(a.asDouble()))
     }
 
-    override fun make(pos: Position) = AcosAPLFunctionImpl(pos)
+    override fun make(pos: Position) = AcosAPLFunctionImpl(pos.withName("acos"))
 }
 
 class AtanAPLFunction : APLFunctionDescriptor {
@@ -746,7 +758,7 @@ class AtanAPLFunction : APLFunctionDescriptor {
         override fun numberCombine1Arg(a: APLNumber) = APLDouble(atan(a.asDouble()))
     }
 
-    override fun make(pos: Position) = AtanAPLFunctionImpl(pos)
+    override fun make(pos: Position) = AtanAPLFunctionImpl(pos.withName("atan"))
 }
 
 class AndAPLFunction : APLFunctionDescriptor {
@@ -829,7 +841,7 @@ class NandAPLFunction : APLFunctionDescriptor {
         override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
-    override fun make(pos: Position) = NandAPLFunctionImpl(pos)
+    override fun make(pos: Position) = NandAPLFunctionImpl(pos.withName("nand"))
 }
 
 class NorAPLFunction : APLFunctionDescriptor {
@@ -875,7 +887,7 @@ class NorAPLFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = NorAPLFunctionImpl(pos)
+    override fun make(pos: Position) = NorAPLFunctionImpl(pos.withName("nor"))
 }
 
 fun integerGcd(m: Long, n: Long): Long {
@@ -971,11 +983,14 @@ class OrAPLFunction : APLFunctionDescriptor {
         override val optimisationFlags get() = OptimisationFlags(OPTIMISATION_FLAG_2ARG_LONG_LONG)
     }
 
-    override fun make(pos: Position) = OrAPLFunctionImpl(pos)
+    override fun make(pos: Position) = OrAPLFunctionImpl(pos.withName("or"))
 }
 
 class BinomialAPLFunction : APLFunctionDescriptor {
     class BinomialAPLFunctionImpl(pos: Position) : MathNumericCombineAPLFunction(pos) {
+        override fun name1Arg() = "gamma"
+        override fun name2Arg() = "binomial"
+
         override fun numberCombine1Arg(a: APLNumber): APLValue {
             return singleArgNumericRelationOperation(pos, a,
                                                      { x -> doubleGamma((x + 1).toDouble()).makeAPLNumber() },
@@ -984,7 +999,8 @@ class BinomialAPLFunction : APLFunctionDescriptor {
         }
 
         override fun numberCombine2Arg(a: APLNumber, b: APLNumber): APLValue {
-            return numericRelationOperation(pos,
+            return numericRelationOperation(
+                pos,
                                             a,
                                             b,
                                             { x, y -> doubleBinomial(x.toDouble(), y.toDouble()).makeAPLNumber() },

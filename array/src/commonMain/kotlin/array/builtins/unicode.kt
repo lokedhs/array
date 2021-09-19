@@ -25,7 +25,7 @@ class MakeCodepoints : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = MakeCodepointsImpl(pos)
+    override fun make(pos: Position) = MakeCodepointsImpl(pos.withName("toCodepoints"))
 }
 
 private fun fromUnicodeCodepoint(value: APLValue): APLValue {
@@ -51,7 +51,7 @@ class MakeCharsFromCodepoints : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = MakeCharsFromCodepointsImpl(pos)
+    override fun make(pos: Position) = MakeCharsFromCodepointsImpl(pos.withName("fromCodepoints"))
 }
 
 class GraphemesFunction : APLFunctionDescriptor {
@@ -64,7 +64,7 @@ class GraphemesFunction : APLFunctionDescriptor {
         }
     }
 
-    override fun make(pos: Position) = GraphemesFunctionImpl(pos)
+    override fun make(pos: Position) = GraphemesFunctionImpl(pos.withName("toGraphemes"))
 }
 
 class UnicodeModule : KapModule {
