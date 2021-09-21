@@ -256,14 +256,16 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
         val v = valueInt.valueAt(index)
 
         val innerIndex = p % cutoffMultiplier
+        val d = v.dimensions
         return if (innerIndex == 0) {
             when {
-                v is APLSingleValue -> v
-                v.dimensions.contentSize() == 0 -> v.defaultValue()
+                d.size == 0 -> v.disclose()
+                d.contentSize() == 0 -> v.defaultValue()
                 else -> v.valueAt(0)
             }
+        } else if (d.size == 0) {
+            v.defaultValue()
         } else {
-            val d = v.dimensions
             val position = Dimensions.positionFromIndexWithMultipliers(innerIndex, newDimensionsMultipliers)
             for (i in position.indices) {
                 if (position[i] >= d[i]) {
@@ -275,29 +277,36 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
     }
 
     private fun maxShapeOf(v: APLValue, pos: Position? = null): Dimensions {
+        fun raiseDimensionsError() {
+            throwAPLException(InvalidDimensionsException("Not all elements in array have the same dimensions", pos))
+        }
+
         if (v.dimensions.contentSize() == 0) {
             return emptyDimensions()
         }
-        var elements: IntArray? = null
+        var elements: IntArray? = null // null actually means empty dimensions
         v.iterateMembers { value ->
             val dimensions = value.dimensions
-            if (elements == null) {
-                elements = IntArray(dimensions.size) { i -> dimensions[i] }
-            } else {
-                if (dimensions.size != elements!!.size) {
-                    throwAPLException(
-                        InvalidDimensionsException(
-                            "Not all elements in array have the same dimensions",
-                            pos))
-                }
-                for (i in 0 until elements!!.size) {
-                    if (elements!![i] < dimensions[i]) {
-                        elements!![i] = dimensions[i]
+            if (elements != null) {
+                if (dimensions.size == 0) {
+                    if (elements!!.size != 1) {
+                        raiseDimensionsError()
+                    }
+                } else {
+                    if (dimensions.size != elements!!.size) {
+                        raiseDimensionsError()
+                    }
+                    for (i in 0 until elements!!.size) {
+                        if (elements!![i] < dimensions[i]) {
+                            elements!![i] = dimensions[i]
+                        }
                     }
                 }
+            } else if (dimensions.size > 0) {
+                elements = IntArray(dimensions.size) { i -> dimensions[i] }
             }
         }
-        return Dimensions(elements!!)
+        return if (elements != null) Dimensions(elements!!) else emptyDimensions()
     }
 }
 

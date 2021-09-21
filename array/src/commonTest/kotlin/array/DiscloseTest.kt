@@ -285,4 +285,12 @@ class DiscloseTest : APLTest() {
             assertArrayContent(arrayOf(1, 2), v)
         }
     }
+
+    @Test
+    fun discloseWithScalarMember() {
+        parseAPLExpression("⊃ (1 2 3) 4 (,5) (1001 1002 1003)").let { result ->
+            assertDimension(dimensionsOfSize(4, 3), result)
+            assertArrayContent(arrayOf(1, 2, 3, 4, 0, 0, 5, 0, 0, 1001, 1002, 1003), result)
+        }
+    }
 }
