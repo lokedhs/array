@@ -773,6 +773,8 @@ class APLString(val content: IntArray) : APLArray() {
 
     override fun collapseInt() = this
 
+    override fun toString() = "APLString[value=\"${content.joinToString(transform = ::charToString)}\"]"
+
     companion object {
         fun make(s: String) = APLString(s)
     }

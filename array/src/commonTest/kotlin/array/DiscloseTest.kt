@@ -293,4 +293,32 @@ class DiscloseTest : APLTest() {
             assertArrayContent(arrayOf(1, 2, 3, 4, 0, 0, 5, 0, 0, 1001, 1002, 1003), result)
         }
     }
+
+    @Test
+    fun discloseMultipleDimensions() {
+        parseAPLExpression("⊃ (1 2) (2 2 ⍴ 0 1 2 3)").let { result ->
+            assertDimension(dimensionsOfSize(2, 2, 2), result)
+            assertArrayContent(arrayOf(1, 2, 0, 0, 0, 1, 2, 3), result)
+        }
+    }
+
+    @Test
+    fun discloseMultipleDimensionsWithExtend() {
+        parseAPLExpression("⊃ (1 2 3) (1 2 3 4) (2 2 ⍴ 0 1 2 3) (9 8 7 6) (2 1 ⍴ 1 2)").let { result ->
+            assertDimension(dimensionsOfSize(5, 2, 4), result)
+            assertArrayContent(
+                arrayOf(
+                    1, 2, 3, 0,
+                    0, 0, 0, 0,
+                    1, 2, 3, 4,
+                    0, 0, 0, 0,
+                    0, 1, 0, 0,
+                    2, 3, 0, 0,
+                    9, 8, 7, 6,
+                    0, 0, 0, 0,
+                    1, 0, 0, 0,
+                    2, 0, 0, 0),
+                result)
+        }
+    }
 }

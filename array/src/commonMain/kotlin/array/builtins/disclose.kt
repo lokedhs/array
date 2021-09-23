@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import kotlin.math.max
 
 class AxisEnclosedValue(val value: APLValue, axis: Int) : APLArray() {
     override val dimensions: Dimensions
@@ -267,44 +268,50 @@ class DisclosedArrayValue(value: APLValue, pos: Position) : APLArray() {
             v.defaultValue()
         } else {
             val position = Dimensions.positionFromIndexWithMultipliers(innerIndex, newDimensionsMultipliers)
+            val n = position.size - d.size
             for (i in position.indices) {
-                if (position[i] >= d[i]) {
+                val size = if (i < n) 1 else d[i - n]
+                if (position[i] >= size) {
                     return v.defaultValue()
                 }
             }
-            return v.valueAt(d.indexFromPosition(position))
+            val updatedPosition = if (position.size == d.size) {
+                position
+            } else {
+                IntArray(d.size) { i -> position[i + n] }
+            }
+            return v.valueAt(d.indexFromPosition(updatedPosition))
         }
     }
 
     private fun maxShapeOf(v: APLValue, pos: Position? = null): Dimensions {
-        fun raiseDimensionsError() {
-            throwAPLException(InvalidDimensionsException("Not all elements in array have the same dimensions", pos))
-        }
-
         if (v.dimensions.contentSize() == 0) {
             return emptyDimensions()
         }
         var elements: IntArray? = null // null actually means empty dimensions
         v.iterateMembers { value ->
             val dimensions = value.dimensions
-            if (elements != null) {
-                if (dimensions.size == 0) {
-                    if (elements!!.size != 1) {
-                        raiseDimensionsError()
+            when {
+                elements == null -> {
+                    elements = IntArray(dimensions.size) { i -> dimensions[i] }
+                }
+                elements!!.size < dimensions.size -> {
+                    elements = IntArray(dimensions.size) { i ->
+                        val n = dimensions.size - elements!!.size
+                        if (i < n) dimensions[i] else max(elements!![i - n], dimensions[i])
                     }
-                } else {
-                    if (dimensions.size != elements!!.size) {
-                        raiseDimensionsError()
-                    }
-                    for (i in 0 until elements!!.size) {
-                        if (elements!![i] < dimensions[i]) {
-                            elements!![i] = dimensions[i]
+                }
+                else -> {
+                    val n = elements!!.size - dimensions.size
+                    for (i in n until elements!!.size) {
+                        val size = dimensions[i - n]
+                        if (elements!![i] < size) {
+                            elements!![i] = size
                         }
                     }
                 }
-            } else if (dimensions.size > 0) {
-                elements = IntArray(dimensions.size) { i -> dimensions[i] }
             }
+
         }
         return if (elements != null) Dimensions(elements!!) else emptyDimensions()
     }
