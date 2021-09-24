@@ -14,6 +14,7 @@ import javafx.geometry.Insets
 import javafx.geometry.Side
 import javafx.scene.Node
 import javafx.scene.control.ContextMenu
+import javafx.scene.control.Label
 import javafx.scene.control.MenuItem
 import javafx.scene.input.MouseButton
 import javafx.scene.layout.*
@@ -68,21 +69,40 @@ private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
 }
 
 private fun makeArrayNode(client: Client, value: APLValue): Node {
-    fun renderAsString(): Text {
-        return Text(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
+    fun renderAsString(): Region {
+        return Label(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
     }
 
     val d = value.dimensions
-    return when {
+    val node = when {
+        d.dimensions.any { it > 100 } -> renderOversizeValue(value)
         d.size == 1 && d[0] == 0 -> renderAsString()
         value.isStringValue() -> makeStringDisp(value)
         d.size == 1 -> makeArray1(client, value)
         d.size == 2 -> makeArray2(client, value)
         else -> renderAsString()
     }
+    if (d.size == 2) {
+        val contextMenu = ContextMenu(MenuItem("Open in editor").apply { onAction = EventHandler { ArrayEditor.open(client, value) } })
+        node.setOnMouseClicked { event ->
+            if (event.button == MouseButton.SECONDARY) {
+                contextMenu.show(node, Side.RIGHT, -(node.width - event.x), event.y)
+                event.consume()
+            }
+        }
+    }
+    return node
 }
 
-private fun makeArray1(client: Client, value: APLValue): Node {
+private fun renderOversizeValue(value: APLValue): Region {
+    val d = value.dimensions
+    val s = d.dimensions.joinToString(", ")
+    val text = Label("Oversized array: ${s}")
+    text.border = Border(BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths(1.0)))
+    return text
+}
+
+private fun makeArray1(client: Client, value: APLValue): Region {
     val grid = GridPane()
     grid.border = Border(BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths(1.0)))
     value.iterateMembersWithPosition { v, i ->
@@ -96,7 +116,7 @@ private fun makeArray1(client: Client, value: APLValue): Node {
     return grid
 }
 
-private fun makeArray2(client: Client, value: APLValue): Node {
+private fun makeArray2(client: Client, value: APLValue): Region {
     val dimensions = value.dimensions
     val grid = GridPane()
     grid.border = Border(BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths(1.0)))
@@ -156,17 +176,9 @@ private fun makeArray2(client: Client, value: APLValue): Node {
         }
     }
 
-    val contextMenu = ContextMenu(MenuItem("Open in editor").apply { onAction = EventHandler { ArrayEditor.open(client, value) } })
-    grid.setOnMouseClicked { event ->
-        if (event.button == MouseButton.SECONDARY) {
-            contextMenu.show(grid, Side.RIGHT, -(grid.width - event.x), event.y)
-            event.consume()
-        }
-    }
-
     return grid
 }
 
-private fun makeStringDisp(value: APLValue): Node {
-    return Text(renderStringValueOptionalQuotes(value, true)).apply { styleClass.add("kapresult") }
+private fun makeStringDisp(value: APLValue): Region {
+    return Label(renderStringValueOptionalQuotes(value, true)).apply { styleClass.add("kapresult") }
 }
