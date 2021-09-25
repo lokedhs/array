@@ -1,0 +1,21 @@
+⍝ The only difference in the solutions to part 1 and 2 is the use of union ∩,
+⍝ vs the use of intersection ∩.
+⍝
+⍝ First any empty lines are identified using: input≢¨⊂""
+⍝ after this the rows are grouped based on the location of
+⍝ the empty lines: ⊂⍨
+⍝
+⍝ Then, for each line, take the union of the characters in
+⍝ all strings, and return the size of the resulting array: ≢⊃∪/⍵
+⍝
+⍝ Finally, take the sum of all the lengths using +/
+
+∇ solveDay6part1 (file) {
+    input ← io:read file
+    +/ {≢⊃∪/⍵}¨ input ⊂⍨ input≢¨⊂""
+}
+
+∇ solveDay6part2 (file) {
+    input ← io:read file
+    +/ {≢⊃∩/⍵}¨ input ⊂⍨ input≢¨⊂""
+}
