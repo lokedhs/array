@@ -1,4 +1,4 @@
-⍝ The only difference in the solutions to part 1 and 2 is the use of union ∩,
+⍝ The only difference in the solutions to part 1 and 2 is the use of union ∪,
 ⍝ vs the use of intersection ∩.
 ⍝
 ⍝ First any empty lines are identified using: input≢¨⊂""

@@ -165,24 +165,34 @@ class LiteralScalarValue(val value: Instruction) : Instruction(value.pos) {
     override fun toString() = "LiteralScalarValue(${value})"
 }
 
-class LiteralInteger(val value: Long, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
-    override fun toString() = "LiteralInteger[value=$value]"
+class LiteralInteger(value: Long, pos: Position) : Instruction(pos) {
+    private val valueInt = APLLong(value)
+
+    override fun evalWithContext(context: RuntimeContext) = valueInt
+    override fun toString() = "LiteralInteger[value=$valueInt]"
+    val value get() = valueInt.value
 }
 
-class LiteralDouble(val value: Double, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
-    override fun toString() = "LiteralDouble[value=$value]"
+class LiteralDouble(value: Double, pos: Position) : Instruction(pos) {
+    private val valueInt = APLDouble(value)
+
+    override fun evalWithContext(context: RuntimeContext) = valueInt
+    override fun toString() = "LiteralDouble[value=$valueInt]"
+    val value get() = valueInt.value
 }
 
-class LiteralComplex(val value: Complex, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = value.makeAPLNumber()
-    override fun toString() = "LiteralComplex[value=$value]"
+class LiteralComplex(value: Complex, pos: Position) : Instruction(pos) {
+    private val valueInt = value.makeAPLNumber()
+
+    override fun evalWithContext(context: RuntimeContext) = valueInt
+    override fun toString() = "LiteralComplex[value=$valueInt]"
 }
 
-class LiteralCharacter(val value: Int, pos: Position) : Instruction(pos) {
-    override fun evalWithContext(context: RuntimeContext) = APLChar(value)
-    override fun toString() = "LiteralCharacter[value=$value]"
+class LiteralCharacter(value: Int, pos: Position) : Instruction(pos) {
+    val valueInt = APLChar(value)
+
+    override fun evalWithContext(context: RuntimeContext) = valueInt
+    override fun toString() = "LiteralCharacter[value=$valueInt]"
 }
 
 class LiteralSymbol(name: Symbol, pos: Position) : Instruction(pos) {
