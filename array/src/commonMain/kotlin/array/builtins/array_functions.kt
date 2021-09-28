@@ -151,10 +151,30 @@ class IotaAPLFunction : APLFunctionDescriptor {
 object ResizedArrayImpls {
     class ResizedArray(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
         override val specialisedType = value.specialisedType
-        override fun valueAt(p: Int) = value.valueAt(p % value.size)
-        override fun valueAtInt(p: Int, pos: Position?) = value.valueAtInt(p % value.size, pos)
-        override fun valueAtLong(p: Int, pos: Position?) = value.valueAtLong(p % value.size, pos)
-        override fun valueAtDouble(p: Int, pos: Position?) = value.valueAtDouble(p % value.size, pos)
+
+        override fun valueAt(p: Int): APLValue {
+            val s = value.size
+            val p0 = if (p < s) p else p % s
+            return value.valueAt(p0)
+        }
+
+        override fun valueAtInt(p: Int, pos: Position?): Int {
+            val s = value.size
+            val p0 = if (p < s) p else p % s
+            return value.valueAtInt(p0, pos)
+        }
+
+        override fun valueAtLong(p: Int, pos: Position?): Long {
+            val s = value.size
+            val p0 = if (p < s) p else p % s
+            return value.valueAtLong(p0, pos)
+        }
+
+        override fun valueAtDouble(p: Int, pos: Position?): Double {
+            val s = value.size
+            val p0 = if (p < s) p else p % s
+            return value.valueAtDouble(p0, pos)
+        }
     }
 
     class ResizedSingleValueGeneric(override val dimensions: Dimensions, private val value: APLValue) : APLArray() {
