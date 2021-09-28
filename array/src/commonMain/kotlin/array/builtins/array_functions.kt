@@ -77,10 +77,11 @@ object IotaArrayImpls {
         override fun collapseInt() = this
 
         override fun valueAtLong(p: Int, pos: Position?): Long {
-            if (p < 0 || p >= length) {
-                throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}", pos))
+            return when {
+                p < 0 || p >= length -> throwAPLException(APLIndexOutOfBoundsException("Position in array: ${p}, size: ${length}", pos))
+                p < width -> p + offset
+                else -> (p % width) + offset
             }
-            return (p % width) + offset
         }
 
         override fun valueAt(p: Int): APLValue {
