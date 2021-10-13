@@ -1,9 +1,5 @@
 package array.gui
 
-import javafx.event.EventHandler
-import javafx.scene.control.TextInputControl
-import javafx.scene.input.KeyEvent
-
 class ExtendedCharsKeyboardInput {
     val keymap: Map<KeyDescriptor, String>
 
@@ -50,7 +46,7 @@ class ExtendedCharsKeyboardInput {
             makeKeyDescriptor(";") to "⍎", makeKeyDescriptor(":", Flag.SHIFT) to "≡",
             makeKeyDescriptor("'") to "⍕", makeKeyDescriptor("\"", Flag.SHIFT) to "≢",
             // Fourth row
-            makeKeyDescriptor("z") to "⊂",
+            makeKeyDescriptor("z") to "⊂", makeKeyDescriptor("Z", Flag.SHIFT) to "⊆",
             makeKeyDescriptor("x") to "⊃", makeKeyDescriptor("X", Flag.SHIFT) to "⊇",
             makeKeyDescriptor("c") to "∩", makeKeyDescriptor("C", Flag.SHIFT) to "⍧",
             makeKeyDescriptor("v") to "∪",
