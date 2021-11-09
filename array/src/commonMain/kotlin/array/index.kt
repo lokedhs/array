@@ -8,7 +8,8 @@ class IndexedArrayValue(val content: APLValue, indexValue: Array<Either<Int, Int
         val sourceIndex: Int,
         val source: IntArrayValue,
         val sourceMultipliers: IntArray,
-        val multiplier: Int)
+        val multiplier: Int
+    )
 
     override val dimensions: Dimensions
     private val destToSourceAxis: List<AxisValueAndOffset>
@@ -78,7 +79,8 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
     private fun lookupFromArray(
         indexValue: APLValue,
         contentValue: APLValue,
-        aDimensions: Dimensions): IndexedArrayValue {
+        aDimensions: Dimensions
+    ): IndexedArrayValue {
         val indexAsList = indexValue.listify()
         if (indexAsList.listSize() != contentValue.dimensions.size) {
             throwAPLException(
@@ -97,7 +99,7 @@ class ArrayIndex(val content: Instruction, val indexInstr: Instruction, pos: Pos
             val d = v.dimensions
             if (d.size == 0) {
                 Either.Left(v.ensureNumber(pos).asInt()
-                    .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i, pos) })
+                                .also { posAlongAxis -> checkAxisPositionIsInRange(posAlongAxis, aDimensions, i, pos) })
             } else {
                 Either.Right(IntArrayValue.fromAPLValue(v, pos).also { selectionArray ->
                     selectionArray.values.forEach { posAlongAxis ->

@@ -587,18 +587,15 @@ private fun arrayToAPLFormat(value: APLArray): String {
 }
 
 private fun arrayToAPLFormatStandard(value: APLArray): String {
+    fun requiresParen(v: APLValue) = !(v is APLNumber || v is APLChar || v.isStringValue())
+
     val buf = StringBuilder()
     val dimensions = value.dimensions
     if (dimensions.size == 0) {
         buf.append("⊂")
         buf.append(value.valueAt(0).formatted(FormatStyle.READABLE))
     } else {
-        for (i in dimensions.indices) {
-            if (i > 0) {
-                buf.append(" ")
-            }
-            buf.append(dimensions[i])
-        }
+        buf.append(dimensions.dimensions.joinToString(separator = " "))
         buf.append("⍴")
         if (value.size == 0) {
             buf.append("1")
@@ -608,7 +605,10 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
                 if (i > 0) {
                     buf.append(" ")
                 }
+                val p = requiresParen(a)
+                if (p) buf.append("(")
                 buf.append(a.formatted(FormatStyle.READABLE))
+                if (p) buf.append(")")
             }
         }
     }
