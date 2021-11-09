@@ -1,6 +1,7 @@
 package array.builtins
 
 import array.*
+import array.syntax.ConstantSyntaxRule
 
 class ForEachResult1Arg(
     val context: RuntimeContext,

@@ -16,6 +16,8 @@ import javafx.scene.Node
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Label
 import javafx.scene.control.MenuItem
+import javafx.scene.input.Clipboard
+import javafx.scene.input.DataFormat
 import javafx.scene.input.MouseButton
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
@@ -24,8 +26,10 @@ import java.util.*
 import kotlin.reflect.KClass
 
 interface ValueRenderer {
+    val value: APLValue
     val text: String
-    fun renderValue(): Node
+    fun renderValue(): Region
+    fun addToMenu(contextMenu: ContextMenu) {}
 
     companion object {
         private val renderers = hashMapOf<KClass<out APLValue>, (APLValue) -> ValueRenderer>(
@@ -46,14 +50,45 @@ interface ValueRenderer {
     }
 }
 
-class Array2ValueRenderer(private val client: Client, private val value: APLValue) : ValueRenderer {
+class Array2ValueRenderer(private val client: Client, override val value: APLValue) : ValueRenderer {
     override val text = value.formatted(FormatStyle.PLAIN)
-    override fun renderValue(): Node = makeArrayNode(client, value)
+    override fun renderValue() = makeArrayNode(client, value)
+
+    override fun addToMenu(contextMenu: ContextMenu) {
+        if (value.dimensions.size == 2) {
+            val item = MenuItem("Open in editor").apply { onAction = EventHandler { ArrayEditor.open(client, value) } }
+            contextMenu.items.add(item)
+        }
+    }
 }
 
 private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
     override fun length() = renderer.text.length
-    override fun createNode(renderContext: ClientRenderContext, style: TextStyle) = renderer.renderValue()
+
+    override fun createNode(renderContext: ClientRenderContext, style: TextStyle): Node {
+        val node = renderer.renderValue()
+        val contextMenu = ContextMenu(
+            MenuItem("Copy as string").apply { onAction = EventHandler { copyAsString() } },
+            MenuItem("Copy as code").apply { onAction = EventHandler { copyAsCode() } })
+        renderer.addToMenu(contextMenu)
+        node.setOnMouseClicked { event ->
+            if (event.button == MouseButton.SECONDARY) {
+                contextMenu.show(node, Side.RIGHT, -(node.width - event.x), event.y)
+            }
+        }
+        return node
+    }
+
+    private fun copyAsString() {
+        val clipboard = Clipboard.getSystemClipboard()
+        clipboard.setContent(mapOf(DataFormat.PLAIN_TEXT to renderer.value.formatted(FormatStyle.PRETTY)))
+    }
+
+    private fun copyAsCode() {
+        val clipboard = Clipboard.getSystemClipboard()
+        clipboard.setContent(mapOf(DataFormat.PLAIN_TEXT to renderer.value.formatted(FormatStyle.READABLE)))
+    }
+
     override fun joinSegment(nextSeg: EditorContent): Optional<EditorContent> = Optional.empty()
     override fun realGetText() = renderer.text
     override fun realCharAt(index: Int) = throw IllegalStateException("Can't get character array element")
@@ -68,7 +103,7 @@ private class Array2ContentEntry(val renderer: ValueRenderer) : EditorContent {
     }
 }
 
-private fun makeArrayNode(client: Client, value: APLValue): Node {
+private fun makeArrayNode(client: Client, value: APLValue): Region {
     fun renderAsString(): Region {
         return Label(value.formatted(FormatStyle.PRETTY)).apply { styleClass.add("kapresult") }
     }
@@ -81,15 +116,6 @@ private fun makeArrayNode(client: Client, value: APLValue): Node {
         d.size == 1 -> makeArray1(client, value)
         d.size == 2 -> makeArray2(client, value)
         else -> renderAsString()
-    }
-    if (d.size == 2) {
-        val contextMenu = ContextMenu(MenuItem("Open in editor").apply { onAction = EventHandler { ArrayEditor.open(client, value) } })
-        node.setOnMouseClicked { event ->
-            if (event.button == MouseButton.SECONDARY) {
-                contextMenu.show(node, Side.RIGHT, -(node.width - event.x), event.y)
-                event.consume()
-            }
-        }
     }
     return node
 }

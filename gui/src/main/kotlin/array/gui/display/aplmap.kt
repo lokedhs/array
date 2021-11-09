@@ -14,6 +14,7 @@ import javafx.scene.control.TreeCell
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.Region
 import javafx.util.Callback
 
 sealed class APLValueTreeNode {
@@ -22,14 +23,14 @@ sealed class APLValueTreeNode {
     class ChildNode(val value: APLValue) : APLValueTreeNode()
 }
 
-class APLMapRenderer(val value: APLMap) : ValueRenderer {
+class APLMapRenderer(override val value: APLMap) : ValueRenderer {
     private val entries: List<TreeItem<APLValueTreeNode>> = value.content.entries
         .sortedWith { a, b -> a.key.value.compare(b.key.value) }
         .map { EntryTreeItem(APLValueTreeNode.EntryNode(it.key, it.value)) }
 
     override val text = value.formatted(FormatStyle.PLAIN)
 
-    override fun renderValue(): Node {
+    override fun renderValue(): Region {
         val tree = TreeView<APLValueTreeNode>()
         tree.cellFactory = Callback<TreeView<APLValueTreeNode>, TreeCell<APLValueTreeNode>> {
             APLMapCellImpl()
