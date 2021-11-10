@@ -27,6 +27,16 @@ class MapTest : APLTest() {
     }
 
     @Test
+    fun multiElementMapFromVector() {
+        parseAPLExpression("map \"foo\" 1 \"test\" 2").let { result ->
+            assertTrue(result is APLMap)
+            assertEquals(2, result.elementCount())
+            assertSimpleNumber(1, result.lookupValue(APLString("foo")))
+            assertSimpleNumber(2, result.lookupValue(APLString("test")))
+        }
+    }
+
+    @Test
     fun missingElementsReturnsNull() {
         parseAPLExpression("map 3 2 ⍴ \"foo\" 1 \"bar\" 2 \"a\" 3").let { result ->
             assertTrue(result is APLMap)
