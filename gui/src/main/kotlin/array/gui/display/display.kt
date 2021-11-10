@@ -33,7 +33,8 @@ interface ValueRenderer {
 
     companion object {
         private val renderers = hashMapOf<KClass<out APLValue>, (APLValue) -> ValueRenderer>(
-            Pair(APLMap::class, { APLMapRenderer(it as APLMap) }))
+            //Pair(APLMap::class, { APLMapRenderer(it as APLMap) })
+        )
 
         fun makeValueRenderer(client: Client, value: APLValue): ValueRenderer {
             val renderer = renderers[value::class]

@@ -3,6 +3,7 @@ package array
 import array.builtins.compareAPLArrays
 import array.rendertext.String2D
 import array.rendertext.encloseInBox
+import array.rendertext.maybeWrapInParens
 import array.rendertext.renderStringValue
 
 enum class APLValueType(val typeName: String) {
@@ -113,6 +114,7 @@ abstract class APLValue {
     open val size: Int get() = dimensions.contentSize()
 
     abstract fun formatted(style: FormatStyle = FormatStyle.PRETTY): String
+    open fun formattedAsCodeRequiresParens() = true
     abstract fun collapseInt(): APLValue
     abstract fun collapseFirstLevel(): APLValue
     fun isScalar(): Boolean = rank == 0
@@ -341,6 +343,8 @@ abstract class APLArray : APLValue() {
             FormatStyle.READABLE -> arrayToAPLFormat(this)
         }
 
+    override fun formattedAsCodeRequiresParens() = !isStringValue()
+
     override fun arrayify() = if (rank == 0) APLArrayImpl.make(dimensionsOfSize(1)) { valueAt(0) } else this
 
     override fun compareEquals(reference: APLValue): Boolean {
@@ -428,9 +432,17 @@ class APLMap(val content: ImmutableMap2<APLValueKey, APLValue>) : APLSingleValue
 
     private fun formatMapReadable(): String {
         val buf = StringBuilder()
-        buf.append("map ${content.size} 2 ⍴")
+        buf.append("map ${content.size} 2⍴")
+        var first = true
         content.forEach { (k, v) ->
-            buf.append(" (${k.value.formatted(FormatStyle.READABLE)}) (${v.formatted(FormatStyle.READABLE)})")
+            if (first) {
+                first = false
+            } else {
+                buf.append(" ")
+            }
+            maybeWrapInParens(buf, k.value)
+            buf.append(" ")
+            maybeWrapInParens(buf, v)
         }
         return buf.toString()
     }
@@ -587,8 +599,6 @@ private fun arrayToAPLFormat(value: APLArray): String {
 }
 
 private fun arrayToAPLFormatStandard(value: APLArray): String {
-    fun requiresParen(v: APLValue) = !(v is APLNumber || v is APLChar || v.isStringValue())
-
     val buf = StringBuilder()
     val dimensions = value.dimensions
     if (dimensions.size == 0) {
@@ -605,10 +615,7 @@ private fun arrayToAPLFormatStandard(value: APLArray): String {
                 if (i > 0) {
                     buf.append(" ")
                 }
-                val p = requiresParen(a)
-                if (p) buf.append("(")
-                buf.append(a.formatted(FormatStyle.READABLE))
-                if (p) buf.append(")")
+                maybeWrapInParens(buf, a)
             }
         }
     }
@@ -749,6 +756,8 @@ class APLChar(val value: Int) : APLSingleValue() {
         FormatStyle.PRETTY -> "@${charToString(value)}"
         FormatStyle.READABLE -> "@${charToString(value)}"
     }
+
+    override fun formattedAsCodeRequiresParens() = false
 
     override fun compareEquals(reference: APLValue) = reference is APLChar && value == reference.value
 

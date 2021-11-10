@@ -325,6 +325,17 @@ fun rightJustified(dest: MutableList<String>, s: List<String>, width: Int) {
     dest.addAll(s)
 }
 
+fun maybeWrapInParens(buf: Appendable, value: APLValue) {
+    val shouldWrap = value.formattedAsCodeRequiresParens()
+    if (shouldWrap) {
+        buf.append("(")
+    }
+    buf.append(value.formatted(FormatStyle.READABLE))
+    if (shouldWrap) {
+        buf.append(")")
+    }
+}
+
 fun renderStringValue(value: APLValue, style: FormatStyle): String {
     return when (style) {
         FormatStyle.PLAIN -> renderStringValueOptionalQuotes(value, false)
