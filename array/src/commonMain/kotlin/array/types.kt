@@ -528,19 +528,12 @@ class APLList(val elements: List<APLValue>) : APLSingleValue() {
 
     override val dimensions get() = emptyDimensions()
 
-    override fun formatted(style: FormatStyle): String {
-        val buf = StringBuilder()
-        var first = true
-        for (v in elements) {
-            if (first) {
-                first = false
-            } else {
-                buf.append("\n; value\n")
-            }
-            buf.append(v.formatted())
+    override fun formatted(style: FormatStyle) =
+        when (style) {
+            FormatStyle.PLAIN -> elements.joinToString(separator = " ; ") { v -> v.formatted(FormatStyle.PLAIN) }
+            FormatStyle.PRETTY -> elements.joinToString(separator = "\n; value\n") { v -> v.formatted(FormatStyle.PRETTY) }
+            FormatStyle.READABLE -> elements.joinToString(separator = " ; ") { v -> v.formatted(FormatStyle.READABLE) }
         }
-        return buf.toString()
-    }
 
     override fun collapseInt() = this
 
