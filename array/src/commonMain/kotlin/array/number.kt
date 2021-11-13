@@ -34,8 +34,8 @@ class APLLong(val value: Long) : APLNumber() {
     override fun formatted(style: FormatStyle) =
         when (style) {
             FormatStyle.PLAIN -> value.toString()
-            FormatStyle.READABLE -> value.toString()
             FormatStyle.PRETTY -> value.toString()
+            FormatStyle.READABLE -> if (value < 0) "¯" + (-value).toString() else value.toString()
         }
 
     override fun compareEquals(reference: APLValue) = reference is APLLong && value == reference.value
