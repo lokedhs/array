@@ -3,6 +3,11 @@ package array
 import kotlin.math.ceil
 import kotlin.math.min
 
+class ParallelWrappedException(val exceptions: List<Throwable>, pos: Position? = null) :
+    APLEvalException("Wrapped exceptions. Primary: ${exceptions[0].message}", pos) {
+    fun primaryException() = exceptions[0]
+}
+
 interface ParallelTaskResult
 
 interface ParallelTask {
@@ -16,11 +21,8 @@ abstract class ParallelTaskList {
 
 interface ParallelSupported {
     fun computeParallelTasks1Arg(context: RuntimeContext, numTasks: Int, a: APLValue, axis: APLValue?): ParallelTaskList
-    fun computeParallelTasks2Arg(workUnitSize: Int): ParallelTaskList
+    fun computeParallelTasks2Arg(context: RuntimeContext, numTasks: Int, a: APLValue, b: APLValue, axis: APLValue?): ParallelTaskList
 }
-
-// Test code:
-// {io:println "start:",⍕⍵ ◊ time:sleep 2 ◊ io:println "end:",⍕⍵ ◊ ⍵+100}¨ ⍳10
 
 /**
  * Implementation of parallel task that does not perform parallelisation.
@@ -59,7 +61,7 @@ class ConstantParallelTaskList(val value: APLValue) : ParallelTaskList() {
     }
 }
 
-class ParallelCompressTaskList(val value: APLValue, numTasks: Int) : ParallelTaskList() {
+class ParallelCompressTaskList(val value: APLValue, numTasks: Int, val pos: Position?) : ParallelTaskList() {
     private val labels = value.labels
     private val dimensions = value.dimensions
     private val size = dimensions.contentSize()
@@ -77,11 +79,15 @@ class ParallelCompressTaskList(val value: APLValue, numTasks: Int) : ParallelTas
 
     override fun finaliseCompute(results: ArrayList<Either<ParallelTaskResult, Throwable>>): APLValue {
         val list = ArrayList<APLValue>()
+        val exceptions = ArrayList<Throwable>()
         results.forEach { v ->
             when (v) {
                 is Either.Left -> list.addAll((v.value as ParallelCompressResult).result)
-                is Either.Right -> throw v.value // TODO: We only throw the first found exception
+                is Either.Right -> exceptions.add(v.value)
             }
+        }
+        if (exceptions.isNotEmpty()) {
+            throwAPLException(ParallelWrappedException(exceptions, pos))
         }
         val result = CollapsedArrayImpl(dimensions, list.toTypedArray())
         return if (labels == null) {
@@ -109,11 +115,11 @@ class ParallelCompressTaskList(val value: APLValue, numTasks: Int) : ParallelTas
     private inner class ParallelCompressResult(val result: List<APLValue>) : ParallelTaskResult
 
     companion object {
-        fun make(value: APLValue, numTasks: Int): ParallelTaskList {
+        fun make(value: APLValue, numTasks: Int, pos: Position): ParallelTaskList {
             return if (value.dimensions.size == 0) {
                 return ConstantParallelTaskList(value)
             } else {
-                ParallelCompressTaskList(value, numTasks)
+                ParallelCompressTaskList(value, numTasks, pos)
             }
         }
     }
@@ -131,10 +137,19 @@ class ParallelOp : APLOperatorOneArg {
 private class ParallelHandler(val derived: ParallelSupported, val numTasksWeightFactor: Double = 10.0) : APLFunctionDescriptor {
     inner class ParallelHandlerImpl(pos: Position) : APLFunction(pos) {
         override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
-            val parallelTaskList = derived.computeParallelTasks1Arg(
-                context,
-                ceil(context.engine.backgroundDispatcher.numThreads * numTasksWeightFactor).toInt(),
-                a, axis)
+            val parallelTaskList = derived.computeParallelTasks1Arg(context, computeNumEngines(context), a, axis)
+            return evalTaskList(context, parallelTaskList)
+        }
+
+        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
+            val parallelTaskList = derived.computeParallelTasks2Arg(context, computeNumEngines(context), a, b, axis)
+            return evalTaskList(context, parallelTaskList)
+        }
+
+        private fun computeNumEngines(context: RuntimeContext) =
+            ceil(context.engine.backgroundDispatcher.numThreads * numTasksWeightFactor).toInt()
+
+        private fun evalTaskList(context: RuntimeContext, parallelTaskList: ParallelTaskList): APLValue {
             val dispatcher = context.engine.backgroundDispatcher
             val tasks = parallelTaskList.tasks.map { task ->
                 dispatcher.start {
@@ -149,10 +164,6 @@ private class ParallelHandler(val derived: ParallelSupported, val numTasksWeight
                 results.add(res)
             }
             return parallelTaskList.finaliseCompute(results)
-        }
-
-        override fun eval2Arg(context: RuntimeContext, a: APLValue, b: APLValue, axis: APLValue?): APLValue {
-            TODO("Will be implemented later")
         }
     }
 

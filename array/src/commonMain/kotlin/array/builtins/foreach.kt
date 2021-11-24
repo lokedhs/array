@@ -57,14 +57,20 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
                 return compute2Arg(context, fn, a, b, axis, pos)
             }
 
-            override fun computeParallelTasks1Arg(context: RuntimeContext, numTasks: Int, a: APLValue, axis: APLValue?): ParallelTaskList {
+            override fun computeParallelTasks1Arg(
+                context: RuntimeContext, numTasks: Int, a: APLValue, axis: APLValue?
+            ): ParallelTaskList {
                 val res = eval1Arg(context, a, axis)
-                return ParallelCompressTaskList.make(res, numTasks)
+                return ParallelCompressTaskList.make(res, numTasks, pos)
             }
 
-            override fun computeParallelTasks2Arg(workUnitSize: Int): ParallelTaskList {
-                TODO("not implemented")
+            override fun computeParallelTasks2Arg(
+                context: RuntimeContext, numTasks: Int, a: APLValue, b: APLValue, axis: APLValue?
+            ): ParallelTaskList {
+                val res = eval2Arg(context, a, b, axis)
+                return ParallelCompressTaskList.make(res, numTasks, pos)
             }
+
         }
     }
 

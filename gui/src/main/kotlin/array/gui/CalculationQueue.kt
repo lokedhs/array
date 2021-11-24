@@ -32,7 +32,9 @@ class CalculationQueue(val engine: Engine) {
     ) : Request {
         override fun processRequest() {
             val queueResult = try {
-                val result = engine.parseAndEval(source, linkNewContext).collapse()
+                val result = engine.withThreadLocalAssigned {
+                    engine.parseAndEval(source, linkNewContext).collapse()
+                }
                 Either.Left(result)
             } catch (e: InterruptedException) {
                 throw e
