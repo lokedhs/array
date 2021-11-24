@@ -32,7 +32,7 @@ actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return JsAtomicRefArray(size)
 }
 
-actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+actual fun <T : Any> makeMPThreadLocalBackend(type: KClass<T>): MPThreadLocal<T> {
     return object : MPThreadLocal<T> {
         override var value: T? = null
     }
@@ -57,4 +57,10 @@ actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Reg
     } catch (e: Throwable) {
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }
+}
+
+actual fun numCores() = 1
+
+actual fun makeBackgroundDispatcher(numThreads: Int): MPThreadPoolExecutor {
+    return SingleThreadedThreadPoolExecutor()
 }

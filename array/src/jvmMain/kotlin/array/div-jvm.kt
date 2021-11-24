@@ -1,5 +1,7 @@
 package array
 
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReferenceArray
 import java.util.regex.PatternSyntaxException
 import kotlin.reflect.KClass
@@ -22,7 +24,7 @@ actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return JvmMPAtomicRefArray(size)
 }
 
-actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+actual fun <T : Any> makeMPThreadLocalBackend(type: KClass<T>): MPThreadLocal<T> {
     return object : MPThreadLocal<T> {
         val tl = object : ThreadLocal<T?>() {
             override fun initialValue(): T? = null
@@ -46,4 +48,28 @@ actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Reg
     } catch (e: PatternSyntaxException) {
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }
+}
+
+actual fun numCores(): Int {
+    return Runtime.getRuntime().availableProcessors()
+}
+
+class JvmMPThreadPoolExecutor(val maxNumParallel: Int) : MPThreadPoolExecutor {
+    private val executor = Executors.newFixedThreadPool(maxNumParallel)
+    override val numThreads get() = maxNumParallel
+
+    override fun <T> start(fn: () -> T): BackgroundTask<T> {
+        val future = executor.submit(fn)
+        return JvmTExecutorTask(future)
+    }
+
+    inner class JvmTExecutorTask<T>(val future: Future<T>) : BackgroundTask<T> {
+        override fun await(): T {
+            return future.get()
+        }
+    }
+}
+
+actual fun makeBackgroundDispatcher(numThreads: Int): MPThreadPoolExecutor {
+    return JvmMPThreadPoolExecutor(numThreads)
 }

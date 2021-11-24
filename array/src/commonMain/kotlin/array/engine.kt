@@ -179,11 +179,13 @@ private const val CORE_NAMESPACE_NAME = "kap"
 private const val KEYWORD_NAMESPACE_NAME = "keyword"
 private const val DEFAULT_NAMESPACE_NAME = "default"
 
-val threadLocalEngineRef = makeMPThreadLocal(Engine::class)
-
-class CallStackElement(val name: String, val pos: Position?) {
-    fun copy() = CallStackElement(name, pos)
+class ThreadLocalCallStack(val engine: Engine) {
+    val callStack = ArrayList<CallStackElement>()
 }
+
+data class CallStackElement(val name: String, val pos: Position?)
+
+val threadLocalCallstackRef = makeMPThreadLocal<ThreadLocalCallStack>()
 
 /**
  * A handler that is registered by [Engine.registerClosableHandler] which is responsible for implementing
@@ -196,7 +198,7 @@ interface ClosableHandler<T : APLValue> {
     fun close(value: T)
 }
 
-class Engine {
+class Engine(numComputeEngines: Int? = null) {
     private val functions = HashMap<Symbol, APLFunctionDescriptor>()
     private val operators = HashMap<Symbol, APLOperator>()
     private val functionDefinitionListeners = ArrayList<FunctionDefinitionListener>()
@@ -216,7 +218,8 @@ class Engine {
     val initialNamespace = makeNamespace(DEFAULT_NAMESPACE_NAME)
     var currentNamespace = initialNamespace
     val closableHandlers = HashMap<KClass<out APLValue>, ClosableHandler<*>>()
-    val callStack = ArrayList<CallStackElement>()
+
+    val backgroundDispatcher = makeBackgroundDispatcher(numComputeEngines ?: numCores())
 
     init {
         // Intern the names of all the types in the core namespace.
@@ -338,6 +341,7 @@ class Engine {
         registerNativeOperator("⍤", RankOperator())
         registerNativeOperator("∵", BitwiseOp())
         registerNativeOperator("∘", ComposeOp())
+        registerNativeOperator("parallel", ParallelOp())
 
         // function aliases                             
         functionAliases[coreNamespace.internAndExport("*")] = coreNamespace.internAndExport("⋆")
@@ -443,8 +447,7 @@ class Engine {
         }
     }
 
-    fun internSymbol(name: String, namespace: Namespace? = null): Symbol =
-        (namespace ?: currentNamespace).internSymbol(name)
+    fun internSymbol(name: String, namespace: Namespace? = null): Symbol = (namespace ?: currentNamespace).internSymbol(name)
 
     fun makeNamespace(name: String, overrideDefaultImport: Boolean = false): Namespace {
         return namespaces.getOrPut(name) {
@@ -488,6 +491,9 @@ class Engine {
     @OptIn(ExperimentalContracts::class)
     inline fun <T> withCallStackElement(name: String, pos: Position, fn: (CallStackElement) -> T): T {
         contract { callsInPlace(fn, InvocationKind.EXACTLY_ONCE) }
+        val threadLocalCallStack = threadLocalCallstackRef.value
+        assertx(threadLocalCallStack != null)
+        val callStack = threadLocalCallStack.callStack
         if (callStack.size >= 100) {
             throwAPLException(APLEvalException("Stack overflow", pos))
         }
@@ -504,12 +510,12 @@ class Engine {
     }
 
     inline fun <T> withThreadLocalAssigned(fn: () -> T): T {
-        val oldThreadLocal = threadLocalEngineRef.value
-        threadLocalEngineRef.value = this
+        val oldThreadLocal = threadLocalCallstackRef.value
+        threadLocalCallstackRef.value = ThreadLocalCallStack(this)
         try {
             return fn()
         } finally {
-            threadLocalEngineRef.value = oldThreadLocal
+            threadLocalCallstackRef.value = oldThreadLocal
         }
     }
 
@@ -545,9 +551,9 @@ class CloseAPLFunction : APLFunctionDescriptor {
 }
 
 fun throwAPLException(ex: APLEvalException): Nothing {
-    val engine = threadLocalEngineRef.value
-    if (engine != null) {
-        ex.callStack = engine.callStack.map { e -> e.copy() }
+    val threadLocalCallStack = threadLocalCallstackRef.value
+    if (threadLocalCallStack != null) {
+        ex.callStack = threadLocalCallStack.callStack.map { e -> e.copy() }
     }
     throw ex
 }

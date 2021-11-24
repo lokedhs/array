@@ -55,7 +55,6 @@ class Unimplemented2ArgException(pos: Position? = null) : APLEvalException("Func
 class IllegalArgumentNumException(expectedCount: Int, receivedCount: Int, pos: Position? = null) :
     APLEvalException("Expected a list of ${expectedCount} values. Actual elements: ${receivedCount}", pos)
 
-class BitwiseNotSupported(pos: Position? = null) : APLEvalException("Function cannot handle bitwise operations", pos)
 class IntMagnitudeException(value: Long, pos: Position? = null) : APLEvalException("Value does not fit in an int: ${value}", pos)
 
 open class ParseException(message: String, pos: Position? = null) : APLGenericException(message, pos)
@@ -68,6 +67,8 @@ class OperatorAxisNotSupported(pos: Position) : ParseException("Operator does no
 class SyntaxRuleMismatch(expectedSymbol: Symbol, foundSymbol: Symbol, pos: Position? = null) :
     ParseException("In custom syntax rule: Expected: ${expectedSymbol.symbolName}. Found: ${foundSymbol.symbolName}", pos)
 
+class BitwiseNotSupported(pos: Position? = null) : ParseException("Function does not support bitwise operations", pos)
+class ParallelNotSupported(pos: Position? = null) : ParseException("Function does not support parallel", pos)
 class SyntaxSubRuleNotFound(name: Symbol, pos: Position? = null) : ParseException("Syntax sub rule does not exist. Name: ${name}", pos)
 class IllegalDeclaration(message: String, pos: Position? = null) : ParseException("Illegal declaration: ${message}", pos)
 

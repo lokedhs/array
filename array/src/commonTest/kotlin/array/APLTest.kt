@@ -28,23 +28,35 @@ class NearComplex(val expected: Complex, val realPrecision: Int, val imPrecision
     }
 }
 
-open class APLTest {
-    fun parseAPLExpression(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): APLValue {
-        return parseAPLExpression2(expr, withStandardLib, collapse).first
+abstract class APLTest {
+    fun parseAPLExpression(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true, numTasks: Int? = null): APLValue {
+        return parseAPLExpression2(expr, withStandardLib, collapse, numTasks).first
     }
 
-    fun parseAPLExpression2(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): Pair<APLValue, Engine> {
-        val engine = Engine()
+    fun parseAPLExpression2(
+        expr: String,
+        withStandardLib: Boolean = false,
+        collapse: Boolean = true,
+        numTasks: Int? = null
+    ): Pair<APLValue, Engine> {
+        val engine = Engine(numTasks)
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
             engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
         }
         val result = engine.parseAndEval(StringSourceLocation(expr), false)
-        return Pair(if (collapse) result.collapse() else result, engine)
+        engine.withThreadLocalAssigned {
+            return Pair(if (collapse) result.collapse() else result, engine)
+        }
     }
 
-    fun parseAPLExpressionWithOutput(expr: String, withStandardLib: Boolean = false, collapse: Boolean = true): Pair<APLValue, String> {
-        val engine = Engine()
+    fun parseAPLExpressionWithOutput(
+        expr: String,
+        withStandardLib: Boolean = false,
+        collapse: Boolean = true,
+        numTasks: Int? = null
+    ): Pair<APLValue, String> {
+        val engine = Engine(numTasks)
         engine.addLibrarySearchPath("standard-lib")
         if (withStandardLib) {
             engine.parseAndEval(StringSourceLocation("use(\"standard-lib.kap\")"), true)
@@ -52,7 +64,9 @@ open class APLTest {
         val output = StringBuilderOutput()
         engine.standardOutput = output
         val result = engine.parseAndEval(StringSourceLocation(expr), false)
-        return Pair(if (collapse) result.collapse() else result, output.buf.toString())
+        engine.withThreadLocalAssigned {
+            return Pair(if (collapse) result.collapse() else result, output.buf.toString())
+        }
     }
 
     fun assertArrayContent(expectedValue: Array<out Any>, value: APLValue) {

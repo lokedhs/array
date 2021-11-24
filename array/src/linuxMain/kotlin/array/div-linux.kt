@@ -40,7 +40,7 @@ actual fun <T> makeAtomicRefArray(size: Int): MPAtomicRefArray<T> {
     return LinuxMPAtomicRefArray(size)
 }
 
-actual fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T> {
+actual fun <T : Any> makeMPThreadLocalBackend(type: KClass<T>): MPThreadLocal<T> {
     // Use the single-threaded implementation as the native version doesn't support multi-threading yet
     return object : MPThreadLocal<T> {
         override var value: T? = null
@@ -65,4 +65,10 @@ actual fun toRegexpWithException(string: String, options: Set<RegexOption>): Reg
     } catch (e: Exception) {
         throw RegexpParseException("Error parsing regexp: \"${string}\"", e)
     }
+}
+
+actual fun numCores() = 1
+
+actual fun makeBackgroundDispatcher(numThreads: Int): MPThreadPoolExecutor {
+    return SingleThreadedThreadPoolExecutor()
 }

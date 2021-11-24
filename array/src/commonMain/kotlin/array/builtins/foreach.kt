@@ -1,7 +1,6 @@
 package array.builtins
 
 import array.*
-import array.syntax.ConstantSyntaxRule
 
 class ForEachResult1Arg(
     val context: RuntimeContext,
@@ -40,7 +39,7 @@ class ForEachResult2Arg(
 
 class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
     override fun make(pos: Position): APLFunction {
-        return object : APLFunction(pos) {
+        return object : APLFunction(pos), ParallelSupported {
             override fun eval1Arg(context: RuntimeContext, a: APLValue, axis: APLValue?): APLValue {
                 return if (a.isScalar()) {
                     return EnclosedAPLValue.make(fn.eval1Arg(context, a.disclose(), null))
@@ -56,6 +55,15 @@ class ForEachFunctionDescriptor(val fn: APLFunction) : APLFunctionDescriptor {
                 axis: APLValue?
             ): APLValue {
                 return compute2Arg(context, fn, a, b, axis, pos)
+            }
+
+            override fun computeParallelTasks1Arg(context: RuntimeContext, numTasks: Int, a: APLValue, axis: APLValue?): ParallelTaskList {
+                val res = eval1Arg(context, a, axis)
+                return ParallelCompressTaskList.make(res, numTasks)
+            }
+
+            override fun computeParallelTasks2Arg(workUnitSize: Int): ParallelTaskList {
+                TODO("not implemented")
             }
         }
     }

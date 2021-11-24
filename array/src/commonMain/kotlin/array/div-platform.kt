@@ -27,7 +27,11 @@ interface MPThreadLocal<T> {
     var value: T?
 }
 
-expect fun <T : Any> makeMPThreadLocal(type: KClass<T>): MPThreadLocal<T>
+expect fun <T : Any> makeMPThreadLocalBackend(type: KClass<T>): MPThreadLocal<T>
+
+inline fun <reified T : Any> makeMPThreadLocal(): MPThreadLocal<T> {
+    return makeMPThreadLocalBackend(T::class)
+}
 
 /**
  * Format a double in a standardised way. A value with zero decimal part should be rendered as 4.0.
@@ -43,3 +47,30 @@ expect fun currentTime(): Long
 class RegexpParseException(message: String, cause: Throwable) : Exception(message, cause)
 
 expect fun toRegexpWithException(string: String, options: Set<RegexOption>): Regex
+
+expect fun numCores(): Int
+
+interface BackgroundTask<T> {
+    fun await(): T
+}
+
+//expect fun <T> BackgroundTask<T>.make(fn: () -> T): BackgroundTask<T>
+
+interface MPThreadPoolExecutor {
+    val numThreads: Int
+    fun <T> start(fn: () -> T): BackgroundTask<T>
+}
+
+class SingleThreadedThreadPoolExecutor : MPThreadPoolExecutor {
+    override val numThreads get() = 1
+
+    override fun <T> start(fn: () -> T): BackgroundTask<T> {
+        return object : BackgroundTask<T> {
+            override fun await(): T {
+                return fn()
+            }
+        }
+    }
+}
+
+expect fun makeBackgroundDispatcher(numThreads: Int): MPThreadPoolExecutor
