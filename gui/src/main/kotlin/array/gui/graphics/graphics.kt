@@ -27,9 +27,15 @@ class GraphicWindowAPLValue(engine: Engine, width: Int, height: Int) : APLSingle
     override fun compareEquals(reference: APLValue) = reference is GraphicWindowAPLValue && window === reference.window
     override fun makeKey() = APLValueKeyImpl(this, window)
 
-    fun updateContent(w: Int, h: Int, content: DoubleArray) {
+    fun updateContent2D(w: Int, h: Int, content: DoubleArray) {
         Platform.runLater {
-            window.repaintContent(w, h, content)
+            window.repaintContent2D(w, h, content)
+        }
+    }
+
+    fun updateContent3D(w: Int, h: Int, content: DoubleArray) {
+        Platform.runLater {
+            window.repaintContent3D(w, h, content)
         }
     }
 }
@@ -58,10 +64,21 @@ class DrawGraphicFunction : APLFunctionDescriptor {
                 throw APLIncompatibleDomainsException("Left argument must be a graphic object", pos)
             }
             val bDimensions = b.dimensions
-            if (bDimensions.size != 2) {
-                throw InvalidDimensionsException("Right argument must be a two-dimensional array", pos)
+            when (bDimensions.size) {
+                2 -> {
+                    v.updateContent2D(bDimensions[1], bDimensions[0], b.toDoubleArray(pos))
+                }
+                3 -> {
+                    if (bDimensions[2] != 3) {
+                        throwAPLException(APLIllegalArgumentException("Colour arrays needs must have a third dimension of size 3", pos))
+                    }
+                    v.updateContent3D(bDimensions[1], bDimensions[0], b.toDoubleArray(pos))
+                }
+                else -> {
+                    throw InvalidDimensionsException("Right argument must be 2 or 3-dimensional", pos)
+                }
             }
-            v.updateContent(bDimensions[1], bDimensions[0], b.toDoubleArray(pos))
+
             return b
         }
     }
@@ -137,7 +154,8 @@ class GraphicWindow(val engine: Engine, width: Int, height: Int) {
             stage.show()
         }
 
-        fun repaintCanvas(width: Int, height: Int, array: DoubleArray) {
+        fun repaintCanvas2D(width: Int, height: Int, array: DoubleArray) {
+            assert(array.size == width * height)
             val imageWidth = image.width
             val imageHeight = image.height
             val xStride = width.toDouble() / imageWidth
@@ -154,13 +172,38 @@ class GraphicWindow(val engine: Engine, width: Int, height: Int) {
             canvas.graphicsContext2D.drawImage(image, 0.0, 0.0)
         }
 
+        fun repaintCanvas3D(width: Int, height: Int, array: DoubleArray) {
+            assert(array.size == width * height * 3)
+            val lineWidth = width * 3
+            val imageWidth = image.width
+            val imageHeight = image.height
+            val xStride = width.toDouble() / imageWidth
+            val yStride = height.toDouble() / imageHeight
+            val pixelWriter = image.pixelWriter
+            for (y in 0 until imageHeight.toInt()) {
+                for (x in 0 until imageWidth.toInt()) {
+                    val offset = (y * yStride).toInt() * lineWidth + (x * xStride).toInt() * 3
+                    val valueR = min(max((array[offset] * 255).toInt(), 0), 255) and 0xFF
+                    val valueG = min(max((array[offset + 1] * 255).toInt(), 0), 255) and 0xFF
+                    val valueB = min(max((array[offset + 2] * 255).toInt(), 0), 255) and 0xFF
+                    val colour = (0xFF shl 24) or (valueR shl 16) or (valueG shl 8) or valueB
+                    pixelWriter.setArgb(x, y, colour)
+                }
+            }
+            canvas.graphicsContext2D.drawImage(image, 0.0, 0.0)
+        }
+
         private fun processKeyPress(event: KeyEvent) {
             publishEventIfEnabled(KapKeyEvent(event))
         }
     }
 
-    fun repaintContent(width: Int, height: Int, array: DoubleArray) {
-        content.get()?.repaintCanvas(width, height, array)
+    fun repaintContent2D(width: Int, height: Int, array: DoubleArray) {
+        content.get()?.repaintCanvas2D(width, height, array)
+    }
+
+    fun repaintContent3D(width: Int, height: Int, array: DoubleArray) {
+        content.get()?.repaintCanvas3D(width, height, array)
     }
 }
 
