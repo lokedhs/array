@@ -1,0 +1,74 @@
+= KAP Tutorial
+
+The following document is recommended for people with previous programming experience, but with no prior experience with APL or any of its cousins, such as https://www.jsoftware.com/[J], https://kx.com/[K], https://code.kx.com/q/[Q], https://mlochbaum.github.io/BQN/[BQN], etc.
+
+== What KAP is and isn't
+
+=== About APL
+
+At its core, KAP is a programming language based on APL.
+
+APL is a programming language invented by Ken Iverson in 1966 and is particularly famous for its use of non-ASCII symbols.
+There exists many implementations of APL today, with the most commonly used one being https://www.dyalog.com/[Dyalog].
+Dyalog is a commercial product which is free for non-commercial use.
+
+At the risk of scaring away a beginner, here is a classic example of APL code (which also happens to be valid KAP code):
+
+----
+{⊃1 ⍵ ∨.∧ 3 4 = +/ +⌿ ¯1 0 1 ∘.⊖ ¯1 0 1 ⌽¨ ⊂⍵}
+----
+
+The above example can also be found in the Wikipedia page for https://en.wikipedia.org/wiki/APL_(programming_language)[APL].
+
+=== How KAP is different from APL
+
+APL requires the programmer to take a very different approach to programming compared to most other programming languages.
+In particular, it strongly de-emphasises the use of loops.
+Traditional APL doesn't even have a looping constructs or `if` statements, with the only way to do flow control is to use goto.
+Dyalog has looping constructs, but they are still cumbersome to use.
+
+APL has often been been referred to as a "`functional`" programming language.
+This is partially true, but it does lack first-class functions.
+First-class functions refers to the ability to work with functions as if they were values themselves.
+For example, you could create an array of functions.
+Some APL derivatives such as BQN supports this concept, and Dyalog can also do it, albeit in a very roundabout way.
+
+KAP grew out of a desire to see if it was possible to nicely integrate these programming constructs together with APL.
+The question as to whether that goal has been achieved is left to the reader to determine.
+
+Another difference that makes KAP almost unique among APL dialects is that it is centred around lazy evaluation.
+It's almost unique, as APL/3000 had a similar feature all the way back in the 70's.
+
+=== What KAP can be used for
+
+If the reader is asking themselves if they are supposed to build the software supporting their new startup in KAP, then the answer is almost certainly no (although if they do, the author would very much like to hear about it).
+
+Currently, the language can be seen as an alternative to Excel when working with data in array form.
+Excel is great for visualising data, but performing calculations with it quickly becomes difficult as the code tends to be hidden in cells in the document.
+For a programmer, this artefact of Excel is probably the most frustrating, since the code is arguably more important than the data itself.
+
+The best way to get started is to start using KAP as a calculator by running the GUI frontend and simply typing expressions to compute things.
+When users of other progamming languages may take to an IDE and start writing tens or even hundreds of lines of code to perform certain calculations, KAP can do the same in sometimes just a single line of code.
+It is therefore often not necessary to actually open an editor to write a program, and the user can instead simply perform their calculation directly in the tool itself.
+
+== A simple first program
+
+The first thing anyone learning a new language wants to know is how to print a message to the screen.
+In KAP, printing is done using `io:print` or `io:println`.
+The difference between the two is that the latter adds a newline after the output.
+
+The following code prints a string to the screen:
+
+----
+io:println "Example of printing a string"
+----
+
+The name of the function is `println`, which resides in the `io` namespace.
+It is possible to `import` a namespace so that one does not have to specify the namespace very time the function is used.
+This is not done in this tutorial in order to make it very clear which namespace a given symbol belongs to.
+Many common functions belong to the `kap` namespace which is imported by default.
+Those symbols are given without the namespace.
+
+When using the REPL to enter KAP expressions, the return value of the expression is always printed to the screen.
+This is the reason why when typing the above example into the REPL, the string will be printed twice.
+The first is the result of the call to `io:println` and the second is the return value of the expression. `io:println` always returns the value it printed, which results in the double output.
