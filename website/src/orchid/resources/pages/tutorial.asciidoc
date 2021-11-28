@@ -14,6 +14,7 @@ Dyalog is a commercial product which is free for non-commercial use.
 
 At the risk of scaring away a beginner, here is a classic example of APL code (which also happens to be valid KAP code):
 
+[source,kap]
 ----
 {⊃1 ⍵ ∨.∧ 3 4 = +/ +⌿ ¯1 0 1 ∘.⊖ ¯1 0 1 ⌽¨ ⊂⍵}
 ----
@@ -51,7 +52,9 @@ The best way to get started is to start using KAP as a calculator by running the
 When users of other progamming languages may take to an IDE and start writing tens or even hundreds of lines of code to perform certain calculations, KAP can do the same in sometimes just a single line of code.
 It is therefore often not necessary to actually open an editor to write a program, and the user can instead simply perform their calculation directly in the tool itself.
 
-== A simple first program
+== KAP basics
+
+=== Printing text
 
 The first thing anyone learning a new language wants to know is how to print a message to the screen.
 In KAP, printing is done using `io:print` or `io:println`.
@@ -59,6 +62,7 @@ The difference between the two is that the latter adds a newline after the outpu
 
 The following code prints a string to the screen:
 
+[source,kap]
 ----
 io:println "Example of printing a string"
 ----
@@ -72,3 +76,297 @@ Those symbols are given without the namespace.
 When using the REPL to enter KAP expressions, the return value of the expression is always printed to the screen.
 This is the reason why when typing the above example into the REPL, the string will be printed twice.
 The first is the result of the call to `io:println` and the second is the return value of the expression. `io:println` always returns the value it printed, which results in the double output.
+
+=== Comments
+
+Comments in KAP are indicated using the symbol `⍝` and extends to the end of the line.
+
+[source,kap]
+----
+⍝ This entire line is a comment
+io:println "This will be printed"    ⍝ This is another comment
+----
+
+=== Mathematical functions
+
+Just like any other programming languages, KAP provides functions to perform mathematical computations, the main ones are:
+
+- `+` -- addition
+- `-` -- subtraction
+- `×` -- multiplication
+- `÷` -- division
+- `*` -- exponentiation
+- `|` -- modulo
+
+In KAP, just like in most APL implementations, evaluation happens from right-to-left.
+This is probably the biggest difference compared to other languages.
+This means that the following:
+
+[source,kap]
+----
+3×4+5
+----
+
+evaluates to `23`.
+In other words, it's interpreted as `3×(4+5)`.
+This may seem somewhat strange, but the decision to interpret the code like this provides two distinct benefits: First and foremost, it removes any ambiguity as to the order in which computation will be performed.
+Secondly, it reduces the number of parentheses that are needed when writing complex code.
+
+=== Variables
+
+Variables in KAP can be global, or they can have local bindings.
+The difference between the two types of bindings will be obvious later in the tutorial, but for now this distinction can be ignored.
+
+Variables have names starting with an alphabetic character or underscore, followed by zero or more alphabetical characters, digits or underscore.
+A variable is assigned using `←` like this:
+
+[source,kap]
+----
+foo ← 123        ⍝ Assigns the value 123 to the variable foo
+bar ← 1+2+3      ⍝ Assigns the value 6 to the variable bar
+xyz ← foo + bar  ⍝ Assigns the value 129 to the variable xyz
+----
+
+=== Statement separators
+
+Individual statements are separated either by a newline or the symbol `⋄`.
+Thus, the following:
+
+[source,kap]
+----
+io:println a
+io:println b
+----
+
+is equivalent to:
+
+[source,kap]
+----
+io:println a ⋄ io:println b
+----
+
+=== Monadic and dyadic function invocation
+
+Two terms that any beginner learning APL will quickly come across are the terms _monadic_ and _dyadic_.
+These terms refer to the two different ways in which a function can be called:
+
+- *Monadic* function invocation takes its argument to the right of the name
+- *Dyadic* function invocation takes two arguments on each side of the function name
+
+The call to `io:println` above is monadic, in that the function argument is to the right:
+
+[source,kap]
+----
+io:println rightArg   ⍝ The value rightArg is to the right of the function name
+----
+
+An example of a dyadic invocation that we've already seen is the invocation of the function `+`:
+
+[source,kap]
+----
+10 + 11               ⍝ The function + is called with two arguments: 10 and 11
+----
+
+It is important to note that there is nothing special about `+`.
+It's a regular function just like `io:println`.
+It just happens to consist of a single character instead of a word.
+KAP allows the programmer to define their own functions with a single character name and the details on this will be explained later in this document.
+
+Functions can support monadic, dyadic or both kinds of invocations.
+An example of a function that allows both monadic and dyadic invocation is `-`:
+
+[source,kap]
+----
+foo - 3               ⍝ Compute the result of 3 subtracted from foo
+-foo                  ⍝ Negate the value of foo (if foo was 10, then the result is -10)
+----
+
+The rule for deciding whether a function invocation is monadic or dyadic is that if there is anything to the left that is a valid argument, then it's a dyadic invocation, otherwise it's monadic.
+An example will help clear this up:
+
+[source,kap]
+----
+10×-2                 ⍝ Result is -20
+----
+
+Looking from the right, the rightmost `-` does not have a value to the left (to the left of the `-` is a `×` symbol), and it must therefore be a monadic invocation resulting in the value `-2`.
+The call to `×` is dyadic since it has a `10` to the left, so the result is the product of `10` and `-2` which is `-20`.
+
+== Working with arrays
+
+KAP programming is about arrays.
+While the language has other container types, the array is the main way that data is organised.
+Arrays are particularly important in KAP because a lot of functions are designed to work on sets of data using a single operation.
+The reason array languages can get away with having poor support for flow control is that in many cases they are not needed, since one does not usually have to iterate over multiple values, and instead perform a single operation that acts on arrays of data in one go.
+
+While KAP has stronger flow control constructs than most other array languages, the language's strength is still the focus on arrays, which is why this topic is explained even before discussing how flow control works.
+
+In many languages, arrays have only a single dimension.
+Taking Javascript as an example, an array is a collection of objects which is given inside square brackets:
+
+[source,javascript]
+----
+// Foo is a list of 4 values
+var foo = [1, 2, "string", [4, 5]];
+----
+
+In the example above, the array consists of 4 values.
+The first two are numbers, the third is a string and the fourth is another array that contains two more numbers.
+
+In KAP, the same declaration would look like this:
+
+[source,kap]
+----
+value ← 1 2 "string" (4 5)
+----
+
+As can be seen from the comparison above, KAP parses everything as arrays by default.
+If more than one value is given separated by spaces, the individual values will be concatenated together and interpreted as a 1-dimensional array.
+
+=== Array dimensionality
+
+All arrays have a dimensionality, or "`rank`" as it is often referred to.
+Arrays in most languages are 1-dimensional, meaning that values in the array are addressed using a single number.
+KAP uses the square brackets to read values from an array, so to read second value from a 1-dimensional array, one would use the following syntax:
+
+[source,kap]
+----
+foo ← 10 11 12 13 14 15 16
+bar ← foo[1]                  ⍝ bar now contains the value 11
+----
+
+All arrays are zero-indexed, meaning that the first element (the value 10) can be read using `foo[0]`, the second using `foo[1]`, etc.
+
+To create an array of different dimensionality, the function `⍴` is used.
+When called dyadically, this function takes an array of numbers to the left that indicates the sizes of the resulting array's dimensions, and changes the dimensions of the array specified on the right to confirm to the requested dimensions.
+
+That description was probably a bit confusing, so an example is in order:
+
+[source,kap]
+----
+foo ← 10 11 12 13 14 15
+bar ← 2 3 ⍴ foo
+----
+
+After running the above, the variable `bar` will contain a 2-dimensional array that looks like the following:
+
+[cols=3]
+|===
+|10|11|12
+|13|14|15
+|===
+
+To read a value from a 2-dimensional array, one have to use two indices:
+
+[source,kap]
+----
+value ← bar[1;2]
+----
+
+After the above have been run, the variable `value` contains `15`.
+That is to say, it contains the value in the second row and third column.
+
+=== TODO
+
+*Array operations?*
+
+== Flow control
+
+=== If statements
+
+The if statement looks similar to that of C:
+
+[source,kap]
+----
+if(a < b) {
+    io:println "a is less than b"
+} else {
+    io:println "a is not less than b"
+}
+----
+
+However, in KAP, the if statement is a value which is set to the result of the last form in the evaluated clause.
+An example:
+
+[source,kap]
+----
+foo ← if(a < b) {
+    10
+} else {
+    20
+}
+----
+
+After executing the above, the variable `foo` will have the value `10` if `a` was less than `b`.
+
+=== While loops
+
+KAP provides a while loop that is similar to that of C and many of its descendents.
+A while loop terminates once its condition is false.
+The following example prints the numbers 0 to 19:
+
+[source,kap]
+----
+i ← 0
+while(i < 20) {
+    io:println i
+    i ← i+1
+}
+----
+
+=== Exceptions
+
+*TODO: Explain try/catch*
+
+== List of built-in KAP functions
+
+=== Functions
+
+[cols=3,options=header,cols="1a,4a,4a"]
+|===
+|Function
+|Monadic
+|Dyadic
+
+|`+`
+|Complex conjugate
+|Addition
+
+|`-`
+|Negation
+|Subtraction
+
+|`×`
+|Signum
+|Multiplication
+
+|`÷`
+|Reciprocal
+|Division
+
+|`\|`
+|Magnitude
+|Modulo (note that the arguments are reversed, for `a\|b`, the result is `b` modulo `a`)
+
+|`⌈`
+|Ceiling (return the smallest integer greater than or equal to the argument)
+|Maximum of the two arguments
+
+|`⌊`
+|Floor (return the largest integer smaller than or equal to the argument)
+|Minimum of the two arguments
+|===
+
+=== Operators
+
+[cols=2,options=header,cols="1a,4a"]
+|===
+|Name
+|Description
+
+|`/`
+|Reduce along last axis
+
+|`⌿`
+|Reduce along first axis (this is equivalent to `FN/[0]`)
+|===
