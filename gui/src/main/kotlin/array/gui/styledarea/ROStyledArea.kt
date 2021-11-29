@@ -11,6 +11,7 @@ import org.fxmisc.richtext.model.*
 import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
 import java.util.function.BiConsumer
+import java.util.function.BooleanSupplier
 import java.util.function.Function
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -47,9 +48,18 @@ class ROStyledArea(
         // History navigation
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.UP), { atEditboxStart() }, { prevHistory() }))
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.DOWN), { atEditboxEnd() }, { nextHistory() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.P, KeyCombination.CONTROL_DOWN), { atEditboxStart() }, { prevHistory() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.N, KeyCombination.CONTROL_DOWN), { atEditboxEnd() }, { nextHistory() }))
 
         // Cursor movement
         entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.HOME), { atEditbox() }, { moveToBeginningOfInput() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.HOME, KeyCombination.SHIFT_DOWN), { atEditbox() }, { moveToBeginningOfInput() }))
+
+        // Emacs-style cursor movement
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN), { true }, { caretSelectionBind.moveToNextChar() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.B, KeyCombination.CONTROL_DOWN), { true }, { caretSelectionBind.moveToPrevChar() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.A, KeyCombination.CONTROL_DOWN), { atEditbox() }, { moveToBeginningOfInput() }))
+        entries.add(InputMap.consumeWhen(EventPattern.keyPressed(KeyCode.E, KeyCombination.CONTROL_DOWN), { atEditbox() }, { moveToEndOfInput() }))
     }
 
     fun displayPrompt() {
@@ -168,7 +178,7 @@ class ROStyledArea(
             val inputPos = findInputStartEnd()
             insert(inputPos.promptStartPos, builder.build())
         }
-        showParagraphAtTop(document.paragraphs.size - 1)
+        showBottomParagraphAtTop()
     }
 
     fun appendAPLValueEnd(value: APLValue, style: TextStyle, parStyle: ParStyle = ParStyle()) {
@@ -182,6 +192,10 @@ class ROStyledArea(
             val inputPos = findInputStartEnd()
             insert(inputPos.promptStartPos, newDoc)
         }
+        showBottomParagraphAtTop()
+    }
+
+    fun showBottomParagraphAtTop() {
         showParagraphAtTop(document.paragraphs.size - 1)
     }
 

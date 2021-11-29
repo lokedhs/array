@@ -90,6 +90,7 @@ class ResultList3(val client: Client) {
                 }
                 historyPos--
                 styledArea.replaceInputText(history[historyPos])
+                styledArea.showBottomParagraphAtTop()
             }
         }
 
@@ -103,6 +104,7 @@ class ResultList3(val client: Client) {
                     historyPos++
                     styledArea.replaceInputText(pendingInput ?: "")
                     pendingInput = null
+                    styledArea.showBottomParagraphAtTop()
                 }
             }
         }
