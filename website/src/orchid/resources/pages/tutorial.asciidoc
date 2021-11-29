@@ -1,4 +1,10 @@
 = KAP Tutorial
+:experimental:
+:doctype: book
+
+:toc:
+
+= Introduction
 
 The following document is recommended for people with previous programming experience, but with no prior experience with APL or any of its cousins, such as https://www.jsoftware.com/[J], https://kx.com/[K], https://code.kx.com/q/[Q], https://mlochbaum.github.io/BQN/[BQN], etc.
 
@@ -49,8 +55,42 @@ Excel is great for visualising data, but performing calculations with it quickly
 For a programmer, this artefact of Excel is probably the most frustrating, since the code is arguably more important than the data itself.
 
 The best way to get started is to start using KAP as a calculator by running the GUI frontend and simply typing expressions to compute things.
-When users of other progamming languages may take to an IDE and start writing tens or even hundreds of lines of code to perform certain calculations, KAP can do the same in sometimes just a single line of code.
+When users of other programming languages may take to an IDE and start writing tens or even hundreds of lines of code to perform certain calculations, KAP can do the same in sometimes just a single line of code.
 It is therefore often not necessary to actually open an editor to write a program, and the user can instead simply perform their calculation directly in the tool itself.
+
+= Running KAP
+
+== Download
+
+Currently, KAP is only available in source form and can be downloaded from https://github.com/lokedhs/array[Github].
+The source code can be downloaded using the following command:
+
+----
+git clone https://github.com/lokedhs/array
+----
+
+== Running the UI
+
+There are different ways to run KAP, but the easiest way to get started is to use the built-in UI.
+The client can be started using the following command:
+
+----
+./gradlew gui:run
+----
+
+== Inputting APL symbols
+
+The use of non-ASCII symbols is something that many beginners find complicated.
+It is possible to configure a separate input keymap in most operating systems that support APL symbols.
+However, the easiest way for a beginner to start using KAP is to use the graphical UI.
+It provides a REPL as well as a text editor that provides easy access to APL symbols using two different mechanisms:
+
+- Press kbd:[Alt] or kbd:[Meta] together with other keys.
+For example, to generate `⍴` type kbd:[Meta+r].
+- Press kbd:[\`] followed by other keys.
+Type kbd:[`] followed by kbd:[Space] to generate a ```.
+
+= First steps
 
 == KAP basics
 
@@ -68,7 +108,7 @@ io:println "Example of printing a string"
 ----
 
 The name of the function is `println`, which resides in the `io` namespace.
-It is possible to `import` a namespace so that one does not have to specify the namespace very time the function is used.
+It is possible to `import` a namespace so that one does not have to specify the namespace every time the function is used.
 This is not done in this tutorial in order to make it very clear which namespace a given symbol belongs to.
 Many common functions belong to the `kap` namespace which is imported by default.
 Those symbols are given without the namespace.
@@ -150,8 +190,10 @@ io:println a ⋄ io:println b
 Two terms that any beginner learning APL will quickly come across are the terms _monadic_ and _dyadic_.
 These terms refer to the two different ways in which a function can be called:
 
-- *Monadic* function invocation takes its argument to the right of the name
-- *Dyadic* function invocation takes two arguments on each side of the function name
+- *Monadic* function invocation takes its argument to the right of the name. +
+Example, assuming `FN` is the name of the function: `FN arg0`.
+- *Dyadic* function invocation takes two arguments on each side of the function name. +
+Example: `arg0 FN arg1`.
 
 The call to `io:println` above is monadic, in that the function argument is to the right:
 
@@ -223,19 +265,21 @@ value ← 1 2 "string" (4 5)
 As can be seen from the comparison above, KAP parses everything as arrays by default.
 If more than one value is given separated by spaces, the individual values will be concatenated together and interpreted as a 1-dimensional array.
 
-=== Array dimensionality
-
-All arrays have a dimensionality, or "`rank`" as it is often referred to.
-Arrays in most languages are 1-dimensional, meaning that values in the array are addressed using a single number.
 KAP uses the square brackets to read values from an array, so to read second value from a 1-dimensional array, one would use the following syntax:
 
 [source,kap]
 ----
 foo ← 10 11 12 13 14 15 16
-bar ← foo[1]                  ⍝ bar now contains the value 11
+bar ← foo[1]                      ⍝ bar now contains the value 11
 ----
 
 All arrays are zero-indexed, meaning that the first element (the value 10) can be read using `foo[0]`, the second using `foo[1]`, etc.
+
+=== Array dimensionality
+
+All arrays have a dimensionality, or "`rank`" as it is often referred to.
+Arrays in most languages are 1-dimensional, meaning that values in the array are addressed using a single number.
+The syntax to do this was demonstrated in the previous section.
 
 To create an array of different dimensionality, the function `⍴` is used.
 When called dyadically, this function takes an array of numbers to the left that indicates the sizes of the resulting array's dimensions, and changes the dimensions of the array specified on the right to confirm to the requested dimensions.
@@ -317,6 +361,8 @@ while(i < 20) {
 === Exceptions
 
 *TODO: Explain try/catch*
+
+= KAP Reference
 
 == List of built-in KAP functions
 
