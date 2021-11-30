@@ -87,7 +87,8 @@ This is the recommended way to run KAP at the moment, as it implements all langu
 
 KAP can be compiled to Javascript, and a simple web-based demo is available on https://kapdemo.dhsdevelopments.com/
 
-Note that currently this website is very limited, and the user experience is not great. In particular, it does not provide a simple way to enter the special symbols.
+Note that currently this website is very limited, and the user experience is not great.
+In particular, it does not provide a simple way to enter the special symbols.
 
 == Inputting APL symbols
 
@@ -282,7 +283,9 @@ If more than one value is given separated by spaces, the individual values will 
 
 ==== Iota function
 
-It is very common to need an array consisting of numbers in ascending order. For example, a 5-element array containing the values `0 1 2 3 4`. In fact, this is so common that a function is provided to do exactly this: `⍳`, called "`iota`".
+It is very common to need an array consisting of numbers in ascending order.
+For example, a 5-element array containing the values `0 1 2 3 4`.
+In fact, this is so common that a function is provided to do exactly this: `⍳`, called "`iota`".
 
 When invoked monadically, `⍳` accepts an argument indicating the size of the resulting array:
 
@@ -312,7 +315,10 @@ All arrays are zero-indexed, meaning that the first element (the value 10) can b
 
 ==== Reading multiple values
 
-The value inside square brackets (i.e. the index) does not need to be a single number. One can specify an array as in index itself. The result will be an array with the corresponding values for each index. For example:
+The value inside square brackets (i.e. the index) does not need to be a single number.
+One can specify an array as in index itself.
+The result will be an array with the corresponding values for each index.
+For example:
 
 [source,kap]
 ----
@@ -325,7 +331,8 @@ The value inside square brackets (i.e. the index) does not need to be a single n
 
 The result is a 3-element array containing the values 14, 15 and 10. These are the values in the original array at indexes 4, 5 and 0.
 
-To read a sequence of values from an array, the `⍳` function can be used together with array lookup. Thus, to read the first 6 elements from an array, the following can be used:
+To read a sequence of values from an array, the `⍳` function can be used together with array lookup.
+Thus, to read the first 6 elements from an array, the following can be used:
 
 [source,kap]
 ----
@@ -342,7 +349,7 @@ Of course, KAP provides other ways to slice arrays (as would be expected from an
 
 All arrays have a dimensionality, or "`rank`" as it is often referred to.
 Arrays in most languages are 1-dimensional, meaning that values in the array are addressed using a single number.
-The syntax to do this was demonstrated in the previous section.
+When creating an array using the syntax described in the previous section, the result is a 1-dimensional array.
 
 To create an array of different dimensionality, the function `⍴` is used.
 When called dyadically, this function takes an array of numbers to the left that indicates the sizes of the resulting array's dimensions, and changes the dimensions of the array specified on the right to confirm to the requested dimensions.
@@ -355,7 +362,8 @@ foo ← 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
 bar ← 3 5 ⍴ foo
 ----
 
-After running the above, the variable `foo` will contain a 1-dimensional array, while `bar` contains a 2-dimensional version of the same data. The operation performed by `⍴` is referred to as "`reshape`" because it changes the shape of the array while preserving content.
+After running the above, the variable `foo` will contain a 1-dimensional array, while `bar` contains a 2-dimensional version of the same data.
+The operation performed by `⍴` is referred to as "`reshape`" because it changes the shape of the array while preserving content.
 
 Content of `foo`:
 
@@ -375,7 +383,7 @@ Content of `foo`:
 //] wid 25 at (0, 3.5)
 //----
 
-[cols="^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1", width=60]
+[cols="^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1",width=60]
 |===
 |0 |1 |2 |3 |4 |5 |6 |7 |8 |9 |10 |11 |12 |13 |14
 |===
@@ -404,7 +412,7 @@ Content of `bar`:
 //] wid 25 at (0,0)
 //----
 
-[cols="^1,^1,^1,^1,^1", width=25]
+[cols="^1,^1,^1,^1,^1",width=25]
 |===
 |0  |1  |2  |3  |4
 |5  |6  |7  |8  |9
@@ -421,7 +429,8 @@ value ← bar[1;2]
 After the above have been run, the variable `value` contains `7`.
 That is to say, it contains the value in the second row and third column.
 
-Just like the 1-dimensional case, one can always specify an array instead of a single value when reading values from a multidimensional array. An example:
+Just like the 1-dimensional case, one can always specify an array instead of a single value when reading values from a multidimensional array.
+An example:
 
 [source,kap]
 ----
@@ -430,7 +439,7 @@ bar[1;0 2 3]
 
 This will return the following 1-dimensional array:
 
-[cols="^1,^1,^1", width=15]
+[cols="^1,^1,^1",width=15]
 |===
 |5 |7 |8
 |===
@@ -444,7 +453,7 @@ bar[;4]
 
 This returns the following:
 
-[cols="^1,^1,^1", width=10]
+[cols="^1,^1,^1",width=10]
 |===
 |0 |5 |10
 |===
