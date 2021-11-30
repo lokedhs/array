@@ -159,7 +159,7 @@ This means that the following:
 3×4+5
 ----
 
-evaluates to `23`.
+evaluates to `27`.
 In other words, it's interpreted as `3×(4+5)`.
 This may seem somewhat strange, but the decision to interpret the code like this provides two distinct benefits: First and foremost, it removes any ambiguity as to the order in which computation will be performed.
 Secondly, it reduces the number of parentheses that are needed when writing complex code.
