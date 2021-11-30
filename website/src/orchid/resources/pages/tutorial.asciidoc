@@ -1,3 +1,4 @@
+// suppress inspection "JSUnusedLocalSymbols" for whole file
 = KAP Tutorial
 :experimental:
 :doctype: book
@@ -58,9 +59,11 @@ The best way to get started is to start using KAP as a calculator by running the
 When users of other programming languages may take to an IDE and start writing tens or even hundreds of lines of code to perform certain calculations, KAP can do the same in sometimes just a single line of code.
 It is therefore often not necessary to actually open an editor to write a program, and the user can instead simply perform their calculation directly in the tool itself.
 
-= Running KAP
+= Using the KAP software disctribution
 
-== Download
+== Running KAP
+
+=== Download
 
 Currently, KAP is only available in source form and can be downloaded from https://github.com/lokedhs/array[Github].
 The source code can be downloaded using the following command:
@@ -69,7 +72,7 @@ The source code can be downloaded using the following command:
 git clone https://github.com/lokedhs/array
 ----
 
-== Running the UI
+=== Running the UI
 
 There are different ways to run KAP, but the easiest way to get started is to use the built-in UI.
 The client can be started using the following command:
@@ -78,6 +81,14 @@ The client can be started using the following command:
 ./gradlew gui:run
 ----
 
+This is the recommended way to run KAP at the moment, as it implements all language features as well as provides an easy way to enter the all the symbols used by the language.
+
+=== Trying KAP online
+
+KAP can be compiled to Javascript, and a simple web-based demo is available on https://kapdemo.dhsdevelopments.com/
+
+Note that currently this website is very limited, and the user experience is not great. In particular, it does not provide a simple way to enter the special symbols.
+
 == Inputting APL symbols
 
 The use of non-ASCII symbols is something that many beginners find complicated.
@@ -85,9 +96,9 @@ It is possible to configure a separate input keymap in most operating systems th
 However, the easiest way for a beginner to start using KAP is to use the graphical UI.
 It provides a REPL as well as a text editor that provides easy access to APL symbols using two different mechanisms:
 
-- Press kbd:[Alt] or kbd:[Meta] together with other keys.
+- Press kbd:[Alt] or kbd:[Meta] together with other keys. +
 For example, to generate `⍴` type kbd:[Meta+r].
-- Press kbd:[\`] followed by other keys.
+- Press kbd:[\`] followed by other keys. +
 Type kbd:[`] followed by kbd:[Space] to generate a ```.
 
 = First steps
@@ -243,6 +254,10 @@ The reason array languages can get away with having poor support for flow contro
 
 While KAP has stronger flow control constructs than most other array languages, the language's strength is still the focus on arrays, which is why this topic is explained even before discussing how flow control works.
 
+=== Constructing arrays
+
+==== Literal arrays
+
 In many languages, arrays have only a single dimension.
 Taking Javascript as an example, an array is a collection of objects which is given inside square brackets:
 
@@ -265,6 +280,26 @@ value ← 1 2 "string" (4 5)
 As can be seen from the comparison above, KAP parses everything as arrays by default.
 If more than one value is given separated by spaces, the individual values will be concatenated together and interpreted as a 1-dimensional array.
 
+==== Iota function
+
+It is very common to need an array consisting of numbers in ascending order. For example, a 5-element array containing the values `0 1 2 3 4`. In fact, this is so common that a function is provided to do exactly this: `⍳`, called "`iota`".
+
+When invoked monadically, `⍳` accepts an argument indicating the size of the resulting array:
+
+[source,kap]
+----
+    ⍳5
+┏━━━━━━━━━┓
+┃0 1 2 3 4┃
+┗━━━━━━━━━┛
+----
+
+The `⍳` function will be used in a lot of examples below.
+
+=== Accessing data in arrays
+
+==== Reading single values
+
 KAP uses the square brackets to read values from an array, so to read second value from a 1-dimensional array, one would use the following syntax:
 
 [source,kap]
@@ -274,6 +309,34 @@ bar ← foo[1]                      ⍝ bar now contains the value 11
 ----
 
 All arrays are zero-indexed, meaning that the first element (the value 10) can be read using `foo[0]`, the second using `foo[1]`, etc.
+
+==== Reading multiple values
+
+The value inside square brackets (i.e. the index) does not need to be a single number. One can specify an array as in index itself. The result will be an array with the corresponding values for each index. For example:
+
+[source,kap]
+----
+    foo ← 10 11 12 13 14 15 16
+    foo[4 5 0]
+┏━━━━━━━━┓
+┃14 15 10┃
+┗━━━━━━━━┛
+----
+
+The result is a 3-element array containing the values 14, 15 and 10. These are the values in the original array at indexes 4, 5 and 0.
+
+To read a sequence of values from an array, the `⍳` function can be used together with array lookup. Thus, to read the first 6 elements from an array, the following can be used:
+
+[source,kap]
+----
+    foo ← 10 11 12 13 14 15 16 17 18 19
+    foo[⍳6]
+┏━━━━━━━━━━━━━━━━━┓
+┃10 11 12 13 14 15┃
+┗━━━━━━━━━━━━━━━━━┛
+----
+
+Of course, KAP provides other ways to slice arrays (as would be expected from an array language) and these methods will be discussed later.
 
 === Array dimensionality
 
@@ -288,16 +351,64 @@ That description was probably a bit confusing, so an example is in order:
 
 [source,kap]
 ----
-foo ← 10 11 12 13 14 15
-bar ← 2 3 ⍴ foo
+foo ← 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14
+bar ← 3 5 ⍴ foo
 ----
 
-After running the above, the variable `bar` will contain a 2-dimensional array that looks like the following:
+After running the above, the variable `foo` will contain a 1-dimensional array, while `bar` contains a 2-dimensional version of the same data. The operation performed by `⍴` is referred to as "`reshape`" because it changes the shape of the array while preserving content.
 
-[cols=3]
+Content of `foo`:
+
+//[dpic]
+//----
+//GRAPH1: [ n = 15
+//
+//line from (0,0) to (n,0)
+//line from (0,1) to (n,1)
+//for x = 0 to n do {
+//  line from (x,0) to (x,1)
+//}
+//
+//for x = 0 to n-1 do {
+//  sprintf("%g", x) at (x+0.5, 0.5) ht 0.15
+//}
+//] wid 25 at (0, 3.5)
+//----
+
+[cols="^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1,^1", width=60]
 |===
-|10|11|12
-|13|14|15
+|0 |1 |2 |3 |4 |5 |6 |7 |8 |9 |10 |11 |12 |13 |14
+|===
+
+Content of `bar`:
+
+//[dpic]
+//----
+//GRAPH2: [ cols = 5; rows = 3
+//
+//for y = 0 to rows do {
+//  line from (0,y) to (cols,y)
+//}
+//
+//for x = 0 to cols do {
+//  line from (x,0) to (x,rows)
+//}
+//
+//i = 0
+//for y = rows-1 to 0 by -1 do {
+//  for x = 0 to cols-1 do {
+//    sprintf("%g", i) at (x+0.5, y+0.5) ht 0.15
+//    i = i+1
+//  }
+//}
+//] wid 25 at (0,0)
+//----
+
+[cols="^1,^1,^1,^1,^1", width=25]
+|===
+|0  |1  |2  |3  |4
+|5  |6  |7  |8  |9
+|10 |11 |12 |13 |14
 |===
 
 To read a value from a 2-dimensional array, one have to use two indices:
@@ -307,8 +418,36 @@ To read a value from a 2-dimensional array, one have to use two indices:
 value ← bar[1;2]
 ----
 
-After the above have been run, the variable `value` contains `15`.
+After the above have been run, the variable `value` contains `7`.
 That is to say, it contains the value in the second row and third column.
+
+Just like the 1-dimensional case, one can always specify an array instead of a single value when reading values from a multidimensional array. An example:
+
+[source,kap]
+----
+bar[1;0 2 3]
+----
+
+This will return the following 1-dimensional array:
+
+[cols="^1,^1,^1", width=15]
+|===
+|5 |7 |8
+|===
+
+It is also possible to read all values along a given axis by omitting the index:
+
+[source,kap]
+----
+bar[;4]
+----
+
+This returns the following:
+
+[cols="^1,^1,^1", width=10]
+|===
+|0 |5 |10
+|===
 
 === TODO
 
