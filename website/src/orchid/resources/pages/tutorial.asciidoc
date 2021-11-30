@@ -351,6 +351,8 @@ All arrays have a dimensionality, or "`rank`" as it is often referred to.
 Arrays in most languages are 1-dimensional, meaning that values in the array are addressed using a single number.
 When creating an array using the syntax described in the previous section, the result is a 1-dimensional array.
 
+==== Creating multidimensional arrays
+
 To create an array of different dimensionality, the function `⍴` is used.
 When called dyadically, this function takes an array of numbers to the left that indicates the sizes of the resulting array's dimensions, and changes the dimensions of the array specified on the right to confirm to the requested dimensions.
 
@@ -458,6 +460,22 @@ This returns the following:
 |0 |5 |10
 |===
 
+==== Finding the dimensionality of an array
+
+In the previous section, it was explained how `⍴` is called dyadically to set the dimensions of an array.
+When called monadically, the function returns the dimensionality of its argument.
+
+[source,kap]
+----
+foo ← 3 5 ⍴ ⍳15
+bar ← ⍴ foo
+----
+
+After this code has been run, the variable `bar` will contain the array `3 5`.
+
+From this it can be seen that `⍴ X ⍴ Y` will always return `X`.
+This is because ths expression is parsed as `⍴ (X ⍴ Y)`, which is equivalent to first reshaping Y with dimensions X, and then returning the dimensions of this array.
+
 === TODO
 
 *Array operations?*
@@ -564,3 +582,75 @@ while(i < 20) {
 |`⌿`
 |Reduce along first axis (this is equivalent to `FN/[0]`)
 |===
+
+== Flow control
+
+=== If statements
+
+If statement with a single clause. Returns `⍬` if the condition is false.
+
+[source,kap]
+----
+if (a) {
+    result
+}
+----
+
+If statement with both then and else clauses:
+
+[source,kap]
+----
+if (a) {
+    resultIfTrue
+} else {
+    resultIfFalse
+}
+----
+
+=== When statement
+
+The `when` statement can be used to check for multiple conditions. This is preferred to a long list of if/else if/else statements.
+
+[source,kap]
+----
+when {
+    (conditionA) { resultIfA }
+    (conditionB) { resultIfB }
+    (1)          { elseResult }
+}
+----
+
+=== While statement
+
+Executes the body until the condition is false:
+
+[source,kap]
+----
+while (a) {
+    code
+}
+----
+
+=== Unwinding
+
+The `unwindProtect` statement is used to execute one code block after another one, regardless of whether the first one performed a non-local exit (such as by throwing an exception):
+
+[source,kap]
+----
+unwindProtect { mainCode } { unwind }
+----
+
+=== Throwing an exception
+
+Exceptions are thrown using `→`. Exception have a type, represented by a symbol and some associated data. The following example throws an exception of type `:foo` with data `"test"`:
+
+[source,kap]
+----
+:foo → "test"
+----
+
+When called monadically, `→` will throw an execption of type `:error`.
+
+=== Catching exception
+
+TODO: Need to define a syntax extension to make exception catching nice
